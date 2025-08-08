@@ -1,6 +1,8 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 // --- Enums ---
 
@@ -24,6 +26,7 @@ type User struct {
 	PreferredLang string    `json:"preferredLang"`
 	IsActive      bool      `json:"isActive"`
 	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
 type UserResponse struct {
@@ -35,6 +38,7 @@ type UserResponse struct {
 	PreferredLang string   `json:"preferredLang"`
 	IsActive      bool     `json:"isActive"`
 	CreatedAt     string   `json:"createdAt"`
+	UpdatedAt     string   `json:"updatedAt"`
 }
 
 type LoginResponse struct {
