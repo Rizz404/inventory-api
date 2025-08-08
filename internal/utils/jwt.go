@@ -14,6 +14,7 @@ var refreshTokenSecret = []byte(os.Getenv("JWT_REFRESH_SECRET"))
 type JWTClaims struct {
 	IDUser   string  `json:"id_user"`
 	Username *string `json:"username,omitempty"`
+	Email    *string `json:"email,omitempty"`
 	IsActive *bool   `json:"is_active,omitempty"`
 	Role     *string `json:"role,omitempty"`
 	jwt.RegisteredClaims
@@ -22,6 +23,7 @@ type JWTClaims struct {
 type CreateJWTPayload struct {
 	IDUser   string
 	Username string
+	Email    string
 	Role     string
 	IsActive bool
 }
@@ -38,6 +40,7 @@ func CreateAccessToken(payload *CreateJWTPayload) (string, error) {
 	claims := &JWTClaims{
 		IDUser:   payload.IDUser,
 		Username: &payload.Username,
+		Email:    &payload.Email,
 		Role:     &payload.Role,
 		IsActive: &payload.IsActive,
 		RegisteredClaims: jwt.RegisteredClaims{

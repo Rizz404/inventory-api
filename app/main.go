@@ -1,15 +1,14 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
-	"time"
 
-	firebase "firebase.google.com/go/v4"
-	"github.com/Rizz404/inventory-api/internal/client/fcm"
+	"github.com/Rizz404/inventory-api/internal/postgresql"
+	"github.com/Rizz404/inventory-api/internal/rest"
+	"github.com/Rizz404/inventory-api/services/auth"
+	"github.com/Rizz404/inventory-api/services/user"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -20,7 +19,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	recovermw "github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
-	"google.golang.org/api/option"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -46,7 +44,7 @@ func main() {
 	}
 
 	// * FCM Configuration
-	enableFCM := os.Getenv("ENABLE_FCM") == "true"
+	// enableFCM := os.Getenv("ENABLE_FCM") == "true"
 
 	// *===================================DATABASE===================================*
 	db, err := gorm.Open(postgres.New(postgres.Config{
@@ -71,57 +69,57 @@ func main() {
 	log.Printf("successfully connected to database")
 
 	// *===================================FCM CLIENT===================================*
-	var fcmClient *fcm.Client
-	if enableFCM {
-		credentialsMap := map[string]string{
-			"type":                        os.Getenv("FIREBASE_TYPE"),
-			"project_id":                  os.Getenv("FIREBASE_PROJECT_ID"),
-			"private_key_id":              os.Getenv("FIREBASE_PRIVATE_KEY_ID"),
-			"private_key":                 os.Getenv("FIREBASE_PRIVATE_KEY"),
-			"client_email":                os.Getenv("FIREBASE_CLIENT_EMAIL"),
-			"client_id":                   os.Getenv("FIREBASE_CLIENT_ID"),
-			"auth_uri":                    os.Getenv("FIREBASE_AUTH_URI"),
-			"token_uri":                   os.Getenv("FIREBASE_TOKEN_URI"),
-			"auth_provider_x509_cert_url": os.Getenv("FIREBASE_AUTH_PROVIDER_X509_CERT_URL"),
-			"client_x509_cert_url":        os.Getenv("FIREBASE_CLIENT_X509_CERT_URL"),
-			"universe_domain":             os.Getenv("FIREBASE_UNIVERSE_DOMAIN"),
-		}
+	// var fcmClient *fcm.Client
+	// if enableFCM {
+	// 	credentialsMap := map[string]string{
+	// 		"type":                        os.Getenv("FIREBASE_TYPE"),
+	// 		"project_id":                  os.Getenv("FIREBASE_PROJECT_ID"),
+	// 		"private_key_id":              os.Getenv("FIREBASE_PRIVATE_KEY_ID"),
+	// 		"private_key":                 os.Getenv("FIREBASE_PRIVATE_KEY"),
+	// 		"client_email":                os.Getenv("FIREBASE_CLIENT_EMAIL"),
+	// 		"client_id":                   os.Getenv("FIREBASE_CLIENT_ID"),
+	// 		"auth_uri":                    os.Getenv("FIREBASE_AUTH_URI"),
+	// 		"token_uri":                   os.Getenv("FIREBASE_TOKEN_URI"),
+	// 		"auth_provider_x509_cert_url": os.Getenv("FIREBASE_AUTH_PROVIDER_X509_CERT_URL"),
+	// 		"client_x509_cert_url":        os.Getenv("FIREBASE_CLIENT_X509_CERT_URL"),
+	// 		"universe_domain":             os.Getenv("FIREBASE_UNIVERSE_DOMAIN"),
+	// 	}
 
-		credentialsJSON, err := json.Marshal(credentialsMap)
-		if err != nil {
-			log.Printf("Warning: Failed to marshal Firebase credentials: %v. Firebase services will be disabled.", err)
-		} else {
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
+	// 	credentialsJSON, err := json.Marshal(credentialsMap)
+	// 	if err != nil {
+	// 		log.Printf("Warning: Failed to marshal Firebase credentials: %v. Firebase services will be disabled.", err)
+	// 	} else {
+	// 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	// 		defer cancel()
 
-			opt := option.WithCredentialsJSON(credentialsJSON)
+	// 		opt := option.WithCredentialsJSON(credentialsJSON)
 
-			app, err := firebase.NewApp(ctx, nil, opt)
-			if err != nil {
-				log.Printf("Warning: Failed to initialize Firebase app: %v. Firebase services will be disabled.", err)
-			} else {
-				// * Inisialisasi FCM Client
-				client, err := app.Messaging(ctx)
-				if err != nil {
-					log.Printf("Warning: Failed to get FCM messaging client: %v. FCM will be disabled.", err)
-				} else {
-					fcmClient = fcm.NewClientFromMessaging(client)
-					log.Printf("FCM client initialized successfully")
-				}
+	// 		app, err := firebase.NewApp(ctx, nil, opt)
+	// 		if err != nil {
+	// 			log.Printf("Warning: Failed to initialize Firebase app: %v. Firebase services will be disabled.", err)
+	// 		} else {
+	// 			// * Inisialisasi FCM Client
+	// 			client, err := app.Messaging(ctx)
+	// 			if err != nil {
+	// 				log.Printf("Warning: Failed to get FCM messaging client: %v. FCM will be disabled.", err)
+	// 			} else {
+	// 				fcmClient = fcm.NewClientFromMessaging(client)
+	// 				log.Printf("FCM client initialized successfully")
+	// 			}
 
-				// Todo: Nanti inisialisasi service dari firebase lain disini
-			}
-		}
-	} else {
-		log.Printf("Firebase services disabled via ENABLE_FCM environment variable")
-	}
+	// 			// Todo: Nanti inisialisasi service dari firebase lain disini
+	// 		}
+	// 	}
+	// } else {
+	// 	log.Printf("Firebase services disabled via ENABLE_FCM environment variable")
+	// }
 
 	// *===================================REPOSITORY===================================*
-	// userRepository := postgresql.NewUserRepository(db)
+	userRepository := postgresql.NewUserRepository(db)
 
 	// *===================================SERVICE===================================*
-	// authService := auth.NewService(userRepository)
-	// userService := user.NewService(userRepository)
+	authService := auth.NewService(userRepository)
+	userService := user.NewService(userRepository)
 
 	// *===================================SERVER CONFIG===================================*
 	app := fiber.New(fiber.Config{
@@ -151,8 +149,8 @@ func main() {
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 
-	// rest.NewAuthHandler(v1, authService)
-	// rest.NewUserHandler(v1, userService)
+	rest.NewAuthHandler(v1, authService)
+	rest.NewUserHandler(v1, userService)
 
 	// *===================================SERVER===================================*
 	log.Printf("server running on http://localhost%s", addr)

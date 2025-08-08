@@ -43,7 +43,7 @@ func NewUserHandler(app fiber.Router, s UserService) {
 	// * Create
 	users.Post("/",
 		middleware.AuthMiddleware(),
-		middleware.AuthorizeRole(domain.UserRoleAdmin),
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.CreateUser,
 	)
 
