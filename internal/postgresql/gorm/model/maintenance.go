@@ -37,13 +37,15 @@ func (MaintenanceScheduleTranslation) TableName() string {
 }
 
 type MaintenanceRecord struct {
-	ID                SQLULID                        `gorm:"primaryKey;type:varchar(26)"`
-	ScheduleID        *SQLULID                       `gorm:"type:varchar(26)"`
-	AssetID           SQLULID                        `gorm:"type:varchar(26);not null"`
-	MaintenanceDate   time.Time                      `gorm:"type:date;not null"`
-	PerformedByUser   *SQLULID                       `gorm:"type:varchar(26)"`
-	PerformedByVendor *string                        `gorm:"type:varchar(150)"`
-	ActualCost        *float64                       `gorm:"type:decimal(12,2)"`
+	ID                SQLULID   `gorm:"primaryKey;type:varchar(26)"`
+	ScheduleID        *SQLULID  `gorm:"type:varchar(26)"`
+	AssetID           SQLULID   `gorm:"type:varchar(26);not null"`
+	MaintenanceDate   time.Time `gorm:"type:date;not null"`
+	PerformedByUser   *SQLULID  `gorm:"type:varchar(26)"`
+	PerformedByVendor *string   `gorm:"type:varchar(150)"`
+	ActualCost        *float64  `gorm:"type:decimal(12,2)"`
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 	Schedule          *MaintenanceSchedule           `gorm:"foreignKey:ScheduleID"`
 	Asset             Asset                          `gorm:"foreignKey:AssetID"`
 	User              *User                          `gorm:"foreignKey:PerformedByUser"`

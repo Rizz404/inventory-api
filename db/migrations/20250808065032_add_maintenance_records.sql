@@ -7,6 +7,8 @@ CREATE TABLE maintenance_records (
   performed_by_user VARCHAR(26) NULL,
   performed_by_vendor VARCHAR(150) NULL,
   actual_cost DECIMAL(12, 2) NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (schedule_id) REFERENCES maintenance_schedules(id) ON DELETE
   SET NULL,
     FOREIGN KEY (asset_id) REFERENCES assets(id) ON DELETE CASCADE,

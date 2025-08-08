@@ -3,14 +3,16 @@ package model
 import "time"
 
 type AssetMovement struct {
-	ID             SQLULID                    `gorm:"primaryKey;type:varchar(26)"`
-	AssetID        SQLULID                    `gorm:"type:varchar(26);not null"`
-	FromLocationID *SQLULID                   `gorm:"type:varchar(26)"`
-	ToLocationID   *SQLULID                   `gorm:"type:varchar(26)"`
-	FromUserID     *SQLULID                   `gorm:"type:varchar(26)"`
-	ToUserID       *SQLULID                   `gorm:"type:varchar(26)"`
-	MovementDate   time.Time                  `gorm:"not null"`
-	MovedBy        SQLULID                    `gorm:"type:varchar(26);not null"`
+	ID             SQLULID   `gorm:"primaryKey;type:varchar(26)"`
+	AssetID        SQLULID   `gorm:"type:varchar(26);not null"`
+	FromLocationID *SQLULID  `gorm:"type:varchar(26)"`
+	ToLocationID   *SQLULID  `gorm:"type:varchar(26)"`
+	FromUserID     *SQLULID  `gorm:"type:varchar(26)"`
+	ToUserID       *SQLULID  `gorm:"type:varchar(26)"`
+	MovementDate   time.Time `gorm:"not null"`
+	MovedBy        SQLULID   `gorm:"type:varchar(26);not null"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 	Asset          Asset                      `gorm:"foreignKey:AssetID"`
 	FromLocation   *Location                  `gorm:"foreignKey:FromLocationID"`
 	ToLocation     *Location                  `gorm:"foreignKey:ToLocationID"`

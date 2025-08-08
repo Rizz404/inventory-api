@@ -3,7 +3,9 @@ CREATE TABLE locations (
   id VARCHAR(26) PRIMARY KEY,
   location_code VARCHAR(20) UNIQUE NOT NULL,
   building VARCHAR(100) NULL,
-  floor VARCHAR(20) NULL
+  floor VARCHAR(20) NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_locations_building_floor ON locations(building, floor);

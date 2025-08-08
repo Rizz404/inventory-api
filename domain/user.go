@@ -19,6 +19,7 @@ const (
 type User struct {
 	ID            string    `json:"id"`
 	Username      string    `json:"username"`
+	Email         string    `json:"email"`
 	PasswordHash  string    `json:"-"` // Hide password hash from JSON responses
 	FullName      string    `json:"fullName"`
 	Role          UserRole  `json:"role"`
@@ -32,6 +33,7 @@ type User struct {
 type UserResponse struct {
 	ID            string   `json:"id"`
 	Username      string   `json:"username"`
+	Email         string   `json:"email"`
 	FullName      string   `json:"fullName"`
 	Role          UserRole `json:"role"`
 	EmployeeID    *string  `json:"employeeId,omitempty"`
@@ -50,12 +52,13 @@ type LoginResponse struct {
 // --- Payloads ---
 
 type LoginPayload struct {
-	Username string `json:"username" form:"username" validate:"required"`
+	Email    string `json:"email" form:"email" validate:"required,email"`
 	Password string `json:"password" form:"password" validate:"required,min=8"`
 }
 
 type CreateUserPayload struct {
 	Username      string   `json:"username" form:"username" validate:"required,min=3,max=50"`
+	Email         string   `json:"email" form:"email" validate:"required,email,max=255"`
 	Password      string   `json:"password" form:"password" validate:"required,min=8,max=100"`
 	FullName      string   `json:"fullName" form:"fullName" validate:"required,min=3,max=100"`
 	Role          UserRole `json:"role" form:"role" validate:"required,oneof=Admin Staff Employee"`
@@ -65,6 +68,7 @@ type CreateUserPayload struct {
 
 type UpdateUserPayload struct {
 	Username      *string   `json:"username,omitempty" form:"username" validate:"omitempty,min=3,max=50"`
+	Email         *string   `json:"email,omitempty" form:"email" validate:"omitempty,email,max=255"`
 	Password      *string   `json:"password,omitempty" form:"password" validate:"omitempty,min=8,max=100"`
 	FullName      *string   `json:"fullName,omitempty" form:"fullName" validate:"omitempty,min=3,max=100"`
 	Role          *UserRole `json:"role,omitempty" form:"role" validate:"omitempty,oneof=Admin Staff Employee"`

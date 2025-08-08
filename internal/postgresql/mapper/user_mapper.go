@@ -13,6 +13,7 @@ func ToModelUser(d *domain.User) model.User {
 
 	return model.User{
 		Username:      d.Username,
+		Email:         d.Email,
 		PasswordHash:  d.PasswordHash,
 		FullName:      d.FullName,
 		Role:          d.Role,
@@ -26,6 +27,7 @@ func ToDomainUser(m *model.User) domain.User {
 	return domain.User{
 		ID:            m.ID.String(),
 		Username:      m.Username,
+		Email:         m.Email,
 		PasswordHash:  m.PasswordHash,
 		FullName:      m.FullName,
 		Role:          m.Role,
@@ -41,6 +43,7 @@ func ToDomainUserResponse(m *model.User) domain.UserResponse {
 	return domain.UserResponse{
 		ID:            m.ID.String(),
 		Username:      m.Username,
+		Email:         m.Email,
 		FullName:      m.FullName,
 		Role:          m.Role,
 		EmployeeID:    m.EmployeeID,
@@ -64,6 +67,9 @@ func ToModelUserUpdateMap(payload *domain.UpdateUserPayload) map[string]interfac
 
 	if payload.Username != nil {
 		updates["username"] = *payload.Username
+	}
+	if payload.Email != nil {
+		updates["email"] = *payload.Email
 	}
 	if payload.Password != nil {
 		updates["password_hash"] = *payload.Password

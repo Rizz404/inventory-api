@@ -31,10 +31,10 @@ func NewService(r Repository) *Service {
 
 // *===========================MUTATION===========================*
 func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (domain.LoginResponse, error) {
-	// Search by username (we don't have email field anymore)
-	user, err := s.Repo.GetUserByUsernameOrEmail(ctx, payload.Username, "")
+	// Search by email
+	user, err := s.Repo.GetUserByUsernameOrEmail(ctx, "", payload.Email)
 	if err != nil {
-		return domain.LoginResponse{}, domain.ErrUnauthorized("invalid username or password")
+		return domain.LoginResponse{}, domain.ErrUnauthorized("invalid email or password")
 	}
 
 	// Check if user is active
@@ -45,7 +45,7 @@ func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (doma
 	// Verify password
 	passwordIsValid := utils.CheckPasswordHash(payload.Password, user.PasswordHash)
 	if !passwordIsValid {
-		return domain.LoginResponse{}, domain.ErrUnauthorized("invalid username or password")
+		return domain.LoginResponse{}, domain.ErrUnauthorized("invalid email or password")
 	}
 
 	// Create JWT payload with available fields

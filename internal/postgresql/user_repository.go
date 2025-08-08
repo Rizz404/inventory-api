@@ -216,9 +216,21 @@ func (r *gormUserRepository) GetUserById(ctx context.Context, userId string) (do
 
 func (r *gormUserRepository) GetUserByUsernameOrEmail(ctx context.Context, username string, email string) (domain.User, error) {
 	var user model.User
+	var err error
 
-	// Since we don't have email field in current domain, just search by username
-	err := r.db.WithContext(ctx).Where("username = ?", username).First(&user).Error
+	if username != "" && email != "" {
+		// Search by both username OR email
+		err = r.db.WithContext(ctx).Where("username = ? OR email = ?", username, email).First(&user).Error
+	} else if username != "" {
+		// Search by username only
+		err = r.db.WithContext(ctx).Where("username = ?", username).First(&user).Error
+	} else if email != "" {
+		// Search by email only
+		err = r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
+	} else {
+		return domain.User{}, domain.ErrNotFound("user")
+	}
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.User{}, domain.ErrNotFound("user")
@@ -248,9 +260,12 @@ func (r *gormUserRepository) CheckUsernameExist(ctx context.Context, username st
 }
 
 func (r *gormUserRepository) CheckEmailExist(ctx context.Context, email string) (bool, error) {
-	// Since we don't have email field in current domain, return false
-	// This method exists for interface compatibility
-	return false, nil
+	var count int64
+	err := r.db.WithContext(ctx).Model(&model.User{}).Where("email = ?", email).Count(&count).Error
+	if err != nil {
+		return false, domain.ErrInternal(err)
+	}
+	return count > 0, nil
 }
 
 func (r *gormUserRepository) CountUsers(ctx context.Context, params query.Params) (int64, error) {

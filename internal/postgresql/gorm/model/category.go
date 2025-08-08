@@ -1,9 +1,13 @@
 package model
 
+import "time"
+
 type Category struct {
-	ID           SQLULID               `gorm:"primaryKey;type:varchar(26)"`
-	ParentID     *SQLULID              `gorm:"type:varchar(26)"`
-	CategoryCode string                `gorm:"type:varchar(20);unique;not null"`
+	ID           SQLULID  `gorm:"primaryKey;type:varchar(26)"`
+	ParentID     *SQLULID `gorm:"type:varchar(26)"`
+	CategoryCode string   `gorm:"type:varchar(20);unique;not null"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 	Parent       *Category             `gorm:"foreignKey:ParentID"`
 	Children     []Category            `gorm:"foreignKey:ParentID"`
 	Translations []CategoryTranslation `gorm:"foreignKey:CategoryID"`

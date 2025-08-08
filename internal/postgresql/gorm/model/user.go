@@ -9,6 +9,7 @@ import (
 type User struct {
 	ID            SQLULID         `gorm:"primaryKey;type:varchar(26)"`
 	Username      string          `gorm:"type:varchar(50);unique;not null"`
+	Email         string          `gorm:"type:varchar(255);unique;not null"`
 	PasswordHash  string          `gorm:"type:varchar(255);not null"`
 	FullName      string          `gorm:"type:varchar(100);not null"`
 	Role          domain.UserRole `gorm:"type:user_role;not null"`
