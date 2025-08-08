@@ -1,0 +1,38 @@
+vendor/
+_*
+*.test
+.DS_Store
+engine
+bin/
+*.out
+tmp_app/
+.env
+*.exe
+main.exe
+
+# Temporary files
+tmp/
+*.tmp
+*.log
+*.pid
+
+# Go specific
+go.work
+go.work.sum
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# Build artifacts
+dist/
+build/
+coverage.out
+coverage.html
