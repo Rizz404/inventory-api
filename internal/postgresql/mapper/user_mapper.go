@@ -3,9 +3,36 @@ package mapper
 import (
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
+	"github.com/oklog/ulid/v2"
 )
 
 func ToModelUser(d *domain.User) model.User {
+	var employeeID *string
+	if d.EmployeeID != nil {
+		employeeID = d.EmployeeID
+	}
+
+	modelUser := model.User{
+		Username:      d.Username,
+		Email:         d.Email,
+		PasswordHash:  d.PasswordHash,
+		FullName:      d.FullName,
+		Role:          d.Role,
+		EmployeeID:    employeeID,
+		PreferredLang: d.PreferredLang,
+		IsActive:      d.IsActive,
+	}
+
+	if d.ID != "" {
+		if parsedID, err := ulid.Parse(d.ID); err == nil {
+			modelUser.ID = model.SQLULID(parsedID)
+		}
+	}
+
+	return modelUser
+}
+
+func ToModelUserForCreate(d *domain.User) model.User {
 	var employeeID *string
 	if d.EmployeeID != nil {
 		employeeID = d.EmployeeID

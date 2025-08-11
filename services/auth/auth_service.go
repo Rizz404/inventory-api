@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/utils"
@@ -30,6 +31,41 @@ func NewService(r Repository) *Service {
 }
 
 // *===========================MUTATION===========================*
+func (s *Service) Register(ctx context.Context, payload *domain.RegisterPayload) (domain.User, error) {
+	hashedPassword, err := utils.HashPassword(payload.Password)
+	if err != nil {
+		return domain.User{}, domain.ErrInternal(err)
+	}
+
+	// * Cek apakah username atau email sudah ada
+	_, err = s.Repo.GetUserByUsernameOrEmail(ctx, payload.Username, payload.Email)
+	if err == nil {
+		// * Jika tidak ada error, berarti user DITEMUKAN. Ini konflik.
+		return domain.User{}, domain.ErrConflict("user with this username or email already exists")
+	}
+
+	var appErr *domain.AppError
+	if errors.As(err, &appErr) && appErr.Code != 404 {
+		// * Jika errornya bukan 404 (NotFound), maka ini adalah error internal.
+		return domain.User{}, err
+	}
+
+	// * Siapkan user baru
+	newUser := domain.User{
+		Username:     payload.Username,
+		Email:        payload.Email,
+		PasswordHash: hashedPassword,
+		Role:         domain.RoleEmployee,
+	}
+
+	createdUser, err := s.Repo.CreateUser(ctx, &newUser)
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	return createdUser, nil
+}
+
 func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (domain.LoginResponse, error) {
 	// Search by email
 	user, err := s.Repo.GetUserByUsernameOrEmail(ctx, "", payload.Email)

@@ -1,9 +1,12 @@
 package model
 
 import (
+	"log"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/oklog/ulid/v2"
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -22,4 +25,15 @@ type User struct {
 
 func (User) TableName() string {
 	return "users"
+}
+
+func (u *User) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 User.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for User: %s", u.ID.String())
+	}
+
+	return nil
 }
