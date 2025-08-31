@@ -21,7 +21,7 @@ type Repository interface {
 	GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.User, error)
 	GetUsersCursor(ctx context.Context, params query.Params) ([]domain.User, error)
 	GetUserById(ctx context.Context, userId string) (domain.User, error)
-	GetUserByUsernameOrEmail(ctx context.Context, username string, email string) (domain.User, error)
+	GetUserByNameOrEmail(ctx context.Context, name string, email string) (domain.User, error)
 	CheckUserExist(ctx context.Context, userId string) (bool, error)
 	CountUsers(ctx context.Context, params query.Params) (int64, error)
 }
@@ -43,11 +43,11 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 		return domain.User{}, domain.ErrInternal(err)
 	}
 
-	// * Cek apakah username atau email sudah ada
-	_, err = s.Repo.GetUserByUsernameOrEmail(ctx, payload.Username, payload.Email)
+	// * Cek apakah name atau email sudah ada
+	_, err = s.Repo.GetUserByNameOrEmail(ctx, payload.Name, payload.Email)
 	if err == nil {
 		// * Jika tidak ada error, berarti user DITEMUKAN. Ini konflik.
-		return domain.User{}, domain.ErrConflict("user with this username or email already exists")
+		return domain.User{}, domain.ErrConflict("user with this name or email already exists")
 	}
 
 	var appErr *domain.AppError
@@ -64,7 +64,7 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 
 	// * Siapkan user baru
 	newUser := domain.User{
-		Username:      payload.Username,
+		Name:          payload.Name,
 		Email:         payload.Email,
 		PasswordHash:  hashedPassword,
 		FullName:      payload.FullName,
@@ -92,20 +92,20 @@ func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain
 		return domain.User{}, err
 	}
 
-	// Check username/email uniqueness if being updated
-	if payload.Username != nil || payload.Email != nil {
-		checkUsername := ""
+	// Check name/email uniqueness if being updated
+	if payload.Name != nil || payload.Email != nil {
+		checkName := ""
 		checkEmail := ""
-		if payload.Username != nil {
-			checkUsername = *payload.Username
+		if payload.Name != nil {
+			checkName = *payload.Name
 		}
 		if payload.Email != nil {
 			checkEmail = *payload.Email
 		}
 
-		_, err := s.Repo.GetUserByUsernameOrEmail(ctx, checkUsername, checkEmail)
+		_, err := s.Repo.GetUserByNameOrEmail(ctx, checkName, checkEmail)
 		if err == nil {
-			return domain.User{}, domain.ErrConflict("username or email already taken")
+			return domain.User{}, domain.ErrConflict("name or email already taken")
 		}
 		var appErr *domain.AppError
 		if errors.As(err, &appErr) && appErr.Code != 404 {
@@ -178,8 +178,8 @@ func (s *Service) GetUserById(ctx context.Context, userId string) (domain.User, 
 	return user, nil
 }
 
-func (s *Service) GetUserByUsernameOrEmail(ctx context.Context, username string, email string) (domain.User, error) {
-	user, err := s.Repo.GetUserByUsernameOrEmail(ctx, username, email)
+func (s *Service) GetUserByNameOrEmail(ctx context.Context, name string, email string) (domain.User, error) {
+	user, err := s.Repo.GetUserByNameOrEmail(ctx, name, email)
 	if err != nil {
 		return domain.User{}, err
 	}

@@ -50,7 +50,7 @@ func (r *gormUserRepository) applyUserSorts(db *gorm.DB, sort *query.SortOptions
 	}
 	var orderClause string
 	switch strings.ToLower(sort.Field) {
-	case "username", "full_name", "created_at", "updated_at", "role":
+	case "name", "full_name", "created_at", "updated_at", "role":
 		orderClause = "users." + sort.Field
 	default:
 		return db.Order("users.created_at DESC")
@@ -82,7 +82,7 @@ func (r *gormUserRepository) UpdateUser(ctx context.Context, payload *domain.Use
 
 	// Update user in database
 	userUpdates := model.User{
-		Username:      payload.Username,
+		Name:          payload.Name,
 		PasswordHash:  payload.PasswordHash,
 		FullName:      payload.FullName,
 		Role:          payload.Role,
@@ -156,7 +156,7 @@ func (r *gormUserRepository) GetUsersPaginated(ctx context.Context, params query
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Where("users.username ILIKE ? OR users.full_name ILIKE ?", searchPattern, searchPattern)
+		db = db.Where("users.name ILIKE ? OR users.full_name ILIKE ?", searchPattern, searchPattern)
 	}
 
 	// * Set pagination ke nil agar query.Apply tidak memproses cursor
@@ -181,7 +181,7 @@ func (r *gormUserRepository) GetUsersCursor(ctx context.Context, params query.Pa
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Where("users.username ILIKE ? OR users.full_name ILIKE ?", searchPattern, searchPattern)
+		db = db.Where("users.name ILIKE ? OR users.full_name ILIKE ?", searchPattern, searchPattern)
 	}
 
 	// * Set offset ke 0 agar query.Apply tidak memproses offset
@@ -214,16 +214,16 @@ func (r *gormUserRepository) GetUserById(ctx context.Context, userId string) (do
 	return mapper.ToDomainUser(&user), nil
 }
 
-func (r *gormUserRepository) GetUserByUsernameOrEmail(ctx context.Context, username string, email string) (domain.User, error) {
+func (r *gormUserRepository) GetUserByNameOrEmail(ctx context.Context, name string, email string) (domain.User, error) {
 	var user model.User
 	var err error
 
-	if username != "" && email != "" {
-		// Search by both username OR email
-		err = r.db.WithContext(ctx).Where("username = ? OR email = ?", username, email).First(&user).Error
-	} else if username != "" {
-		// Search by username only
-		err = r.db.WithContext(ctx).Where("username = ?", username).First(&user).Error
+	if name != "" && email != "" {
+		// Search by both name OR email
+		err = r.db.WithContext(ctx).Where("name = ? OR email = ?", name, email).First(&user).Error
+	} else if name != "" {
+		// Search by name only
+		err = r.db.WithContext(ctx).Where("name = ?", name).First(&user).Error
 	} else if email != "" {
 		// Search by email only
 		err = r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
@@ -250,9 +250,9 @@ func (r *gormUserRepository) CheckUserExist(ctx context.Context, userId string) 
 	return count > 0, nil
 }
 
-func (r *gormUserRepository) CheckUsernameExist(ctx context.Context, username string) (bool, error) {
+func (r *gormUserRepository) CheckNameExist(ctx context.Context, name string) (bool, error) {
 	var count int64
-	err := r.db.WithContext(ctx).Model(&model.User{}).Where("username = ?", username).Count(&count).Error
+	err := r.db.WithContext(ctx).Model(&model.User{}).Where("name = ?", name).Count(&count).Error
 	if err != nil {
 		return false, domain.ErrInternal(err)
 	}
@@ -274,7 +274,7 @@ func (r *gormUserRepository) CountUsers(ctx context.Context, params query.Params
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Where("users.username ILIKE ? OR users.full_name ILIKE ?", searchPattern, searchPattern)
+		db = db.Where("users.name ILIKE ? OR users.full_name ILIKE ?", searchPattern, searchPattern)
 	}
 
 	db = query.Apply(db, query.Params{Filters: params.Filters}, r.applyUserFilters, nil)

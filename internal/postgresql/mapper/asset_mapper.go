@@ -30,7 +30,7 @@ func ToDomainAssetResponse(m model.Asset, langCode string) domain.AssetResponse 
 		resp.WarrantyEnd = Ptr(m.WarrantyEnd.Format(DateFormat))
 	}
 	if m.Category.ID.String() != "" {
-		resp.Category = Ptr(ToDomainCategoryResponse(m.Category, langCode))
+		resp.Category = Ptr(ToDomainCategoryResponse(&m.Category, langCode))
 	}
 	if m.Location != nil && m.Location.ID.String() != "" {
 		resp.Location = Ptr(ToDomainLocationResponse(*m.Location, langCode))

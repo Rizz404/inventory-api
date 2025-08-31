@@ -13,7 +13,7 @@ func ToModelUser(d *domain.User) model.User {
 	}
 
 	modelUser := model.User{
-		Username:      d.Username,
+		Name:          d.Name,
 		Email:         d.Email,
 		PasswordHash:  d.PasswordHash,
 		FullName:      d.FullName,
@@ -39,7 +39,7 @@ func ToModelUserForCreate(d *domain.User) model.User {
 	}
 
 	return model.User{
-		Username:      d.Username,
+		Name:          d.Name,
 		Email:         d.Email,
 		PasswordHash:  d.PasswordHash,
 		FullName:      d.FullName,
@@ -53,7 +53,7 @@ func ToModelUserForCreate(d *domain.User) model.User {
 func ToDomainUser(m *model.User) domain.User {
 	return domain.User{
 		ID:            m.ID.String(),
-		Username:      m.Username,
+		Name:          m.Name,
 		Email:         m.Email,
 		PasswordHash:  m.PasswordHash,
 		FullName:      m.FullName,
@@ -69,7 +69,7 @@ func ToDomainUser(m *model.User) domain.User {
 func ToDomainUserResponse(m *model.User) domain.UserResponse {
 	return domain.UserResponse{
 		ID:            m.ID.String(),
-		Username:      m.Username,
+		Name:          m.Name,
 		Email:         m.Email,
 		FullName:      m.FullName,
 		Role:          m.Role,
@@ -89,11 +89,11 @@ func ToDomainUsersResponse(m []model.User) []domain.UserResponse {
 	return responses
 }
 
-func ToModelUserUpdateMap(payload *domain.UpdateUserPayload) map[string]interface{} {
-	updates := make(map[string]interface{})
+func ToModelUserUpdateMap(payload *domain.UpdateUserPayload) map[string]any {
+	updates := make(map[string]any)
 
-	if payload.Username != nil {
-		updates["username"] = *payload.Username
+	if payload.Name != nil {
+		updates["name"] = *payload.Name
 	}
 	if payload.Email != nil {
 		updates["email"] = *payload.Email

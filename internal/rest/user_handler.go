@@ -22,7 +22,7 @@ type UserService interface {
 	GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.User, int64, error)
 	GetUsersCursor(ctx context.Context, params query.Params) ([]domain.User, error)
 	GetUserById(ctx context.Context, userId string) (domain.User, error)
-	GetUserByUsernameOrEmail(ctx context.Context, username string, email string) (domain.User, error)
+	GetUserByNameOrEmail(ctx context.Context, name string, email string) (domain.User, error)
 	CheckUserExist(ctx context.Context, userId string) (bool, error)
 	CountUsers(ctx context.Context, params query.Params) (int64, error)
 }

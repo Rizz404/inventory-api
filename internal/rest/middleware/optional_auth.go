@@ -30,8 +30,8 @@ func OptionalAuth() fiber.Handler {
 
 		// * Set user info jika token valid
 		c.Locals("id_user", claims.IDUser)
-		if claims.Username != nil {
-			c.Locals("username", *claims.Username)
+		if claims.Name != nil {
+			c.Locals("name", *claims.Name)
 		}
 		if claims.Email != nil {
 			c.Locals("email", *claims.Email)

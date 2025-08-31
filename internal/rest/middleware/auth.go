@@ -44,8 +44,8 @@ func AuthMiddleware() fiber.Handler {
 
 			// Set user info ke context untuk digunakan di handler selanjutnya
 			c.Locals("id_user", claims.IDUser)
-			if claims.Username != nil {
-				c.Locals("username", *claims.Username)
+			if claims.Name != nil {
+				c.Locals("name", *claims.Name)
 			}
 
 			if claims.Email != nil {

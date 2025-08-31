@@ -11,7 +11,7 @@ import (
 
 type User struct {
 	ID            SQLULID         `gorm:"primaryKey;type:varchar(26)"`
-	Username      string          `gorm:"type:varchar(50);unique;not null"`
+	Name          string          `gorm:"type:varchar(50);unique;not null"`
 	Email         string          `gorm:"type:varchar(255);unique;not null"`
 	PasswordHash  string          `gorm:"type:varchar(255);not null"`
 	FullName      string          `gorm:"type:varchar(100);not null"`
@@ -19,6 +19,7 @@ type User struct {
 	EmployeeID    *string         `gorm:"type:varchar(20);unique"`
 	PreferredLang string          `gorm:"type:varchar(5);default:'id-ID'"`
 	IsActive      bool            `gorm:"default:true"`
+	AvatarURL     *string         `gorm:"type:varchar(255)"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }

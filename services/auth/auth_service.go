@@ -14,9 +14,9 @@ type Repository interface {
 	UpdateUser(ctx context.Context, payload *domain.User) (domain.User, error)
 
 	// * QUERY
-	GetUserByUsernameOrEmail(ctx context.Context, username string, email string) (domain.User, error)
+	GetUserByNameOrEmail(ctx context.Context, name string, email string) (domain.User, error)
 	CheckUserExist(ctx context.Context, userId string) (bool, error)
-	CheckUsernameExist(ctx context.Context, username string) (bool, error)
+	CheckNameExist(ctx context.Context, name string) (bool, error)
 	CheckEmailExist(ctx context.Context, email string) (bool, error)
 }
 
@@ -37,11 +37,11 @@ func (s *Service) Register(ctx context.Context, payload *domain.RegisterPayload)
 		return domain.User{}, domain.ErrInternal(err)
 	}
 
-	// * Cek apakah username atau email sudah ada
-	_, err = s.Repo.GetUserByUsernameOrEmail(ctx, payload.Username, payload.Email)
+	// * Cek apakah name atau email sudah ada
+	_, err = s.Repo.GetUserByNameOrEmail(ctx, payload.Name, payload.Email)
 	if err == nil {
 		// * Jika tidak ada error, berarti user DITEMUKAN. Ini konflik.
-		return domain.User{}, domain.ErrConflict("user with this username or email already exists")
+		return domain.User{}, domain.ErrConflict("user with this name or email already exists")
 	}
 
 	var appErr *domain.AppError
@@ -52,7 +52,7 @@ func (s *Service) Register(ctx context.Context, payload *domain.RegisterPayload)
 
 	// * Siapkan user baru
 	newUser := domain.User{
-		Username:     payload.Username,
+		Name:         payload.Name,
 		Email:        payload.Email,
 		PasswordHash: hashedPassword,
 		Role:         domain.RoleEmployee,
@@ -68,7 +68,7 @@ func (s *Service) Register(ctx context.Context, payload *domain.RegisterPayload)
 
 func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (domain.LoginResponse, error) {
 	// Search by email
-	user, err := s.Repo.GetUserByUsernameOrEmail(ctx, "", payload.Email)
+	user, err := s.Repo.GetUserByNameOrEmail(ctx, "", payload.Email)
 	if err != nil {
 		return domain.LoginResponse{}, domain.ErrUnauthorized("invalid email or password")
 	}
@@ -87,7 +87,7 @@ func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (doma
 	// Create JWT payload with available fields
 	jwtPayload := &utils.CreateJWTPayload{
 		IDUser:   user.ID,
-		Username: user.Username,
+		Name:     user.Name,
 		Role:     string(user.Role), // Convert UserRole to string
 		IsActive: user.IsActive,
 	}
@@ -105,7 +105,7 @@ func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (doma
 	// Create user response
 	userResponse := domain.UserResponse{
 		ID:            user.ID,
-		Username:      user.Username,
+		Name:          user.Name,
 		FullName:      user.FullName,
 		Role:          user.Role,
 		EmployeeID:    user.EmployeeID,
