@@ -1,11 +1,15 @@
 package domain
 
+import "time"
+
 // --- Structs ---
 
 type Category struct {
 	ID           string                `json:"id"`
 	ParentID     *string               `json:"parentId"`
 	CategoryCode string                `json:"categoryCode"`
+	CreatedAt    time.Time             `json:"createdAt"`
+	UpdatedAt    time.Time             `json:"updatedAt"`
 	Translations []CategoryTranslation `json:"translations,omitempty"`
 }
 
@@ -24,6 +28,8 @@ type CategoryResponse struct {
 	Name         string             `json:"name"`
 	Description  *string            `json:"description,omitempty"`
 	Children     []CategoryResponse `json:"children,omitempty"`
+	CreatedAt    string             `json:"createdAt"`
+	UpdatedAt    string             `json:"updatedAt"`
 }
 
 // --- Payloads ---

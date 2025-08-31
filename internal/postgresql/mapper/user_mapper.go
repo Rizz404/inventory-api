@@ -60,6 +60,32 @@ func ToDomainUsersResponse(m []model.User) []domain.UserResponse {
 	return responses
 }
 
+// * Convert domain.User directly to domain.UserResponse without going through model.User
+func DomainUserToUserResponse(d *domain.User) domain.UserResponse {
+	return domain.UserResponse{
+		ID:            d.ID,
+		Name:          d.Name,
+		Email:         d.Email,
+		FullName:      d.FullName,
+		Role:          d.Role,
+		EmployeeID:    d.EmployeeID,
+		PreferredLang: d.PreferredLang,
+		IsActive:      d.IsActive,
+		AvatarURL:     d.AvatarURL,
+		CreatedAt:     d.CreatedAt.Format(TimeFormat),
+		UpdatedAt:     d.UpdatedAt.Format(TimeFormat),
+	}
+}
+
+// * Convert slice of domain.User to slice of domain.UserResponse
+func DomainUsersToUsersResponse(users []domain.User) []domain.UserResponse {
+	responses := make([]domain.UserResponse, len(users))
+	for i, user := range users {
+		responses[i] = DomainUserToUserResponse(&user)
+	}
+	return responses
+}
+
 func ToModelUserUpdateMap(payload *domain.UpdateUserPayload) map[string]any {
 	updates := make(map[string]any)
 

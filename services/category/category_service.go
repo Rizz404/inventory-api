@@ -5,6 +5,7 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
+	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 )
 
 // * Repository interface defines the contract for category data operations
@@ -96,13 +97,8 @@ func (s *Service) CreateCategory(ctx context.Context, payload *domain.CreateCate
 		return domain.CategoryResponse{}, err
 	}
 
-	// * Return the first translation as default language or empty if no translations
-	langCode := "id-ID" // Default language
-	if len(createdCategory.Translations) > 0 {
-		langCode = createdCategory.Translations[0].LangCode
-	}
-
-	return s.GetCategoryById(ctx, createdCategory.ID, langCode)
+	// * Convert to CategoryResponse using direct mapper
+	return mapper.DomainCategoryToCategoryResponse(&createdCategory, "id-ID"), nil
 }
 
 func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.CategoryResponse, error) {
@@ -135,13 +131,8 @@ func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload
 		return domain.CategoryResponse{}, err
 	}
 
-	// * Return the first translation as default language or empty if no translations
-	langCode := "id-ID" // Default language
-	if len(updatedCategory.Translations) > 0 {
-		langCode = updatedCategory.Translations[0].LangCode
-	}
-
-	return s.GetCategoryById(ctx, updatedCategory.ID, langCode)
+	// * Convert to CategoryResponse using direct mapper
+	return mapper.DomainCategoryToCategoryResponse(&updatedCategory, "id-ID"), nil
 }
 
 func (s *Service) DeleteCategory(ctx context.Context, categoryId string) error {
@@ -183,29 +174,8 @@ func (s *Service) GetCategoryById(ctx context.Context, categoryId string, langCo
 		return domain.CategoryResponse{}, err
 	}
 
-	// * Convert to CategoryResponse with specific language
-	response := domain.CategoryResponse{
-		ID:           category.ID,
-		ParentID:     category.ParentID,
-		CategoryCode: category.CategoryCode,
-	}
-
-	// * Find translation for the requested language
-	for _, translation := range category.Translations {
-		if translation.LangCode == langCode {
-			response.Name = translation.CategoryName
-			response.Description = translation.Description
-			break
-		}
-	}
-
-	// * If no translation found for requested language, use first available
-	if response.Name == "" && len(category.Translations) > 0 {
-		response.Name = category.Translations[0].CategoryName
-		response.Description = category.Translations[0].Description
-	}
-
-	return response, nil
+	// * Convert to CategoryResponse using direct mapper
+	return mapper.DomainCategoryToCategoryResponse(&category, langCode), nil
 }
 
 func (s *Service) GetCategoryByCode(ctx context.Context, categoryCode string, langCode string) (domain.CategoryResponse, error) {
@@ -214,29 +184,8 @@ func (s *Service) GetCategoryByCode(ctx context.Context, categoryCode string, la
 		return domain.CategoryResponse{}, err
 	}
 
-	// * Convert to CategoryResponse with specific language
-	response := domain.CategoryResponse{
-		ID:           category.ID,
-		ParentID:     category.ParentID,
-		CategoryCode: category.CategoryCode,
-	}
-
-	// * Find translation for the requested language
-	for _, translation := range category.Translations {
-		if translation.LangCode == langCode {
-			response.Name = translation.CategoryName
-			response.Description = translation.Description
-			break
-		}
-	}
-
-	// * If no translation found for requested language, use first available
-	if response.Name == "" && len(category.Translations) > 0 {
-		response.Name = category.Translations[0].CategoryName
-		response.Description = category.Translations[0].Description
-	}
-
-	return response, nil
+	// * Convert to CategoryResponse using direct mapper
+	return mapper.DomainCategoryToCategoryResponse(&category, langCode), nil
 }
 
 func (s *Service) GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error) {

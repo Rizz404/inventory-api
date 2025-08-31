@@ -146,6 +146,43 @@ func ToDomainCategoriesResponse(m []model.Category, langCode string) []domain.Ca
 	return responses
 }
 
+// * Convert domain.Category directly to domain.CategoryResponse without going through model.Category
+func DomainCategoryToCategoryResponse(d *domain.Category, langCode string) domain.CategoryResponse {
+	response := domain.CategoryResponse{
+		ID:           d.ID,
+		ParentID:     d.ParentID,
+		CategoryCode: d.CategoryCode,
+		CreatedAt:    d.CreatedAt.Format(TimeFormat),
+		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
+	}
+
+	// * Find translation for the requested language
+	for _, translation := range d.Translations {
+		if translation.LangCode == langCode {
+			response.Name = translation.CategoryName
+			response.Description = translation.Description
+			break
+		}
+	}
+
+	// * If no translation found for requested language, use first available
+	if response.Name == "" && len(d.Translations) > 0 {
+		response.Name = d.Translations[0].CategoryName
+		response.Description = d.Translations[0].Description
+	}
+
+	return response
+}
+
+// * Convert slice of domain.Category to slice of domain.CategoryResponse
+func DomainCategoriesToCategoriesResponse(categories []domain.Category, langCode string) []domain.CategoryResponse {
+	responses := make([]domain.CategoryResponse, len(categories))
+	for i, category := range categories {
+		responses[i] = DomainCategoryToCategoryResponse(&category, langCode)
+	}
+	return responses
+}
+
 func BuildCategoryHierarchy(categories []domain.CategoryResponse) []domain.CategoryResponse {
 	categoryMap := make(map[string]*domain.CategoryResponse)
 	var rootCategories []domain.CategoryResponse
