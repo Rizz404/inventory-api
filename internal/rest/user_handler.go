@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"context"
 	"strconv"
 
 	"github.com/Rizz404/inventory-api/domain"
@@ -9,29 +8,15 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/rest/middleware"
 	"github.com/Rizz404/inventory-api/internal/web"
+	"github.com/Rizz404/inventory-api/services/user"
 	"github.com/gofiber/fiber/v2"
 )
 
-type UserService interface {
-	// * MUTATION
-	CreateUser(ctx context.Context, payload *domain.CreateUserPayload) (domain.User, error)
-	UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.User, error)
-	DeleteUser(ctx context.Context, userId string) error
-
-	// * QUERY
-	GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.User, int64, error)
-	GetUsersCursor(ctx context.Context, params query.Params) ([]domain.User, error)
-	GetUserById(ctx context.Context, userId string) (domain.User, error)
-	GetUserByNameOrEmail(ctx context.Context, name string, email string) (domain.User, error)
-	CheckUserExist(ctx context.Context, userId string) (bool, error)
-	CountUsers(ctx context.Context, params query.Params) (int64, error)
-}
-
 type UserHandler struct {
-	Service UserService
+	Service user.UserService
 }
 
-func NewUserHandler(app fiber.Router, s UserService) {
+func NewUserHandler(app fiber.Router, s user.UserService) {
 	handler := &UserHandler{
 		Service: s,
 	}
@@ -52,7 +37,11 @@ func NewUserHandler(app fiber.Router, s UserService) {
 	users.Get("/count", handler.CountUsers)
 	users.Get("/profile", middleware.AuthMiddleware(), handler.GetCurrentUser)
 	users.Patch("/profile", middleware.AuthMiddleware(), handler.UpdateCurrentUser)
-	users.Get("/check/:id", handler.CheckUserExist)
+	users.Get("/name/:name", handler.GetUserByName)
+	users.Get("/email/:email", handler.GetUserByEmail)
+	users.Get("/check/name/:name", handler.CheckNameExists)
+	users.Get("/check/email/:email", handler.CheckEmailExists)
+	users.Get("/check/:id", handler.CheckUserExists)
 	users.Get("/:id", handler.GetUserById)
 	users.Patch("/:id", handler.UpdateUser)
 	users.Delete("/:id", handler.DeleteUser)
@@ -61,11 +50,13 @@ func NewUserHandler(app fiber.Router, s UserService) {
 func (h *UserHandler) parseUserFiltersAndSort(c *fiber.Ctx) (query.Params, error) {
 	params := query.Params{}
 
+	// * Parse search query
 	search := c.Query("search")
 	if search != "" {
 		params.SearchQuery = &search
 	}
 
+	// * Parse sorting options
 	sortBy := c.Query("sort_by")
 	if sortBy != "" {
 		params.Sort = &query.SortOptions{
@@ -74,19 +65,27 @@ func (h *UserHandler) parseUserFiltersAndSort(c *fiber.Ctx) (query.Params, error
 		}
 	}
 
+	// * Parse filtering options
 	roleStr := c.Query("role")
 	var role *domain.UserRole
 	if roleStr != "" {
 		r := domain.UserRole(roleStr)
 		role = &r
 	}
+
 	filters := &postgresql.UserFilterOptions{Role: role}
+
 	if isActiveStr := c.Query("is_active"); isActiveStr != "" {
 		isActive, err := strconv.ParseBool(isActiveStr)
 		if err == nil {
 			filters.IsActive = &isActive
 		}
 	}
+
+	if employeeID := c.Query("employee_id"); employeeID != "" {
+		filters.EmployeeID = &employeeID
+	}
+
 	params.Filters = filters
 
 	return params, nil
@@ -215,6 +214,34 @@ func (h *UserHandler) GetUserById(c *fiber.Ctx) error {
 	return web.Success(c, fiber.StatusOK, "User retrieved successfully", user)
 }
 
+func (h *UserHandler) GetUserByName(c *fiber.Ctx) error {
+	name := c.Params("name")
+	if name == "" {
+		return web.HandleError(c, domain.ErrBadRequest("Name is required"))
+	}
+
+	user, err := h.Service.GetUserByName(c.Context(), name)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, "User retrieved successfully by name", user)
+}
+
+func (h *UserHandler) GetUserByEmail(c *fiber.Ctx) error {
+	email := c.Params("email")
+	if email == "" {
+		return web.HandleError(c, domain.ErrBadRequest("Email is required"))
+	}
+
+	user, err := h.Service.GetUserByEmail(c.Context(), email)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, "User retrieved successfully by email", user)
+}
+
 func (h *UserHandler) GetCurrentUser(c *fiber.Ctx) error {
 	id, ok := web.GetUserIDFromContext(c)
 	if !ok {
@@ -229,18 +256,46 @@ func (h *UserHandler) GetCurrentUser(c *fiber.Ctx) error {
 	return web.Success(c, fiber.StatusOK, "User retrieved successfully", user)
 }
 
-func (h *UserHandler) CheckUserExist(c *fiber.Ctx) error {
+func (h *UserHandler) CheckUserExists(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return web.HandleError(c, domain.ErrBadRequest("User ID is required"))
 	}
 
-	user, err := h.Service.CheckUserExist(c.Context(), id)
+	exists, err := h.Service.CheckUserExists(c.Context(), id)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "User retrieved successfully", user)
+	return web.Success(c, fiber.StatusOK, "User existence checked successfully", map[string]bool{"exists": exists})
+}
+
+func (h *UserHandler) CheckNameExists(c *fiber.Ctx) error {
+	name := c.Params("name")
+	if name == "" {
+		return web.HandleError(c, domain.ErrBadRequest("Name is required"))
+	}
+
+	exists, err := h.Service.CheckNameExists(c.Context(), name)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, "Name existence checked successfully", map[string]bool{"exists": exists})
+}
+
+func (h *UserHandler) CheckEmailExists(c *fiber.Ctx) error {
+	email := c.Params("email")
+	if email == "" {
+		return web.HandleError(c, domain.ErrBadRequest("Email is required"))
+	}
+
+	exists, err := h.Service.CheckEmailExists(c.Context(), email)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, "Email existence checked successfully", map[string]bool{"exists": exists})
 }
 
 func (h *UserHandler) CountUsers(c *fiber.Ctx) error {

@@ -14,22 +14,23 @@ import (
 	"gorm.io/gorm"
 )
 
-type gormUserRepository struct {
+type UserRepository struct {
 	db *gorm.DB
 }
 
 type UserFilterOptions struct {
-	Role     *domain.UserRole `json:"role,omitempty"`
-	IsActive *bool            `json:"is_active,omitempty"`
+	Role       *domain.UserRole `json:"role,omitempty"`
+	IsActive   *bool            `json:"is_active,omitempty"`
+	EmployeeID *string          `json:"employee_id,omitempty"`
 }
 
-func NewUserRepository(db *gorm.DB) *gormUserRepository {
-	return &gormUserRepository{
+func NewUserRepository(db *gorm.DB) *UserRepository {
+	return &UserRepository{
 		db: db,
 	}
 }
 
-func (r *gormUserRepository) applyUserFilters(db *gorm.DB, filters any) *gorm.DB {
+func (r *UserRepository) applyUserFilters(db *gorm.DB, filters any) *gorm.DB {
 	f, ok := filters.(*UserFilterOptions)
 	if !ok || f == nil {
 		return db
@@ -41,16 +42,19 @@ func (r *gormUserRepository) applyUserFilters(db *gorm.DB, filters any) *gorm.DB
 	if f.IsActive != nil {
 		db = db.Where("users.is_active = ?", *f.IsActive)
 	}
+	if f.EmployeeID != nil {
+		db = db.Where("users.employee_id = ?", *f.EmployeeID)
+	}
 	return db
 }
 
-func (r *gormUserRepository) applyUserSorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
+func (r *UserRepository) applyUserSorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("users.created_at DESC")
 	}
 	var orderClause string
 	switch strings.ToLower(sort.Field) {
-	case "name", "full_name", "created_at", "updated_at", "role":
+	case "name", "full_name", "email", "role", "employee_id", "is_active", "created_at", "updated_at":
 		orderClause = "users." + sort.Field
 	default:
 		return db.Order("users.created_at DESC")
@@ -64,7 +68,7 @@ func (r *gormUserRepository) applyUserSorts(db *gorm.DB, sort *query.SortOptions
 }
 
 // *===========================MUTATION===========================*
-func (r *gormUserRepository) CreateUser(ctx context.Context, payload *domain.User) (domain.User, error) {
+func (r *UserRepository) CreateUser(ctx context.Context, payload *domain.User) (domain.User, error) {
 	modelUser := mapper.ToModelUser(payload)
 
 	// Create user in database
@@ -76,7 +80,7 @@ func (r *gormUserRepository) CreateUser(ctx context.Context, payload *domain.Use
 	return mapper.ToDomainUser(&modelUser), nil
 }
 
-func (r *gormUserRepository) UpdateUser(ctx context.Context, payload *domain.User) (domain.User, error) {
+func (r *UserRepository) UpdateUser(ctx context.Context, payload *domain.User) (domain.User, error) {
 	var updatedUser model.User
 	userID := payload.ID
 
@@ -89,6 +93,7 @@ func (r *gormUserRepository) UpdateUser(ctx context.Context, payload *domain.Use
 		EmployeeID:    payload.EmployeeID,
 		PreferredLang: payload.PreferredLang,
 		IsActive:      payload.IsActive,
+		AvatarURL:     payload.AvatarURL,
 	}
 
 	err := r.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", userID).Updates(userUpdates).Error
@@ -108,7 +113,7 @@ func (r *gormUserRepository) UpdateUser(ctx context.Context, payload *domain.Use
 	return mapper.ToDomainUser(&updatedUser), nil
 }
 
-func (r *gormUserRepository) UpdateUserWithPayload(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.User, error) {
+func (r *UserRepository) UpdateUserWithPayload(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.User, error) {
 	var updatedUser model.User
 
 	// Build update map from payload
@@ -141,7 +146,7 @@ func (r *gormUserRepository) UpdateUserWithPayload(ctx context.Context, userId s
 	return mapper.ToDomainUser(&updatedUser), nil
 }
 
-func (r *gormUserRepository) DeleteUser(ctx context.Context, userId string) error {
+func (r *UserRepository) DeleteUser(ctx context.Context, userId string) error {
 	err := r.db.WithContext(ctx).Delete(&model.User{}, "id = ?", userId).Error
 	if err != nil {
 		return domain.ErrInternal(err)
@@ -150,7 +155,7 @@ func (r *gormUserRepository) DeleteUser(ctx context.Context, userId string) erro
 }
 
 // *===========================QUERY===========================*
-func (r *gormUserRepository) GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.User, error) {
+func (r *UserRepository) GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.User, error) {
 	var users []model.User
 	db := r.db.WithContext(ctx)
 
@@ -175,7 +180,7 @@ func (r *gormUserRepository) GetUsersPaginated(ctx context.Context, params query
 	return domainUsers, nil
 }
 
-func (r *gormUserRepository) GetUsersCursor(ctx context.Context, params query.Params) ([]domain.User, error) {
+func (r *UserRepository) GetUsersCursor(ctx context.Context, params query.Params) ([]domain.User, error) {
 	var users []model.User
 	db := r.db.WithContext(ctx)
 
@@ -200,7 +205,7 @@ func (r *gormUserRepository) GetUsersCursor(ctx context.Context, params query.Pa
 	return domainUsers, nil
 }
 
-func (r *gormUserRepository) GetUserById(ctx context.Context, userId string) (domain.User, error) {
+func (r *UserRepository) GetUserById(ctx context.Context, userId string) (domain.User, error) {
 	var user model.User
 
 	err := r.db.WithContext(ctx).First(&user, "id = ?", userId).Error
@@ -214,26 +219,13 @@ func (r *gormUserRepository) GetUserById(ctx context.Context, userId string) (do
 	return mapper.ToDomainUser(&user), nil
 }
 
-func (r *gormUserRepository) GetUserByNameOrEmail(ctx context.Context, name string, email string) (domain.User, error) {
+func (r *UserRepository) GetUserByName(ctx context.Context, name string) (domain.User, error) {
 	var user model.User
-	var err error
 
-	if name != "" && email != "" {
-		// Search by both name OR email
-		err = r.db.WithContext(ctx).Where("name = ? OR email = ?", name, email).First(&user).Error
-	} else if name != "" {
-		// Search by name only
-		err = r.db.WithContext(ctx).Where("name = ?", name).First(&user).Error
-	} else if email != "" {
-		// Search by email only
-		err = r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
-	} else {
-		return domain.User{}, domain.ErrNotFound("user")
-	}
-
+	err := r.db.WithContext(ctx).Where("name = ?", name).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.User{}, domain.ErrNotFound("user")
+			return domain.User{}, domain.ErrNotFound("user with name '" + name + "'")
 		}
 		return domain.User{}, domain.ErrInternal(err)
 	}
@@ -241,7 +233,21 @@ func (r *gormUserRepository) GetUserByNameOrEmail(ctx context.Context, name stri
 	return mapper.ToDomainUser(&user), nil
 }
 
-func (r *gormUserRepository) CheckUserExist(ctx context.Context, userId string) (bool, error) {
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (domain.User, error) {
+	var user model.User
+
+	err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.User{}, domain.ErrNotFound("user with email '" + email + "'")
+		}
+		return domain.User{}, domain.ErrInternal(err)
+	}
+
+	return mapper.ToDomainUser(&user), nil
+}
+
+func (r *UserRepository) CheckUserExists(ctx context.Context, userId string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", userId).Count(&count).Error
 	if err != nil {
@@ -250,7 +256,7 @@ func (r *gormUserRepository) CheckUserExist(ctx context.Context, userId string) 
 	return count > 0, nil
 }
 
-func (r *gormUserRepository) CheckNameExist(ctx context.Context, name string) (bool, error) {
+func (r *UserRepository) CheckNameExists(ctx context.Context, name string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&model.User{}).Where("name = ?", name).Count(&count).Error
 	if err != nil {
@@ -259,7 +265,7 @@ func (r *gormUserRepository) CheckNameExist(ctx context.Context, name string) (b
 	return count > 0, nil
 }
 
-func (r *gormUserRepository) CheckEmailExist(ctx context.Context, email string) (bool, error) {
+func (r *UserRepository) CheckEmailExists(ctx context.Context, email string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&model.User{}).Where("email = ?", email).Count(&count).Error
 	if err != nil {
@@ -268,7 +274,7 @@ func (r *gormUserRepository) CheckEmailExist(ctx context.Context, email string) 
 	return count > 0, nil
 }
 
-func (r *gormUserRepository) CountUsers(ctx context.Context, params query.Params) (int64, error) {
+func (r *UserRepository) CountUsers(ctx context.Context, params query.Params) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Model(&model.User{})
 

@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"errors"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/utils"
@@ -14,10 +13,10 @@ type Repository interface {
 	UpdateUser(ctx context.Context, payload *domain.User) (domain.User, error)
 
 	// * QUERY
-	GetUserByNameOrEmail(ctx context.Context, name string, email string) (domain.User, error)
-	CheckUserExist(ctx context.Context, userId string) (bool, error)
-	CheckNameExist(ctx context.Context, name string) (bool, error)
-	CheckEmailExist(ctx context.Context, email string) (bool, error)
+	GetUserByEmail(ctx context.Context, email string) (domain.User, error)
+	CheckUserExists(ctx context.Context, userId string) (bool, error)
+	CheckNameExists(ctx context.Context, name string) (bool, error)
+	CheckEmailExists(ctx context.Context, email string) (bool, error)
 }
 
 type Service struct {
@@ -37,17 +36,17 @@ func (s *Service) Register(ctx context.Context, payload *domain.RegisterPayload)
 		return domain.User{}, domain.ErrInternal(err)
 	}
 
-	// * Cek apakah name atau email sudah ada
-	_, err = s.Repo.GetUserByNameOrEmail(ctx, payload.Name, payload.Email)
-	if err == nil {
-		// * Jika tidak ada error, berarti user DITEMUKAN. Ini konflik.
-		return domain.User{}, domain.ErrConflict("user with this name or email already exists")
+	// * Check if name or email already exists
+	if nameExists, err := s.Repo.CheckNameExists(ctx, payload.Name); err != nil {
+		return domain.User{}, err
+	} else if nameExists {
+		return domain.User{}, domain.ErrConflict("user with name '" + payload.Name + "' already exists")
 	}
 
-	var appErr *domain.AppError
-	if errors.As(err, &appErr) && appErr.Code != 404 {
-		// * Jika errornya bukan 404 (NotFound), maka ini adalah error internal.
+	if emailExists, err := s.Repo.CheckEmailExists(ctx, payload.Email); err != nil {
 		return domain.User{}, err
+	} else if emailExists {
+		return domain.User{}, domain.ErrConflict("user with email '" + payload.Email + "' already exists")
 	}
 
 	// * Siapkan user baru
@@ -68,7 +67,7 @@ func (s *Service) Register(ctx context.Context, payload *domain.RegisterPayload)
 
 func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (domain.LoginResponse, error) {
 	// Search by email
-	user, err := s.Repo.GetUserByNameOrEmail(ctx, "", payload.Email)
+	user, err := s.Repo.GetUserByEmail(ctx, payload.Email)
 	if err != nil {
 		return domain.LoginResponse{}, domain.ErrUnauthorized("invalid email or password")
 	}

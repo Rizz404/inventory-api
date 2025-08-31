@@ -2,14 +2,14 @@ package user
 
 import (
 	"context"
-	"errors"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
+	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
 
-// * Sekarang service hanya mem-proxy error, karena sudah diterjemahkan oleh repo
+// * Repository interface defines the contract for user data operations
 type Repository interface {
 	// * MUTATION
 	CreateUser(ctx context.Context, payload *domain.User) (domain.User, error)
@@ -21,8 +21,30 @@ type Repository interface {
 	GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.User, error)
 	GetUsersCursor(ctx context.Context, params query.Params) ([]domain.User, error)
 	GetUserById(ctx context.Context, userId string) (domain.User, error)
-	GetUserByNameOrEmail(ctx context.Context, name string, email string) (domain.User, error)
-	CheckUserExist(ctx context.Context, userId string) (bool, error)
+	GetUserByName(ctx context.Context, name string) (domain.User, error)
+	GetUserByEmail(ctx context.Context, email string) (domain.User, error)
+	CheckUserExists(ctx context.Context, userId string) (bool, error)
+	CheckNameExists(ctx context.Context, name string) (bool, error)
+	CheckEmailExists(ctx context.Context, email string) (bool, error)
+	CountUsers(ctx context.Context, params query.Params) (int64, error)
+}
+
+// * UserService interface defines the contract for user business operations
+type UserService interface {
+	// * MUTATION
+	CreateUser(ctx context.Context, payload *domain.CreateUserPayload) (domain.UserResponse, error)
+	UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.UserResponse, error)
+	DeleteUser(ctx context.Context, userId string) error
+
+	// * QUERY
+	GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.UserResponse, int64, error)
+	GetUsersCursor(ctx context.Context, params query.Params) ([]domain.UserResponse, error)
+	GetUserById(ctx context.Context, userId string) (domain.UserResponse, error)
+	GetUserByName(ctx context.Context, name string) (domain.UserResponse, error)
+	GetUserByEmail(ctx context.Context, email string) (domain.UserResponse, error)
+	CheckUserExists(ctx context.Context, userId string) (bool, error)
+	CheckNameExists(ctx context.Context, name string) (bool, error)
+	CheckEmailExists(ctx context.Context, email string) (bool, error)
 	CountUsers(ctx context.Context, params query.Params) (int64, error)
 }
 
@@ -30,30 +52,33 @@ type Service struct {
 	Repo Repository
 }
 
-func NewService(r Repository) *Service {
+// * Ensure Service implements UserService interface
+var _ UserService = (*Service)(nil)
+
+func NewService(r Repository) UserService {
 	return &Service{
 		Repo: r,
 	}
 }
 
 // *===========================MUTATION===========================*
-func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayload) (domain.User, error) {
+func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayload) (domain.UserResponse, error) {
 	hashedPassword, err := utils.HashPassword(payload.Password)
 	if err != nil {
-		return domain.User{}, domain.ErrInternal(err)
+		return domain.UserResponse{}, domain.ErrInternal(err)
 	}
 
-	// * Cek apakah name atau email sudah ada
-	_, err = s.Repo.GetUserByNameOrEmail(ctx, payload.Name, payload.Email)
-	if err == nil {
-		// * Jika tidak ada error, berarti user DITEMUKAN. Ini konflik.
-		return domain.User{}, domain.ErrConflict("user with this name or email already exists")
+	// * Check if name or email already exists
+	if nameExists, err := s.Repo.CheckNameExists(ctx, payload.Name); err != nil {
+		return domain.UserResponse{}, err
+	} else if nameExists {
+		return domain.UserResponse{}, domain.ErrConflict("user with name '" + payload.Name + "' already exists")
 	}
 
-	var appErr *domain.AppError
-	if errors.As(err, &appErr) && appErr.Code != 404 {
-		// * Jika errornya bukan 404 (NotFound), maka ini adalah error internal.
-		return domain.User{}, err
+	if emailExists, err := s.Repo.CheckEmailExists(ctx, payload.Email); err != nil {
+		return domain.UserResponse{}, err
+	} else if emailExists {
+		return domain.UserResponse{}, domain.ErrConflict("user with email '" + payload.Email + "' already exists")
 	}
 
 	// Set default language if not provided
@@ -72,56 +97,53 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 		EmployeeID:    payload.EmployeeID,
 		PreferredLang: preferredLang,
 		IsActive:      true, // Default active
+		AvatarURL:     payload.AvatarURL,
 	}
 
 	createdUser, err := s.Repo.CreateUser(ctx, &newUser)
 	if err != nil {
 		// * Repository sudah menerjemahkan error (misal: conflict), jadi langsung kembalikan
-		return domain.User{}, err
+		return domain.UserResponse{}, err
 	}
 
-	// Clear password hash from response
-	createdUser.PasswordHash = ""
-	return createdUser, nil
+	// * Convert to UserResponse using mapper
+	userModel := mapper.ToModelUser(&createdUser)
+	return mapper.ToDomainUserResponse(&userModel), nil
 }
 
-func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.User, error) {
+func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.UserResponse, error) {
 	// Check if user exists
 	_, err := s.Repo.GetUserById(ctx, userId)
 	if err != nil {
-		return domain.User{}, err
+		return domain.UserResponse{}, err
 	}
 
-	// Check name/email uniqueness if being updated
-	if payload.Name != nil || payload.Email != nil {
-		checkName := ""
-		checkEmail := ""
-		if payload.Name != nil {
-			checkName = *payload.Name
+	// * Check name/email uniqueness if being updated
+	if payload.Name != nil {
+		if nameExists, err := s.Repo.CheckNameExists(ctx, *payload.Name); err != nil {
+			return domain.UserResponse{}, err
+		} else if nameExists {
+			return domain.UserResponse{}, domain.ErrConflict("name '" + *payload.Name + "' is already taken")
 		}
-		if payload.Email != nil {
-			checkEmail = *payload.Email
-		}
+	}
 
-		_, err := s.Repo.GetUserByNameOrEmail(ctx, checkName, checkEmail)
-		if err == nil {
-			return domain.User{}, domain.ErrConflict("name or email already taken")
-		}
-		var appErr *domain.AppError
-		if errors.As(err, &appErr) && appErr.Code != 404 {
-			return domain.User{}, err
+	if payload.Email != nil {
+		if emailExists, err := s.Repo.CheckEmailExists(ctx, *payload.Email); err != nil {
+			return domain.UserResponse{}, err
+		} else if emailExists {
+			return domain.UserResponse{}, domain.ErrConflict("email '" + *payload.Email + "' is already taken")
 		}
 	}
 
 	// Use the new UpdateUserWithPayload method
 	updatedUser, err := s.Repo.UpdateUserWithPayload(ctx, userId, payload)
 	if err != nil {
-		return domain.User{}, err
+		return domain.UserResponse{}, err
 	}
 
-	// Clear password hash from response
-	updatedUser.PasswordHash = ""
-	return updatedUser, nil
+	// * Convert to UserResponse using mapper
+	userModel := mapper.ToModelUser(&updatedUser)
+	return mapper.ToDomainUserResponse(&userModel), nil
 }
 
 func (s *Service) DeleteUser(ctx context.Context, userId string) error {
@@ -133,7 +155,7 @@ func (s *Service) DeleteUser(ctx context.Context, userId string) error {
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.User, int64, error) {
+func (s *Service) GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.UserResponse, int64, error) {
 	users, err := s.Repo.GetUsersPaginated(ctx, params)
 	if err != nil {
 		return nil, 0, err
@@ -145,56 +167,87 @@ func (s *Service) GetUsersPaginated(ctx context.Context, params query.Params) ([
 		return nil, 0, err
 	}
 
-	// Clear password hash from all users
-	for i := range users {
-		users[i].PasswordHash = ""
+	// * Convert to UserResponse using mapper
+	userResponses := make([]domain.UserResponse, len(users))
+	for i, user := range users {
+		userModel := mapper.ToModelUser(&user)
+		userResponses[i] = mapper.ToDomainUserResponse(&userModel)
 	}
 
-	return users, count, nil
+	return userResponses, count, nil
 }
 
-func (s *Service) GetUsersCursor(ctx context.Context, params query.Params) ([]domain.User, error) {
+func (s *Service) GetUsersCursor(ctx context.Context, params query.Params) ([]domain.UserResponse, error) {
 	users, err := s.Repo.GetUsersCursor(ctx, params)
 	if err != nil {
 		return nil, err
 	}
 
-	// Clear password hash from all users
-	for i := range users {
-		users[i].PasswordHash = ""
+	// * Convert to UserResponse using mapper
+	userResponses := make([]domain.UserResponse, len(users))
+	for i, user := range users {
+		userModel := mapper.ToModelUser(&user)
+		userResponses[i] = mapper.ToDomainUserResponse(&userModel)
 	}
 
-	return users, nil
+	return userResponses, nil
 }
 
-func (s *Service) GetUserById(ctx context.Context, userId string) (domain.User, error) {
+func (s *Service) GetUserById(ctx context.Context, userId string) (domain.UserResponse, error) {
 	user, err := s.Repo.GetUserById(ctx, userId)
 	if err != nil {
-		return domain.User{}, err
+		return domain.UserResponse{}, err
 	}
 
-	// Clear password hash from response
-	user.PasswordHash = ""
-	return user, nil
+	// * Convert to UserResponse using mapper
+	userModel := mapper.ToModelUser(&user)
+	return mapper.ToDomainUserResponse(&userModel), nil
 }
 
-func (s *Service) GetUserByNameOrEmail(ctx context.Context, name string, email string) (domain.User, error) {
-	user, err := s.Repo.GetUserByNameOrEmail(ctx, name, email)
+func (s *Service) GetUserByName(ctx context.Context, name string) (domain.UserResponse, error) {
+	user, err := s.Repo.GetUserByName(ctx, name)
 	if err != nil {
-		return domain.User{}, err
+		return domain.UserResponse{}, err
 	}
 
-	// Clear password hash from response
-	user.PasswordHash = ""
-	return user, nil
+	// * Convert to UserResponse using mapper
+	userModel := mapper.ToModelUser(&user)
+	return mapper.ToDomainUserResponse(&userModel), nil
 }
 
-func (s *Service) CheckUserExist(ctx context.Context, userId string) (bool, error) {
-	exist, err := s.Repo.CheckUserExist(ctx, userId)
+func (s *Service) GetUserByEmail(ctx context.Context, email string) (domain.UserResponse, error) {
+	user, err := s.Repo.GetUserByEmail(ctx, email)
+	if err != nil {
+		return domain.UserResponse{}, err
+	}
+
+	// * Convert to UserResponse using mapper
+	userModel := mapper.ToModelUser(&user)
+	return mapper.ToDomainUserResponse(&userModel), nil
+}
+
+func (s *Service) CheckUserExists(ctx context.Context, userId string) (bool, error) {
+	exists, err := s.Repo.CheckUserExists(ctx, userId)
 	if err != nil {
 		return false, err
 	}
-	return exist, nil
+	return exists, nil
+}
+
+func (s *Service) CheckNameExists(ctx context.Context, name string) (bool, error) {
+	exists, err := s.Repo.CheckNameExists(ctx, name)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (s *Service) CheckEmailExists(ctx context.Context, email string) (bool, error) {
+	exists, err := s.Repo.CheckEmailExists(ctx, email)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
 
 func (s *Service) CountUsers(ctx context.Context, params query.Params) (int64, error) {
