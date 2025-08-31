@@ -1,6 +1,12 @@
 package model
 
-import "time"
+import (
+	"log"
+	"time"
+
+	"github.com/oklog/ulid/v2"
+	"gorm.io/gorm"
+)
 
 type Category struct {
 	ID           SQLULID  `gorm:"primaryKey;type:varchar(26)"`
@@ -17,6 +23,17 @@ func (Category) TableName() string {
 	return "categories"
 }
 
+func (u *Category) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 Category.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for Category: %s", u.ID.String())
+	}
+
+	return nil
+}
+
 type CategoryTranslation struct {
 	ID           SQLULID `gorm:"primaryKey;type:varchar(26)"`
 	CategoryID   SQLULID `gorm:"type:varchar(26);not null;uniqueIndex:idx_cat_lang"`
@@ -27,4 +44,15 @@ type CategoryTranslation struct {
 
 func (CategoryTranslation) TableName() string {
 	return "categories_translation"
+}
+
+func (u *CategoryTranslation) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 CategoryTranslation.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for CategoryTranslation: %s", u.ID.String())
+	}
+
+	return nil
 }

@@ -28,7 +28,7 @@ func NewUserHandler(app fiber.Router, s user.UserService) {
 	// * Create
 	users.Post("/",
 		middleware.AuthMiddleware(),
-		middleware.AuthorizeRole(domain.RoleAdmin),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
 		handler.CreateUser,
 	)
 

@@ -31,16 +31,17 @@ type User struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
+// ! jangan omitempty biar client nya tau
 type UserResponse struct {
 	ID            string   `json:"id"`
 	Name          string   `json:"name"`
 	Email         string   `json:"email"`
 	FullName      string   `json:"fullName"`
 	Role          UserRole `json:"role"`
-	EmployeeID    *string  `json:"employeeId,omitempty"` // ! gak usah diapa-apain dulu, soalnya belum ada
+	EmployeeID    *string  `json:"employeeId"` // ! gak usah diapa-apain dulu, soalnya belum ada
 	PreferredLang string   `json:"preferredLang"`
 	IsActive      bool     `json:"isActive"`
-	AvatarURL     *string  `json:"avatarUrl,omitempty"`
+	AvatarURL     *string  `json:"avatarUrl"`
 	CreatedAt     string   `json:"createdAt"`
 	UpdatedAt     string   `json:"updatedAt"`
 }

@@ -7,22 +7,266 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 )
 
+// * Repository interface defines the contract for category data operations
 type Repository interface {
 	// * MUTATION
 	CreateCategory(ctx context.Context, payload *domain.Category) (domain.Category, error)
-	UpdateCategory(ctx context.Context, payload *domain.Category) (domain.Category, error)
-	UpdateCategoryWithPayload(ctx context.Context, userId string, payload *domain.UpdateCategoryPayload) (domain.Category, error)
-	DeleteCategory(ctx context.Context, userId string) error
+	UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.Category, error)
+	DeleteCategory(ctx context.Context, categoryId string) error
 
 	// * QUERY
 	GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error)
 	GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error)
-	GetCategoryById(ctx context.Context, userId string) (domain.Category, error)
-	GetCategoryByCategorynameOrEmail(ctx context.Context, name string, email string) (domain.Category, error)
-	CheckCategoryExist(ctx context.Context, userId string) (bool, error)
+	GetCategoriesResponse(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryResponse, error)
+	GetCategoryById(ctx context.Context, categoryId string) (domain.Category, error)
+	GetCategoryByCode(ctx context.Context, categoryCode string) (domain.Category, error)
+	GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error)
+	CheckCategoryExist(ctx context.Context, categoryId string) (bool, error)
+	CheckCategoryCodeExist(ctx context.Context, categoryCode string) (bool, error)
+	CountCategories(ctx context.Context, params query.Params) (int64, error)
+}
+
+// * CategoryService interface defines the contract for category business operations
+type CategoryService interface {
+	// * MUTATION
+	CreateCategory(ctx context.Context, payload *domain.CreateCategoryPayload) (domain.CategoryResponse, error)
+	UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.CategoryResponse, error)
+	DeleteCategory(ctx context.Context, categoryId string) error
+
+	// * QUERY
+	GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryResponse, int64, error)
+	GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryResponse, error)
+	GetCategoryById(ctx context.Context, categoryId string, langCode string) (domain.CategoryResponse, error)
+	GetCategoryByCode(ctx context.Context, categoryCode string, langCode string) (domain.CategoryResponse, error)
+	GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error)
+	CheckCategoryExists(ctx context.Context, categoryId string) (bool, error)
+	CheckCategoryCodeExists(ctx context.Context, categoryCode string) (bool, error)
 	CountCategories(ctx context.Context, params query.Params) (int64, error)
 }
 
 type Service struct {
 	Repo Repository
+}
+
+// * Ensure Service implements CategoryService interface
+var _ CategoryService = (*Service)(nil)
+
+func NewService(r Repository) CategoryService {
+	return &Service{
+		Repo: r,
+	}
+}
+
+// *===========================MUTATION===========================*
+func (s *Service) CreateCategory(ctx context.Context, payload *domain.CreateCategoryPayload) (domain.CategoryResponse, error) {
+	// * Check if category code already exists
+	if codeExists, err := s.Repo.CheckCategoryCodeExist(ctx, payload.CategoryCode); err != nil {
+		return domain.CategoryResponse{}, err
+	} else if codeExists {
+		return domain.CategoryResponse{}, domain.ErrConflict("category with code '" + payload.CategoryCode + "' already exists")
+	}
+
+	// * Check if parent category exists if parentId is provided
+	if payload.ParentID != nil && *payload.ParentID != "" {
+		if parentExists, err := s.Repo.CheckCategoryExist(ctx, *payload.ParentID); err != nil {
+			return domain.CategoryResponse{}, err
+		} else if !parentExists {
+			return domain.CategoryResponse{}, domain.ErrNotFound("parent category")
+		}
+	}
+
+	// * Prepare domain category
+	newCategory := domain.Category{
+		ParentID:     payload.ParentID,
+		CategoryCode: payload.CategoryCode,
+		Translations: make([]domain.CategoryTranslation, len(payload.Translations)),
+	}
+
+	// * Convert translation payloads to domain translations
+	for i, translationPayload := range payload.Translations {
+		newCategory.Translations[i] = domain.CategoryTranslation{
+			LangCode:     translationPayload.LangCode,
+			CategoryName: translationPayload.CategoryName,
+			Description:  translationPayload.Description,
+		}
+	}
+
+	createdCategory, err := s.Repo.CreateCategory(ctx, &newCategory)
+	if err != nil {
+		return domain.CategoryResponse{}, err
+	}
+
+	// * Return the first translation as default language or empty if no translations
+	langCode := "id-ID" // Default language
+	if len(createdCategory.Translations) > 0 {
+		langCode = createdCategory.Translations[0].LangCode
+	}
+
+	return s.GetCategoryById(ctx, createdCategory.ID, langCode)
+}
+
+func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.CategoryResponse, error) {
+	// * Check if category exists
+	_, err := s.Repo.GetCategoryById(ctx, categoryId)
+	if err != nil {
+		return domain.CategoryResponse{}, err
+	}
+
+	// * Check category code uniqueness if being updated
+	if payload.CategoryCode != nil {
+		if codeExists, err := s.Repo.CheckCategoryCodeExist(ctx, *payload.CategoryCode); err != nil {
+			return domain.CategoryResponse{}, err
+		} else if codeExists {
+			return domain.CategoryResponse{}, domain.ErrConflict("category code '" + *payload.CategoryCode + "' is already taken")
+		}
+	}
+
+	// * Check if parent category exists if parentId is provided
+	if payload.ParentID != nil && *payload.ParentID != "" {
+		if parentExists, err := s.Repo.CheckCategoryExist(ctx, *payload.ParentID); err != nil {
+			return domain.CategoryResponse{}, err
+		} else if !parentExists {
+			return domain.CategoryResponse{}, domain.ErrNotFound("parent category")
+		}
+	}
+
+	updatedCategory, err := s.Repo.UpdateCategory(ctx, categoryId, payload)
+	if err != nil {
+		return domain.CategoryResponse{}, err
+	}
+
+	// * Return the first translation as default language or empty if no translations
+	langCode := "id-ID" // Default language
+	if len(updatedCategory.Translations) > 0 {
+		langCode = updatedCategory.Translations[0].LangCode
+	}
+
+	return s.GetCategoryById(ctx, updatedCategory.ID, langCode)
+}
+
+func (s *Service) DeleteCategory(ctx context.Context, categoryId string) error {
+	err := s.Repo.DeleteCategory(ctx, categoryId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// *===========================QUERY===========================*
+func (s *Service) GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryResponse, int64, error) {
+	categories, err := s.Repo.GetCategoriesResponse(ctx, params, langCode)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// * Count total for pagination
+	count, err := s.Repo.CountCategories(ctx, params)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return categories, count, nil
+}
+
+func (s *Service) GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryResponse, error) {
+	categories, err := s.Repo.GetCategoriesResponse(ctx, params, langCode)
+	if err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
+
+func (s *Service) GetCategoryById(ctx context.Context, categoryId string, langCode string) (domain.CategoryResponse, error) {
+	category, err := s.Repo.GetCategoryById(ctx, categoryId)
+	if err != nil {
+		return domain.CategoryResponse{}, err
+	}
+
+	// * Convert to CategoryResponse with specific language
+	response := domain.CategoryResponse{
+		ID:           category.ID,
+		ParentID:     category.ParentID,
+		CategoryCode: category.CategoryCode,
+	}
+
+	// * Find translation for the requested language
+	for _, translation := range category.Translations {
+		if translation.LangCode == langCode {
+			response.Name = translation.CategoryName
+			response.Description = translation.Description
+			break
+		}
+	}
+
+	// * If no translation found for requested language, use first available
+	if response.Name == "" && len(category.Translations) > 0 {
+		response.Name = category.Translations[0].CategoryName
+		response.Description = category.Translations[0].Description
+	}
+
+	return response, nil
+}
+
+func (s *Service) GetCategoryByCode(ctx context.Context, categoryCode string, langCode string) (domain.CategoryResponse, error) {
+	category, err := s.Repo.GetCategoryByCode(ctx, categoryCode)
+	if err != nil {
+		return domain.CategoryResponse{}, err
+	}
+
+	// * Convert to CategoryResponse with specific language
+	response := domain.CategoryResponse{
+		ID:           category.ID,
+		ParentID:     category.ParentID,
+		CategoryCode: category.CategoryCode,
+	}
+
+	// * Find translation for the requested language
+	for _, translation := range category.Translations {
+		if translation.LangCode == langCode {
+			response.Name = translation.CategoryName
+			response.Description = translation.Description
+			break
+		}
+	}
+
+	// * If no translation found for requested language, use first available
+	if response.Name == "" && len(category.Translations) > 0 {
+		response.Name = category.Translations[0].CategoryName
+		response.Description = category.Translations[0].Description
+	}
+
+	return response, nil
+}
+
+func (s *Service) GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error) {
+	hierarchy, err := s.Repo.GetCategoryHierarchy(ctx, langCode)
+	if err != nil {
+		return nil, err
+	}
+	return hierarchy, nil
+}
+
+func (s *Service) CheckCategoryExists(ctx context.Context, categoryId string) (bool, error) {
+	exists, err := s.Repo.CheckCategoryExist(ctx, categoryId)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (s *Service) CheckCategoryCodeExists(ctx context.Context, categoryCode string) (bool, error) {
+	exists, err := s.Repo.CheckCategoryCodeExist(ctx, categoryCode)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (s *Service) CountCategories(ctx context.Context, params query.Params) (int64, error) {
+	count, err := s.Repo.CountCategories(ctx, params)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }

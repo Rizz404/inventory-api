@@ -105,11 +105,13 @@ func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (doma
 	userResponse := domain.UserResponse{
 		ID:            user.ID,
 		Name:          user.Name,
+		Email:         user.Email,
 		FullName:      user.FullName,
 		Role:          user.Role,
 		EmployeeID:    user.EmployeeID,
 		PreferredLang: user.PreferredLang,
 		IsActive:      user.IsActive,
+		AvatarURL:     user.AvatarURL,
 		CreatedAt:     user.CreatedAt.Format("2006-01-02 15:04:05"),
 		UpdatedAt:     user.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
