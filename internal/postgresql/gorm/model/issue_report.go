@@ -1,9 +1,12 @@
 package model
 
 import (
+	"log"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/oklog/ulid/v2"
+	"gorm.io/gorm"
 )
 
 type IssueReport struct {
@@ -26,6 +29,17 @@ func (IssueReport) TableName() string {
 	return "issue_reports"
 }
 
+func (u *IssueReport) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 IssueReport.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for IssueReport: %s", u.ID.String())
+	}
+
+	return nil
+}
+
 type IssueReportTranslation struct {
 	ID              SQLULID `gorm:"primaryKey;type:varchar(26)"`
 	ReportID        SQLULID `gorm:"type:varchar(26);not null;uniqueIndex:idx_rep_lang"`
@@ -37,4 +51,15 @@ type IssueReportTranslation struct {
 
 func (IssueReportTranslation) TableName() string {
 	return "issue_reports_translation"
+}
+
+func (u *IssueReportTranslation) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 IssueReportTranslation.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for IssueReportTranslation: %s", u.ID.String())
+	}
+
+	return nil
 }

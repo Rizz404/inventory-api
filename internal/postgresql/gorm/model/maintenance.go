@@ -1,9 +1,12 @@
 package model
 
 import (
+	"log"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/oklog/ulid/v2"
+	"gorm.io/gorm"
 )
 
 type MaintenanceSchedule struct {
@@ -24,6 +27,17 @@ func (MaintenanceSchedule) TableName() string {
 	return "maintenance_schedules"
 }
 
+func (u *MaintenanceSchedule) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 MaintenanceSchedule.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for MaintenanceSchedule: %s", u.ID.String())
+	}
+
+	return nil
+}
+
 type MaintenanceScheduleTranslation struct {
 	ID          SQLULID `gorm:"primaryKey;type:varchar(26)"`
 	ScheduleID  SQLULID `gorm:"type:varchar(26);not null;uniqueIndex:idx_sch_lang"`
@@ -34,6 +48,17 @@ type MaintenanceScheduleTranslation struct {
 
 func (MaintenanceScheduleTranslation) TableName() string {
 	return "maintenance_schedules_translation"
+}
+
+func (u *MaintenanceScheduleTranslation) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 MaintenanceScheduleTranslation.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for MaintenanceScheduleTranslation: %s", u.ID.String())
+	}
+
+	return nil
 }
 
 type MaintenanceRecord struct {
@@ -56,6 +81,17 @@ func (MaintenanceRecord) TableName() string {
 	return "maintenance_records"
 }
 
+func (u *MaintenanceRecord) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 MaintenanceRecord.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for MaintenanceRecord: %s", u.ID.String())
+	}
+
+	return nil
+}
+
 type MaintenanceRecordTranslation struct {
 	ID       SQLULID `gorm:"primaryKey;type:varchar(26)"`
 	RecordID SQLULID `gorm:"type:varchar(26);not null;uniqueIndex:idx_rec_lang"`
@@ -66,4 +102,15 @@ type MaintenanceRecordTranslation struct {
 
 func (MaintenanceRecordTranslation) TableName() string {
 	return "maintenance_records_translation"
+}
+
+func (u *MaintenanceRecordTranslation) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 MaintenanceRecordTranslation.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for MaintenanceRecordTranslation: %s", u.ID.String())
+	}
+
+	return nil
 }

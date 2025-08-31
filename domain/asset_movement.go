@@ -13,6 +13,8 @@ type AssetMovement struct {
 	ToUserID       *string                    `json:"toUserId"`
 	MovementDate   time.Time                  `json:"movementDate"`
 	MovedBy        string                     `json:"movedBy"`
+	CreatedAt      time.Time                  `json:"createdAt"`
+	UpdatedAt      time.Time                  `json:"updatedAt"`
 	Translations   []AssetMovementTranslation `json:"translations,omitempty"`
 }
 
@@ -33,6 +35,8 @@ type AssetMovementResponse struct {
 	MovementDate string            `json:"movementDate"`
 	MovedBy      UserResponse      `json:"movedBy"`
 	Notes        *string           `json:"notes,omitempty"`
+	CreatedAt    string            `json:"createdAt"`
+	UpdatedAt    string            `json:"updatedAt"`
 }
 
 // --- Payloads ---

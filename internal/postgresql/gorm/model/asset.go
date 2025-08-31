@@ -1,9 +1,12 @@
 package model
 
 import (
+	"log"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/oklog/ulid/v2"
+	"gorm.io/gorm"
 )
 
 type Asset struct {
@@ -21,7 +24,7 @@ type Asset struct {
 	VendorName    *string               `gorm:"type:varchar(150)"`
 	WarrantyEnd   *time.Time            `gorm:"type:date"`
 	Status        domain.AssetStatus    `gorm:"type:asset_status;default:'Active'"`
-	Condition     domain.AssetCondition `gorm:"type:asset_condition;default:'Good'"`
+	Condition     domain.AssetCondition `gorm:"type:asset_condition;default:'Good';column:condition_status"`
 	LocationID    *SQLULID              `gorm:"type:varchar(26)"`
 	AssignedTo    *SQLULID              `gorm:"type:varchar(26)"`
 	CreatedAt     time.Time
@@ -33,4 +36,15 @@ type Asset struct {
 
 func (Asset) TableName() string {
 	return "assets"
+}
+
+func (u *Asset) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 Asset.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for Asset: %s", u.ID.String())
+	}
+
+	return nil
 }

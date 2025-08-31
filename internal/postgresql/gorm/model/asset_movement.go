@@ -1,6 +1,12 @@
 package model
 
-import "time"
+import (
+	"log"
+	"time"
+
+	"github.com/oklog/ulid/v2"
+	"gorm.io/gorm"
+)
 
 type AssetMovement struct {
 	ID             SQLULID   `gorm:"primaryKey;type:varchar(26)"`
@@ -26,6 +32,17 @@ func (AssetMovement) TableName() string {
 	return "asset_movements"
 }
 
+func (u *AssetMovement) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 AssetMovement.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for AssetMovement: %s", u.ID.String())
+	}
+
+	return nil
+}
+
 type AssetMovementTranslation struct {
 	ID         SQLULID `gorm:"primaryKey;type:varchar(26)"`
 	MovementID SQLULID `gorm:"type:varchar(26);not null;uniqueIndex:idx_mov_lang"`
@@ -35,4 +52,15 @@ type AssetMovementTranslation struct {
 
 func (AssetMovementTranslation) TableName() string {
 	return "asset_movements_translation"
+}
+
+func (u *AssetMovementTranslation) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 AssetMovementTranslation.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for AssetMovementTranslation: %s", u.ID.String())
+	}
+
+	return nil
 }

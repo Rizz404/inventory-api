@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 // --- Structs ---
 
 type Location struct {
@@ -7,6 +9,8 @@ type Location struct {
 	LocationCode string                `json:"locationCode"`
 	Building     *string               `json:"building"`
 	Floor        *string               `json:"floor"`
+	CreatedAt    time.Time             `json:"createdAt"`
+	UpdatedAt    time.Time             `json:"updatedAt"`
 	Translations []LocationTranslation `json:"translations,omitempty"`
 }
 
@@ -23,6 +27,8 @@ type LocationResponse struct {
 	Building     *string `json:"building,omitempty"`
 	Floor        *string `json:"floor,omitempty"`
 	Name         string  `json:"name"`
+	CreatedAt    string  `json:"createdAt"`
+	UpdatedAt    string  `json:"updatedAt"`
 }
 
 // --- Payloads ---

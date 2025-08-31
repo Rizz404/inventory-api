@@ -49,6 +49,8 @@ type MaintenanceRecord struct {
 	PerformedByUser   *string                        `json:"performedByUser"`
 	PerformedByVendor *string                        `json:"performedByVendor"`
 	ActualCost        *float64                       `json:"actualCost"`
+	CreatedAt         time.Time                      `json:"createdAt"`
+	UpdatedAt         time.Time                      `json:"updatedAt"`
 	Translations      []MaintenanceRecordTranslation `json:"translations,omitempty"`
 }
 
@@ -83,6 +85,8 @@ type MaintenanceRecordResponse struct {
 	ActualCost        *float64                     `json:"actualCost,omitempty"`
 	Title             string                       `json:"title"`
 	Notes             *string                      `json:"notes,omitempty"`
+	CreatedAt         string                       `json:"createdAt"`
+	UpdatedAt         string                       `json:"updatedAt"`
 }
 
 // --- Payloads ---
