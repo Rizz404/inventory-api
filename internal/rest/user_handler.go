@@ -7,6 +7,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/rest/middleware"
+	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/internal/web"
 	"github.com/Rizz404/inventory-api/services/user"
 	"github.com/gofiber/fiber/v2"
@@ -103,13 +104,13 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusCreated, "User created successfully", user)
+	return web.Success(c, fiber.StatusCreated, utils.SuccessUserCreatedKey, user)
 }
 
 func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return web.HandleError(c, domain.ErrBadRequest("User ID is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
 	}
 
 	var payload domain.UpdateUserPayload
@@ -122,13 +123,13 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "User updated successfully", user)
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserUpdatedKey, user)
 }
 
 func (h *UserHandler) UpdateCurrentUser(c *fiber.Ctx) error {
 	id, ok := web.GetUserIDFromContext(c)
 	if !ok {
-		return web.HandleError(c, domain.ErrBadRequest("User ID is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
 	}
 
 	var payload domain.UpdateUserPayload
@@ -141,13 +142,13 @@ func (h *UserHandler) UpdateCurrentUser(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "User updated successfully", user)
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserUpdatedKey, user)
 }
 
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return web.HandleError(c, domain.ErrBadRequest("User ID is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
 	}
 
 	err := h.Service.DeleteUser(c.Context(), id)
@@ -155,7 +156,7 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "User deleted successfully", nil)
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserDeletedKey, nil)
 }
 
 // *===========================QUERY===========================*
@@ -174,7 +175,7 @@ func (h *UserHandler) GetUsersPaginated(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.SuccessWithPageInfo(c, fiber.StatusOK, "Users retrieved successfully", users, int(total), limit, (offset/limit)+1)
+	return web.SuccessWithPageInfo(c, fiber.StatusOK, utils.SuccessUserRetrievedKey, users, int(total), limit, (offset/limit)+1)
 }
 
 func (h *UserHandler) GetUsersCursor(c *fiber.Ctx) error {
@@ -198,12 +199,12 @@ func (h *UserHandler) GetUsersCursor(c *fiber.Ctx) error {
 		nextCursor = users[len(users)-1].ID
 	}
 
-	return web.SuccessWithCursor(c, fiber.StatusOK, "Users retrieved successfully", users, nextCursor, hasNextPage, limit)
+	return web.SuccessWithCursor(c, fiber.StatusOK, utils.SuccessUserRetrievedKey, users, nextCursor, hasNextPage, limit)
 }
 func (h *UserHandler) GetUserById(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return web.HandleError(c, domain.ErrBadRequest("User ID is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
 	}
 
 	user, err := h.Service.GetUserById(c.Context(), id)
@@ -211,13 +212,13 @@ func (h *UserHandler) GetUserById(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "User retrieved successfully", user)
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserRetrievedKey, user)
 }
 
 func (h *UserHandler) GetUserByName(c *fiber.Ctx) error {
 	name := c.Params("name")
 	if name == "" {
-		return web.HandleError(c, domain.ErrBadRequest("Name is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserNameRequiredKey))
 	}
 
 	user, err := h.Service.GetUserByName(c.Context(), name)
@@ -225,13 +226,13 @@ func (h *UserHandler) GetUserByName(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "User retrieved successfully by name", user)
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserRetrievedByNameKey, user)
 }
 
 func (h *UserHandler) GetUserByEmail(c *fiber.Ctx) error {
 	email := c.Params("email")
 	if email == "" {
-		return web.HandleError(c, domain.ErrBadRequest("Email is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserEmailRequiredKey))
 	}
 
 	user, err := h.Service.GetUserByEmail(c.Context(), email)
@@ -239,13 +240,13 @@ func (h *UserHandler) GetUserByEmail(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "User retrieved successfully by email", user)
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserRetrievedByEmailKey, user)
 }
 
 func (h *UserHandler) GetCurrentUser(c *fiber.Ctx) error {
 	id, ok := web.GetUserIDFromContext(c)
 	if !ok {
-		return web.HandleError(c, domain.ErrBadRequest("User ID is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
 	}
 
 	user, err := h.Service.GetUserById(c.Context(), id)
@@ -253,13 +254,13 @@ func (h *UserHandler) GetCurrentUser(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "User retrieved successfully", user)
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserRetrievedKey, user)
 }
 
 func (h *UserHandler) CheckUserExists(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return web.HandleError(c, domain.ErrBadRequest("User ID is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
 	}
 
 	exists, err := h.Service.CheckUserExists(c.Context(), id)
@@ -267,13 +268,13 @@ func (h *UserHandler) CheckUserExists(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "User existence checked successfully", map[string]bool{"exists": exists})
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserExistenceCheckedKey, map[string]bool{"exists": exists})
 }
 
 func (h *UserHandler) CheckNameExists(c *fiber.Ctx) error {
 	name := c.Params("name")
 	if name == "" {
-		return web.HandleError(c, domain.ErrBadRequest("Name is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserNameRequiredKey))
 	}
 
 	exists, err := h.Service.CheckNameExists(c.Context(), name)
@@ -281,13 +282,13 @@ func (h *UserHandler) CheckNameExists(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "Name existence checked successfully", map[string]bool{"exists": exists})
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserNameExistenceCheckedKey, map[string]bool{"exists": exists})
 }
 
 func (h *UserHandler) CheckEmailExists(c *fiber.Ctx) error {
 	email := c.Params("email")
 	if email == "" {
-		return web.HandleError(c, domain.ErrBadRequest("Email is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserEmailRequiredKey))
 	}
 
 	exists, err := h.Service.CheckEmailExists(c.Context(), email)
@@ -295,7 +296,7 @@ func (h *UserHandler) CheckEmailExists(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "Email existence checked successfully", map[string]bool{"exists": exists})
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserEmailExistenceCheckedKey, map[string]bool{"exists": exists})
 }
 
 func (h *UserHandler) CountUsers(c *fiber.Ctx) error {
@@ -309,5 +310,5 @@ func (h *UserHandler) CountUsers(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "User counted successfully", count)
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserCountedKey, count)
 }

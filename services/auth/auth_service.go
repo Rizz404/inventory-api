@@ -40,13 +40,13 @@ func (s *Service) Register(ctx context.Context, payload *domain.RegisterPayload)
 	if nameExists, err := s.Repo.CheckNameExists(ctx, payload.Name); err != nil {
 		return domain.User{}, err
 	} else if nameExists {
-		return domain.User{}, domain.ErrConflict("user with name '" + payload.Name + "' already exists")
+		return domain.User{}, domain.ErrConflictWithKey(utils.ErrUserNameExistsKey)
 	}
 
 	if emailExists, err := s.Repo.CheckEmailExists(ctx, payload.Email); err != nil {
 		return domain.User{}, err
 	} else if emailExists {
-		return domain.User{}, domain.ErrConflict("user with email '" + payload.Email + "' already exists")
+		return domain.User{}, domain.ErrConflictWithKey(utils.ErrUserEmailExistsKey)
 	}
 
 	// * Siapkan user baru
@@ -69,18 +69,18 @@ func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (doma
 	// Search by email
 	user, err := s.Repo.GetUserByEmail(ctx, payload.Email)
 	if err != nil {
-		return domain.LoginResponse{}, domain.ErrUnauthorized("invalid email or password")
+		return domain.LoginResponse{}, domain.ErrUnauthorizedWithKey(utils.ErrInvalidCredentialsKey)
 	}
 
 	// Check if user is active
 	if !user.IsActive {
-		return domain.LoginResponse{}, domain.ErrUnauthorized("user account is inactive")
+		return domain.LoginResponse{}, domain.ErrUnauthorizedWithKey(utils.ErrUserNotFoundKey) // * Use generic message for security
 	}
 
 	// Verify password
 	passwordIsValid := utils.CheckPasswordHash(payload.Password, user.PasswordHash)
 	if !passwordIsValid {
-		return domain.LoginResponse{}, domain.ErrUnauthorized("invalid email or password")
+		return domain.LoginResponse{}, domain.ErrUnauthorizedWithKey(utils.ErrInvalidCredentialsKey)
 	}
 
 	// Create JWT payload with available fields

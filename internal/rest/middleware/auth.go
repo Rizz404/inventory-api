@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/internal/web"
 	jwtware "github.com/gofiber/contrib/jwt"
@@ -24,22 +25,22 @@ func AuthMiddleware() fiber.Handler {
 			// Add debugging
 			fmt.Printf("JWT Error: %v\n", err)
 			fmt.Printf("Authorization Header: %s\n", c.Get("Authorization"))
-			return web.Error(c, fiber.StatusUnauthorized, "invalid or missing JWT token", err)
+			return web.HandleError(c, domain.ErrUnauthorizedWithKey(utils.ErrTokenInvalidKey))
 		},
 		SuccessHandler: func(c *fiber.Ctx) error {
 			auth := c.Get("Authorization")
 			if auth == "" {
-				return web.Error(c, fiber.StatusUnauthorized, "missing Authorization header", nil)
+				return web.HandleError(c, domain.ErrUnauthorizedWithKey(utils.ErrUnauthorizedKey))
 			}
 
 			tokenString := strings.TrimPrefix(auth, "Bearer ")
 			if tokenString == auth {
-				return web.Error(c, fiber.StatusUnauthorized, "invalid token format", nil)
+				return web.HandleError(c, domain.ErrUnauthorizedWithKey(utils.ErrTokenInvalidKey))
 			}
 
 			claims, err := utils.ValidateToken(tokenString, accessTokenSecret)
 			if err != nil {
-				return web.Error(c, fiber.StatusUnauthorized, "invalid token", nil)
+				return web.HandleError(c, domain.ErrUnauthorizedWithKey(utils.ErrTokenInvalidKey))
 			}
 
 			// Set user info ke context untuk digunakan di handler selanjutnya

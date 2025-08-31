@@ -72,13 +72,13 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 	if nameExists, err := s.Repo.CheckNameExists(ctx, payload.Name); err != nil {
 		return domain.UserResponse{}, err
 	} else if nameExists {
-		return domain.UserResponse{}, domain.ErrConflict("user with name '" + payload.Name + "' already exists")
+		return domain.UserResponse{}, domain.ErrConflictWithKey(utils.ErrUserNameExistsKey)
 	}
 
 	if emailExists, err := s.Repo.CheckEmailExists(ctx, payload.Email); err != nil {
 		return domain.UserResponse{}, err
 	} else if emailExists {
-		return domain.UserResponse{}, domain.ErrConflict("user with email '" + payload.Email + "' already exists")
+		return domain.UserResponse{}, domain.ErrConflictWithKey(utils.ErrUserEmailExistsKey)
 	}
 
 	// Set default language if not provided
@@ -122,7 +122,7 @@ func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain
 		if nameExists, err := s.Repo.CheckNameExists(ctx, *payload.Name); err != nil {
 			return domain.UserResponse{}, err
 		} else if nameExists {
-			return domain.UserResponse{}, domain.ErrConflict("name '" + *payload.Name + "' is already taken")
+			return domain.UserResponse{}, domain.ErrConflictWithKey(utils.ErrUserNameExistsKey)
 		}
 	}
 
@@ -130,7 +130,7 @@ func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain
 		if emailExists, err := s.Repo.CheckEmailExists(ctx, *payload.Email); err != nil {
 			return domain.UserResponse{}, err
 		} else if emailExists {
-			return domain.UserResponse{}, domain.ErrConflict("email '" + *payload.Email + "' is already taken")
+			return domain.UserResponse{}, domain.ErrConflictWithKey(utils.ErrUserEmailExistsKey)
 		}
 	}
 

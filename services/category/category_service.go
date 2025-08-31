@@ -6,6 +6,7 @@ import (
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
+	"github.com/Rizz404/inventory-api/internal/utils"
 )
 
 // * Repository interface defines the contract for category data operations
@@ -64,7 +65,7 @@ func (s *Service) CreateCategory(ctx context.Context, payload *domain.CreateCate
 	if codeExists, err := s.Repo.CheckCategoryCodeExist(ctx, payload.CategoryCode); err != nil {
 		return domain.CategoryResponse{}, err
 	} else if codeExists {
-		return domain.CategoryResponse{}, domain.ErrConflict("category with code '" + payload.CategoryCode + "' already exists")
+		return domain.CategoryResponse{}, domain.ErrConflictWithKey(utils.ErrCategoryCodeExistsKey)
 	}
 
 	// * Check if parent category exists if parentId is provided
@@ -72,7 +73,7 @@ func (s *Service) CreateCategory(ctx context.Context, payload *domain.CreateCate
 		if parentExists, err := s.Repo.CheckCategoryExist(ctx, *payload.ParentID); err != nil {
 			return domain.CategoryResponse{}, err
 		} else if !parentExists {
-			return domain.CategoryResponse{}, domain.ErrNotFound("parent category")
+			return domain.CategoryResponse{}, domain.ErrNotFoundWithKey(utils.ErrCategoryNotFoundKey)
 		}
 	}
 
@@ -113,7 +114,7 @@ func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload
 		if codeExists, err := s.Repo.CheckCategoryCodeExist(ctx, *payload.CategoryCode); err != nil {
 			return domain.CategoryResponse{}, err
 		} else if codeExists {
-			return domain.CategoryResponse{}, domain.ErrConflict("category code '" + *payload.CategoryCode + "' is already taken")
+			return domain.CategoryResponse{}, domain.ErrConflictWithKey(utils.ErrCategoryCodeExistsKey)
 		}
 	}
 
@@ -122,7 +123,7 @@ func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload
 		if parentExists, err := s.Repo.CheckCategoryExist(ctx, *payload.ParentID); err != nil {
 			return domain.CategoryResponse{}, err
 		} else if !parentExists {
-			return domain.CategoryResponse{}, domain.ErrNotFound("parent category")
+			return domain.CategoryResponse{}, domain.ErrNotFoundWithKey(utils.ErrCategoryNotFoundKey)
 		}
 	}
 

@@ -7,6 +7,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/rest/middleware"
+	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/internal/web"
 	"github.com/Rizz404/inventory-api/services/category"
 	"github.com/gofiber/fiber/v2"
@@ -101,13 +102,13 @@ func (h *CategoryHandler) CreateCategory(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusCreated, "Category created successfully", category)
+	return web.Success(c, fiber.StatusCreated, utils.SuccessCategoryCreatedKey, category)
 }
 
 func (h *CategoryHandler) UpdateCategory(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return web.HandleError(c, domain.ErrBadRequest("Category ID is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrCategoryIDRequiredKey))
 	}
 
 	var payload domain.UpdateCategoryPayload
@@ -120,13 +121,13 @@ func (h *CategoryHandler) UpdateCategory(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "Category updated successfully", category)
+	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryUpdatedKey, category)
 }
 
 func (h *CategoryHandler) DeleteCategory(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return web.HandleError(c, domain.ErrBadRequest("Category ID is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrCategoryIDRequiredKey))
 	}
 
 	err := h.Service.DeleteCategory(c.Context(), id)
@@ -134,7 +135,7 @@ func (h *CategoryHandler) DeleteCategory(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "Category deleted successfully", nil)
+	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryDeletedKey, nil)
 }
 
 // *===========================QUERY===========================*
@@ -156,7 +157,7 @@ func (h *CategoryHandler) GetCategoriesPaginated(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.SuccessWithPageInfo(c, fiber.StatusOK, "Categories retrieved successfully", categories, int(total), limit, (offset/limit)+1)
+	return web.SuccessWithPageInfo(c, fiber.StatusOK, utils.SuccessCategoryRetrievedKey, categories, int(total), limit, (offset/limit)+1)
 }
 
 func (h *CategoryHandler) GetCategoriesCursor(c *fiber.Ctx) error {
@@ -183,13 +184,13 @@ func (h *CategoryHandler) GetCategoriesCursor(c *fiber.Ctx) error {
 		nextCursor = categories[len(categories)-1].ID
 	}
 
-	return web.SuccessWithCursor(c, fiber.StatusOK, "Categories retrieved successfully", categories, nextCursor, hasNextPage, limit)
+	return web.SuccessWithCursor(c, fiber.StatusOK, utils.SuccessCategoryRetrievedKey, categories, nextCursor, hasNextPage, limit)
 }
 
 func (h *CategoryHandler) GetCategoryById(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return web.HandleError(c, domain.ErrBadRequest("Category ID is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrCategoryIDRequiredKey))
 	}
 
 	// * Get language from headers
@@ -200,13 +201,13 @@ func (h *CategoryHandler) GetCategoryById(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "Category retrieved successfully", category)
+	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryRetrievedKey, category)
 }
 
 func (h *CategoryHandler) GetCategoryByCode(c *fiber.Ctx) error {
 	code := c.Params("code")
 	if code == "" {
-		return web.HandleError(c, domain.ErrBadRequest("Category code is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrCategoryCodeRequiredKey))
 	}
 
 	// * Get language from headers
@@ -217,7 +218,7 @@ func (h *CategoryHandler) GetCategoryByCode(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "Category retrieved successfully by code", category)
+	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryRetrievedByCodeKey, category)
 }
 
 func (h *CategoryHandler) GetCategoryHierarchy(c *fiber.Ctx) error {
@@ -229,13 +230,13 @@ func (h *CategoryHandler) GetCategoryHierarchy(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "Category hierarchy retrieved successfully", hierarchy)
+	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryHierarchyRetrievedKey, hierarchy)
 }
 
 func (h *CategoryHandler) CheckCategoryExists(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return web.HandleError(c, domain.ErrBadRequest("Category ID is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrCategoryIDRequiredKey))
 	}
 
 	exists, err := h.Service.CheckCategoryExists(c.Context(), id)
@@ -243,13 +244,13 @@ func (h *CategoryHandler) CheckCategoryExists(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "Category existence checked successfully", map[string]bool{"exists": exists})
+	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryExistenceCheckedKey, map[string]bool{"exists": exists})
 }
 
 func (h *CategoryHandler) CheckCategoryCodeExists(c *fiber.Ctx) error {
 	code := c.Params("code")
 	if code == "" {
-		return web.HandleError(c, domain.ErrBadRequest("Category code is required"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrCategoryCodeRequiredKey))
 	}
 
 	exists, err := h.Service.CheckCategoryCodeExists(c.Context(), code)
@@ -257,7 +258,7 @@ func (h *CategoryHandler) CheckCategoryCodeExists(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "Category code existence checked successfully", map[string]bool{"exists": exists})
+	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryCodeExistenceCheckedKey, map[string]bool{"exists": exists})
 }
 
 func (h *CategoryHandler) CountCategories(c *fiber.Ctx) error {
@@ -271,5 +272,5 @@ func (h *CategoryHandler) CountCategories(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, "Categories counted successfully", count)
+	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryCountedKey, count)
 }
