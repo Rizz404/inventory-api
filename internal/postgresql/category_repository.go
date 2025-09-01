@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type gormCategoryRepository struct {
+type CategoryRepository struct {
 	db *gorm.DB
 }
 
@@ -23,43 +23,43 @@ type CategoryFilterOptions struct {
 	HasParent *bool   `json:"hasParent,omitempty"`
 }
 
-func NewCategoryRepository(db *gorm.DB) *gormCategoryRepository {
-	return &gormCategoryRepository{
+func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
+	return &CategoryRepository{
 		db: db,
 	}
 }
 
-func (r *gormCategoryRepository) applyCategoryFilters(db *gorm.DB, filters any) *gorm.DB {
+func (r *CategoryRepository) applyCategoryFilters(db *gorm.DB, filters any) *gorm.DB {
 	f, ok := filters.(*CategoryFilterOptions)
 	if !ok || f == nil {
 		return db
 	}
 
 	if f.ParentID != nil {
-		db = db.Where("categories.parent_id = ?", f.ParentID)
+		db = db.Where("c.parent_id = ?", f.ParentID)
 	}
 	if f.HasParent != nil {
 		if *f.HasParent {
-			db = db.Where("categories.parent_id IS NOT NULL")
+			db = db.Where("c.parent_id IS NOT NULL")
 		} else {
-			db = db.Where("categories.parent_id IS NULL")
+			db = db.Where("c.parent_id IS NULL")
 		}
 	}
 	return db
 }
 
-func (r *gormCategoryRepository) applyCategorySorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
+func (r *CategoryRepository) applyCategorySorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
-		return db.Order("categories.created_at DESC")
+		return db.Order("c.created_at DESC")
 	}
 	var orderClause string
 	switch strings.ToLower(sort.Field) {
 	case "category_code", "created_at", "updated_at":
-		orderClause = "categories." + sort.Field
+		orderClause = "c." + sort.Field
 	case "name", "category_name":
-		orderClause = "category_translations.category_name"
+		orderClause = "ct.category_name"
 	default:
-		return db.Order("categories.created_at DESC")
+		return db.Order("c.created_at DESC")
 	}
 
 	order := "DESC"
@@ -70,7 +70,7 @@ func (r *gormCategoryRepository) applyCategorySorts(db *gorm.DB, sort *query.Sor
 }
 
 // *===========================MUTATION===========================*
-func (r *gormCategoryRepository) CreateCategory(ctx context.Context, payload *domain.Category) (domain.Category, error) {
+func (r *CategoryRepository) CreateCategory(ctx context.Context, payload *domain.Category) (domain.Category, error) {
 	tx := r.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return domain.Category{}, domain.ErrInternal(tx.Error)
@@ -105,7 +105,7 @@ func (r *gormCategoryRepository) CreateCategory(ctx context.Context, payload *do
 	return r.GetCategoryById(ctx, modelCategory.ID.String())
 }
 
-func (r *gormCategoryRepository) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.Category, error) {
+func (r *CategoryRepository) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.Category, error) {
 	tx := r.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return domain.Category{}, domain.ErrInternal(tx.Error)
@@ -168,7 +168,7 @@ func (r *gormCategoryRepository) UpdateCategory(ctx context.Context, categoryId 
 	return r.GetCategoryById(ctx, categoryId)
 }
 
-func (r *gormCategoryRepository) DeleteCategory(ctx context.Context, categoryId string) error {
+func (r *CategoryRepository) DeleteCategory(ctx context.Context, categoryId string) error {
 	tx := r.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return domain.ErrInternal(tx.Error)
@@ -199,15 +199,17 @@ func (r *gormCategoryRepository) DeleteCategory(ctx context.Context, categoryId 
 }
 
 // *===========================QUERY===========================*
-func (r *gormCategoryRepository) GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error) {
+func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error) {
 	var categories []model.Category
-	db := r.db.WithContext(ctx).Preload("Translations")
+	db := r.db.WithContext(ctx).
+		Table("categories c").
+		Preload("Translations")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN category_translations ON categories.id = category_translations.category_id").
-			Where("categories.category_code ILIKE ? OR category_translations.category_name ILIKE ?", searchPattern, searchPattern).
-			Distinct("categories.id")
+		db = db.Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id").
+			Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
+			Distinct("c.id")
 	}
 
 	// Set pagination cursor to empty for offset-based pagination
@@ -226,15 +228,17 @@ func (r *gormCategoryRepository) GetCategoriesPaginated(ctx context.Context, par
 	return domainCategories, nil
 }
 
-func (r *gormCategoryRepository) GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error) {
+func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error) {
 	var categories []model.Category
-	db := r.db.WithContext(ctx).Preload("Translations")
+	db := r.db.WithContext(ctx).
+		Table("categories c").
+		Preload("Translations")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN category_translations ON categories.id = category_translations.category_id").
-			Where("categories.category_code ILIKE ? OR category_translations.category_name ILIKE ?", searchPattern, searchPattern).
-			Distinct("categories.id")
+		db = db.Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id").
+			Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
+			Distinct("c.id")
 	}
 
 	// Set offset to 0 for cursor-based pagination
@@ -253,15 +257,17 @@ func (r *gormCategoryRepository) GetCategoriesCursor(ctx context.Context, params
 	return domainCategories, nil
 }
 
-func (r *gormCategoryRepository) GetCategoriesResponse(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryResponse, error) {
+func (r *CategoryRepository) GetCategoriesResponse(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryResponse, error) {
 	var categories []model.Category
-	db := r.db.WithContext(ctx).Preload("Translations")
+	db := r.db.WithContext(ctx).
+		Table("categories c").
+		Preload("Translations")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN category_translations ON categories.id = category_translations.category_id").
-			Where("categories.category_code ILIKE ? OR category_translations.category_name ILIKE ?", searchPattern, searchPattern).
-			Distinct("categories.id")
+		db = db.Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id").
+			Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
+			Distinct("c.id")
 	}
 
 	db = query.Apply(db, params, r.applyCategoryFilters, r.applyCategorySorts)
@@ -273,10 +279,13 @@ func (r *gormCategoryRepository) GetCategoriesResponse(ctx context.Context, para
 	return mapper.ToDomainCategoriesResponse(categories, langCode), nil
 }
 
-func (r *gormCategoryRepository) GetCategoryById(ctx context.Context, categoryId string) (domain.Category, error) {
+func (r *CategoryRepository) GetCategoryById(ctx context.Context, categoryId string) (domain.Category, error) {
 	var category model.Category
 
-	err := r.db.WithContext(ctx).Preload("Translations").First(&category, "id = ?", categoryId).Error
+	err := r.db.WithContext(ctx).
+		Table("categories c").
+		Preload("Translations").
+		First(&category, "id = ?", categoryId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Category{}, domain.ErrNotFound("category")
@@ -287,10 +296,13 @@ func (r *gormCategoryRepository) GetCategoryById(ctx context.Context, categoryId
 	return mapper.ToDomainCategory(&category), nil
 }
 
-func (r *gormCategoryRepository) GetCategoryByCode(ctx context.Context, categoryCode string) (domain.Category, error) {
+func (r *CategoryRepository) GetCategoryByCode(ctx context.Context, categoryCode string) (domain.Category, error) {
 	var category model.Category
 
-	err := r.db.WithContext(ctx).Preload("Translations").First(&category, "category_code = ?", categoryCode).Error
+	err := r.db.WithContext(ctx).
+		Table("categories c").
+		Preload("Translations").
+		First(&category, "category_code = ?", categoryCode).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Category{}, domain.ErrNotFound("category")
@@ -301,7 +313,7 @@ func (r *gormCategoryRepository) GetCategoryByCode(ctx context.Context, category
 	return mapper.ToDomainCategory(&category), nil
 }
 
-func (r *gormCategoryRepository) GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error) {
+func (r *CategoryRepository) GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error) {
 	categories, err := r.GetCategoriesResponse(ctx, query.Params{
 		Pagination: &query.PaginationOptions{
 			Limit: 1000, // Large limit to get all categories
@@ -314,7 +326,7 @@ func (r *gormCategoryRepository) GetCategoryHierarchy(ctx context.Context, langC
 	return mapper.BuildCategoryHierarchy(categories), nil
 }
 
-func (r *gormCategoryRepository) CheckCategoryExist(ctx context.Context, categoryId string) (bool, error) {
+func (r *CategoryRepository) CheckCategoryExist(ctx context.Context, categoryId string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&model.Category{}).Where("id = ?", categoryId).Count(&count).Error
 	if err != nil {
@@ -323,7 +335,7 @@ func (r *gormCategoryRepository) CheckCategoryExist(ctx context.Context, categor
 	return count > 0, nil
 }
 
-func (r *gormCategoryRepository) CheckCategoryCodeExist(ctx context.Context, categoryCode string) (bool, error) {
+func (r *CategoryRepository) CheckCategoryCodeExist(ctx context.Context, categoryCode string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&model.Category{}).Where("category_code = ?", categoryCode).Count(&count).Error
 	if err != nil {
@@ -332,15 +344,15 @@ func (r *gormCategoryRepository) CheckCategoryCodeExist(ctx context.Context, cat
 	return count > 0, nil
 }
 
-func (r *gormCategoryRepository) CountCategories(ctx context.Context, params query.Params) (int64, error) {
+func (r *CategoryRepository) CountCategories(ctx context.Context, params query.Params) (int64, error) {
 	var count int64
-	db := r.db.WithContext(ctx).Model(&model.Category{})
+	db := r.db.WithContext(ctx).Table("categories c")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN category_translations ON categories.id = category_translations.category_id").
-			Where("categories.category_code ILIKE ? OR category_translations.category_name ILIKE ?", searchPattern, searchPattern).
-			Distinct("categories.id")
+		db = db.Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id").
+			Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
+			Distinct("c.id")
 	}
 
 	db = query.Apply(db, query.Params{Filters: params.Filters}, r.applyCategoryFilters, nil)

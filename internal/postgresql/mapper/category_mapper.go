@@ -84,6 +84,8 @@ func ToDomainCategory(m *model.Category) domain.Category {
 	domainCategory := domain.Category{
 		ID:           m.ID.String(),
 		CategoryCode: m.CategoryCode,
+		CreatedAt:    m.CreatedAt,
+		UpdatedAt:    m.UpdatedAt,
 	}
 
 	if m.ParentID != nil && !m.ParentID.IsZero() {

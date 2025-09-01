@@ -33,7 +33,7 @@ func ToDomainAssetResponse(m model.Asset, langCode string) domain.AssetResponse 
 		resp.Category = Ptr(ToDomainCategoryResponse(&m.Category, langCode))
 	}
 	if m.Location != nil && m.Location.ID.String() != "" {
-		resp.Location = Ptr(ToDomainLocationResponse(*m.Location, langCode))
+		resp.Location = Ptr(ToDomainLocationResponse(m.Location, langCode))
 	}
 	if m.User != nil && m.User.ID.String() != "" {
 		resp.AssignedTo = Ptr(ToDomainUserResponse(m.User))

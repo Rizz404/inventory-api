@@ -34,6 +34,13 @@ const (
 	ErrCategoryCodeRequiredKey MessageKey = "error.category.code_required"
 	ErrCategoryNameRequiredKey MessageKey = "error.category.name_required"
 
+	// * Location-specific error keys
+	ErrLocationNotFoundKey     MessageKey = "error.location.not_found"
+	ErrLocationCodeExistsKey   MessageKey = "error.location.code_exists"
+	ErrLocationIDRequiredKey   MessageKey = "error.location.id_required"
+	ErrLocationCodeRequiredKey MessageKey = "error.location.code_required"
+	ErrLocationNameRequiredKey MessageKey = "error.location.name_required"
+
 	// * Auth-specific error keys
 	ErrInvalidCredentialsKey MessageKey = "error.auth.invalid_credentials"
 	ErrTokenExpiredKey       MessageKey = "error.auth.token_expired"
@@ -72,6 +79,17 @@ const (
 	SuccessCategoryCountedKey              MessageKey = "success.category.counted"
 	SuccessCategoryExistenceCheckedKey     MessageKey = "success.category.existence_checked"
 	SuccessCategoryCodeExistenceCheckedKey MessageKey = "success.category.code_existence_checked"
+
+	// * Location-specific success keys
+	SuccessLocationCreatedKey              MessageKey = "success.location.created"
+	SuccessLocationUpdatedKey              MessageKey = "success.location.updated"
+	SuccessLocationDeletedKey              MessageKey = "success.location.deleted"
+	SuccessLocationRetrievedKey            MessageKey = "success.location.retrieved"
+	SuccessLocationRetrievedByCodeKey      MessageKey = "success.location.retrieved_by_code"
+	SuccessLocationHierarchyRetrievedKey   MessageKey = "success.location.hierarchy_retrieved"
+	SuccessLocationCountedKey              MessageKey = "success.location.counted"
+	SuccessLocationExistenceCheckedKey     MessageKey = "success.location.existence_checked"
+	SuccessLocationCodeExistenceCheckedKey MessageKey = "success.location.code_existence_checked"
 
 	// * Auth-specific success keys
 	SuccessLoginKey   MessageKey = "success.auth.login"
@@ -175,6 +193,33 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Category name is required",
 		"id-ID": "Nama kategori diperlukan",
 		"ja-JP": "カテゴリ名が必要です",
+	},
+
+	// * Location-specific error messages
+	ErrLocationNotFoundKey: {
+		"en-US": "Location not found",
+		"id-ID": "Lokasi tidak ditemukan",
+		"ja-JP": "ロケーションが見つかりません",
+	},
+	ErrLocationCodeExistsKey: {
+		"en-US": "Location code already exists",
+		"id-ID": "Kode lokasi sudah ada",
+		"ja-JP": "ロケーションコードは既に存在します",
+	},
+	ErrLocationIDRequiredKey: {
+		"en-US": "Location ID is required",
+		"id-ID": "ID lokasi diperlukan",
+		"ja-JP": "ロケーションIDが必要です",
+	},
+	ErrLocationCodeRequiredKey: {
+		"en-US": "Location code is required",
+		"id-ID": "Kode lokasi diperlukan",
+		"ja-JP": "ロケーションコードが必要です",
+	},
+	ErrLocationNameRequiredKey: {
+		"en-US": "Location name is required",
+		"id-ID": "Nama lokasi diperlukan",
+		"ja-JP": "ロケーション名が必要です",
 	},
 
 	// * Auth-specific error messages
@@ -323,6 +368,53 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Category code existence checked successfully",
 		"id-ID": "Keberadaan kode kategori berhasil diperiksa",
 		"ja-JP": "カテゴリコードの存在が正常に確認されました",
+	},
+
+	// * Location-specific success messages
+	SuccessLocationCreatedKey: {
+		"en-US": "Location created successfully",
+		"id-ID": "Lokasi berhasil dibuat",
+		"ja-JP": "ロケーションが正常に作成されました",
+	},
+	SuccessLocationUpdatedKey: {
+		"en-US": "Location updated successfully",
+		"id-ID": "Lokasi berhasil diperbarui",
+		"ja-JP": "ロケーションが正常に更新されました",
+	},
+	SuccessLocationDeletedKey: {
+		"en-US": "Location deleted successfully",
+		"id-ID": "Lokasi berhasil dihapus",
+		"ja-JP": "ロケーションが正常に削除されました",
+	},
+	SuccessLocationRetrievedKey: {
+		"en-US": "Locations retrieved successfully",
+		"id-ID": "Lokasi berhasil diambil",
+		"ja-JP": "ロケーションが正常に取得されました",
+	},
+	SuccessLocationRetrievedByCodeKey: {
+		"en-US": "Location retrieved successfully by code",
+		"id-ID": "Lokasi berhasil diambil berdasarkan kode",
+		"ja-JP": "コードでロケーションが正常に取得されました",
+	},
+	SuccessLocationHierarchyRetrievedKey: {
+		"en-US": "Location hierarchy retrieved successfully",
+		"id-ID": "Hierarki lokasi berhasil diambil",
+		"ja-JP": "ロケーション階層が正常に取得されました",
+	},
+	SuccessLocationCountedKey: {
+		"en-US": "Locations counted successfully",
+		"id-ID": "Lokasi berhasil dihitung",
+		"ja-JP": "ロケーションが正常にカウントされました",
+	},
+	SuccessLocationExistenceCheckedKey: {
+		"en-US": "Location existence checked successfully",
+		"id-ID": "Keberadaan lokasi berhasil diperiksa",
+		"ja-JP": "ロケーションの存在が正常に確認されました",
+	},
+	SuccessLocationCodeExistenceCheckedKey: {
+		"en-US": "Location code existence checked successfully",
+		"id-ID": "Keberadaan kode lokasi berhasil diperiksa",
+		"ja-JP": "ロケーションコードの存在が正常に確認されました",
 	},
 
 	// * Auth-specific success messages

@@ -10,7 +10,7 @@ CREATE TABLE locations (
 
 CREATE INDEX idx_locations_building_floor ON locations(building, floor);
 
-CREATE TABLE locations_translation (
+CREATE TABLE location_translations (
   id VARCHAR(26) PRIMARY KEY,
   location_id VARCHAR(26) NOT NULL,
   lang_code VARCHAR(5) NOT NULL,
@@ -19,12 +19,12 @@ CREATE TABLE locations_translation (
   FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_locations_translation_location_lang ON locations_translation(location_id, lang_code);
+CREATE INDEX idx_location_translations_location_lang ON location_translations(location_id, lang_code);
 
 -- +goose Down
-DROP INDEX IF EXISTS idx_locations_translation_location_lang;
+DROP INDEX IF EXISTS idx_location_translations_location_lang;
 
-DROP TABLE IF EXISTS locations_translation;
+DROP TABLE IF EXISTS location_translations;
 
 DROP INDEX IF EXISTS idx_locations_building_floor;
 

@@ -43,7 +43,7 @@ type CategoryTranslation struct {
 }
 
 func (CategoryTranslation) TableName() string {
-	return "categories_translation"
+	return "category_translations"
 }
 
 func (u *CategoryTranslation) BeforeCreate(tx *gorm.DB) error {

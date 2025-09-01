@@ -11,7 +11,7 @@ CREATE TABLE categories (
 
 CREATE INDEX idx_categories_parent_id ON categories(parent_id);
 
-CREATE TABLE categories_translation (
+CREATE TABLE category_translations (
   id VARCHAR(26) PRIMARY KEY,
   category_id VARCHAR(26) NOT NULL,
   lang_code VARCHAR(5) NOT NULL,
@@ -21,12 +21,12 @@ CREATE TABLE categories_translation (
   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_categories_translation_category_lang ON categories_translation(category_id, lang_code);
+CREATE INDEX idx_category_translations_category_lang ON category_translations(category_id, lang_code);
 
 -- +goose Down
-DROP INDEX IF EXISTS idx_categories_translation_category_lang;
+DROP INDEX IF EXISTS idx_category_translations_category_lang;
 
-DROP TABLE IF EXISTS categories_translation;
+DROP TABLE IF EXISTS category_translations;
 
 DROP INDEX IF EXISTS idx_categories_parent_id;
 

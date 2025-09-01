@@ -25,7 +25,7 @@ CREATE INDEX idx_issue_reports_status ON issue_reports(status);
 
 CREATE INDEX idx_issue_reports_priority ON issue_reports(priority);
 
-CREATE TABLE issue_reports_translation (
+CREATE TABLE issue_report_translations (
   id VARCHAR(26) PRIMARY KEY,
   report_id VARCHAR(26) NOT NULL,
   lang_code VARCHAR(5) NOT NULL,
@@ -36,12 +36,12 @@ CREATE TABLE issue_reports_translation (
   FOREIGN KEY (report_id) REFERENCES issue_reports(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_reports_translation_report_lang ON issue_reports_translation(report_id, lang_code);
+CREATE INDEX idx_reports_translation_report_lang ON issue_report_translations(report_id, lang_code);
 
 -- +goose Down
 DROP INDEX IF EXISTS idx_reports_translation_report_lang;
 
-DROP TABLE IF EXISTS issue_reports_translation;
+DROP TABLE IF EXISTS issue_report_translations;
 
 DROP INDEX IF EXISTS idx_issue_reports_priority;
 

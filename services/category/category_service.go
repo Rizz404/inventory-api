@@ -99,7 +99,7 @@ func (s *Service) CreateCategory(ctx context.Context, payload *domain.CreateCate
 	}
 
 	// * Convert to CategoryResponse using direct mapper
-	return mapper.DomainCategoryToCategoryResponse(&createdCategory, "id-ID"), nil
+	return mapper.DomainCategoryToCategoryResponse(&createdCategory, mapper.DefaultLangCode), nil
 }
 
 func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.CategoryResponse, error) {
@@ -133,7 +133,7 @@ func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload
 	}
 
 	// * Convert to CategoryResponse using direct mapper
-	return mapper.DomainCategoryToCategoryResponse(&updatedCategory, "id-ID"), nil
+	return mapper.DomainCategoryToCategoryResponse(&updatedCategory, mapper.DefaultLangCode), nil
 }
 
 func (s *Service) DeleteCategory(ctx context.Context, categoryId string) error {

@@ -37,27 +37,27 @@ func (r *UserRepository) applyUserFilters(db *gorm.DB, filters any) *gorm.DB {
 	}
 
 	if f.Role != nil {
-		db = db.Where("users.role = ?", f.Role)
+		db = db.Where("u.role = ?", f.Role)
 	}
 	if f.IsActive != nil {
-		db = db.Where("users.is_active = ?", *f.IsActive)
+		db = db.Where("u.is_active = ?", *f.IsActive)
 	}
 	if f.EmployeeID != nil {
-		db = db.Where("users.employee_id = ?", *f.EmployeeID)
+		db = db.Where("u.employee_id = ?", *f.EmployeeID)
 	}
 	return db
 }
 
 func (r *UserRepository) applyUserSorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
-		return db.Order("users.created_at DESC")
+		return db.Order("u.created_at DESC")
 	}
 	var orderClause string
 	switch strings.ToLower(sort.Field) {
 	case "name", "full_name", "email", "role", "employee_id", "is_active", "created_at", "updated_at":
-		orderClause = "users." + sort.Field
+		orderClause = "u." + sort.Field
 	default:
-		return db.Order("users.created_at DESC")
+		return db.Order("u.created_at DESC")
 	}
 
 	order := "DESC"
@@ -157,11 +157,12 @@ func (r *UserRepository) DeleteUser(ctx context.Context, userId string) error {
 // *===========================QUERY===========================*
 func (r *UserRepository) GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.User, error) {
 	var users []model.User
-	db := r.db.WithContext(ctx)
+	db := r.db.WithContext(ctx).
+		Table("users u")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Where("users.name ILIKE ? OR users.full_name ILIKE ?", searchPattern, searchPattern)
+		db = db.Where("u.name ILIKE ? OR u.full_name ILIKE ?", searchPattern, searchPattern)
 	}
 
 	// * Set pagination ke nil agar query.Apply tidak memproses cursor
@@ -182,11 +183,12 @@ func (r *UserRepository) GetUsersPaginated(ctx context.Context, params query.Par
 
 func (r *UserRepository) GetUsersCursor(ctx context.Context, params query.Params) ([]domain.User, error) {
 	var users []model.User
-	db := r.db.WithContext(ctx)
+	db := r.db.WithContext(ctx).
+		Table("users u")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Where("users.name ILIKE ? OR users.full_name ILIKE ?", searchPattern, searchPattern)
+		db = db.Where("u.name ILIKE ? OR u.full_name ILIKE ?", searchPattern, searchPattern)
 	}
 
 	// * Set offset ke 0 agar query.Apply tidak memproses offset
@@ -276,11 +278,11 @@ func (r *UserRepository) CheckEmailExists(ctx context.Context, email string) (bo
 
 func (r *UserRepository) CountUsers(ctx context.Context, params query.Params) (int64, error) {
 	var count int64
-	db := r.db.WithContext(ctx).Model(&model.User{})
+	db := r.db.WithContext(ctx).Table("users u")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Where("users.name ILIKE ? OR users.full_name ILIKE ?", searchPattern, searchPattern)
+		db = db.Where("u.name ILIKE ? OR u.full_name ILIKE ?", searchPattern, searchPattern)
 	}
 
 	db = query.Apply(db, query.Params{Filters: params.Filters}, r.applyUserFilters, nil)

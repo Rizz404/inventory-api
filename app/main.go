@@ -9,6 +9,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/rest"
 	"github.com/Rizz404/inventory-api/services/auth"
 	"github.com/Rizz404/inventory-api/services/category"
+	"github.com/Rizz404/inventory-api/services/location"
 	"github.com/Rizz404/inventory-api/services/user"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -118,11 +119,13 @@ func main() {
 	// *===================================REPOSITORY===================================*
 	userRepository := postgresql.NewUserRepository(db)
 	categoryRepository := postgresql.NewCategoryRepository(db)
+	locationRepository := postgresql.NewLocationRepository(db)
 
 	// *===================================SERVICE===================================*
 	authService := auth.NewService(userRepository)
 	userService := user.NewService(userRepository)
 	categoryService := category.NewService(categoryRepository)
+	locationService := location.NewService(locationRepository)
 
 	// *===================================SERVER CONFIG===================================*
 	app := fiber.New(fiber.Config{
@@ -155,6 +158,7 @@ func main() {
 	rest.NewAuthHandler(v1, authService)
 	rest.NewUserHandler(v1, userService)
 	rest.NewCategoryHandler(v1, categoryService)
+	rest.NewLocationHandler(v1, locationService)
 
 	// *===================================SERVER===================================*
 	log.Printf("server running on http://localhost%s", addr)
