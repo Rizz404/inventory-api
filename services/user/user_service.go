@@ -26,6 +26,8 @@ type Repository interface {
 	CheckUserExists(ctx context.Context, userId string) (bool, error)
 	CheckNameExists(ctx context.Context, name string) (bool, error)
 	CheckEmailExists(ctx context.Context, email string) (bool, error)
+	CheckNameExistsExcluding(ctx context.Context, name string, excludeUserId string) (bool, error)
+	CheckEmailExistsExcluding(ctx context.Context, email string, excludeUserId string) (bool, error)
 	CountUsers(ctx context.Context, params query.Params) (int64, error)
 }
 
@@ -119,7 +121,7 @@ func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain
 
 	// * Check name/email uniqueness if being updated
 	if payload.Name != nil {
-		if nameExists, err := s.Repo.CheckNameExists(ctx, *payload.Name); err != nil {
+		if nameExists, err := s.Repo.CheckNameExistsExcluding(ctx, *payload.Name, userId); err != nil {
 			return domain.UserResponse{}, err
 		} else if nameExists {
 			return domain.UserResponse{}, domain.ErrConflictWithKey(utils.ErrUserNameExistsKey)
@@ -127,7 +129,7 @@ func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain
 	}
 
 	if payload.Email != nil {
-		if emailExists, err := s.Repo.CheckEmailExists(ctx, *payload.Email); err != nil {
+		if emailExists, err := s.Repo.CheckEmailExistsExcluding(ctx, *payload.Email, userId); err != nil {
 			return domain.UserResponse{}, err
 		} else if emailExists {
 			return domain.UserResponse{}, domain.ErrConflictWithKey(utils.ErrUserEmailExistsKey)

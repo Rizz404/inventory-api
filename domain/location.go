@@ -24,8 +24,8 @@ type LocationTranslation struct {
 type LocationResponse struct {
 	ID           string  `json:"id"`
 	LocationCode string  `json:"locationCode"`
-	Building     *string `json:"building,omitempty"`
-	Floor        *string `json:"floor,omitempty"`
+	Building     *string `json:"building"`
+	Floor        *string `json:"floor"`
 	Name         string  `json:"name"`
 	CreatedAt    string  `json:"createdAt"`
 	UpdatedAt    string  `json:"updatedAt"`

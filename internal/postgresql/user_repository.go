@@ -276,6 +276,45 @@ func (r *UserRepository) CheckEmailExists(ctx context.Context, email string) (bo
 	return count > 0, nil
 }
 
+func (r *UserRepository) GetUsersResponse(ctx context.Context, params query.Params) ([]domain.UserResponse, error) {
+	users, err := r.GetUsersPaginated(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert to UserResponse using direct mapper
+	userResponses := mapper.DomainUsersToUsersResponse(users)
+	return userResponses, nil
+}
+
+func (r *UserRepository) GetUserResponseById(ctx context.Context, userId string) (domain.UserResponse, error) {
+	user, err := r.GetUserById(ctx, userId)
+	if err != nil {
+		return domain.UserResponse{}, err
+	}
+
+	// Convert to UserResponse using direct mapper
+	return mapper.DomainUserToUserResponse(&user), nil
+}
+
+func (r *UserRepository) CheckNameExistsExcluding(ctx context.Context, name string, excludeUserId string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&model.User{}).Where("name = ? AND id != ?", name, excludeUserId).Count(&count).Error
+	if err != nil {
+		return false, domain.ErrInternal(err)
+	}
+	return count > 0, nil
+}
+
+func (r *UserRepository) CheckEmailExistsExcluding(ctx context.Context, email string, excludeUserId string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&model.User{}).Where("email = ? AND id != ?", email, excludeUserId).Count(&count).Error
+	if err != nil {
+		return false, domain.ErrInternal(err)
+	}
+	return count > 0, nil
+}
+
 func (r *UserRepository) CountUsers(ctx context.Context, params query.Params) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Table("users u")

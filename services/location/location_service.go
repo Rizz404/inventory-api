@@ -25,6 +25,7 @@ type Repository interface {
 	GetLocationHierarchy(ctx context.Context, langCode string) ([]domain.LocationResponse, error)
 	CheckLocationExist(ctx context.Context, locationId string) (bool, error)
 	CheckLocationCodeExist(ctx context.Context, locationCode string) (bool, error)
+	CheckLocationCodeExistExcluding(ctx context.Context, locationCode string, excludeLocationId string) (bool, error)
 	CountLocations(ctx context.Context, params query.Params) (int64, error)
 }
 
@@ -102,7 +103,7 @@ func (s *Service) UpdateLocation(ctx context.Context, locationId string, payload
 
 	// * Check location code uniqueness if being updated
 	if payload.LocationCode != nil {
-		if codeExists, err := s.Repo.CheckLocationCodeExist(ctx, *payload.LocationCode); err != nil {
+		if codeExists, err := s.Repo.CheckLocationCodeExistExcluding(ctx, *payload.LocationCode, locationId); err != nil {
 			return domain.LocationResponse{}, err
 		} else if codeExists {
 			return domain.LocationResponse{}, domain.ErrConflictWithKey(utils.ErrLocationCodeExistsKey)

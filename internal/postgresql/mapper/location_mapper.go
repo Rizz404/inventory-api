@@ -134,6 +134,8 @@ func DomainLocationToLocationResponse(d *domain.Location, langCode string) domai
 	response := domain.LocationResponse{
 		ID:           d.ID,
 		LocationCode: d.LocationCode,
+		Building:     d.Building,
+		Floor:        d.Floor,
 		CreatedAt:    d.CreatedAt.Format(TimeFormat),
 		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
 	}
@@ -180,6 +182,12 @@ func ToModelLocationUpdateMap(payload *domain.UpdateLocationPayload) map[string]
 
 	if payload.LocationCode != nil {
 		updates["location_code"] = *payload.LocationCode
+	}
+	if payload.Building != nil {
+		updates["building"] = payload.Building
+	}
+	if payload.Floor != nil {
+		updates["floor"] = payload.Floor
 	}
 
 	return updates

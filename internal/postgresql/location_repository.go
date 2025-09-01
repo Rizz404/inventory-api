@@ -331,6 +331,15 @@ func (r *LocationRepository) CheckLocationCodeExist(ctx context.Context, locatio
 	return count > 0, nil
 }
 
+func (r *LocationRepository) CheckLocationCodeExistExcluding(ctx context.Context, locationCode string, excludeLocationId string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Table("locations l").Where("l.location_code = ? AND l.id != ?", locationCode, excludeLocationId).Count(&count).Error
+	if err != nil {
+		return false, domain.ErrInternal(err)
+	}
+	return count > 0, nil
+}
+
 func (r *LocationRepository) CountLocations(ctx context.Context, params query.Params) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Table("locations l")

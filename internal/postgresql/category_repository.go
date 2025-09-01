@@ -344,6 +344,15 @@ func (r *CategoryRepository) CheckCategoryCodeExist(ctx context.Context, categor
 	return count > 0, nil
 }
 
+func (r *CategoryRepository) CheckCategoryCodeExistExcluding(ctx context.Context, categoryCode string, excludeCategoryId string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&model.Category{}).Where("category_code = ? AND id != ?", categoryCode, excludeCategoryId).Count(&count).Error
+	if err != nil {
+		return false, domain.ErrInternal(err)
+	}
+	return count > 0, nil
+}
+
 func (r *CategoryRepository) CountCategories(ctx context.Context, params query.Params) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Table("categories c")

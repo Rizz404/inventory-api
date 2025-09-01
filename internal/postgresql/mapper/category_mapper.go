@@ -117,6 +117,8 @@ func ToDomainCategoryResponse(m *model.Category, langCode string) domain.Categor
 	response := domain.CategoryResponse{
 		ID:           m.ID.String(),
 		CategoryCode: m.CategoryCode,
+		CreatedAt:    m.CreatedAt.Format(TimeFormat),
+		UpdatedAt:    m.UpdatedAt.Format(TimeFormat),
 	}
 
 	if m.ParentID != nil && !m.ParentID.IsZero() {

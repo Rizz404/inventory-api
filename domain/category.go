@@ -23,11 +23,11 @@ type CategoryTranslation struct {
 
 type CategoryResponse struct {
 	ID           string             `json:"id"`
-	ParentID     *string            `json:"parentId,omitempty"`
+	ParentID     *string            `json:"parentId"`
 	CategoryCode string             `json:"categoryCode"`
 	Name         string             `json:"name"`
-	Description  *string            `json:"description,omitempty"`
-	Children     []CategoryResponse `json:"children,omitempty"`
+	Description  *string            `json:"description"`
+	Children     []CategoryResponse `json:"children"`
 	CreatedAt    string             `json:"createdAt"`
 	UpdatedAt    string             `json:"updatedAt"`
 }

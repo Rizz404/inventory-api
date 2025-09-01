@@ -25,6 +25,7 @@ type Repository interface {
 	GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error)
 	CheckCategoryExist(ctx context.Context, categoryId string) (bool, error)
 	CheckCategoryCodeExist(ctx context.Context, categoryCode string) (bool, error)
+	CheckCategoryCodeExistExcluding(ctx context.Context, categoryCode string, excludeCategoryId string) (bool, error)
 	CountCategories(ctx context.Context, params query.Params) (int64, error)
 }
 
@@ -111,7 +112,7 @@ func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload
 
 	// * Check category code uniqueness if being updated
 	if payload.CategoryCode != nil {
-		if codeExists, err := s.Repo.CheckCategoryCodeExist(ctx, *payload.CategoryCode); err != nil {
+		if codeExists, err := s.Repo.CheckCategoryCodeExistExcluding(ctx, *payload.CategoryCode, categoryId); err != nil {
 			return domain.CategoryResponse{}, err
 		} else if codeExists {
 			return domain.CategoryResponse{}, domain.ErrConflictWithKey(utils.ErrCategoryCodeExistsKey)
