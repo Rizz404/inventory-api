@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Rizz404/inventory-api/internal/client/cloudinary"
 	"github.com/Rizz404/inventory-api/internal/postgresql"
 	"github.com/Rizz404/inventory-api/internal/rest"
 	"github.com/Rizz404/inventory-api/services/auth"
@@ -70,6 +71,36 @@ func main() {
 
 	log.Printf("successfully connected to database")
 
+	// *===================================CLOUDINARY CLIENT===================================*
+	var cloudinaryClient *cloudinary.Client
+	cloudinaryURL := os.Getenv("CLOUDINARY_URL")
+	if cloudinaryURL != "" {
+		var err error
+		cloudinaryClient, err = cloudinary.NewClientFromURL(cloudinaryURL)
+		if err != nil {
+			log.Printf("Warning: Failed to initialize Cloudinary client: %v. File upload will be disabled.", err)
+		} else {
+			log.Printf("Cloudinary client initialized successfully")
+		}
+	} else {
+		// Try individual environment variables
+		cloudName := os.Getenv("CLOUDINARY_CLOUD_NAME")
+		apiKey := os.Getenv("CLOUDINARY_API_KEY")
+		apiSecret := os.Getenv("CLOUDINARY_API_SECRET")
+
+		if cloudName != "" && apiKey != "" && apiSecret != "" {
+			var err error
+			cloudinaryClient, err = cloudinary.NewClient(cloudName, apiKey, apiSecret)
+			if err != nil {
+				log.Printf("Warning: Failed to initialize Cloudinary client: %v. File upload will be disabled.", err)
+			} else {
+				log.Printf("Cloudinary client initialized successfully")
+			}
+		} else {
+			log.Printf("Cloudinary credentials not provided. File upload will be disabled.")
+		}
+	}
+
 	// *===================================FCM CLIENT===================================*
 	// var fcmClient *fcm.Client
 	// if enableFCM {
@@ -123,7 +154,7 @@ func main() {
 
 	// *===================================SERVICE===================================*
 	authService := auth.NewService(userRepository)
-	userService := user.NewService(userRepository)
+	userService := user.NewService(userRepository, cloudinaryClient)
 	categoryService := category.NewService(categoryRepository)
 	locationService := location.NewService(locationRepository)
 

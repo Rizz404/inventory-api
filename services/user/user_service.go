@@ -2,11 +2,15 @@ package user
 
 import (
 	"context"
+	"mime/multipart"
+	"strings"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/client/cloudinary"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
+	"github.com/oklog/ulid/v2"
 )
 
 // * Repository interface defines the contract for user data operations
@@ -34,8 +38,8 @@ type Repository interface {
 // * UserService interface defines the contract for user business operations
 type UserService interface {
 	// * MUTATION
-	CreateUser(ctx context.Context, payload *domain.CreateUserPayload) (domain.UserResponse, error)
-	UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.UserResponse, error)
+	CreateUser(ctx context.Context, payload *domain.CreateUserPayload, avatarFile *multipart.FileHeader) (domain.UserResponse, error)
+	UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload, avatarFile *multipart.FileHeader) (domain.UserResponse, error)
 	DeleteUser(ctx context.Context, userId string) error
 
 	// * QUERY
@@ -51,20 +55,22 @@ type UserService interface {
 }
 
 type Service struct {
-	Repo Repository
+	Repo             Repository
+	CloudinaryClient *cloudinary.Client
 }
 
 // * Ensure Service implements UserService interface
 var _ UserService = (*Service)(nil)
 
-func NewService(r Repository) UserService {
+func NewService(r Repository, cloudinaryClient *cloudinary.Client) UserService {
 	return &Service{
-		Repo: r,
+		Repo:             r,
+		CloudinaryClient: cloudinaryClient,
 	}
 }
 
 // *===========================MUTATION===========================*
-func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayload) (domain.UserResponse, error) {
+func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayload, avatarFile *multipart.FileHeader) (domain.UserResponse, error) {
 	hashedPassword, err := utils.HashPassword(payload.Password)
 	if err != nil {
 		return domain.UserResponse{}, domain.ErrInternal(err)
@@ -89,6 +95,30 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 		preferredLang = *payload.PreferredLang
 	}
 
+	// * Handle avatar upload if file is provided
+	var avatarURL *string
+	if avatarFile != nil {
+		// Upload file to Cloudinary if client is available
+		if s.CloudinaryClient != nil {
+			// Generate temporary user ID for avatar naming
+			tempUserID := "temp_" + ulid.Make().String()
+			uploadConfig := cloudinary.GetAvatarUploadConfig()
+			publicID := "user_" + tempUserID + "_avatar"
+			uploadConfig.PublicID = &publicID
+
+			uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, avatarFile, uploadConfig)
+			if err != nil {
+				return domain.UserResponse{}, domain.ErrBadRequestWithKey(utils.ErrFileUploadFailedKey)
+			}
+			avatarURL = &uploadResult.SecureURL
+		} else {
+			return domain.UserResponse{}, domain.ErrBadRequestWithKey(utils.ErrCloudinaryConfigKey)
+		}
+	} else if payload.AvatarURL != nil {
+		// Use provided avatar URL from JSON/form data
+		avatarURL = payload.AvatarURL
+	}
+
 	// * Siapkan user baru
 	newUser := domain.User{
 		Name:          payload.Name,
@@ -99,7 +129,7 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 		EmployeeID:    payload.EmployeeID,
 		PreferredLang: preferredLang,
 		IsActive:      true, // Default active
-		AvatarURL:     payload.AvatarURL,
+		AvatarURL:     avatarURL,
 	}
 
 	createdUser, err := s.Repo.CreateUser(ctx, &newUser)
@@ -108,13 +138,31 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 		return domain.UserResponse{}, err
 	}
 
+	// * Update avatar public ID with actual user ID if file was uploaded
+	if avatarFile != nil && s.CloudinaryClient != nil && avatarURL != nil {
+		// Re-upload with correct public ID
+		uploadConfig := cloudinary.GetAvatarUploadConfig()
+		finalPublicID := "user_" + createdUser.ID + "_avatar"
+		uploadConfig.PublicID = &finalPublicID
+
+		uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, avatarFile, uploadConfig)
+		if err == nil {
+			// Update user with final avatar URL
+			updatePayload := &domain.UpdateUserPayload{
+				AvatarURL: &uploadResult.SecureURL,
+			}
+			createdUser, _ = s.Repo.UpdateUserWithPayload(ctx, createdUser.ID, updatePayload)
+		}
+		// Note: We don't return error here to avoid failing user creation if avatar re-upload fails
+	}
+
 	// * Convert to UserResponse using direct mapper
 	return mapper.DomainUserToUserResponse(&createdUser), nil
 }
 
-func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.UserResponse, error) {
+func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload, avatarFile *multipart.FileHeader) (domain.UserResponse, error) {
 	// Check if user exists
-	_, err := s.Repo.GetUserById(ctx, userId)
+	existingUser, err := s.Repo.GetUserById(ctx, userId)
 	if err != nil {
 		return domain.UserResponse{}, err
 	}
@@ -136,10 +184,51 @@ func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain
 		}
 	}
 
-	// Use the new UpdateUserWithPayload method
+	// * Handle avatar update
+	var shouldDeleteOldAvatar bool
+	oldAvatarPublicID := "user_" + userId + "_avatar"
+
+	if avatarFile != nil {
+		// Upload new avatar file
+		if s.CloudinaryClient != nil {
+			uploadConfig := cloudinary.GetAvatarUploadConfig()
+			publicID := "user_" + userId + "_avatar"
+			uploadConfig.PublicID = &publicID
+
+			uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, avatarFile, uploadConfig)
+			if err != nil {
+				return domain.UserResponse{}, domain.ErrBadRequestWithKey(utils.ErrFileUploadFailedKey)
+			}
+
+			// Set new avatar URL in payload
+			payload.AvatarURL = &uploadResult.SecureURL
+			// Note: Cloudinary will automatically overwrite old avatar due to same public ID
+		} else {
+			return domain.UserResponse{}, domain.ErrBadRequestWithKey(utils.ErrCloudinaryConfigKey)
+		}
+	} else if payload.AvatarURL != nil {
+		// Handle avatar URL changes from JSON/form data
+		if *payload.AvatarURL == "" || *payload.AvatarURL == "null" {
+			// User wants to remove avatar
+			payload.AvatarURL = nil
+			shouldDeleteOldAvatar = true
+		}
+		// If payload.AvatarURL has a valid URL, it will be used as-is
+	}
+
+	// Use the UpdateUserWithPayload method
 	updatedUser, err := s.Repo.UpdateUserWithPayload(ctx, userId, payload)
 	if err != nil {
 		return domain.UserResponse{}, err
+	}
+
+	// * Delete old avatar from Cloudinary if needed
+	if shouldDeleteOldAvatar && s.CloudinaryClient != nil && existingUser.AvatarURL != nil && *existingUser.AvatarURL != "" {
+		// Only delete if the old avatar was stored in Cloudinary (contains our public ID pattern)
+		if strings.Contains(*existingUser.AvatarURL, "user_"+userId+"_avatar") {
+			_ = s.CloudinaryClient.DeleteFile(ctx, oldAvatarPublicID)
+			// Note: We don't return error here to avoid failing user update if avatar deletion fails
+		}
 	}
 
 	// * Convert to UserResponse using direct mapper

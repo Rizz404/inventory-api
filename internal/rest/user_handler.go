@@ -1,7 +1,9 @@
 package rest
 
 import (
+	"mime/multipart"
 	"strconv"
+	"strings"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql"
@@ -95,11 +97,31 @@ func (h *UserHandler) parseUserFiltersAndSort(c *fiber.Ctx) (query.Params, error
 // *===========================MUTATION===========================*
 func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 	var payload domain.CreateUserPayload
-	if err := web.ParseAndValidate(c, &payload); err != nil {
-		return web.HandleError(c, err)
+
+	// Check content type to determine parsing method
+	contentType := c.Get("Content-Type")
+	var avatarFile *multipart.FileHeader
+
+	if strings.Contains(contentType, "multipart/form-data") {
+		// Parse multipart form data
+		if err := web.ParseFormAndValidate(c, &payload); err != nil {
+			return web.HandleError(c, err)
+		}
+
+		// Try to get avatar file (optional)
+		file, err := c.FormFile("avatar")
+		if err == nil {
+			avatarFile = file
+		}
+		// Note: We don't return error if avatar file is missing since it's optional
+	} else {
+		// Parse JSON/form-urlencoded data
+		if err := web.ParseAndValidate(c, &payload); err != nil {
+			return web.HandleError(c, err)
+		}
 	}
 
-	user, err := h.Service.CreateUser(c.Context(), &payload)
+	user, err := h.Service.CreateUser(c.Context(), &payload, avatarFile)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
@@ -114,11 +136,31 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	}
 
 	var payload domain.UpdateUserPayload
-	if err := web.ParseAndValidate(c, &payload); err != nil {
-		return web.HandleError(c, err)
+
+	// Check content type to determine parsing method
+	contentType := c.Get("Content-Type")
+	var avatarFile *multipart.FileHeader
+
+	if strings.Contains(contentType, "multipart/form-data") {
+		// Parse multipart form data
+		if err := web.ParseFormAndValidate(c, &payload); err != nil {
+			return web.HandleError(c, err)
+		}
+
+		// Try to get avatar file (optional)
+		file, err := c.FormFile("avatar")
+		if err == nil {
+			avatarFile = file
+		}
+		// Note: We don't return error if avatar file is missing since it's optional
+	} else {
+		// Parse JSON/form-urlencoded data
+		if err := web.ParseAndValidate(c, &payload); err != nil {
+			return web.HandleError(c, err)
+		}
 	}
 
-	user, err := h.Service.UpdateUser(c.Context(), id, &payload)
+	user, err := h.Service.UpdateUser(c.Context(), id, &payload, avatarFile)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
@@ -133,11 +175,31 @@ func (h *UserHandler) UpdateCurrentUser(c *fiber.Ctx) error {
 	}
 
 	var payload domain.UpdateUserPayload
-	if err := web.ParseAndValidate(c, &payload); err != nil {
-		return web.HandleError(c, err)
+
+	// Check content type to determine parsing method
+	contentType := c.Get("Content-Type")
+	var avatarFile *multipart.FileHeader
+
+	if strings.Contains(contentType, "multipart/form-data") {
+		// Parse multipart form data
+		if err := web.ParseFormAndValidate(c, &payload); err != nil {
+			return web.HandleError(c, err)
+		}
+
+		// Try to get avatar file (optional)
+		file, err := c.FormFile("avatar")
+		if err == nil {
+			avatarFile = file
+		}
+		// Note: We don't return error if avatar file is missing since it's optional
+	} else {
+		// Parse JSON/form-urlencoded data
+		if err := web.ParseAndValidate(c, &payload); err != nil {
+			return web.HandleError(c, err)
+		}
 	}
 
-	user, err := h.Service.UpdateUser(c.Context(), id, &payload)
+	user, err := h.Service.UpdateUser(c.Context(), id, &payload, avatarFile)
 	if err != nil {
 		return web.HandleError(c, err)
 	}

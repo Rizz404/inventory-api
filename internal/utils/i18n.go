@@ -45,6 +45,15 @@ const (
 	ErrInvalidCredentialsKey MessageKey = "error.auth.invalid_credentials"
 	ErrTokenExpiredKey       MessageKey = "error.auth.token_expired"
 	ErrTokenInvalidKey       MessageKey = "error.auth.token_invalid"
+
+	// * File upload error keys
+	ErrFileRequiredKey       MessageKey = "error.file.required"
+	ErrFileTypeNotAllowedKey MessageKey = "error.file.type_not_allowed"
+	ErrFileSizeTooLargeKey   MessageKey = "error.file.size_too_large"
+	ErrTooManyFilesKey       MessageKey = "error.file.too_many_files"
+	ErrFileUploadFailedKey   MessageKey = "error.file.upload_failed"
+	ErrFileDeleteFailedKey   MessageKey = "error.file.delete_failed"
+	ErrCloudinaryConfigKey   MessageKey = "error.file.cloudinary_config"
 )
 
 // * Success message keys
@@ -95,6 +104,12 @@ const (
 	SuccessLoginKey   MessageKey = "success.auth.login"
 	SuccessLogoutKey  MessageKey = "success.auth.logout"
 	SuccessRefreshKey MessageKey = "success.auth.refresh"
+
+	// * File upload success keys
+	SuccessFileUploadedKey          MessageKey = "success.file.uploaded"
+	SuccessAvatarUploadedKey        MessageKey = "success.file.avatar_uploaded"
+	SuccessFileDeletedKey           MessageKey = "success.file.deleted"
+	SuccessMultipleFilesUploadedKey MessageKey = "success.file.multiple_uploaded"
 )
 
 // * messageTranslations contains all message translations
@@ -237,6 +252,43 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Invalid token",
 		"id-ID": "Token tidak valid",
 		"ja-JP": "無効なトークン",
+	},
+
+	// * File upload error messages
+	ErrFileRequiredKey: {
+		"en-US": "File is required",
+		"id-ID": "File diperlukan",
+		"ja-JP": "ファイルが必要です",
+	},
+	ErrFileTypeNotAllowedKey: {
+		"en-US": "File type not allowed",
+		"id-ID": "Tipe file tidak diizinkan",
+		"ja-JP": "ファイルタイプは許可されていません",
+	},
+	ErrFileSizeTooLargeKey: {
+		"en-US": "File size too large",
+		"id-ID": "Ukuran file terlalu besar",
+		"ja-JP": "ファイルサイズが大きすぎます",
+	},
+	ErrTooManyFilesKey: {
+		"en-US": "Too many files",
+		"id-ID": "Terlalu banyak file",
+		"ja-JP": "ファイルが多すぎます",
+	},
+	ErrFileUploadFailedKey: {
+		"en-US": "File upload failed",
+		"id-ID": "Unggah file gagal",
+		"ja-JP": "ファイルアップロードに失敗しました",
+	},
+	ErrFileDeleteFailedKey: {
+		"en-US": "File delete failed",
+		"id-ID": "Hapus file gagal",
+		"ja-JP": "ファイル削除に失敗しました",
+	},
+	ErrCloudinaryConfigKey: {
+		"en-US": "Cloudinary configuration error",
+		"id-ID": "Kesalahan konfigurasi Cloudinary",
+		"ja-JP": "Cloudinary設定エラー",
 	},
 
 	// * Success messages
@@ -432,6 +484,28 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Token refreshed successfully",
 		"id-ID": "Token berhasil diperbarui",
 		"ja-JP": "トークンが正常に更新されました",
+	},
+
+	// * File upload success messages
+	SuccessFileUploadedKey: {
+		"en-US": "File uploaded successfully",
+		"id-ID": "File berhasil diunggah",
+		"ja-JP": "ファイルが正常にアップロードされました",
+	},
+	SuccessAvatarUploadedKey: {
+		"en-US": "Avatar uploaded successfully",
+		"id-ID": "Avatar berhasil diunggah",
+		"ja-JP": "アバターが正常にアップロードされました",
+	},
+	SuccessFileDeletedKey: {
+		"en-US": "File deleted successfully",
+		"id-ID": "File berhasil dihapus",
+		"ja-JP": "ファイルが正常に削除されました",
+	},
+	SuccessMultipleFilesUploadedKey: {
+		"en-US": "Multiple files uploaded successfully",
+		"id-ID": "Beberapa file berhasil diunggah",
+		"ja-JP": "複数のファイルが正常にアップロードされました",
 	},
 }
 

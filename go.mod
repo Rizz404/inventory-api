@@ -4,6 +4,7 @@ go 1.23.4
 
 require (
 	firebase.google.com/go/v4 v4.18.0
+	github.com/cloudinary/cloudinary-go/v2 v2.13.0
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/gofiber/contrib/jwt v1.1.2
 	github.com/gofiber/fiber/v2 v2.52.9
@@ -35,6 +36,7 @@ require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443 // indirect
+	github.com/creasty/defaults v1.7.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -50,6 +52,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.15.0 // indirect
+	github.com/gorilla/schema v1.4.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgx/v5 v5.6.0 // indirect
