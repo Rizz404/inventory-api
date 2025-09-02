@@ -158,7 +158,7 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"ja-JP": "ユーザーが見つかりません",
 	},
 	ErrUserNameExistsKey: {
-		"en-US": "Username already exists",
+		"en-US": "Name already exists",
 		"id-ID": "Nama pengguna sudah ada",
 		"ja-JP": "ユーザー名は既に存在します",
 	},
@@ -173,7 +173,7 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"ja-JP": "ユーザーIDが必要です",
 	},
 	ErrUserNameRequiredKey: {
-		"en-US": "Username is required",
+		"en-US": "Name is required",
 		"id-ID": "Nama pengguna diperlukan",
 		"ja-JP": "ユーザー名が必要です",
 	},
@@ -365,7 +365,7 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"ja-JP": "ユーザーの存在が正常に確認されました",
 	},
 	SuccessUserNameExistenceCheckedKey: {
-		"en-US": "Username existence checked successfully",
+		"en-US": "Name existence checked successfully",
 		"id-ID": "Keberadaan nama pengguna berhasil diperiksa",
 		"ja-JP": "ユーザー名の存在が正常に確認されました",
 	},

@@ -11,6 +11,8 @@ func ToModelLocation(d *domain.Location) model.Location {
 		LocationCode: d.LocationCode,
 		Building:     d.Building,
 		Floor:        d.Floor,
+		Latitude:     d.Latitude,
+		Longitude:    d.Latitude,
 	}
 
 	if d.ID != "" {
@@ -27,6 +29,8 @@ func ToModelLocationForCreate(d *domain.Location) model.Location {
 		LocationCode: d.LocationCode,
 		Building:     d.Building,
 		Floor:        d.Floor,
+		Latitude:     d.Latitude,
+		Longitude:    d.Latitude,
 	}
 
 	return modelLocation
@@ -74,6 +78,8 @@ func ToDomainLocation(m *model.Location) domain.Location {
 		LocationCode: m.LocationCode,
 		Building:     m.Building,
 		Floor:        m.Floor,
+		Latitude:     m.Latitude,
+		Longitude:    m.Latitude,
 		CreatedAt:    m.CreatedAt,
 		UpdatedAt:    m.UpdatedAt,
 	}
@@ -103,6 +109,8 @@ func ToDomainLocationResponse(m *model.Location, langCode string) domain.Locatio
 		LocationCode: m.LocationCode,
 		Building:     m.Building,
 		Floor:        m.Floor,
+		Latitude:     m.Latitude,
+		Longitude:    m.Longitude,
 		CreatedAt:    m.CreatedAt.Format(TimeFormat),
 		UpdatedAt:    m.UpdatedAt.Format(TimeFormat),
 	}
@@ -136,6 +144,8 @@ func DomainLocationToLocationResponse(d *domain.Location, langCode string) domai
 		LocationCode: d.LocationCode,
 		Building:     d.Building,
 		Floor:        d.Floor,
+		Latitude:     d.Latitude,
+		Longitude:    d.Longitude,
 		CreatedAt:    d.CreatedAt.Format(TimeFormat),
 		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
 	}
@@ -188,6 +198,12 @@ func ToModelLocationUpdateMap(payload *domain.UpdateLocationPayload) map[string]
 	}
 	if payload.Floor != nil {
 		updates["floor"] = payload.Floor
+	}
+	if payload.Latitude != nil {
+		updates["latitude"] = payload.Latitude
+	}
+	if payload.Longitude != nil {
+		updates["longitude"] = payload.Longitude
 	}
 
 	return updates

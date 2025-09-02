@@ -50,7 +50,7 @@ type IssueReportTranslation struct {
 }
 
 func (IssueReportTranslation) TableName() string {
-	return "issue_reports_translation"
+	return "issue_report_translations"
 }
 
 func (u *IssueReportTranslation) BeforeCreate(tx *gorm.DB) error {

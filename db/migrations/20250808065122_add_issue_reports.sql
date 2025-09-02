@@ -36,10 +36,10 @@ CREATE TABLE issue_report_translations (
   FOREIGN KEY (report_id) REFERENCES issue_reports(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_reports_translation_report_lang ON issue_report_translations(report_id, lang_code);
+CREATE INDEX idx_report_translations_report_lang ON issue_report_translations(report_id, lang_code);
 
 -- +goose Down
-DROP INDEX IF EXISTS idx_reports_translation_report_lang;
+DROP INDEX IF EXISTS idx_report_translations_report_lang;
 
 DROP TABLE IF EXISTS issue_report_translations;
 

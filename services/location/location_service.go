@@ -74,6 +74,8 @@ func (s *Service) CreateLocation(ctx context.Context, payload *domain.CreateLoca
 		LocationCode: payload.LocationCode,
 		Building:     payload.Building,
 		Floor:        payload.Floor,
+		Latitude:     payload.Latitude,
+		Longitude:    payload.Longitude,
 		Translations: make([]domain.LocationTranslation, len(payload.Translations)),
 	}
 

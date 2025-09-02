@@ -6,8 +6,7 @@ CREATE TYPE asset_condition AS ENUM ('Good', 'Fair', 'Poor', 'Damaged');
 CREATE TABLE assets (
   id VARCHAR(26) PRIMARY KEY,
   asset_tag VARCHAR(50) UNIQUE NOT NULL,
-  qr_code_value VARCHAR(255) UNIQUE NULL,
-  nfc_tag_id VARCHAR(255) UNIQUE NULL,
+  data_matrix_value VARCHAR(255) UNIQUE NOT NULL,
   asset_name VARCHAR(200) NOT NULL,
   category_id VARCHAR(26) NOT NULL,
   brand VARCHAR(100) NULL,
@@ -23,10 +22,6 @@ CREATE TABLE assets (
   assigned_to VARCHAR(26) NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT chk_identifier CHECK (
-    qr_code_value IS NOT NULL
-    OR nfc_tag_id IS NOT NULL
-  ),
   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT,
   FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE
   SET NULL,
@@ -45,6 +40,8 @@ CREATE INDEX idx_assets_category_id ON assets(category_id);
 CREATE INDEX idx_assets_warranty_end ON assets(warranty_end);
 
 CREATE INDEX idx_assets_name_brand_model ON assets(asset_name, brand, model);
+
+CREATE INDEX idx_assets_data_matrix ON assets(data_matrix_value);
 
 -- +goose Down
 DROP INDEX IF EXISTS idx_assets_name_brand_model;

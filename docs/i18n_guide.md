@@ -275,10 +275,10 @@ Response:
 
 #### User-Specific Errors
 - `ErrUserNotFoundKey` - User not found
-- `ErrUserNameExistsKey` - Username already exists
+- `ErrUserNameExistsKey` - Name already exists
 - `ErrUserEmailExistsKey` - Email already exists
 - `ErrUserIDRequiredKey` - User ID is required
-- `ErrUserNameRequiredKey` - Username is required
+- `ErrUserNameRequiredKey` - Name is required
 - `ErrUserEmailRequiredKey` - Email is required
 
 #### Category-Specific Errors

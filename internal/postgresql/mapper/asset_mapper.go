@@ -7,20 +7,19 @@ import (
 
 func ToDomainAssetResponse(m model.Asset, langCode string) domain.AssetResponse {
 	resp := domain.AssetResponse{
-		ID:            m.ID.String(),
-		AssetTag:      m.AssetTag,
-		QrCodeValue:   m.QrCodeValue,
-		NfcTagID:      m.NfcTagID,
-		AssetName:     m.AssetName,
-		Brand:         m.Brand,
-		Model:         m.Model,
-		SerialNumber:  m.SerialNumber,
-		PurchasePrice: m.PurchasePrice,
-		VendorName:    m.VendorName,
-		Status:        m.Status,
-		Condition:     m.Condition,
-		CreatedAt:     m.CreatedAt.Format(TimeFormat),
-		UpdatedAt:     m.UpdatedAt.Format(TimeFormat),
+		ID:              m.ID.String(),
+		AssetTag:        m.AssetTag,
+		DataMatrixValue: m.DataMatrixValue,
+		AssetName:       m.AssetName,
+		Brand:           m.Brand,
+		Model:           m.Model,
+		SerialNumber:    m.SerialNumber,
+		PurchasePrice:   m.PurchasePrice,
+		VendorName:      m.VendorName,
+		Status:          m.Status,
+		Condition:       m.Condition,
+		CreatedAt:       m.CreatedAt.Format(TimeFormat),
+		UpdatedAt:       m.UpdatedAt.Format(TimeFormat),
 	}
 
 	if m.PurchaseDate != nil {

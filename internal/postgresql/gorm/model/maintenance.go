@@ -47,7 +47,7 @@ type MaintenanceScheduleTranslation struct {
 }
 
 func (MaintenanceScheduleTranslation) TableName() string {
-	return "maintenance_schedules_translation"
+	return "maintenance_schedule_translations"
 }
 
 func (u *MaintenanceScheduleTranslation) BeforeCreate(tx *gorm.DB) error {
@@ -101,7 +101,7 @@ type MaintenanceRecordTranslation struct {
 }
 
 func (MaintenanceRecordTranslation) TableName() string {
-	return "maintenance_records_translation"
+	return "maintenance_record_translations"
 }
 
 func (u *MaintenanceRecordTranslation) BeforeCreate(tx *gorm.DB) error {

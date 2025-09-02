@@ -4,11 +4,15 @@ CREATE TABLE locations (
   location_code VARCHAR(20) UNIQUE NOT NULL,
   building VARCHAR(100) NULL,
   floor VARCHAR(20) NULL,
+  latitude DECIMAL(11,8) NULL,
+  longitude DECIMAL(11,8) NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_locations_building_floor ON locations(building, floor);
+
+CREATE INDEX idx_locations_coordinates ON locations(latitude, longitude);
 
 CREATE TABLE location_translations (
   id VARCHAR(26) PRIMARY KEY,
@@ -25,6 +29,8 @@ CREATE INDEX idx_location_translations_location_lang ON location_translations(lo
 DROP INDEX IF EXISTS idx_location_translations_location_lang;
 
 DROP TABLE IF EXISTS location_translations;
+
+DROP INDEX IF EXISTS idx_locations_coordinates;
 
 DROP INDEX IF EXISTS idx_locations_building_floor;
 

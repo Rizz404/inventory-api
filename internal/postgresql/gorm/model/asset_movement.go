@@ -51,7 +51,7 @@ type AssetMovementTranslation struct {
 }
 
 func (AssetMovementTranslation) TableName() string {
-	return "asset_movements_translation"
+	return "asset_movement_translations"
 }
 
 func (u *AssetMovementTranslation) BeforeCreate(tx *gorm.DB) error {

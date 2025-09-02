@@ -45,7 +45,7 @@ type NotificationTranslation struct {
 }
 
 func (NotificationTranslation) TableName() string {
-	return "notifications_translation"
+	return "notification_translations"
 }
 
 func (u *NotificationTranslation) BeforeCreate(tx *gorm.DB) error {

@@ -7,8 +7,7 @@ import "time"
 type ScanMethodType string
 
 const (
-	ScanMethodQRCode      ScanMethodType = "QR_CODE"
-	ScanMethodNFC         ScanMethodType = "NFC"
+	ScanMethodDataMatrix  ScanMethodType = "DATA_MATRIX"
 	ScanMethodManualInput ScanMethodType = "MANUAL_INPUT"
 )
 
@@ -50,7 +49,7 @@ type ScanLogResponse struct {
 
 type CreateScanLogPayload struct {
 	ScannedValue    string         `json:"scannedValue" validate:"required"`
-	ScanMethod      ScanMethodType `json:"scanMethod" validate:"required,oneof=QR_CODE NFC MANUAL_INPUT"`
+	ScanMethod      ScanMethodType `json:"scanMethod" validate:"required,oneof=DATA_MATRIX MANUAL_INPUT"`
 	ScanLocationLat *float64       `json:"scanLocationLat,omitempty" validate:"omitempty,latitude"`
 	ScanLocationLng *float64       `json:"scanLocationLng,omitempty" validate:"omitempty,longitude"`
 }

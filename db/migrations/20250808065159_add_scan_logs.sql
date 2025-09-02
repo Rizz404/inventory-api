@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TYPE scan_method_type AS ENUM ('QR_CODE', 'NFC', 'MANUAL_INPUT');
+CREATE TYPE scan_method_type AS ENUM ('DATA_MATRIX', 'MANUAL_INPUT');
 
 CREATE TYPE scan_result_type AS ENUM ('Success', 'Invalid ID', 'Asset Not Found');
 
@@ -24,7 +24,11 @@ CREATE INDEX idx_scan_logs_scanned_by ON scan_logs(scanned_by);
 
 CREATE INDEX idx_scan_logs_result ON scan_logs(scan_result);
 
+CREATE INDEX idx_scan_logs_location ON scan_logs(scan_location_lat, scan_location_lng);
+
 -- +goose Down
+DROP INDEX IF EXISTS idx_scan_logs_location;
+
 DROP INDEX IF EXISTS idx_scan_logs_result;
 
 DROP INDEX IF EXISTS idx_scan_logs_scanned_by;

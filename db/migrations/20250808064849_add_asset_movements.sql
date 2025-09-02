@@ -28,7 +28,7 @@ CREATE INDEX idx_movements_movement_date ON asset_movements(movement_date);
 
 CREATE INDEX idx_movements_to_location_user ON asset_movements(to_location_id, to_user_id);
 
-CREATE TABLE asset_movements_translation (
+CREATE TABLE asset_movement_translations (
   id VARCHAR(26) PRIMARY KEY,
   movement_id VARCHAR(26) NOT NULL,
   lang_code VARCHAR(5) NOT NULL,
@@ -37,12 +37,12 @@ CREATE TABLE asset_movements_translation (
   FOREIGN KEY (movement_id) REFERENCES asset_movements(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_movements_translation_movement_lang ON asset_movements_translation(movement_id, lang_code);
+CREATE INDEX idx_movement_translations_movement_lang ON asset_movement_translations(movement_id, lang_code);
 
 -- +goose Down
-DROP INDEX IF EXISTS idx_movements_translation_movement_lang;
+DROP INDEX IF EXISTS idx_movement_translations_movement_lang;
 
-DROP TABLE IF EXISTS asset_movements_translation;
+DROP TABLE IF EXISTS asset_movement_translations;
 
 DROP INDEX IF EXISTS idx_movements_to_location_user;
 

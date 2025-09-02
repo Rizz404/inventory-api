@@ -22,7 +22,7 @@ CREATE INDEX idx_maintenance_schedules_status ON maintenance_schedules(status);
 
 CREATE INDEX idx_maintenance_schedules_scheduled_date ON maintenance_schedules(scheduled_date);
 
-CREATE TABLE maintenance_schedules_translation (
+CREATE TABLE maintenance_schedule_translations (
   id VARCHAR(26) PRIMARY KEY,
   schedule_id VARCHAR(26) NOT NULL,
   lang_code VARCHAR(5) NOT NULL,
@@ -32,12 +32,12 @@ CREATE TABLE maintenance_schedules_translation (
   FOREIGN KEY (schedule_id) REFERENCES maintenance_schedules(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_schedules_translation_schedule_lang ON maintenance_schedules_translation(schedule_id, lang_code);
+CREATE INDEX idx_schedule_translations_schedule_lang ON maintenance_schedule_translations(schedule_id, lang_code);
 
 -- +goose Down
-DROP INDEX IF EXISTS idx_schedules_translation_schedule_lang;
+DROP INDEX IF EXISTS idx_schedule_translations_schedule_lang;
 
-DROP TABLE IF EXISTS maintenance_schedules_translation;
+DROP TABLE IF EXISTS maintenance_schedule_translations;
 
 DROP INDEX IF EXISTS idx_maintenance_schedules_scheduled_date;
 
