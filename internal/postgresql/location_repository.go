@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
@@ -357,4 +358,198 @@ func (r *LocationRepository) CountLocations(ctx context.Context, params query.Pa
 		return 0, domain.ErrInternal(err)
 	}
 	return count, nil
+}
+
+func (r *LocationRepository) GetLocationStatistics(ctx context.Context) (domain.LocationStatistics, error) {
+	var stats domain.LocationStatistics
+
+	// Get total location count
+	var totalCount int64
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).Count(&totalCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	stats.Total.Count = int(totalCount)
+
+	// Get location counts by building
+	var buildingStats []struct {
+		Building string `json:"building"`
+		Count    int64  `json:"count"`
+	}
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).
+		Select("COALESCE(building, 'No Building') as building, COUNT(*) as count").
+		Group("building").
+		Order("count DESC").
+		Scan(&buildingStats).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.ByBuilding = make([]domain.BuildingStatistics, len(buildingStats))
+	for i, bs := range buildingStats {
+		stats.ByBuilding[i] = domain.BuildingStatistics{
+			Building: bs.Building,
+			Count:    int(bs.Count),
+		}
+	}
+
+	// Get location counts by floor
+	var floorStats []struct {
+		Floor string `json:"floor"`
+		Count int64  `json:"count"`
+	}
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).
+		Select("COALESCE(floor, 'No Floor') as floor, COUNT(*) as count").
+		Group("floor").
+		Order("count DESC").
+		Scan(&floorStats).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.ByFloor = make([]domain.FloorStatistics, len(floorStats))
+	for i, fs := range floorStats {
+		stats.ByFloor[i] = domain.FloorStatistics{
+			Floor: fs.Floor,
+			Count: int(fs.Count),
+		}
+	}
+
+	// Get geographic statistics
+	var withCoordinates, withoutCoordinates int64
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).
+		Where("latitude IS NOT NULL AND longitude IS NOT NULL").
+		Count(&withCoordinates).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).
+		Where("latitude IS NULL OR longitude IS NULL").
+		Count(&withoutCoordinates).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.Geographic.WithCoordinates = int(withCoordinates)
+	stats.Geographic.WithoutCoordinates = int(withoutCoordinates)
+
+	// Get average coordinates if there are locations with coordinates
+	if withCoordinates > 0 {
+		var avgLat, avgLng float64
+		if err := r.db.WithContext(ctx).Model(&model.Location{}).
+			Select("AVG(latitude)").
+			Where("latitude IS NOT NULL").
+			Scan(&avgLat).Error; err != nil {
+			return stats, domain.ErrInternal(err)
+		}
+		if err := r.db.WithContext(ctx).Model(&model.Location{}).
+			Select("AVG(longitude)").
+			Where("longitude IS NOT NULL").
+			Scan(&avgLng).Error; err != nil {
+			return stats, domain.ErrInternal(err)
+		}
+		stats.Geographic.AverageLatitude = &avgLat
+		stats.Geographic.AverageLongitude = &avgLng
+	}
+
+	// Get creation trends (last 30 days)
+	var creationTrends []struct {
+		Date  string `json:"date"`
+		Count int64  `json:"count"`
+	}
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).
+		Select("DATE(created_at) as date, COUNT(*) as count").
+		Where("created_at >= NOW() - INTERVAL '30 days'").
+		Group("DATE(created_at)").
+		Order("date ASC").
+		Scan(&creationTrends).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.CreationTrends = make([]domain.LocationCreationTrend, len(creationTrends))
+	for i, ct := range creationTrends {
+		stats.CreationTrends[i] = domain.LocationCreationTrend{
+			Date:  ct.Date,
+			Count: int(ct.Count),
+		}
+	}
+
+	// Calculate summary statistics
+	stats.Summary.TotalLocations = int(totalCount)
+
+	// Get locations with/without building
+	var withBuilding, withoutBuilding int64
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).
+		Where("building IS NOT NULL AND building != ''").
+		Count(&withBuilding).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).
+		Where("building IS NULL OR building = ''").
+		Count(&withoutBuilding).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.Summary.LocationsWithBuilding = int(withBuilding)
+	stats.Summary.LocationsWithoutBuilding = int(withoutBuilding)
+
+	// Get locations with/without floor
+	var withFloor, withoutFloor int64
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).
+		Where("floor IS NOT NULL AND floor != ''").
+		Count(&withFloor).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).
+		Where("floor IS NULL OR floor = ''").
+		Count(&withoutFloor).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.Summary.LocationsWithFloor = int(withFloor)
+	stats.Summary.LocationsWithoutFloor = int(withoutFloor)
+
+	stats.Summary.LocationsWithCoordinates = int(withCoordinates)
+
+	// Calculate percentages
+	if totalCount > 0 {
+		stats.Summary.CoordinatesPercentage = float64(withCoordinates) / float64(totalCount) * 100
+		stats.Summary.BuildingPercentage = float64(withBuilding) / float64(totalCount) * 100
+		stats.Summary.FloorPercentage = float64(withFloor) / float64(totalCount) * 100
+	}
+
+	// Get total unique buildings and floors
+	var totalBuildings, totalFloors int64
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).
+		Select("COUNT(DISTINCT building)").
+		Where("building IS NOT NULL AND building != ''").
+		Scan(&totalBuildings).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).
+		Select("COUNT(DISTINCT floor)").
+		Where("floor IS NOT NULL AND floor != ''").
+		Scan(&totalFloors).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.Summary.TotalBuildings = int(totalBuildings)
+	stats.Summary.TotalFloors = int(totalFloors)
+
+	// Get earliest and latest creation dates
+	var earliestDate, latestDate time.Time
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).Select("MIN(created_at)").Scan(&earliestDate).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	if err := r.db.WithContext(ctx).Model(&model.Location{}).Select("MAX(created_at)").Scan(&latestDate).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.Summary.EarliestCreationDate = earliestDate.Format("2006-01-02")
+	stats.Summary.LatestCreationDate = latestDate.Format("2006-01-02")
+
+	// Calculate average locations per day
+	if !earliestDate.IsZero() && !latestDate.IsZero() {
+		daysDiff := latestDate.Sub(earliestDate).Hours() / 24
+		if daysDiff > 0 {
+			stats.Summary.AverageLocationsPerDay = float64(totalCount) / daysDiff
+		}
+	}
+
+	return stats, nil
 }

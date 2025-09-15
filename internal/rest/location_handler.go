@@ -34,6 +34,7 @@ func NewLocationHandler(app fiber.Router, s location.LocationService) {
 	)
 
 	locations.Get("/", handler.GetLocationsPaginated)
+	locations.Get("/statistics", handler.GetLocationStatistics)
 	locations.Get("/cursor", handler.GetLocationsCursor)
 	locations.Get("/count", handler.CountLocations)
 	locations.Get("/hierarchy", handler.GetLocationHierarchy)
@@ -262,4 +263,13 @@ func (h *LocationHandler) CountLocations(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessLocationCountedKey, count)
+}
+
+func (h *LocationHandler) GetLocationStatistics(c *fiber.Ctx) error {
+	stats, err := h.Service.GetLocationStatistics(c.Context())
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessLocationStatisticsRetrievedKey, stats)
 }

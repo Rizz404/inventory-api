@@ -74,6 +74,7 @@ const (
 	SuccessUserRetrievedByNameKey       MessageKey = "success.user.retrieved_by_name"
 	SuccessUserRetrievedByEmailKey      MessageKey = "success.user.retrieved_by_email"
 	SuccessUserCountedKey               MessageKey = "success.user.counted"
+	SuccessUserStatisticsRetrievedKey   MessageKey = "success.user.statistics_retrieved"
 	SuccessUserExistenceCheckedKey      MessageKey = "success.user.existence_checked"
 	SuccessUserNameExistenceCheckedKey  MessageKey = "success.user.name_existence_checked"
 	SuccessUserEmailExistenceCheckedKey MessageKey = "success.user.email_existence_checked"
@@ -86,6 +87,7 @@ const (
 	SuccessCategoryRetrievedByCodeKey      MessageKey = "success.category.retrieved_by_code"
 	SuccessCategoryHierarchyRetrievedKey   MessageKey = "success.category.hierarchy_retrieved"
 	SuccessCategoryCountedKey              MessageKey = "success.category.counted"
+	SuccessCategoryStatisticsRetrievedKey  MessageKey = "success.category.statistics_retrieved"
 	SuccessCategoryExistenceCheckedKey     MessageKey = "success.category.existence_checked"
 	SuccessCategoryCodeExistenceCheckedKey MessageKey = "success.category.code_existence_checked"
 
@@ -97,6 +99,7 @@ const (
 	SuccessLocationRetrievedByCodeKey      MessageKey = "success.location.retrieved_by_code"
 	SuccessLocationHierarchyRetrievedKey   MessageKey = "success.location.hierarchy_retrieved"
 	SuccessLocationCountedKey              MessageKey = "success.location.counted"
+	SuccessLocationStatisticsRetrievedKey  MessageKey = "success.location.statistics_retrieved"
 	SuccessLocationExistenceCheckedKey     MessageKey = "success.location.existence_checked"
 	SuccessLocationCodeExistenceCheckedKey MessageKey = "success.location.code_existence_checked"
 
@@ -374,6 +377,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"id-ID": "Keberadaan email berhasil diperiksa",
 		"ja-JP": "メールの存在が正常に確認されました",
 	},
+	SuccessUserStatisticsRetrievedKey: {
+		"en-US": "User statistics retrieved successfully",
+		"id-ID": "Statistik pengguna berhasil diambil",
+		"ja-JP": "ユーザー統計が正常に取得されました",
+	},
 
 	// * Category-specific success messages
 	SuccessCategoryCreatedKey: {
@@ -421,6 +429,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"id-ID": "Keberadaan kode kategori berhasil diperiksa",
 		"ja-JP": "カテゴリコードの存在が正常に確認されました",
 	},
+	SuccessCategoryStatisticsRetrievedKey: {
+		"en-US": "Category statistics retrieved successfully",
+		"id-ID": "Statistik kategori berhasil diambil",
+		"ja-JP": "カテゴリ統計が正常に取得されました",
+	},
 
 	// * Location-specific success messages
 	SuccessLocationCreatedKey: {
@@ -467,6 +480,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Location code existence checked successfully",
 		"id-ID": "Keberadaan kode lokasi berhasil diperiksa",
 		"ja-JP": "ロケーションコードの存在が正常に確認されました",
+	},
+	SuccessLocationStatisticsRetrievedKey: {
+		"en-US": "Location statistics retrieved successfully",
+		"id-ID": "Statistik lokasi berhasil diambil",
+		"ja-JP": "ロケーション統計が正常に取得されました",
 	},
 
 	// * Auth-specific success messages

@@ -64,3 +64,57 @@ type UpdateLocationTranslationPayload struct {
 	LangCode     string  `json:"langCode" validate:"required,max=5"`
 	LocationName *string `json:"locationName,omitempty" validate:"omitempty,max=100"`
 }
+
+// --- Statistics ---
+
+type LocationStatistics struct {
+	Total          LocationCountStatistics   `json:"total"`
+	ByBuilding     []BuildingStatistics      `json:"byBuilding"`
+	ByFloor        []FloorStatistics         `json:"byFloor"`
+	Geographic     GeographicStatistics      `json:"geographic"`
+	CreationTrends []LocationCreationTrend   `json:"creationTrends"`
+	Summary        LocationSummaryStatistics `json:"summary"`
+}
+
+type LocationCountStatistics struct {
+	Count int `json:"count"`
+}
+
+type BuildingStatistics struct {
+	Building string `json:"building"`
+	Count    int    `json:"count"`
+}
+
+type FloorStatistics struct {
+	Floor string `json:"floor"`
+	Count int    `json:"count"`
+}
+
+type GeographicStatistics struct {
+	WithCoordinates    int      `json:"withCoordinates"`
+	WithoutCoordinates int      `json:"withoutCoordinates"`
+	AverageLatitude    *float64 `json:"averageLatitude"`
+	AverageLongitude   *float64 `json:"averageLongitude"`
+}
+
+type LocationCreationTrend struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type LocationSummaryStatistics struct {
+	TotalLocations           int     `json:"totalLocations"`
+	LocationsWithBuilding    int     `json:"locationsWithBuilding"`
+	LocationsWithoutBuilding int     `json:"locationsWithoutBuilding"`
+	LocationsWithFloor       int     `json:"locationsWithFloor"`
+	LocationsWithoutFloor    int     `json:"locationsWithoutFloor"`
+	LocationsWithCoordinates int     `json:"locationsWithCoordinates"`
+	CoordinatesPercentage    float64 `json:"coordinatesPercentage"`
+	BuildingPercentage       float64 `json:"buildingPercentage"`
+	FloorPercentage          float64 `json:"floorPercentage"`
+	TotalBuildings           int     `json:"totalBuildings"`
+	TotalFloors              int     `json:"totalFloors"`
+	AverageLocationsPerDay   float64 `json:"averageLocationsPerDay"`
+	LatestCreationDate       string  `json:"latestCreationDate"`
+	EarliestCreationDate     string  `json:"earliestCreationDate"`
+}

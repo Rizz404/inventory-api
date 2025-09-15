@@ -36,6 +36,7 @@ func NewUserHandler(app fiber.Router, s user.UserService) {
 	)
 
 	users.Get("/", handler.GetUsersPaginated)
+	users.Get("/statistics", handler.GetUserStatistics)
 	users.Get("/cursor", handler.GetUsersCursor)
 	users.Get("/count", handler.CountUsers)
 	users.Get("/profile", middleware.AuthMiddleware(), handler.GetCurrentUser)
@@ -373,4 +374,13 @@ func (h *UserHandler) CountUsers(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessUserCountedKey, count)
+}
+
+func (h *UserHandler) GetUserStatistics(c *fiber.Ctx) error {
+	stats, err := h.Service.GetUserStatistics(c.Context())
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserStatisticsRetrievedKey, stats)
 }

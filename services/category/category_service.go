@@ -27,6 +27,7 @@ type Repository interface {
 	CheckCategoryCodeExist(ctx context.Context, categoryCode string) (bool, error)
 	CheckCategoryCodeExistExcluding(ctx context.Context, categoryCode string, excludeCategoryId string) (bool, error)
 	CountCategories(ctx context.Context, params query.Params) (int64, error)
+	GetCategoryStatistics(ctx context.Context) (domain.CategoryStatistics, error)
 }
 
 // * CategoryService interface defines the contract for category business operations
@@ -45,6 +46,7 @@ type CategoryService interface {
 	CheckCategoryExists(ctx context.Context, categoryId string) (bool, error)
 	CheckCategoryCodeExists(ctx context.Context, categoryCode string) (bool, error)
 	CountCategories(ctx context.Context, params query.Params) (int64, error)
+	GetCategoryStatistics(ctx context.Context) (domain.CategoryStatistics, error)
 }
 
 type Service struct {
@@ -220,4 +222,12 @@ func (s *Service) CountCategories(ctx context.Context, params query.Params) (int
 		return 0, err
 	}
 	return count, nil
+}
+
+func (s *Service) GetCategoryStatistics(ctx context.Context) (domain.CategoryStatistics, error) {
+	stats, err := s.Repo.GetCategoryStatistics(ctx)
+	if err != nil {
+		return domain.CategoryStatistics{}, err
+	}
+	return stats, nil
 }

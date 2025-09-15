@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
@@ -330,4 +331,96 @@ func (r *UserRepository) CountUsers(ctx context.Context, params query.Params) (i
 		return 0, domain.ErrInternal(err)
 	}
 	return count, nil
+}
+
+func (r *UserRepository) GetUserStatistics(ctx context.Context) (domain.UserStatistics, error) {
+	var stats domain.UserStatistics
+
+	// Get total user count
+	var totalCount int64
+	if err := r.db.WithContext(ctx).Model(&model.User{}).Count(&totalCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	stats.Total.Count = int(totalCount)
+
+	// Get user counts by status (active/inactive)
+	var activeCount, inactiveCount int64
+	if err := r.db.WithContext(ctx).Model(&model.User{}).Where("is_active = ?", true).Count(&activeCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	if err := r.db.WithContext(ctx).Model(&model.User{}).Where("is_active = ?", false).Count(&inactiveCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	stats.ByStatus.Active = int(activeCount)
+	stats.ByStatus.Inactive = int(inactiveCount)
+
+	// Get user counts by role
+	var adminCount, staffCount, employeeCount int64
+	if err := r.db.WithContext(ctx).Model(&model.User{}).Where("role = ?", domain.RoleAdmin).Count(&adminCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	if err := r.db.WithContext(ctx).Model(&model.User{}).Where("role = ?", domain.RoleStaff).Count(&staffCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	if err := r.db.WithContext(ctx).Model(&model.User{}).Where("role = ?", domain.RoleEmployee).Count(&employeeCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	stats.ByRole.Admin = int(adminCount)
+	stats.ByRole.Staff = int(staffCount)
+	stats.ByRole.Employee = int(employeeCount)
+
+	// Get registration trends (last 30 days)
+	var registrationTrends []struct {
+		Date  string `json:"date"`
+		Count int64  `json:"count"`
+	}
+	if err := r.db.WithContext(ctx).Model(&model.User{}).
+		Select("DATE(created_at) as date, COUNT(*) as count").
+		Where("created_at >= NOW() - INTERVAL '30 days'").
+		Group("DATE(created_at)").
+		Order("date ASC").
+		Scan(&registrationTrends).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.RegistrationTrends = make([]domain.RegistrationTrend, len(registrationTrends))
+	for i, rt := range registrationTrends {
+		stats.RegistrationTrends[i] = domain.RegistrationTrend{
+			Date:  rt.Date,
+			Count: int(rt.Count),
+		}
+	}
+
+	// Calculate summary statistics
+	stats.Summary.TotalUsers = int(totalCount)
+
+	if totalCount > 0 {
+		stats.Summary.ActiveUsersPercentage = float64(activeCount) / float64(totalCount) * 100
+		stats.Summary.InactiveUsersPercentage = float64(inactiveCount) / float64(totalCount) * 100
+		stats.Summary.AdminPercentage = float64(adminCount) / float64(totalCount) * 100
+		stats.Summary.StaffPercentage = float64(staffCount) / float64(totalCount) * 100
+		stats.Summary.EmployeePercentage = float64(employeeCount) / float64(totalCount) * 100
+	}
+
+	// Get earliest and latest registration dates
+	var earliestDate, latestDate time.Time
+	if err := r.db.WithContext(ctx).Model(&model.User{}).Select("MIN(created_at)").Scan(&earliestDate).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	if err := r.db.WithContext(ctx).Model(&model.User{}).Select("MAX(created_at)").Scan(&latestDate).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.Summary.EarliestRegistrationDate = earliestDate.Format("2006-01-02")
+	stats.Summary.LatestRegistrationDate = latestDate.Format("2006-01-02")
+
+	// Calculate average users per day
+	if !earliestDate.IsZero() && !latestDate.IsZero() {
+		daysDiff := latestDate.Sub(earliestDate).Hours() / 24
+		if daysDiff > 0 {
+			stats.Summary.AverageUsersPerDay = float64(totalCount) / daysDiff
+		}
+	}
+
+	return stats, nil
 }

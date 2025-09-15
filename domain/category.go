@@ -57,3 +57,39 @@ type UpdateCategoryTranslationPayload struct {
 	CategoryName *string `json:"categoryName,omitempty" validate:"omitempty,max=100"`
 	Description  *string `json:"description,omitempty"`
 }
+
+// --- Statistics ---
+
+type CategoryStatistics struct {
+	Total          CategoryCountStatistics     `json:"total"`
+	ByHierarchy    CategoryHierarchyStatistics `json:"byHierarchy"`
+	CreationTrends []CategoryCreationTrend     `json:"creationTrends"`
+	Summary        CategorySummaryStatistics   `json:"summary"`
+}
+
+type CategoryCountStatistics struct {
+	Count int `json:"count"`
+}
+
+type CategoryHierarchyStatistics struct {
+	TopLevel     int `json:"topLevel"`
+	WithChildren int `json:"withChildren"`
+	WithParent   int `json:"withParent"`
+}
+
+type CategoryCreationTrend struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type CategorySummaryStatistics struct {
+	TotalCategories                int     `json:"totalCategories"`
+	TopLevelPercentage             float64 `json:"topLevelPercentage"`
+	SubCategoriesPercentage        float64 `json:"subCategoriesPercentage"`
+	CategoriesWithChildrenCount    int     `json:"categoriesWithChildrenCount"`
+	CategoriesWithoutChildrenCount int     `json:"categoriesWithoutChildrenCount"`
+	MaxDepthLevel                  int     `json:"maxDepthLevel"`
+	AverageCategoriesPerDay        float64 `json:"averageCategoriesPerDay"`
+	LatestCreationDate             string  `json:"latestCreationDate"`
+	EarliestCreationDate           string  `json:"earliestCreationDate"`
+}

@@ -33,6 +33,7 @@ type Repository interface {
 	CheckNameExistsExcluding(ctx context.Context, name string, excludeUserId string) (bool, error)
 	CheckEmailExistsExcluding(ctx context.Context, email string, excludeUserId string) (bool, error)
 	CountUsers(ctx context.Context, params query.Params) (int64, error)
+	GetUserStatistics(ctx context.Context) (domain.UserStatistics, error)
 }
 
 // * UserService interface defines the contract for user business operations
@@ -52,6 +53,7 @@ type UserService interface {
 	CheckNameExists(ctx context.Context, name string) (bool, error)
 	CheckEmailExists(ctx context.Context, email string) (bool, error)
 	CountUsers(ctx context.Context, params query.Params) (int64, error)
+	GetUserStatistics(ctx context.Context) (domain.UserStatistics, error)
 }
 
 type Service struct {
@@ -334,4 +336,12 @@ func (s *Service) CountUsers(ctx context.Context, params query.Params) (int64, e
 		return 0, err
 	}
 	return count, nil
+}
+
+func (s *Service) GetUserStatistics(ctx context.Context) (domain.UserStatistics, error) {
+	stats, err := s.Repo.GetUserStatistics(ctx)
+	if err != nil {
+		return domain.UserStatistics{}, err
+	}
+	return stats, nil
 }

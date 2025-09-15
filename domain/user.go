@@ -88,3 +88,45 @@ type UpdateUserPayload struct {
 	IsActive      *bool     `json:"isActive,omitempty" form:"isActive" validate:"omitempty"`
 	AvatarURL     *string   `json:"avatarUrl,omitempty" form:"avatarUrl" validate:"omitempty,url"`
 }
+
+// --- Statistics ---
+
+type UserStatistics struct {
+	Total              UserCountStatistics   `json:"total"`
+	ByStatus           UserStatusStatistics  `json:"byStatus"`
+	ByRole             UserRoleStatistics    `json:"byRole"`
+	RegistrationTrends []RegistrationTrend   `json:"registrationTrends"`
+	Summary            UserSummaryStatistics `json:"summary"`
+}
+
+type UserCountStatistics struct {
+	Count int `json:"count"`
+}
+
+type UserStatusStatistics struct {
+	Active   int `json:"active"`
+	Inactive int `json:"inactive"`
+}
+
+type UserRoleStatistics struct {
+	Admin    int `json:"admin"`
+	Staff    int `json:"staff"`
+	Employee int `json:"employee"`
+}
+
+type RegistrationTrend struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type UserSummaryStatistics struct {
+	TotalUsers               int     `json:"totalUsers"`
+	ActiveUsersPercentage    float64 `json:"activeUsersPercentage"`
+	InactiveUsersPercentage  float64 `json:"inactiveUsersPercentage"`
+	AdminPercentage          float64 `json:"adminPercentage"`
+	StaffPercentage          float64 `json:"staffPercentage"`
+	EmployeePercentage       float64 `json:"employeePercentage"`
+	AverageUsersPerDay       float64 `json:"averageUsersPerDay"`
+	LatestRegistrationDate   string  `json:"latestRegistrationDate"`
+	EarliestRegistrationDate string  `json:"earliestRegistrationDate"`
+}

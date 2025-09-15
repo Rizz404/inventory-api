@@ -27,6 +27,7 @@ type Repository interface {
 	CheckLocationCodeExist(ctx context.Context, locationCode string) (bool, error)
 	CheckLocationCodeExistExcluding(ctx context.Context, locationCode string, excludeLocationId string) (bool, error)
 	CountLocations(ctx context.Context, params query.Params) (int64, error)
+	GetLocationStatistics(ctx context.Context) (domain.LocationStatistics, error)
 }
 
 // * LocationService interface defines the contract for location business operations
@@ -45,6 +46,7 @@ type LocationService interface {
 	CheckLocationExists(ctx context.Context, locationId string) (bool, error)
 	CheckLocationCodeExists(ctx context.Context, locationCode string) (bool, error)
 	CountLocations(ctx context.Context, params query.Params) (int64, error)
+	GetLocationStatistics(ctx context.Context) (domain.LocationStatistics, error)
 }
 
 type Service struct {
@@ -204,4 +206,12 @@ func (s *Service) CountLocations(ctx context.Context, params query.Params) (int6
 		return 0, err
 	}
 	return count, nil
+}
+
+func (s *Service) GetLocationStatistics(ctx context.Context) (domain.LocationStatistics, error) {
+	stats, err := s.Repo.GetLocationStatistics(ctx)
+	if err != nil {
+		return domain.LocationStatistics{}, err
+	}
+	return stats, nil
 }

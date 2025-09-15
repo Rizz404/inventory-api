@@ -34,6 +34,7 @@ func NewCategoryHandler(app fiber.Router, s category.CategoryService) {
 	)
 
 	categories.Get("/", handler.GetCategoriesPaginated)
+	categories.Get("/statistics", handler.GetCategoryStatistics)
 	categories.Get("/cursor", handler.GetCategoriesCursor)
 	categories.Get("/count", handler.CountCategories)
 	categories.Get("/hierarchy", handler.GetCategoryHierarchy)
@@ -273,4 +274,13 @@ func (h *CategoryHandler) CountCategories(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryCountedKey, count)
+}
+
+func (h *CategoryHandler) GetCategoryStatistics(c *fiber.Ctx) error {
+	stats, err := h.Service.GetCategoryStatistics(c.Context())
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryStatisticsRetrievedKey, stats)
 }

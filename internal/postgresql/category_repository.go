@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
@@ -370,4 +371,114 @@ func (r *CategoryRepository) CountCategories(ctx context.Context, params query.P
 		return 0, domain.ErrInternal(err)
 	}
 	return count, nil
+}
+
+func (r *CategoryRepository) GetCategoryStatistics(ctx context.Context) (domain.CategoryStatistics, error) {
+	var stats domain.CategoryStatistics
+
+	// Get total category count
+	var totalCount int64
+	if err := r.db.WithContext(ctx).Model(&model.Category{}).Count(&totalCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	stats.Total.Count = int(totalCount)
+
+	// Get hierarchy statistics
+	var topLevelCount, withChildrenCount, withParentCount int64
+
+	// Top level categories (no parent)
+	if err := r.db.WithContext(ctx).Model(&model.Category{}).Where("parent_id IS NULL").Count(&topLevelCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	// Categories with children
+	if err := r.db.WithContext(ctx).Model(&model.Category{}).
+		Where("id IN (SELECT DISTINCT parent_id FROM categories WHERE parent_id IS NOT NULL)").
+		Count(&withChildrenCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	// Categories with parent
+	if err := r.db.WithContext(ctx).Model(&model.Category{}).Where("parent_id IS NOT NULL").Count(&withParentCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.ByHierarchy.TopLevel = int(topLevelCount)
+	stats.ByHierarchy.WithChildren = int(withChildrenCount)
+	stats.ByHierarchy.WithParent = int(withParentCount)
+
+	// Get creation trends (last 30 days)
+	var creationTrends []struct {
+		Date  string `json:"date"`
+		Count int64  `json:"count"`
+	}
+	if err := r.db.WithContext(ctx).Model(&model.Category{}).
+		Select("DATE(created_at) as date, COUNT(*) as count").
+		Where("created_at >= NOW() - INTERVAL '30 days'").
+		Group("DATE(created_at)").
+		Order("date ASC").
+		Scan(&creationTrends).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.CreationTrends = make([]domain.CategoryCreationTrend, len(creationTrends))
+	for i, ct := range creationTrends {
+		stats.CreationTrends[i] = domain.CategoryCreationTrend{
+			Date:  ct.Date,
+			Count: int(ct.Count),
+		}
+	}
+
+	// Calculate summary statistics
+	stats.Summary.TotalCategories = int(totalCount)
+
+	if totalCount > 0 {
+		stats.Summary.TopLevelPercentage = float64(topLevelCount) / float64(totalCount) * 100
+		stats.Summary.SubCategoriesPercentage = float64(withParentCount) / float64(totalCount) * 100
+	}
+
+	stats.Summary.CategoriesWithChildrenCount = int(withChildrenCount)
+	stats.Summary.CategoriesWithoutChildrenCount = int(totalCount - withChildrenCount)
+
+	// Calculate max depth level using recursive CTE
+	var maxDepth int
+	if err := r.db.WithContext(ctx).Raw(`
+		WITH RECURSIVE category_depth AS (
+			SELECT id, parent_id, 1 as depth
+			FROM categories
+			WHERE parent_id IS NULL
+
+			UNION ALL
+
+			SELECT c.id, c.parent_id, cd.depth + 1
+			FROM categories c
+			INNER JOIN category_depth cd ON c.parent_id = cd.id
+		)
+		SELECT COALESCE(MAX(depth), 0) FROM category_depth
+	`).Scan(&maxDepth).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	stats.Summary.MaxDepthLevel = maxDepth
+
+	// Get earliest and latest creation dates
+	var earliestDate, latestDate time.Time
+	if err := r.db.WithContext(ctx).Model(&model.Category{}).Select("MIN(created_at)").Scan(&earliestDate).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	if err := r.db.WithContext(ctx).Model(&model.Category{}).Select("MAX(created_at)").Scan(&latestDate).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.Summary.EarliestCreationDate = earliestDate.Format("2006-01-02")
+	stats.Summary.LatestCreationDate = latestDate.Format("2006-01-02")
+
+	// Calculate average categories per day
+	if !earliestDate.IsZero() && !latestDate.IsZero() {
+		daysDiff := latestDate.Sub(earliestDate).Hours() / 24
+		if daysDiff > 0 {
+			stats.Summary.AverageCategoriesPerDay = float64(totalCount) / daysDiff
+		}
+	}
+
+	return stats, nil
 }
