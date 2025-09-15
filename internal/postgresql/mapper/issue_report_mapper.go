@@ -3,44 +3,257 @@ package mapper
 import (
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
+	"github.com/oklog/ulid/v2"
 )
 
-func findIssueReportTranslation(translations []model.IssueReportTranslation, langCode string) (title string, description, resolutionNotes *string) {
-	for _, t := range translations {
-		if t.LangCode == langCode {
-			return t.Title, t.Description, t.ResolutionNotes
+// ===== Issue Report Mappers =====
+
+func ToModelIssueReport(d *domain.IssueReport) model.IssueReport {
+	modelReport := model.IssueReport{
+		ReportedDate: d.ReportedDate,
+		IssueType:    d.IssueType,
+		Priority:     d.Priority,
+		Status:       d.Status,
+		ResolvedDate: d.ResolvedDate,
+	}
+
+	if d.ID != "" {
+		if parsedID, err := ulid.Parse(d.ID); err == nil {
+			modelReport.ID = model.SQLULID(parsedID)
 		}
 	}
-	for _, t := range translations {
-		if t.LangCode == DefaultLangCode {
-			return t.Title, t.Description, t.ResolutionNotes
+
+	if d.AssetID != "" {
+		if parsedAssetID, err := ulid.Parse(d.AssetID); err == nil {
+			modelReport.AssetID = model.SQLULID(parsedAssetID)
 		}
 	}
-	if len(translations) > 0 {
-		return translations[0].Title, translations[0].Description, translations[0].ResolutionNotes
+
+	if d.ReportedBy != "" {
+		if parsedReportedBy, err := ulid.Parse(d.ReportedBy); err == nil {
+			modelReport.ReportedBy = model.SQLULID(parsedReportedBy)
+		}
 	}
-	return "", nil, nil
+
+	if d.ResolvedBy != nil && *d.ResolvedBy != "" {
+		if parsedResolvedBy, err := ulid.Parse(*d.ResolvedBy); err == nil {
+			modelULID := model.SQLULID(parsedResolvedBy)
+			modelReport.ResolvedBy = &modelULID
+		}
+	}
+
+	return modelReport
 }
 
-func ToDomainIssueReportResponse(m model.IssueReport, langCode string) domain.IssueReportResponse {
-	title, desc, resNotes := findIssueReportTranslation(m.Translations, langCode)
-	resp := domain.IssueReportResponse{
+func ToModelIssueReportForCreate(d *domain.IssueReport) model.IssueReport {
+	modelReport := model.IssueReport{
+		ReportedDate: d.ReportedDate,
+		IssueType:    d.IssueType,
+		Priority:     d.Priority,
+		Status:       d.Status,
+		ResolvedDate: d.ResolvedDate,
+	}
+
+	if d.AssetID != "" {
+		if parsedAssetID, err := ulid.Parse(d.AssetID); err == nil {
+			modelReport.AssetID = model.SQLULID(parsedAssetID)
+		}
+	}
+
+	if d.ReportedBy != "" {
+		if parsedReportedBy, err := ulid.Parse(d.ReportedBy); err == nil {
+			modelReport.ReportedBy = model.SQLULID(parsedReportedBy)
+		}
+	}
+
+	if d.ResolvedBy != nil && *d.ResolvedBy != "" {
+		if parsedResolvedBy, err := ulid.Parse(*d.ResolvedBy); err == nil {
+			modelULID := model.SQLULID(parsedResolvedBy)
+			modelReport.ResolvedBy = &modelULID
+		}
+	}
+
+	return modelReport
+}
+
+func ToModelIssueReportTranslation(d *domain.IssueReportTranslation) model.IssueReportTranslation {
+	modelTranslation := model.IssueReportTranslation{
+		LangCode:        d.LangCode,
+		Title:           d.Title,
+		Description:     d.Description,
+		ResolutionNotes: d.ResolutionNotes,
+	}
+
+	if d.ID != "" {
+		if parsedID, err := ulid.Parse(d.ID); err == nil {
+			modelTranslation.ID = model.SQLULID(parsedID)
+		}
+	}
+
+	if d.ReportID != "" {
+		if parsedReportID, err := ulid.Parse(d.ReportID); err == nil {
+			modelTranslation.ReportID = model.SQLULID(parsedReportID)
+		}
+	}
+
+	return modelTranslation
+}
+
+func ToModelIssueReportTranslationForCreate(reportID string, d *domain.IssueReportTranslation) model.IssueReportTranslation {
+	modelTranslation := model.IssueReportTranslation{
+		LangCode:        d.LangCode,
+		Title:           d.Title,
+		Description:     d.Description,
+		ResolutionNotes: d.ResolutionNotes,
+	}
+
+	if reportID != "" {
+		if parsedReportID, err := ulid.Parse(reportID); err == nil {
+			modelTranslation.ReportID = model.SQLULID(parsedReportID)
+		}
+	}
+
+	return modelTranslation
+}
+
+func ToDomainIssueReport(m *model.IssueReport) domain.IssueReport {
+	domainReport := domain.IssueReport{
+		ID:           m.ID.String(),
+		AssetID:      m.AssetID.String(),
+		ReportedBy:   m.ReportedBy.String(),
+		ReportedDate: m.ReportedDate,
+		IssueType:    m.IssueType,
+		Priority:     m.Priority,
+		Status:       m.Status,
+		ResolvedDate: m.ResolvedDate,
+	}
+
+	if m.ResolvedBy != nil && !m.ResolvedBy.IsZero() {
+		resolvedByStr := m.ResolvedBy.String()
+		domainReport.ResolvedBy = &resolvedByStr
+	}
+
+	if len(m.Translations) > 0 {
+		domainReport.Translations = make([]domain.IssueReportTranslation, len(m.Translations))
+		for i, translation := range m.Translations {
+			domainReport.Translations[i] = ToDomainIssueReportTranslation(&translation)
+		}
+	}
+
+	return domainReport
+}
+
+func ToDomainIssueReportTranslation(m *model.IssueReportTranslation) domain.IssueReportTranslation {
+	return domain.IssueReportTranslation{
 		ID:              m.ID.String(),
-		Asset:           ToDomainAssetResponse(m.Asset, langCode),
-		ReportedBy:      ToDomainUserResponse(&m.ReportedByUser),
-		ReportedDate:    m.ReportedDate.Format(TimeFormat),
-		IssueType:       m.IssueType,
-		Priority:        m.Priority,
-		Status:          m.Status,
-		Title:           title,
-		Description:     desc,
-		ResolutionNotes: resNotes,
+		ReportID:        m.ReportID.String(),
+		LangCode:        m.LangCode,
+		Title:           m.Title,
+		Description:     m.Description,
+		ResolutionNotes: m.ResolutionNotes,
 	}
+}
+
+func ToDomainIssueReportResponse(m *model.IssueReport, langCode string) domain.IssueReportResponse {
+	response := domain.IssueReportResponse{
+		ID:           m.ID.String(),
+		ReportedDate: m.ReportedDate.Format(TimeFormat),
+		IssueType:    m.IssueType,
+		Priority:     m.Priority,
+		Status:       m.Status,
+	}
+
+	// Handle date formatting
 	if m.ResolvedDate != nil {
-		resp.ResolvedDate = Ptr(m.ResolvedDate.Format(TimeFormat))
+		resolvedDateStr := m.ResolvedDate.Format(TimeFormat)
+		response.ResolvedDate = &resolvedDateStr
 	}
-	if m.ResolvedByUser != nil {
-		resp.ResolvedBy = Ptr(ToDomainUserResponse(m.ResolvedByUser))
+
+	// Find translation for the requested language
+	for _, translation := range m.Translations {
+		if translation.LangCode == langCode {
+			response.Title = translation.Title
+			response.Description = translation.Description
+			response.ResolutionNotes = translation.ResolutionNotes
+			break
+		}
 	}
-	return resp
+
+	// If no translation found for requested language, use first available
+	if response.Title == "" && len(m.Translations) > 0 {
+		response.Title = m.Translations[0].Title
+		response.Description = m.Translations[0].Description
+		response.ResolutionNotes = m.Translations[0].ResolutionNotes
+	}
+
+	// Handle related entities
+	if !m.Asset.ID.IsZero() {
+		assetResponse := ToDomainAssetResponse(&m.Asset, langCode)
+		response.Asset = assetResponse
+	}
+
+	if !m.ReportedByUser.ID.IsZero() {
+		userResponse := ToDomainUserResponse(&m.ReportedByUser)
+		response.ReportedBy = userResponse
+	}
+
+	if m.ResolvedByUser != nil && !m.ResolvedByUser.ID.IsZero() {
+		userResponse := ToDomainUserResponse(m.ResolvedByUser)
+		response.ResolvedBy = &userResponse
+	}
+
+	return response
+}
+
+func ToDomainIssueReportsResponse(m []model.IssueReport, langCode string) []domain.IssueReportResponse {
+	responses := make([]domain.IssueReportResponse, len(m))
+	for i, report := range m {
+		responses[i] = ToDomainIssueReportResponse(&report, langCode)
+	}
+	return responses
+}
+
+// * Convert domain.IssueReport directly to domain.IssueReportResponse without going through model.IssueReport
+func DomainIssueReportToIssueReportResponse(d *domain.IssueReport, langCode string) domain.IssueReportResponse {
+	response := domain.IssueReportResponse{
+		ID:           d.ID,
+		ReportedDate: d.ReportedDate.Format(TimeFormat),
+		IssueType:    d.IssueType,
+		Priority:     d.Priority,
+		Status:       d.Status,
+	}
+
+	// Handle date formatting
+	if d.ResolvedDate != nil {
+		resolvedDateStr := d.ResolvedDate.Format(TimeFormat)
+		response.ResolvedDate = &resolvedDateStr
+	}
+
+	// Find translation for the requested language
+	for _, translation := range d.Translations {
+		if translation.LangCode == langCode {
+			response.Title = translation.Title
+			response.Description = translation.Description
+			response.ResolutionNotes = translation.ResolutionNotes
+			break
+		}
+	}
+
+	// If no translation found for requested language, use first available
+	if response.Title == "" && len(d.Translations) > 0 {
+		response.Title = d.Translations[0].Title
+		response.Description = d.Translations[0].Description
+		response.ResolutionNotes = d.Translations[0].ResolutionNotes
+	}
+
+	return response
+}
+
+// * Convert slice of domain.IssueReport to slice of domain.IssueReportResponse
+func DomainIssueReportsToIssueReportsResponse(reports []domain.IssueReport, langCode string) []domain.IssueReportResponse {
+	responses := make([]domain.IssueReportResponse, len(reports))
+	for i, report := range reports {
+		responses[i] = DomainIssueReportToIssueReportResponse(&report, langCode)
+	}
+	return responses
 }

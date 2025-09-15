@@ -12,7 +12,7 @@ func ToModelLocation(d *domain.Location) model.Location {
 		Building:     d.Building,
 		Floor:        d.Floor,
 		Latitude:     d.Latitude,
-		Longitude:    d.Latitude,
+		Longitude:    d.Longitude,
 	}
 
 	if d.ID != "" {
@@ -30,7 +30,7 @@ func ToModelLocationForCreate(d *domain.Location) model.Location {
 		Building:     d.Building,
 		Floor:        d.Floor,
 		Latitude:     d.Latitude,
-		Longitude:    d.Latitude,
+		Longitude:    d.Longitude,
 	}
 
 	return modelLocation
@@ -79,7 +79,7 @@ func ToDomainLocation(m *model.Location) domain.Location {
 		Building:     m.Building,
 		Floor:        m.Floor,
 		Latitude:     m.Latitude,
-		Longitude:    m.Latitude,
+		Longitude:    m.Longitude,
 		CreatedAt:    m.CreatedAt,
 		UpdatedAt:    m.UpdatedAt,
 	}

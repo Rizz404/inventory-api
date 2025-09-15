@@ -7,6 +7,7 @@ CREATE TABLE assets (
   id VARCHAR(26) PRIMARY KEY,
   asset_tag VARCHAR(50) UNIQUE NOT NULL,
   data_matrix_value VARCHAR(255) UNIQUE NOT NULL,
+  data_matrix_image_url VARCHAR(255) NULL,
   asset_name VARCHAR(200) NOT NULL,
   category_id VARCHAR(26) NOT NULL,
   brand VARCHAR(100) NULL,
