@@ -6,7 +6,6 @@ CREATE TYPE asset_condition AS ENUM ('Good', 'Fair', 'Poor', 'Damaged');
 CREATE TABLE assets (
   id VARCHAR(26) PRIMARY KEY,
   asset_tag VARCHAR(50) UNIQUE NOT NULL,
-  data_matrix_value VARCHAR(255) UNIQUE NOT NULL,
   data_matrix_image_url VARCHAR(255) NULL,
   asset_name VARCHAR(200) NOT NULL,
   category_id VARCHAR(26) NOT NULL,
@@ -41,8 +40,6 @@ CREATE INDEX idx_assets_category_id ON assets(category_id);
 CREATE INDEX idx_assets_warranty_end ON assets(warranty_end);
 
 CREATE INDEX idx_assets_name_brand_model ON assets(asset_name, brand, model);
-
-CREATE INDEX idx_assets_data_matrix ON assets(data_matrix_value);
 
 -- +goose Down
 DROP INDEX IF EXISTS idx_assets_name_brand_model;

@@ -283,6 +283,18 @@ func GetAvatarUploadConfig() UploadConfig {
 	}
 }
 
+// GetDataMatrixImageUploadConfig returns a pre-configured upload config for asset data matrix images
+func GetDataMatrixImageUploadConfig() UploadConfig {
+	return UploadConfig{
+		AllowedTypes: []string{"image/jpeg", "image/png", "image/gif", "image/webp"},
+		FolderName:   "datamatrix",
+		InputName:    "dataMatrixImage",
+		MaxFiles:     1,
+		MaxFileSize:  2 * 1024 * 1024, // 2MB
+		Overwrite:    true,
+	}
+}
+
 // GetDocumentUploadConfig returns a pre-configured upload config for documents
 func GetDocumentUploadConfig() UploadConfig {
 	return UploadConfig{

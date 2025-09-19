@@ -41,6 +41,16 @@ const (
 	ErrLocationCodeRequiredKey MessageKey = "error.location.code_required"
 	ErrLocationNameRequiredKey MessageKey = "error.location.name_required"
 
+	// * Asset-specific error keys
+	ErrAssetNotFoundKey             MessageKey = "error.asset.not_found"
+	ErrAssetTagExistsKey            MessageKey = "error.asset.tag_exists"
+	ErrAssetDataMatrixExistsKey     MessageKey = "error.asset.datamatrix_exists"
+	ErrAssetSerialNumberExistsKey   MessageKey = "error.asset.serial_number_exists"
+	ErrAssetIDRequiredKey           MessageKey = "error.asset.id_required"
+	ErrAssetTagRequiredKey          MessageKey = "error.asset.tag_required"
+	ErrAssetDataMatrixRequiredKey   MessageKey = "error.asset.datamatrix_required"
+	ErrAssetSerialNumberRequiredKey MessageKey = "error.asset.serial_number_required"
+
 	// * Auth-specific error keys
 	ErrInvalidCredentialsKey MessageKey = "error.auth.invalid_credentials"
 	ErrTokenExpiredKey       MessageKey = "error.auth.token_expired"
@@ -102,6 +112,20 @@ const (
 	SuccessLocationStatisticsRetrievedKey  MessageKey = "success.location.statistics_retrieved"
 	SuccessLocationExistenceCheckedKey     MessageKey = "success.location.existence_checked"
 	SuccessLocationCodeExistenceCheckedKey MessageKey = "success.location.code_existence_checked"
+
+	// * Asset-specific success keys
+	SuccessAssetCreatedKey                      MessageKey = "success.asset.created"
+	SuccessAssetUpdatedKey                      MessageKey = "success.asset.updated"
+	SuccessAssetDeletedKey                      MessageKey = "success.asset.deleted"
+	SuccessAssetRetrievedKey                    MessageKey = "success.asset.retrieved"
+	SuccessAssetRetrievedByTagKey               MessageKey = "success.asset.retrieved_by_tag"
+	SuccessAssetRetrievedByDataMatrixKey        MessageKey = "success.asset.retrieved_by_datamatrix"
+	SuccessAssetCountedKey                      MessageKey = "success.asset.counted"
+	SuccessAssetStatisticsRetrievedKey          MessageKey = "success.asset.statistics_retrieved"
+	SuccessAssetExistenceCheckedKey             MessageKey = "success.asset.existence_checked"
+	SuccessAssetTagExistenceCheckedKey          MessageKey = "success.asset.tag_existence_checked"
+	SuccessAssetDataMatrixExistenceCheckedKey   MessageKey = "success.asset.datamatrix_existence_checked"
+	SuccessAssetSerialNumberExistenceCheckedKey MessageKey = "success.asset.serial_number_existence_checked"
 
 	// * Auth-specific success keys
 	SuccessLoginKey   MessageKey = "success.auth.login"

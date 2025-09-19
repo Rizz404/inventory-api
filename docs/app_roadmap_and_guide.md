@@ -121,7 +121,7 @@
    - Simpan.
 
 2. **Menyiapkan Identifier Fisik (Data Matrix)**
-   - Sistem generate Data Matrix code dengan value "LPT-2025-001" dan update field `data_matrix_value`.
+   - Sistem generate Data Matrix code dengan value "LPT-2025-001" dan update field `asset_tag`.
    - Data Matrix dapat menyimpan lebih banyak data dibanding QR Code dan lebih tahan terhadap kerusakan fisik.
 
 ### Alur 3: Monitoring dan Reporting
@@ -159,7 +159,7 @@
 1. **Scan Aset (Data Matrix)**
    - Tap tombol "Scan Aset".
    - Arahkan kamera ke stiker Data Matrix di laptop Budi.
-   - Aplikasi membaca `data_matrix_value`: "LPT-2025-001".
+   - Aplikasi membaca `asset_tag`: "LPT-2025-001".
    - Aplikasi query ke `assets`, `categories`, `category_translations`, `locations`, dan `location_translations` (bergantung bahasa login Bu Siti) dan menemukan data "Laptop Dell Latitude 5430".
    - Halaman detail aset ditampilkan dengan nama kategori dan lokasi sesuai bahasa Bu Siti.
    - **Data scan masuk ke `scan_logs` beserta koordinat GPS saat scan** untuk pelacakan.
@@ -340,7 +340,6 @@ CREATE INDEX idx_location_translations_location_lang ON location_translations(lo
 CREATE TABLE assets (
     id VARCHAR(26) PRIMARY KEY,
     asset_tag VARCHAR(50) UNIQUE NOT NULL,
-    data_matrix_value VARCHAR(255) UNIQUE NOT NULL,
     asset_name VARCHAR(200) NOT NULL, -- Nama teknis, tidak perlu diterjemahkan
     category_id VARCHAR(26) NOT NULL,
     brand VARCHAR(100) NULL,
@@ -367,7 +366,6 @@ CREATE INDEX idx_assets_assigned_to ON assets(assigned_to);
 CREATE INDEX idx_assets_category_id ON assets(category_id);
 CREATE INDEX idx_assets_warranty_end ON assets(warranty_end);
 CREATE INDEX idx_assets_name_brand_model ON assets(asset_name, brand, model);
-CREATE INDEX idx_assets_data_matrix ON assets(data_matrix_value);
 
 --------------------------------------------------
 
@@ -626,7 +624,6 @@ SELECT DISTINCT
     a.id,
     a.asset_tag,
     a.asset_name,
-    a.data_matrix_value,
     COALESCE(ct_user.category_name, ct_default.category_name) as category_name,
     COALESCE(lt_user.location_name, lt_default.location_name) as location_name,
     l.latitude,

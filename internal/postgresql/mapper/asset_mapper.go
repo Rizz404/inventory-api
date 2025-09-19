@@ -11,7 +11,6 @@ import (
 func ToModelAsset(d *domain.Asset) model.Asset {
 	modelAsset := model.Asset{
 		AssetTag:           d.AssetTag,
-		DataMatrixValue:    d.DataMatrixValue,
 		DataMatrixImageUrl: d.DataMatrixImageUrl,
 		AssetName:          d.AssetName,
 		Brand:              d.Brand,
@@ -57,7 +56,6 @@ func ToModelAsset(d *domain.Asset) model.Asset {
 func ToModelAssetForCreate(d *domain.Asset) model.Asset {
 	modelAsset := model.Asset{
 		AssetTag:           d.AssetTag,
-		DataMatrixValue:    d.DataMatrixValue,
 		DataMatrixImageUrl: d.DataMatrixImageUrl,
 		AssetName:          d.AssetName,
 		Brand:              d.Brand,
@@ -98,7 +96,6 @@ func ToDomainAsset(m *model.Asset) domain.Asset {
 	domainAsset := domain.Asset{
 		ID:                 m.ID.String(),
 		AssetTag:           m.AssetTag,
-		DataMatrixValue:    m.DataMatrixValue,
 		DataMatrixImageUrl: m.DataMatrixImageUrl,
 		AssetName:          m.AssetName,
 		CategoryID:         m.CategoryID.String(),
@@ -132,7 +129,6 @@ func ToDomainAssetResponse(m *model.Asset, langCode string) domain.AssetResponse
 	response := domain.AssetResponse{
 		ID:                 m.ID.String(),
 		AssetTag:           m.AssetTag,
-		DataMatrixValue:    m.DataMatrixValue,
 		DataMatrixImageUrl: m.DataMatrixImageUrl,
 		AssetName:          m.AssetName,
 		Brand:              m.Brand,
@@ -189,7 +185,6 @@ func DomainAssetToAssetResponse(d *domain.Asset) domain.AssetResponse {
 	response := domain.AssetResponse{
 		ID:                 d.ID,
 		AssetTag:           d.AssetTag,
-		DataMatrixValue:    d.DataMatrixValue,
 		DataMatrixImageUrl: d.DataMatrixImageUrl,
 		AssetName:          d.AssetName,
 		Brand:              d.Brand,
@@ -231,9 +226,6 @@ func ToModelAssetUpdateMap(payload *domain.UpdateAssetPayload) map[string]any {
 
 	if payload.AssetTag != nil {
 		updates["asset_tag"] = *payload.AssetTag
-	}
-	if payload.DataMatrixValue != nil {
-		updates["data_matrix_value"] = *payload.DataMatrixValue
 	}
 	if payload.DataMatrixImageUrl != nil {
 		updates["data_matrix_image_url"] = *payload.DataMatrixImageUrl

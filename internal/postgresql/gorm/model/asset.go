@@ -12,7 +12,6 @@ import (
 type Asset struct {
 	ID                 SQLULID               `gorm:"primaryKey;type:varchar(26)"`
 	AssetTag           string                `gorm:"type:varchar(50);unique;not null"`
-	DataMatrixValue    string                `gorm:"type:varchar(255);unique;not null"`
 	DataMatrixImageUrl string                `gorm:"type:varchar(255);not null"`
 	AssetName          string                `gorm:"type:varchar(200);not null"`
 	CategoryID         SQLULID               `gorm:"type:varchar(26);not null"`

@@ -27,7 +27,6 @@ const (
 type Asset struct {
 	ID                 string         `json:"id"`
 	AssetTag           string         `json:"assetTag"`
-	DataMatrixValue    string         `json:"dataMatrixValue"`
 	DataMatrixImageUrl string         `json:"dataMatrixImageUrl"`
 	AssetName          string         `json:"assetName"`
 	CategoryID         string         `json:"categoryId"`
@@ -49,7 +48,6 @@ type Asset struct {
 type AssetResponse struct {
 	ID                 string            `json:"id"`
 	AssetTag           string            `json:"assetTag"`
-	DataMatrixValue    string            `json:"dataMatrixValue"`
 	DataMatrixImageUrl string            `json:"dataMatrixImageUrl"`
 	AssetName          string            `json:"assetName"`
 	Brand              *string           `json:"brand,omitempty"`
@@ -72,7 +70,6 @@ type AssetResponse struct {
 
 type CreateAssetPayload struct {
 	AssetTag           string          `json:"assetTag" validate:"required,max=50"`
-	DataMatrixValue    string          `json:"dataMatrixValue" validate:"required,max=255"`
 	DataMatrixImageUrl *string         `json:"dataMatrixImageUrl,omitempty" validate:"omitempty,url"`
 	AssetName          string          `json:"assetName" validate:"required,max=200"`
 	CategoryID         string          `json:"categoryId" validate:"required"`
@@ -91,7 +88,6 @@ type CreateAssetPayload struct {
 
 type UpdateAssetPayload struct {
 	AssetTag           *string         `json:"assetTag,omitempty" validate:"omitempty,max=50"`
-	DataMatrixValue    *string         `json:"dataMatrixValue,omitempty" validate:"omitempty,max=255"`
 	DataMatrixImageUrl *string         `json:"dataMatrixImageUrl,omitempty" validate:"omitempty,url"`
 	AssetName          *string         `json:"assetName,omitempty" validate:"omitempty,max=200"`
 	CategoryID         *string         `json:"categoryId,omitempty" validate:"omitempty"`

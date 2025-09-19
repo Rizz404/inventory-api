@@ -104,7 +104,6 @@ func (r *AssetRepository) UpdateAsset(ctx context.Context, payload *domain.Asset
 	// Update asset in database
 	assetUpdates := model.Asset{
 		AssetTag:           payload.AssetTag,
-		DataMatrixValue:    payload.DataMatrixValue,
 		DataMatrixImageUrl: payload.DataMatrixImageUrl,
 		AssetName:          payload.AssetName,
 		Brand:              payload.Brand,
@@ -293,26 +292,6 @@ func (r *AssetRepository) GetAssetByAssetTag(ctx context.Context, assetTag strin
 	return mapper.ToDomainAsset(&asset), nil
 }
 
-func (r *AssetRepository) GetAssetByDataMatrixValue(ctx context.Context, dataMatrixValue string) (domain.Asset, error) {
-	var asset model.Asset
-
-	err := r.db.WithContext(ctx).
-		Preload("Category").
-		Preload("Category.Translations").
-		Preload("Location").
-		Preload("Location.Translations").
-		Preload("User").
-		Where("data_matrix_value = ?", dataMatrixValue).First(&asset).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.Asset{}, domain.ErrNotFound("asset with data matrix value '" + dataMatrixValue + "'")
-		}
-		return domain.Asset{}, domain.ErrInternal(err)
-	}
-
-	return mapper.ToDomainAsset(&asset), nil
-}
-
 func (r *AssetRepository) CheckAssetExists(ctx context.Context, assetId string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&model.Asset{}).Where("id = ?", assetId).Count(&count).Error
@@ -325,15 +304,6 @@ func (r *AssetRepository) CheckAssetExists(ctx context.Context, assetId string) 
 func (r *AssetRepository) CheckAssetTagExists(ctx context.Context, assetTag string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&model.Asset{}).Where("asset_tag = ?", assetTag).Count(&count).Error
-	if err != nil {
-		return false, domain.ErrInternal(err)
-	}
-	return count > 0, nil
-}
-
-func (r *AssetRepository) CheckDataMatrixValueExists(ctx context.Context, dataMatrixValue string) (bool, error) {
-	var count int64
-	err := r.db.WithContext(ctx).Model(&model.Asset{}).Where("data_matrix_value = ?", dataMatrixValue).Count(&count).Error
 	if err != nil {
 		return false, domain.ErrInternal(err)
 	}
@@ -402,15 +372,6 @@ func (r *AssetRepository) GetAssetResponseById(ctx context.Context, assetId stri
 func (r *AssetRepository) CheckAssetTagExistsExcluding(ctx context.Context, assetTag string, excludeAssetId string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&model.Asset{}).Where("asset_tag = ? AND id != ?", assetTag, excludeAssetId).Count(&count).Error
-	if err != nil {
-		return false, domain.ErrInternal(err)
-	}
-	return count > 0, nil
-}
-
-func (r *AssetRepository) CheckDataMatrixValueExistsExcluding(ctx context.Context, dataMatrixValue string, excludeAssetId string) (bool, error) {
-	var count int64
-	err := r.db.WithContext(ctx).Model(&model.Asset{}).Where("data_matrix_value = ? AND id != ?", dataMatrixValue, excludeAssetId).Count(&count).Error
 	if err != nil {
 		return false, domain.ErrInternal(err)
 	}
