@@ -20,6 +20,20 @@ func ToModelUser(d *domain.User) model.User {
 	}
 }
 
+func ToModelUserForCreate(d *domain.User) model.User {
+	return model.User{
+		Name:          d.Name,
+		Email:         d.Email,
+		PasswordHash:  d.PasswordHash,
+		FullName:      d.FullName,
+		Role:          d.Role,
+		EmployeeID:    d.EmployeeID,
+		PreferredLang: d.PreferredLang,
+		IsActive:      d.IsActive,
+		AvatarURL:     d.AvatarURL,
+	}
+}
+
 func ToDomainUser(m *model.User) domain.User {
 	return domain.User{
 		ID:            m.ID.String(),

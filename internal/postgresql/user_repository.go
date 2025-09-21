@@ -70,7 +70,7 @@ func (r *UserRepository) applyUserSorts(db *gorm.DB, sort *query.SortOptions) *g
 
 // *===========================MUTATION===========================*
 func (r *UserRepository) CreateUser(ctx context.Context, payload *domain.User) (domain.User, error) {
-	modelUser := mapper.ToModelUser(payload)
+	modelUser := mapper.ToModelUserForCreate(payload)
 
 	// Create user in database
 	err := r.db.WithContext(ctx).Create(&modelUser).Error

@@ -10,10 +10,12 @@ import (
 
 func ToModelScanLog(d *domain.ScanLog) model.ScanLog {
 	modelScanLog := model.ScanLog{
-		ScanTime:    d.ScanTime,
-		ScanMethod:  d.ScanMethod,
-		ScanData:    d.ScanData,
-		IsSucceeded: d.IsSucceeded,
+		ScannedValue:    d.ScannedValue,
+		ScanMethod:      d.ScanMethod,
+		ScanTimestamp:   d.ScanTimestamp,
+		ScanLocationLat: d.ScanLocationLat,
+		ScanLocationLng: d.ScanLocationLng,
+		ScanResult:      d.ScanResult,
 	}
 
 	if d.ID != "" {
@@ -22,9 +24,10 @@ func ToModelScanLog(d *domain.ScanLog) model.ScanLog {
 		}
 	}
 
-	if d.AssetID != "" {
-		if parsedAssetID, err := ulid.Parse(d.AssetID); err == nil {
-			modelScanLog.AssetID = model.SQLULID(parsedAssetID)
+	if d.AssetID != nil && *d.AssetID != "" {
+		if parsedAssetID, err := ulid.Parse(*d.AssetID); err == nil {
+			modelULID := model.SQLULID(parsedAssetID)
+			modelScanLog.AssetID = &modelULID
 		}
 	}
 
@@ -39,15 +42,18 @@ func ToModelScanLog(d *domain.ScanLog) model.ScanLog {
 
 func ToModelScanLogForCreate(d *domain.ScanLog) model.ScanLog {
 	modelScanLog := model.ScanLog{
-		ScanTime:    d.ScanTime,
-		ScanMethod:  d.ScanMethod,
-		ScanData:    d.ScanData,
-		IsSucceeded: d.IsSucceeded,
+		ScannedValue:    d.ScannedValue,
+		ScanMethod:      d.ScanMethod,
+		ScanTimestamp:   d.ScanTimestamp,
+		ScanLocationLat: d.ScanLocationLat,
+		ScanLocationLng: d.ScanLocationLng,
+		ScanResult:      d.ScanResult,
 	}
 
-	if d.AssetID != "" {
-		if parsedAssetID, err := ulid.Parse(d.AssetID); err == nil {
-			modelScanLog.AssetID = model.SQLULID(parsedAssetID)
+	if d.AssetID != nil && *d.AssetID != "" {
+		if parsedAssetID, err := ulid.Parse(*d.AssetID); err == nil {
+			modelULID := model.SQLULID(parsedAssetID)
+			modelScanLog.AssetID = &modelULID
 		}
 	}
 
@@ -61,17 +67,23 @@ func ToModelScanLogForCreate(d *domain.ScanLog) model.ScanLog {
 }
 
 func ToDomainScanLog(m *model.ScanLog) domain.ScanLog {
-	return domain.ScanLog{
-		ID:          m.ID.String(),
-		AssetID:     m.AssetID.String(),
-		ScannedBy:   m.ScannedBy.String(),
-		ScanTime:    m.ScanTime,
-		ScanMethod:  m.ScanMethod,
-		ScanData:    m.ScanData,
-		IsSucceeded: m.IsSucceeded,
-		CreatedAt:   m.CreatedAt,
-		UpdatedAt:   m.UpdatedAt,
+	scanLog := domain.ScanLog{
+		ID:              m.ID.String(),
+		ScannedValue:    m.ScannedValue,
+		ScanMethod:      m.ScanMethod,
+		ScannedBy:       m.ScannedBy.String(),
+		ScanTimestamp:   m.ScanTimestamp,
+		ScanLocationLat: m.ScanLocationLat,
+		ScanLocationLng: m.ScanLocationLng,
+		ScanResult:      m.ScanResult,
 	}
+
+	if m.AssetID != nil && !m.AssetID.IsZero() {
+		assetIDStr := m.AssetID.String()
+		scanLog.AssetID = &assetIDStr
+	}
+
+	return scanLog
 }
 
 func ToDomainScanLogs(models []model.ScanLog) []domain.ScanLog {
@@ -85,15 +97,15 @@ func ToDomainScanLogs(models []model.ScanLog) []domain.ScanLog {
 // Domain -> Response conversions (for service layer)
 func ScanLogToResponse(d *domain.ScanLog) domain.ScanLogResponse {
 	return domain.ScanLogResponse{
-		ID:          d.ID,
-		AssetID:     d.AssetID,
-		ScannedByID: d.ScannedBy,
-		ScanTime:    d.ScanTime.Format(TimeFormat),
-		ScanMethod:  d.ScanMethod,
-		ScanData:    d.ScanData,
-		IsSucceeded: d.IsSucceeded,
-		CreatedAt:   d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:   d.UpdatedAt.Format(TimeFormat),
+		ID:              d.ID,
+		AssetID:         d.AssetID,
+		ScannedValue:    d.ScannedValue,
+		ScanMethod:      d.ScanMethod,
+		ScannedByID:     d.ScannedBy,
+		ScanTimestamp:   d.ScanTimestamp.Format(TimeFormat),
+		ScanLocationLat: d.ScanLocationLat,
+		ScanLocationLng: d.ScanLocationLng,
+		ScanResult:      d.ScanResult,
 	}
 }
 
