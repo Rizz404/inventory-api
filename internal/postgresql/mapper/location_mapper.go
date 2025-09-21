@@ -94,6 +94,14 @@ func ToDomainLocation(m *model.Location) domain.Location {
 	return domainLocation
 }
 
+func ToDomainLocations(models []model.Location) []domain.Location {
+	locations := make([]domain.Location, len(models))
+	for i, m := range models {
+		locations[i] = ToDomainLocation(&m)
+	}
+	return locations
+}
+
 func ToDomainLocationTranslation(m *model.LocationTranslation) domain.LocationTranslation {
 	return domain.LocationTranslation{
 		ID:           m.ID.String(),
@@ -103,42 +111,8 @@ func ToDomainLocationTranslation(m *model.LocationTranslation) domain.LocationTr
 	}
 }
 
-func ToDomainLocationResponse(m *model.Location, langCode string) domain.LocationResponse {
-	response := domain.LocationResponse{
-		ID:           m.ID.String(),
-		LocationCode: m.LocationCode,
-		Building:     m.Building,
-		Floor:        m.Floor,
-		Latitude:     m.Latitude,
-		Longitude:    m.Longitude,
-		CreatedAt:    m.CreatedAt.Format(TimeFormat),
-		UpdatedAt:    m.UpdatedAt.Format(TimeFormat),
-	}
-
-	for _, translation := range m.Translations {
-		if translation.LangCode == langCode {
-			response.Name = translation.LocationName
-			break
-		}
-	}
-
-	if response.Name == "" && len(m.Translations) > 0 {
-		response.Name = m.Translations[0].LocationName
-	}
-
-	return response
-}
-
-func ToDomainLocationsResponse(m []model.Location, langCode string) []domain.LocationResponse {
-	responses := make([]domain.LocationResponse, len(m))
-	for i, location := range m {
-		responses[i] = ToDomainLocationResponse(&location, langCode)
-	}
-	return responses
-}
-
-// * Convert domain.Location directly to domain.LocationResponse without going through model.Location
-func DomainLocationToLocationResponse(d *domain.Location, langCode string) domain.LocationResponse {
+// Domain -> Response conversions (for service layer)
+func LocationToResponse(d *domain.Location, langCode string) domain.LocationResponse {
 	response := domain.LocationResponse{
 		ID:           d.ID,
 		LocationCode: d.LocationCode,
@@ -150,7 +124,7 @@ func DomainLocationToLocationResponse(d *domain.Location, langCode string) domai
 		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
 	}
 
-	// * Find translation for the requested language
+	// Find translation for the requested language
 	for _, translation := range d.Translations {
 		if translation.LangCode == langCode {
 			response.Name = translation.LocationName
@@ -158,7 +132,7 @@ func DomainLocationToLocationResponse(d *domain.Location, langCode string) domai
 		}
 	}
 
-	// * If no translation found for requested language, use first available
+	// If no translation found for requested language, use first available
 	if response.Name == "" && len(d.Translations) > 0 {
 		response.Name = d.Translations[0].LocationName
 	}
@@ -166,13 +140,70 @@ func DomainLocationToLocationResponse(d *domain.Location, langCode string) domai
 	return response
 }
 
-// * Convert slice of domain.Location to slice of domain.LocationResponse
-func DomainLocationsToLocationsResponse(locations []domain.Location, langCode string) []domain.LocationResponse {
+func LocationsToResponses(locations []domain.Location, langCode string) []domain.LocationResponse {
 	responses := make([]domain.LocationResponse, len(locations))
 	for i, location := range locations {
-		responses[i] = DomainLocationToLocationResponse(&location, langCode)
+		responses[i] = LocationToResponse(&location, langCode)
 	}
 	return responses
+}
+
+// Statistics conversions
+func LocationStatisticsToResponse(stats *domain.LocationStatistics) domain.LocationStatisticsResponse {
+	buildingStats := make([]domain.BuildingStatisticsResponse, len(stats.ByBuilding))
+	for i, building := range stats.ByBuilding {
+		buildingStats[i] = domain.BuildingStatisticsResponse{
+			Building: building.Building,
+			Count:    building.Count,
+		}
+	}
+
+	floorStats := make([]domain.FloorStatisticsResponse, len(stats.ByFloor))
+	for i, floor := range stats.ByFloor {
+		floorStats[i] = domain.FloorStatisticsResponse{
+			Floor: floor.Floor,
+			Count: floor.Count,
+		}
+	}
+
+	trends := make([]domain.LocationCreationTrendResponse, len(stats.CreationTrends))
+	for i, trend := range stats.CreationTrends {
+		trends[i] = domain.LocationCreationTrendResponse{
+			Date:  trend.Date,
+			Count: trend.Count,
+		}
+	}
+
+	return domain.LocationStatisticsResponse{
+		Total: domain.LocationCountStatisticsResponse{
+			Count: stats.Total.Count,
+		},
+		ByBuilding: buildingStats,
+		ByFloor:    floorStats,
+		Geographic: domain.GeographicStatisticsResponse{
+			WithCoordinates:    stats.Geographic.WithCoordinates,
+			WithoutCoordinates: stats.Geographic.WithoutCoordinates,
+			AverageLatitude:    stats.Geographic.AverageLatitude,
+			AverageLongitude:   stats.Geographic.AverageLongitude,
+		},
+		CreationTrends: trends,
+		Summary: domain.LocationSummaryStatisticsResponse{
+			TotalLocations:           stats.Summary.TotalLocations,
+			LocationsWithBuilding:    stats.Summary.LocationsWithBuilding,
+			LocationsWithoutBuilding: stats.Summary.LocationsWithoutBuilding,
+			LocationsWithFloor:       stats.Summary.LocationsWithFloor,
+			LocationsWithoutFloor:    stats.Summary.LocationsWithoutFloor,
+			LocationsWithCoordinates: stats.Summary.LocationsWithCoordinates,
+			CoordinatesPercentage:    stats.Summary.CoordinatesPercentage,
+			BuildingPercentage:       stats.Summary.BuildingPercentage,
+			FloorPercentage:          stats.Summary.FloorPercentage,
+			TotalBuildings:           stats.Summary.TotalBuildings,
+			TotalFloors:              stats.Summary.TotalFloors,
+			AverageLocationsPerDay:   stats.Summary.AverageLocationsPerDay,
+			LatestCreationDate:       stats.Summary.LatestCreationDate,
+			EarliestCreationDate:     stats.Summary.EarliestCreationDate,
+		},
+	}
 }
 
 func BuildLocationHierarchy(locations []domain.LocationResponse) []domain.LocationResponse {

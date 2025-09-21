@@ -64,29 +64,36 @@ type MaintenanceRecordTranslation struct {
 
 type MaintenanceScheduleResponse struct {
 	ID              string                  `json:"id"`
-	Asset           AssetResponse           `json:"asset"`
+	AssetID         string                  `json:"assetId"`
 	MaintenanceType MaintenanceScheduleType `json:"maintenanceType"`
 	ScheduledDate   string                  `json:"scheduledDate"`
 	FrequencyMonths *int                    `json:"frequencyMonths,omitempty"`
 	Status          ScheduleStatus          `json:"status"`
-	CreatedBy       UserResponse            `json:"createdBy"`
+	CreatedByID     string                  `json:"createdById"`
 	CreatedAt       string                  `json:"createdAt"`
 	Title           string                  `json:"title"`
 	Description     *string                 `json:"description,omitempty"`
+	// * Populated
+	Asset     AssetResponse `json:"asset"`
+	CreatedBy UserResponse  `json:"createdBy"`
 }
 
 type MaintenanceRecordResponse struct {
-	ID                string                       `json:"id"`
-	Schedule          *MaintenanceScheduleResponse `json:"schedule,omitempty"`
-	Asset             AssetResponse                `json:"asset"`
-	MaintenanceDate   string                       `json:"maintenanceDate"`
-	PerformedByUser   *UserResponse                `json:"performedByUser,omitempty"`
-	PerformedByVendor *string                      `json:"performedByVendor,omitempty"`
-	ActualCost        *float64                     `json:"actualCost,omitempty"`
-	Title             string                       `json:"title"`
-	Notes             *string                      `json:"notes,omitempty"`
-	CreatedAt         string                       `json:"createdAt"`
-	UpdatedAt         string                       `json:"updatedAt"`
+	ID                string   `json:"id"`
+	ScheduleID        *string  `json:"scheduleId,omitempty"`
+	AssetID           string   `json:"assetId"`
+	MaintenanceDate   string   `json:"maintenanceDate"`
+	PerformedByUserID *string  `json:"performedByUserId,omitempty"`
+	PerformedByVendor *string  `json:"performedByVendor,omitempty"`
+	ActualCost        *float64 `json:"actualCost,omitempty"`
+	Title             string   `json:"title"`
+	Notes             *string  `json:"notes,omitempty"`
+	CreatedAt         string   `json:"createdAt"`
+	UpdatedAt         string   `json:"updatedAt"`
+	// * Populated
+	Schedule        *MaintenanceScheduleResponse `json:"schedule,omitempty"`
+	Asset           AssetResponse                `json:"asset"`
+	PerformedByUser *UserResponse                `json:"performedByUser,omitempty"`
 }
 
 // --- Payloads ---

@@ -175,11 +175,7 @@ func (r *UserRepository) GetUsersPaginated(ctx context.Context, params query.Par
 	}
 
 	// Convert to domain users
-	domainUsers := make([]domain.User, len(users))
-	for i, user := range users {
-		domainUsers[i] = mapper.ToDomainUser(&user)
-	}
-	return domainUsers, nil
+	return mapper.ToDomainUsers(users), nil
 }
 
 func (r *UserRepository) GetUsersCursor(ctx context.Context, params query.Params) ([]domain.User, error) {
@@ -201,11 +197,7 @@ func (r *UserRepository) GetUsersCursor(ctx context.Context, params query.Params
 	}
 
 	// Convert to domain users
-	domainUsers := make([]domain.User, len(users))
-	for i, user := range users {
-		domainUsers[i] = mapper.ToDomainUser(&user)
-	}
-	return domainUsers, nil
+	return mapper.ToDomainUsers(users), nil
 }
 
 func (r *UserRepository) GetUserById(ctx context.Context, userId string) (domain.User, error) {
@@ -275,27 +267,6 @@ func (r *UserRepository) CheckEmailExists(ctx context.Context, email string) (bo
 		return false, domain.ErrInternal(err)
 	}
 	return count > 0, nil
-}
-
-func (r *UserRepository) GetUsersResponse(ctx context.Context, params query.Params) ([]domain.UserResponse, error) {
-	users, err := r.GetUsersPaginated(ctx, params)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert to UserResponse using direct mapper
-	userResponses := mapper.DomainUsersToUsersResponse(users)
-	return userResponses, nil
-}
-
-func (r *UserRepository) GetUserResponseById(ctx context.Context, userId string) (domain.UserResponse, error) {
-	user, err := r.GetUserById(ctx, userId)
-	if err != nil {
-		return domain.UserResponse{}, err
-	}
-
-	// Convert to UserResponse using direct mapper
-	return mapper.DomainUserToUserResponse(&user), nil
 }
 
 func (r *UserRepository) CheckNameExistsExcluding(ctx context.Context, name string, excludeUserId string) (bool, error) {

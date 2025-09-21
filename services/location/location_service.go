@@ -19,7 +19,6 @@ type Repository interface {
 	// * QUERY
 	GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error)
 	GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error)
-	GetLocationsResponse(ctx context.Context, params query.Params, langCode string) ([]domain.LocationResponse, error)
 	GetLocationById(ctx context.Context, locationId string) (domain.Location, error)
 	GetLocationByCode(ctx context.Context, locationCode string) (domain.Location, error)
 	GetLocationHierarchy(ctx context.Context, langCode string) ([]domain.LocationResponse, error)
@@ -46,7 +45,7 @@ type LocationService interface {
 	CheckLocationExists(ctx context.Context, locationId string) (bool, error)
 	CheckLocationCodeExists(ctx context.Context, locationCode string) (bool, error)
 	CountLocations(ctx context.Context, params query.Params) (int64, error)
-	GetLocationStatistics(ctx context.Context) (domain.LocationStatistics, error)
+	GetLocationStatistics(ctx context.Context) (domain.LocationStatisticsResponse, error)
 }
 
 type Service struct {
@@ -94,8 +93,8 @@ func (s *Service) CreateLocation(ctx context.Context, payload *domain.CreateLoca
 		return domain.LocationResponse{}, err
 	}
 
-	// * Convert to LocationResponse using direct mapper
-	return mapper.DomainLocationToLocationResponse(&createdLocation, mapper.DefaultLangCode), nil
+	// * Convert to LocationResponse using mapper
+	return mapper.LocationToResponse(&createdLocation, mapper.DefaultLangCode), nil
 }
 
 func (s *Service) UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload) (domain.LocationResponse, error) {
@@ -119,8 +118,8 @@ func (s *Service) UpdateLocation(ctx context.Context, locationId string, payload
 		return domain.LocationResponse{}, err
 	}
 
-	// * Convert to LocationResponse using direct mapper
-	return mapper.DomainLocationToLocationResponse(&updatedLocation, mapper.DefaultLangCode), nil
+	// * Convert to LocationResponse using mapper
+	return mapper.LocationToResponse(&updatedLocation, mapper.DefaultLangCode), nil
 }
 
 func (s *Service) DeleteLocation(ctx context.Context, locationId string) error {
@@ -133,7 +132,7 @@ func (s *Service) DeleteLocation(ctx context.Context, locationId string) error {
 
 // *===========================QUERY===========================*
 func (s *Service) GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.LocationResponse, int64, error) {
-	locations, err := s.Repo.GetLocationsResponse(ctx, params, langCode)
+	locations, err := s.Repo.GetLocationsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -144,16 +143,22 @@ func (s *Service) GetLocationsPaginated(ctx context.Context, params query.Params
 		return nil, 0, err
 	}
 
-	return locations, count, nil
+	// * Convert to LocationResponse using mapper
+	locationResponses := mapper.LocationsToResponses(locations, langCode)
+
+	return locationResponses, count, nil
 }
 
 func (s *Service) GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.LocationResponse, error) {
-	locations, err := s.Repo.GetLocationsResponse(ctx, params, langCode)
+	locations, err := s.Repo.GetLocationsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	return locations, nil
+	// * Convert to LocationResponse using mapper
+	locationResponses := mapper.LocationsToResponses(locations, langCode)
+
+	return locationResponses, nil
 }
 
 func (s *Service) GetLocationById(ctx context.Context, locationId string, langCode string) (domain.LocationResponse, error) {
@@ -162,8 +167,8 @@ func (s *Service) GetLocationById(ctx context.Context, locationId string, langCo
 		return domain.LocationResponse{}, err
 	}
 
-	// * Convert to LocationResponse using direct mapper
-	return mapper.DomainLocationToLocationResponse(&location, langCode), nil
+	// * Convert to LocationResponse using mapper
+	return mapper.LocationToResponse(&location, langCode), nil
 }
 
 func (s *Service) GetLocationByCode(ctx context.Context, locationCode string, langCode string) (domain.LocationResponse, error) {
@@ -172,8 +177,8 @@ func (s *Service) GetLocationByCode(ctx context.Context, locationCode string, la
 		return domain.LocationResponse{}, err
 	}
 
-	// * Convert to LocationResponse using direct mapper
-	return mapper.DomainLocationToLocationResponse(&location, langCode), nil
+	// * Convert to LocationResponse using mapper
+	return mapper.LocationToResponse(&location, langCode), nil
 }
 
 func (s *Service) GetLocationHierarchy(ctx context.Context, langCode string) ([]domain.LocationResponse, error) {
@@ -208,10 +213,12 @@ func (s *Service) CountLocations(ctx context.Context, params query.Params) (int6
 	return count, nil
 }
 
-func (s *Service) GetLocationStatistics(ctx context.Context) (domain.LocationStatistics, error) {
+func (s *Service) GetLocationStatistics(ctx context.Context) (domain.LocationStatisticsResponse, error) {
 	stats, err := s.Repo.GetLocationStatistics(ctx)
 	if err != nil {
-		return domain.LocationStatistics{}, err
+		return domain.LocationStatisticsResponse{}, err
 	}
-	return stats, nil
+
+	// Convert to LocationStatisticsResponse using mapper
+	return mapper.LocationStatisticsToResponse(&stats), nil
 }

@@ -125,68 +125,13 @@ func ToDomainAsset(m *model.Asset) domain.Asset {
 	return domainAsset
 }
 
-func ToDomainAssetResponse(m *model.Asset, langCode string) domain.AssetResponse {
-	response := domain.AssetResponse{
-		ID:                 m.ID.String(),
-		AssetTag:           m.AssetTag,
-		DataMatrixImageUrl: m.DataMatrixImageUrl,
-		AssetName:          m.AssetName,
-		Brand:              m.Brand,
-		Model:              m.Model,
-		SerialNumber:       m.SerialNumber,
-		PurchasePrice:      m.PurchasePrice,
-		VendorName:         m.VendorName,
-		Status:             m.Status,
-		Condition:          m.Condition,
-		CreatedAt:          m.CreatedAt.Format(TimeFormat),
-		UpdatedAt:          m.UpdatedAt.Format(TimeFormat),
-	}
-
-	// Handle date formatting
-	if m.PurchaseDate != nil {
-		purchaseDateStr := m.PurchaseDate.Format("2006-01-02")
-		response.PurchaseDate = &purchaseDateStr
-	}
-
-	if m.WarrantyEnd != nil {
-		warrantyEndStr := m.WarrantyEnd.Format("2006-01-02")
-		response.WarrantyEnd = &warrantyEndStr
-	}
-
-	// Handle related entities
-	if !m.Category.ID.IsZero() {
-		categoryResponse := ToDomainCategoryResponse(&m.Category, langCode)
-		response.Category = &categoryResponse
-	}
-
-	if m.Location != nil && !m.Location.ID.IsZero() {
-		locationResponse := ToDomainLocationResponse(m.Location, langCode)
-		response.Location = &locationResponse
-	}
-
-	if m.User != nil && !m.User.ID.IsZero() {
-		userResponse := ToDomainUserResponse(m.User)
-		response.AssignedTo = &userResponse
-	}
-
-	return response
-}
-
-func ToDomainAssetsResponse(m []model.Asset, langCode string) []domain.AssetResponse {
-	responses := make([]domain.AssetResponse, len(m))
-	for i, asset := range m {
-		responses[i] = ToDomainAssetResponse(&asset, langCode)
-	}
-	return responses
-}
-
-// * Convert domain.Asset directly to domain.AssetResponse without going through model.Asset
-func DomainAssetToAssetResponse(d *domain.Asset) domain.AssetResponse {
+func AssetToResponse(d *domain.Asset) domain.AssetResponse {
 	response := domain.AssetResponse{
 		ID:                 d.ID,
 		AssetTag:           d.AssetTag,
 		DataMatrixImageUrl: d.DataMatrixImageUrl,
 		AssetName:          d.AssetName,
+		CategoryID:         d.CategoryID,
 		Brand:              d.Brand,
 		Model:              d.Model,
 		SerialNumber:       d.SerialNumber,
@@ -194,6 +139,8 @@ func DomainAssetToAssetResponse(d *domain.Asset) domain.AssetResponse {
 		VendorName:         d.VendorName,
 		Status:             d.Status,
 		Condition:          d.Condition,
+		LocationID:         d.LocationID,
+		AssignedToID:       d.AssignedTo,
 		CreatedAt:          d.CreatedAt.Format(TimeFormat),
 		UpdatedAt:          d.UpdatedAt.Format(TimeFormat),
 	}
@@ -212,13 +159,108 @@ func DomainAssetToAssetResponse(d *domain.Asset) domain.AssetResponse {
 	return response
 }
 
-// * Convert slice of domain.Asset to slice of domain.AssetResponse
-func DomainAssetsToAssetsResponse(assets []domain.Asset) []domain.AssetResponse {
+func AssetsToResponses(assets []domain.Asset) []domain.AssetResponse {
 	responses := make([]domain.AssetResponse, len(assets))
 	for i, asset := range assets {
-		responses[i] = DomainAssetToAssetResponse(&asset)
+		responses[i] = AssetToResponse(&asset)
 	}
 	return responses
+}
+
+// Helper function to convert domain Assets to domain Assets (for consistency)
+func ToDomainAssets(m []model.Asset) []domain.Asset {
+	assets := make([]domain.Asset, len(m))
+	for i, asset := range m {
+		assets[i] = ToDomainAsset(&asset)
+	}
+	return assets
+}
+
+// Convert asset statistics from domain to response
+func AssetStatisticsToResponse(stats *domain.AssetStatistics) domain.AssetStatisticsResponse {
+	response := domain.AssetStatisticsResponse{
+		Total: domain.AssetCountStatisticsResponse{
+			Count: stats.Total.Count,
+		},
+		ByStatus: domain.AssetStatusStatisticsResponse{
+			Active:      stats.ByStatus.Active,
+			Maintenance: stats.ByStatus.Maintenance,
+			Disposed:    stats.ByStatus.Disposed,
+			Lost:        stats.ByStatus.Lost,
+		},
+		ByCondition: domain.AssetConditionStatisticsResponse{
+			Good:    stats.ByCondition.Good,
+			Fair:    stats.ByCondition.Fair,
+			Poor:    stats.ByCondition.Poor,
+			Damaged: stats.ByCondition.Damaged,
+		},
+		ByAssignment: domain.AssetAssignmentStatisticsResponse{
+			Assigned:   stats.ByAssignment.Assigned,
+			Unassigned: stats.ByAssignment.Unassigned,
+		},
+		ValueStatistics: domain.AssetValueStatisticsResponse{
+			TotalValue:         stats.ValueStatistics.TotalValue,
+			AverageValue:       stats.ValueStatistics.AverageValue,
+			MinValue:           stats.ValueStatistics.MinValue,
+			MaxValue:           stats.ValueStatistics.MaxValue,
+			AssetsWithValue:    stats.ValueStatistics.AssetsWithValue,
+			AssetsWithoutValue: stats.ValueStatistics.AssetsWithoutValue,
+		},
+		WarrantyStatistics: domain.AssetWarrantyStatisticsResponse{
+			ActiveWarranties:  stats.WarrantyStatistics.ActiveWarranties,
+			ExpiredWarranties: stats.WarrantyStatistics.ExpiredWarranties,
+			NoWarrantyInfo:    stats.WarrantyStatistics.NoWarrantyInfo,
+		},
+		Summary: domain.AssetSummaryStatisticsResponse{
+			TotalAssets:                 stats.Summary.TotalAssets,
+			ActiveAssetsPercentage:      stats.Summary.ActiveAssetsPercentage,
+			MaintenanceAssetsPercentage: stats.Summary.MaintenanceAssetsPercentage,
+			DisposedAssetsPercentage:    stats.Summary.DisposedAssetsPercentage,
+			LostAssetsPercentage:        stats.Summary.LostAssetsPercentage,
+			GoodConditionPercentage:     stats.Summary.GoodConditionPercentage,
+			FairConditionPercentage:     stats.Summary.FairConditionPercentage,
+			PoorConditionPercentage:     stats.Summary.PoorConditionPercentage,
+			DamagedConditionPercentage:  stats.Summary.DamagedConditionPercentage,
+			AssignedAssetsPercentage:    stats.Summary.AssignedAssetsPercentage,
+			UnassignedAssetsPercentage:  stats.Summary.UnassignedAssetsPercentage,
+			AssetsWithPurchasePrice:     stats.Summary.AssetsWithPurchasePrice,
+			PurchasePricePercentage:     stats.Summary.PurchasePricePercentage,
+			AssetsWithDataMatrix:        stats.Summary.AssetsWithDataMatrix,
+			DataMatrixPercentage:        stats.Summary.DataMatrixPercentage,
+			AssetsWithWarranty:          stats.Summary.AssetsWithWarranty,
+			WarrantyPercentage:          stats.Summary.WarrantyPercentage,
+			TotalCategories:             stats.Summary.TotalCategories,
+			TotalLocations:              stats.Summary.TotalLocations,
+			AverageAssetsPerDay:         stats.Summary.AverageAssetsPerDay,
+			LatestCreationDate:          stats.Summary.LatestCreationDate,
+			EarliestCreationDate:        stats.Summary.EarliestCreationDate,
+			MostExpensiveAssetValue:     stats.Summary.MostExpensiveAssetValue,
+			LeastExpensiveAssetValue:    stats.Summary.LeastExpensiveAssetValue,
+		},
+	}
+
+	// Convert ByCategory slice
+	response.ByCategory = make([]domain.CategoryStatisticsResponse, len(stats.ByCategory))
+	for i, category := range stats.ByCategory {
+		response.ByCategory[i] = CategoryStatisticsToResponse(&category)
+	}
+
+	// Convert ByLocation slice
+	response.ByLocation = make([]domain.LocationStatisticsResponse, len(stats.ByLocation))
+	for i, location := range stats.ByLocation {
+		response.ByLocation[i] = LocationStatisticsToResponse(&location)
+	}
+
+	// Convert CreationTrends slice
+	response.CreationTrends = make([]domain.AssetCreationTrendResponse, len(stats.CreationTrends))
+	for i, trend := range stats.CreationTrends {
+		response.CreationTrends[i] = domain.AssetCreationTrendResponse{
+			Date:  trend.Date,
+			Count: trend.Count,
+		}
+	}
+
+	return response
 }
 
 func ToModelAssetUpdateMap(payload *domain.UpdateAssetPayload) map[string]any {

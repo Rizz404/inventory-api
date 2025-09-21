@@ -53,7 +53,7 @@ type UserService interface {
 	CheckNameExists(ctx context.Context, name string) (bool, error)
 	CheckEmailExists(ctx context.Context, email string) (bool, error)
 	CountUsers(ctx context.Context, params query.Params) (int64, error)
-	GetUserStatistics(ctx context.Context) (domain.UserStatistics, error)
+	GetUserStatistics(ctx context.Context) (domain.UserStatisticsResponse, error)
 }
 
 type Service struct {
@@ -158,8 +158,8 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 		// Note: We don't return error here to avoid failing user creation if avatar re-upload fails
 	}
 
-	// * Convert to UserResponse using direct mapper
-	return mapper.DomainUserToUserResponse(&createdUser), nil
+	// * Convert to UserResponse using mapper
+	return mapper.UserToResponse(&createdUser), nil
 }
 
 func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload, avatarFile *multipart.FileHeader) (domain.UserResponse, error) {
@@ -233,8 +233,8 @@ func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain
 		}
 	}
 
-	// * Convert to UserResponse using direct mapper
-	return mapper.DomainUserToUserResponse(&updatedUser), nil
+	// * Convert to UserResponse using mapper
+	return mapper.UserToResponse(&updatedUser), nil
 }
 
 func (s *Service) DeleteUser(ctx context.Context, userId string) error {
@@ -258,8 +258,8 @@ func (s *Service) GetUsersPaginated(ctx context.Context, params query.Params) ([
 		return nil, 0, err
 	}
 
-	// * Convert to UserResponse using direct mapper
-	userResponses := mapper.DomainUsersToUsersResponse(users)
+	// * Convert to UserResponse using mapper
+	userResponses := mapper.UsersToResponses(users)
 
 	return userResponses, count, nil
 }
@@ -270,8 +270,8 @@ func (s *Service) GetUsersCursor(ctx context.Context, params query.Params) ([]do
 		return nil, err
 	}
 
-	// * Convert to UserResponse using direct mapper
-	userResponses := mapper.DomainUsersToUsersResponse(users)
+	// * Convert to UserResponse using mapper
+	userResponses := mapper.UsersToResponses(users)
 
 	return userResponses, nil
 }
@@ -282,8 +282,8 @@ func (s *Service) GetUserById(ctx context.Context, userId string) (domain.UserRe
 		return domain.UserResponse{}, err
 	}
 
-	// * Convert to UserResponse using direct mapper
-	return mapper.DomainUserToUserResponse(&user), nil
+	// * Convert to UserResponse using mapper
+	return mapper.UserToResponse(&user), nil
 }
 
 func (s *Service) GetUserByName(ctx context.Context, name string) (domain.UserResponse, error) {
@@ -292,8 +292,8 @@ func (s *Service) GetUserByName(ctx context.Context, name string) (domain.UserRe
 		return domain.UserResponse{}, err
 	}
 
-	// * Convert to UserResponse using direct mapper
-	return mapper.DomainUserToUserResponse(&user), nil
+	// * Convert to UserResponse using mapper
+	return mapper.UserToResponse(&user), nil
 }
 
 func (s *Service) GetUserByEmail(ctx context.Context, email string) (domain.UserResponse, error) {
@@ -302,8 +302,8 @@ func (s *Service) GetUserByEmail(ctx context.Context, email string) (domain.User
 		return domain.UserResponse{}, err
 	}
 
-	// * Convert to UserResponse using direct mapper
-	return mapper.DomainUserToUserResponse(&user), nil
+	// * Convert to UserResponse using mapper
+	return mapper.UserToResponse(&user), nil
 }
 
 func (s *Service) CheckUserExists(ctx context.Context, userId string) (bool, error) {
@@ -338,10 +338,12 @@ func (s *Service) CountUsers(ctx context.Context, params query.Params) (int64, e
 	return count, nil
 }
 
-func (s *Service) GetUserStatistics(ctx context.Context) (domain.UserStatistics, error) {
+func (s *Service) GetUserStatistics(ctx context.Context) (domain.UserStatisticsResponse, error) {
 	stats, err := s.Repo.GetUserStatistics(ctx)
 	if err != nil {
-		return domain.UserStatistics{}, err
+		return domain.UserStatisticsResponse{}, err
 	}
-	return stats, nil
+
+	// Convert to UserStatisticsResponse using mapper
+	return mapper.StatisticsToResponse(&stats), nil
 }

@@ -19,7 +19,6 @@ type Repository interface {
 	// * QUERY
 	GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error)
 	GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error)
-	GetCategoriesResponse(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryResponse, error)
 	GetCategoryById(ctx context.Context, categoryId string) (domain.Category, error)
 	GetCategoryByCode(ctx context.Context, categoryCode string) (domain.Category, error)
 	GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error)
@@ -46,7 +45,7 @@ type CategoryService interface {
 	CheckCategoryExists(ctx context.Context, categoryId string) (bool, error)
 	CheckCategoryCodeExists(ctx context.Context, categoryCode string) (bool, error)
 	CountCategories(ctx context.Context, params query.Params) (int64, error)
-	GetCategoryStatistics(ctx context.Context) (domain.CategoryStatistics, error)
+	GetCategoryStatistics(ctx context.Context) (domain.CategoryStatisticsResponse, error)
 }
 
 type Service struct {
@@ -101,8 +100,8 @@ func (s *Service) CreateCategory(ctx context.Context, payload *domain.CreateCate
 		return domain.CategoryResponse{}, err
 	}
 
-	// * Convert to CategoryResponse using direct mapper
-	return mapper.DomainCategoryToCategoryResponse(&createdCategory, mapper.DefaultLangCode), nil
+	// * Convert to CategoryResponse using mapper
+	return mapper.CategoryToResponse(&createdCategory, mapper.DefaultLangCode), nil
 }
 
 func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.CategoryResponse, error) {
@@ -135,8 +134,8 @@ func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload
 		return domain.CategoryResponse{}, err
 	}
 
-	// * Convert to CategoryResponse using direct mapper
-	return mapper.DomainCategoryToCategoryResponse(&updatedCategory, mapper.DefaultLangCode), nil
+	// * Convert to CategoryResponse using mapper
+	return mapper.CategoryToResponse(&updatedCategory, mapper.DefaultLangCode), nil
 }
 
 func (s *Service) DeleteCategory(ctx context.Context, categoryId string) error {
@@ -149,7 +148,7 @@ func (s *Service) DeleteCategory(ctx context.Context, categoryId string) error {
 
 // *===========================QUERY===========================*
 func (s *Service) GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryResponse, int64, error) {
-	categories, err := s.Repo.GetCategoriesResponse(ctx, params, langCode)
+	categories, err := s.Repo.GetCategoriesPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -160,16 +159,22 @@ func (s *Service) GetCategoriesPaginated(ctx context.Context, params query.Param
 		return nil, 0, err
 	}
 
-	return categories, count, nil
+	// * Convert to CategoryResponse using mapper
+	categoryResponses := mapper.CategoriesToResponses(categories, langCode)
+
+	return categoryResponses, count, nil
 }
 
 func (s *Service) GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryResponse, error) {
-	categories, err := s.Repo.GetCategoriesResponse(ctx, params, langCode)
+	categories, err := s.Repo.GetCategoriesCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	return categories, nil
+	// * Convert to CategoryResponse using mapper
+	categoryResponses := mapper.CategoriesToResponses(categories, langCode)
+
+	return categoryResponses, nil
 }
 
 func (s *Service) GetCategoryById(ctx context.Context, categoryId string, langCode string) (domain.CategoryResponse, error) {
@@ -178,8 +183,8 @@ func (s *Service) GetCategoryById(ctx context.Context, categoryId string, langCo
 		return domain.CategoryResponse{}, err
 	}
 
-	// * Convert to CategoryResponse using direct mapper
-	return mapper.DomainCategoryToCategoryResponse(&category, langCode), nil
+	// * Convert to CategoryResponse using mapper
+	return mapper.CategoryToResponse(&category, langCode), nil
 }
 
 func (s *Service) GetCategoryByCode(ctx context.Context, categoryCode string, langCode string) (domain.CategoryResponse, error) {
@@ -188,8 +193,8 @@ func (s *Service) GetCategoryByCode(ctx context.Context, categoryCode string, la
 		return domain.CategoryResponse{}, err
 	}
 
-	// * Convert to CategoryResponse using direct mapper
-	return mapper.DomainCategoryToCategoryResponse(&category, langCode), nil
+	// * Convert to CategoryResponse using mapper
+	return mapper.CategoryToResponse(&category, langCode), nil
 }
 
 func (s *Service) GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error) {
@@ -224,10 +229,12 @@ func (s *Service) CountCategories(ctx context.Context, params query.Params) (int
 	return count, nil
 }
 
-func (s *Service) GetCategoryStatistics(ctx context.Context) (domain.CategoryStatistics, error) {
+func (s *Service) GetCategoryStatistics(ctx context.Context) (domain.CategoryStatisticsResponse, error) {
 	stats, err := s.Repo.GetCategoryStatistics(ctx)
 	if err != nil {
-		return domain.CategoryStatistics{}, err
+		return domain.CategoryStatisticsResponse{}, err
 	}
-	return stats, nil
+
+	// Convert to CategoryStatisticsResponse using mapper
+	return mapper.CategoryStatisticsToResponse(&stats), nil
 }

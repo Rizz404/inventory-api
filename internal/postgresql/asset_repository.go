@@ -188,7 +188,7 @@ func (r *AssetRepository) DeleteAsset(ctx context.Context, assetId string) error
 }
 
 // *===========================QUERY===========================*
-func (r *AssetRepository) GetAssetsPaginated(ctx context.Context, params query.Params) ([]domain.Asset, error) {
+func (r *AssetRepository) GetAssetsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Asset, error) {
 	var assets []model.Asset
 	db := r.db.WithContext(ctx).
 		Table("assets a").
@@ -212,15 +212,11 @@ func (r *AssetRepository) GetAssetsPaginated(ctx context.Context, params query.P
 		return nil, domain.ErrInternal(err)
 	}
 
-	// Convert to domain assets
-	domainAssets := make([]domain.Asset, len(assets))
-	for i, asset := range assets {
-		domainAssets[i] = mapper.ToDomainAsset(&asset)
-	}
-	return domainAssets, nil
+	// Convert to domain assets using helper function
+	return mapper.ToDomainAssets(assets), nil
 }
 
-func (r *AssetRepository) GetAssetsCursor(ctx context.Context, params query.Params) ([]domain.Asset, error) {
+func (r *AssetRepository) GetAssetsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Asset, error) {
 	var assets []model.Asset
 	db := r.db.WithContext(ctx).
 		Table("assets a").
@@ -244,12 +240,8 @@ func (r *AssetRepository) GetAssetsCursor(ctx context.Context, params query.Para
 		return nil, domain.ErrInternal(err)
 	}
 
-	// Convert to domain assets
-	domainAssets := make([]domain.Asset, len(assets))
-	for i, asset := range assets {
-		domainAssets[i] = mapper.ToDomainAsset(&asset)
-	}
-	return domainAssets, nil
+	// Convert to domain assets using helper function
+	return mapper.ToDomainAssets(assets), nil
 }
 
 func (r *AssetRepository) GetAssetById(ctx context.Context, assetId string) (domain.Asset, error) {
@@ -317,56 +309,6 @@ func (r *AssetRepository) CheckSerialNumberExists(ctx context.Context, serialNum
 		return false, domain.ErrInternal(err)
 	}
 	return count > 0, nil
-}
-
-func (r *AssetRepository) GetAssetsResponse(ctx context.Context, params query.Params, langCode string) ([]domain.AssetResponse, error) {
-	var assets []model.Asset
-	db := r.db.WithContext(ctx).
-		Table("assets a").
-		Preload("Category").
-		Preload("Category.Translations").
-		Preload("Location").
-		Preload("Location.Translations").
-		Preload("User")
-
-	if params.SearchQuery != nil && *params.SearchQuery != "" {
-		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Where("a.asset_tag ILIKE ? OR a.asset_name ILIKE ? OR a.brand ILIKE ? OR a.model ILIKE ? OR a.serial_number ILIKE ?",
-			searchPattern, searchPattern, searchPattern, searchPattern, searchPattern)
-	}
-
-	// * Set pagination ke nil agar query.Apply tidak memproses cursor
-	params.Pagination.Cursor = ""
-	db = query.Apply(db, params, r.applyAssetFilters, r.applyAssetSorts)
-
-	if err := db.Find(&assets).Error; err != nil {
-		return nil, domain.ErrInternal(err)
-	}
-
-	// Convert to AssetResponse using mapper
-	assetResponses := mapper.ToDomainAssetsResponse(assets, langCode)
-	return assetResponses, nil
-}
-
-func (r *AssetRepository) GetAssetResponseById(ctx context.Context, assetId string, langCode string) (domain.AssetResponse, error) {
-	var asset model.Asset
-
-	err := r.db.WithContext(ctx).
-		Preload("Category").
-		Preload("Category.Translations").
-		Preload("Location").
-		Preload("Location.Translations").
-		Preload("User").
-		First(&asset, "id = ?", assetId).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.AssetResponse{}, domain.ErrNotFound("asset")
-		}
-		return domain.AssetResponse{}, domain.ErrInternal(err)
-	}
-
-	// Convert to AssetResponse using mapper
-	return mapper.ToDomainAssetResponse(&asset, langCode), nil
 }
 
 func (r *AssetRepository) CheckAssetTagExistsExcluding(ctx context.Context, assetTag string, excludeAssetId string) (bool, error) {

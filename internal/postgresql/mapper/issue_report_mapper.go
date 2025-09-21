@@ -154,73 +154,29 @@ func ToDomainIssueReportTranslation(m *model.IssueReportTranslation) domain.Issu
 	}
 }
 
-func ToDomainIssueReportResponse(m *model.IssueReport, langCode string) domain.IssueReportResponse {
-	response := domain.IssueReportResponse{
-		ID:           m.ID.String(),
-		ReportedDate: m.ReportedDate.Format(TimeFormat),
-		IssueType:    m.IssueType,
-		Priority:     m.Priority,
-		Status:       m.Status,
+func ToDomainIssueReports(models []model.IssueReport) []domain.IssueReport {
+	reports := make([]domain.IssueReport, len(models))
+	for i, m := range models {
+		reports[i] = ToDomainIssueReport(&m)
 	}
-
-	// Handle date formatting
-	if m.ResolvedDate != nil {
-		resolvedDateStr := m.ResolvedDate.Format(TimeFormat)
-		response.ResolvedDate = &resolvedDateStr
-	}
-
-	// Find translation for the requested language
-	for _, translation := range m.Translations {
-		if translation.LangCode == langCode {
-			response.Title = translation.Title
-			response.Description = translation.Description
-			response.ResolutionNotes = translation.ResolutionNotes
-			break
-		}
-	}
-
-	// If no translation found for requested language, use first available
-	if response.Title == "" && len(m.Translations) > 0 {
-		response.Title = m.Translations[0].Title
-		response.Description = m.Translations[0].Description
-		response.ResolutionNotes = m.Translations[0].ResolutionNotes
-	}
-
-	// Handle related entities
-	if !m.Asset.ID.IsZero() {
-		assetResponse := ToDomainAssetResponse(&m.Asset, langCode)
-		response.Asset = assetResponse
-	}
-
-	if !m.ReportedByUser.ID.IsZero() {
-		userResponse := ToDomainUserResponse(&m.ReportedByUser)
-		response.ReportedBy = userResponse
-	}
-
-	if m.ResolvedByUser != nil && !m.ResolvedByUser.ID.IsZero() {
-		userResponse := ToDomainUserResponse(m.ResolvedByUser)
-		response.ResolvedBy = &userResponse
-	}
-
-	return response
+	return reports
 }
 
-func ToDomainIssueReportsResponse(m []model.IssueReport, langCode string) []domain.IssueReportResponse {
-	responses := make([]domain.IssueReportResponse, len(m))
-	for i, report := range m {
-		responses[i] = ToDomainIssueReportResponse(&report, langCode)
-	}
-	return responses
-}
-
-// * Convert domain.IssueReport directly to domain.IssueReportResponse without going through model.IssueReport
-func DomainIssueReportToIssueReportResponse(d *domain.IssueReport, langCode string) domain.IssueReportResponse {
+// Domain -> Response conversions (for service layer)
+func IssueReportToResponse(d *domain.IssueReport, langCode string) domain.IssueReportResponse {
 	response := domain.IssueReportResponse{
 		ID:           d.ID,
+		AssetID:      d.AssetID,
+		ReportedByID: d.ReportedBy,
 		ReportedDate: d.ReportedDate.Format(TimeFormat),
 		IssueType:    d.IssueType,
 		Priority:     d.Priority,
 		Status:       d.Status,
+	}
+
+	// Handle resolved by ID
+	if d.ResolvedBy != nil {
+		response.ResolvedByID = d.ResolvedBy
 	}
 
 	// Handle date formatting
@@ -249,11 +205,10 @@ func DomainIssueReportToIssueReportResponse(d *domain.IssueReport, langCode stri
 	return response
 }
 
-// * Convert slice of domain.IssueReport to slice of domain.IssueReportResponse
-func DomainIssueReportsToIssueReportsResponse(reports []domain.IssueReport, langCode string) []domain.IssueReportResponse {
+func IssueReportsToResponses(reports []domain.IssueReport, langCode string) []domain.IssueReportResponse {
 	responses := make([]domain.IssueReportResponse, len(reports))
 	for i, report := range reports {
-		responses[i] = DomainIssueReportToIssueReportResponse(&report, langCode)
+		responses[i] = IssueReportToResponse(&report, langCode)
 	}
 	return responses
 }

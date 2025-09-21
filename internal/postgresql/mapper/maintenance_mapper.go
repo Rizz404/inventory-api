@@ -130,61 +130,24 @@ func ToDomainMaintenanceScheduleTranslation(m *model.MaintenanceScheduleTranslat
 	}
 }
 
-func ToDomainMaintenanceScheduleResponse(m *model.MaintenanceSchedule, langCode string) domain.MaintenanceScheduleResponse {
-	response := domain.MaintenanceScheduleResponse{
-		ID:              m.ID.String(),
-		MaintenanceType: m.MaintenanceType,
-		ScheduledDate:   m.ScheduledDate.Format(DateFormat),
-		FrequencyMonths: m.FrequencyMonths,
-		Status:          m.Status,
-		CreatedAt:       m.CreatedAt.Format(TimeFormat),
+func ToDomainMaintenanceSchedules(models []model.MaintenanceSchedule) []domain.MaintenanceSchedule {
+	schedules := make([]domain.MaintenanceSchedule, len(models))
+	for i, m := range models {
+		schedules[i] = ToDomainMaintenanceSchedule(&m)
 	}
-
-	// Find translation for the requested language
-	for _, translation := range m.Translations {
-		if translation.LangCode == langCode {
-			response.Title = translation.Title
-			response.Description = translation.Description
-			break
-		}
-	}
-
-	// If no translation found for requested language, use first available
-	if response.Title == "" && len(m.Translations) > 0 {
-		response.Title = m.Translations[0].Title
-		response.Description = m.Translations[0].Description
-	}
-
-	// Handle related entities
-	if !m.Asset.ID.IsZero() {
-		assetResponse := ToDomainAssetResponse(&m.Asset, langCode)
-		response.Asset = assetResponse
-	}
-
-	if !m.CreatedByUser.ID.IsZero() {
-		userResponse := ToDomainUserResponse(&m.CreatedByUser)
-		response.CreatedBy = userResponse
-	}
-
-	return response
+	return schedules
 }
 
-func ToDomainMaintenanceSchedulesResponse(m []model.MaintenanceSchedule, langCode string) []domain.MaintenanceScheduleResponse {
-	responses := make([]domain.MaintenanceScheduleResponse, len(m))
-	for i, schedule := range m {
-		responses[i] = ToDomainMaintenanceScheduleResponse(&schedule, langCode)
-	}
-	return responses
-}
-
-// * Convert domain.MaintenanceSchedule directly to domain.MaintenanceScheduleResponse without going through model.MaintenanceSchedule
-func DomainMaintenanceScheduleToMaintenanceScheduleResponse(d *domain.MaintenanceSchedule, langCode string) domain.MaintenanceScheduleResponse {
+// Domain -> Response conversions (for service layer)
+func MaintenanceScheduleToResponse(d *domain.MaintenanceSchedule, langCode string) domain.MaintenanceScheduleResponse {
 	response := domain.MaintenanceScheduleResponse{
 		ID:              d.ID,
+		AssetID:         d.AssetID,
 		MaintenanceType: d.MaintenanceType,
 		ScheduledDate:   d.ScheduledDate.Format(DateFormat),
 		FrequencyMonths: d.FrequencyMonths,
 		Status:          d.Status,
+		CreatedByID:     d.CreatedBy,
 		CreatedAt:       d.CreatedAt.Format(TimeFormat),
 	}
 
@@ -206,11 +169,10 @@ func DomainMaintenanceScheduleToMaintenanceScheduleResponse(d *domain.Maintenanc
 	return response
 }
 
-// * Convert slice of domain.MaintenanceSchedule to slice of domain.MaintenanceScheduleResponse
-func DomainMaintenanceSchedulesToMaintenanceSchedulesResponse(schedules []domain.MaintenanceSchedule, langCode string) []domain.MaintenanceScheduleResponse {
+func MaintenanceSchedulesToResponses(schedules []domain.MaintenanceSchedule, langCode string) []domain.MaintenanceScheduleResponse {
 	responses := make([]domain.MaintenanceScheduleResponse, len(schedules))
 	for i, schedule := range schedules {
-		responses[i] = DomainMaintenanceScheduleToMaintenanceScheduleResponse(&schedule, langCode)
+		responses[i] = MaintenanceScheduleToResponse(&schedule, langCode)
 	}
 	return responses
 }
@@ -362,63 +324,22 @@ func ToDomainMaintenanceRecordTranslation(m *model.MaintenanceRecordTranslation)
 	}
 }
 
-func ToDomainMaintenanceRecordResponse(m *model.MaintenanceRecord, langCode string) domain.MaintenanceRecordResponse {
-	response := domain.MaintenanceRecordResponse{
-		ID:                m.ID.String(),
-		MaintenanceDate:   m.MaintenanceDate.Format(DateFormat),
-		PerformedByVendor: m.PerformedByVendor,
-		ActualCost:        m.ActualCost,
-		CreatedAt:         m.CreatedAt.Format(TimeFormat),
-		UpdatedAt:         m.UpdatedAt.Format(TimeFormat),
+func ToDomainMaintenanceRecords(models []model.MaintenanceRecord) []domain.MaintenanceRecord {
+	records := make([]domain.MaintenanceRecord, len(models))
+	for i, m := range models {
+		records[i] = ToDomainMaintenanceRecord(&m)
 	}
-
-	// Find translation for the requested language
-	for _, translation := range m.Translations {
-		if translation.LangCode == langCode {
-			response.Title = translation.Title
-			response.Notes = translation.Notes
-			break
-		}
-	}
-
-	// If no translation found for requested language, use first available
-	if response.Title == "" && len(m.Translations) > 0 {
-		response.Title = m.Translations[0].Title
-		response.Notes = m.Translations[0].Notes
-	}
-
-	// Handle related entities
-	if m.Schedule != nil && !m.Schedule.ID.IsZero() {
-		scheduleResponse := ToDomainMaintenanceScheduleResponse(m.Schedule, langCode)
-		response.Schedule = &scheduleResponse
-	}
-
-	if !m.Asset.ID.IsZero() {
-		assetResponse := ToDomainAssetResponse(&m.Asset, langCode)
-		response.Asset = assetResponse
-	}
-
-	if m.User != nil && !m.User.ID.IsZero() {
-		userResponse := ToDomainUserResponse(m.User)
-		response.PerformedByUser = &userResponse
-	}
-
-	return response
+	return records
 }
 
-func ToDomainMaintenanceRecordsResponse(m []model.MaintenanceRecord, langCode string) []domain.MaintenanceRecordResponse {
-	responses := make([]domain.MaintenanceRecordResponse, len(m))
-	for i, record := range m {
-		responses[i] = ToDomainMaintenanceRecordResponse(&record, langCode)
-	}
-	return responses
-}
-
-// * Convert domain.MaintenanceRecord directly to domain.MaintenanceRecordResponse without going through model.MaintenanceRecord
-func DomainMaintenanceRecordToMaintenanceRecordResponse(d *domain.MaintenanceRecord, langCode string) domain.MaintenanceRecordResponse {
+// Domain -> Response conversions (for service layer)
+func MaintenanceRecordToResponse(d *domain.MaintenanceRecord, langCode string) domain.MaintenanceRecordResponse {
 	response := domain.MaintenanceRecordResponse{
 		ID:                d.ID,
+		ScheduleID:        d.ScheduleID,
+		AssetID:           d.AssetID,
 		MaintenanceDate:   d.MaintenanceDate.Format(DateFormat),
+		PerformedByUserID: d.PerformedByUser,
 		PerformedByVendor: d.PerformedByVendor,
 		ActualCost:        d.ActualCost,
 		CreatedAt:         d.CreatedAt.Format(TimeFormat),
@@ -443,11 +364,10 @@ func DomainMaintenanceRecordToMaintenanceRecordResponse(d *domain.MaintenanceRec
 	return response
 }
 
-// * Convert slice of domain.MaintenanceRecord to slice of domain.MaintenanceRecordResponse
-func DomainMaintenanceRecordsToMaintenanceRecordsResponse(records []domain.MaintenanceRecord, langCode string) []domain.MaintenanceRecordResponse {
+func MaintenanceRecordsToResponses(records []domain.MaintenanceRecord, langCode string) []domain.MaintenanceRecordResponse {
 	responses := make([]domain.MaintenanceRecordResponse, len(records))
 	for i, record := range records {
-		responses[i] = DomainMaintenanceRecordToMaintenanceRecordResponse(&record, langCode)
+		responses[i] = MaintenanceRecordToResponse(&record, langCode)
 	}
 	return responses
 }

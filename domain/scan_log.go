@@ -35,14 +35,17 @@ type ScanLog struct {
 
 type ScanLogResponse struct {
 	ID              string         `json:"id"`
-	Asset           *AssetResponse `json:"asset,omitempty"`
+	AssetID         *string        `json:"assetId,omitempty"`
 	ScannedValue    string         `json:"scannedValue"`
 	ScanMethod      ScanMethodType `json:"scanMethod"`
-	ScannedBy       UserResponse   `json:"scannedBy"`
+	ScannedByID     string         `json:"scannedById"`
 	ScanTimestamp   string         `json:"scanTimestamp"`
 	ScanLocationLat *float64       `json:"scanLocationLat,omitempty"`
 	ScanLocationLng *float64       `json:"scanLocationLng,omitempty"`
 	ScanResult      ScanResultType `json:"scanResult"`
+	// * Populated
+	Asset     *AssetResponse `json:"asset,omitempty"`
+	ScannedBy UserResponse   `json:"scannedBy"`
 }
 
 // --- Payloads ---

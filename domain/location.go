@@ -67,6 +67,7 @@ type UpdateLocationTranslationPayload struct {
 
 // --- Statistics ---
 
+// Internal statistics structs (used in repository layer)
 type LocationStatistics struct {
 	Total          LocationCountStatistics   `json:"total"`
 	ByBuilding     []BuildingStatistics      `json:"byBuilding"`
@@ -103,6 +104,59 @@ type LocationCreationTrend struct {
 }
 
 type LocationSummaryStatistics struct {
+	TotalLocations           int     `json:"totalLocations"`
+	LocationsWithBuilding    int     `json:"locationsWithBuilding"`
+	LocationsWithoutBuilding int     `json:"locationsWithoutBuilding"`
+	LocationsWithFloor       int     `json:"locationsWithFloor"`
+	LocationsWithoutFloor    int     `json:"locationsWithoutFloor"`
+	LocationsWithCoordinates int     `json:"locationsWithCoordinates"`
+	CoordinatesPercentage    float64 `json:"coordinatesPercentage"`
+	BuildingPercentage       float64 `json:"buildingPercentage"`
+	FloorPercentage          float64 `json:"floorPercentage"`
+	TotalBuildings           int     `json:"totalBuildings"`
+	TotalFloors              int     `json:"totalFloors"`
+	AverageLocationsPerDay   float64 `json:"averageLocationsPerDay"`
+	LatestCreationDate       string  `json:"latestCreationDate"`
+	EarliestCreationDate     string  `json:"earliestCreationDate"`
+}
+
+// Response statistics structs (used in service/handler layer)
+type LocationStatisticsResponse struct {
+	Total          LocationCountStatisticsResponse   `json:"total"`
+	ByBuilding     []BuildingStatisticsResponse      `json:"byBuilding"`
+	ByFloor        []FloorStatisticsResponse         `json:"byFloor"`
+	Geographic     GeographicStatisticsResponse      `json:"geographic"`
+	CreationTrends []LocationCreationTrendResponse   `json:"creationTrends"`
+	Summary        LocationSummaryStatisticsResponse `json:"summary"`
+}
+
+type LocationCountStatisticsResponse struct {
+	Count int `json:"count"`
+}
+
+type BuildingStatisticsResponse struct {
+	Building string `json:"building"`
+	Count    int    `json:"count"`
+}
+
+type FloorStatisticsResponse struct {
+	Floor string `json:"floor"`
+	Count int    `json:"count"`
+}
+
+type GeographicStatisticsResponse struct {
+	WithCoordinates    int      `json:"withCoordinates"`
+	WithoutCoordinates int      `json:"withoutCoordinates"`
+	AverageLatitude    *float64 `json:"averageLatitude"`
+	AverageLongitude   *float64 `json:"averageLongitude"`
+}
+
+type LocationCreationTrendResponse struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type LocationSummaryStatisticsResponse struct {
 	TotalLocations           int     `json:"totalLocations"`
 	LocationsWithBuilding    int     `json:"locationsWithBuilding"`
 	LocationsWithoutBuilding int     `json:"locationsWithoutBuilding"`

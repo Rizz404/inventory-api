@@ -26,17 +26,24 @@ type AssetMovementTranslation struct {
 }
 
 type AssetMovementResponse struct {
-	ID           string            `json:"id"`
+	ID             string  `json:"id"`
+	AssetID        string  `json:"assetId"`
+	FromLocationID *string `json:"fromLocationId,omitempty"`
+	ToLocationID   *string `json:"toLocationId,omitempty"`
+	FromUserID     *string `json:"fromUserId,omitempty"`
+	ToUserID       *string `json:"toUserId,omitempty"`
+	MovedByID      string  `json:"movedById"`
+	MovementDate   string  `json:"movementDate"`
+	Notes          *string `json:"notes,omitempty"`
+	CreatedAt      string  `json:"createdAt"`
+	UpdatedAt      string  `json:"updatedAt"`
+	// * Populated
 	Asset        AssetResponse     `json:"asset"`
 	FromLocation *LocationResponse `json:"fromLocation,omitempty"`
 	ToLocation   *LocationResponse `json:"toLocation,omitempty"`
 	FromUser     *UserResponse     `json:"fromUser,omitempty"`
 	ToUser       *UserResponse     `json:"toUser,omitempty"`
-	MovementDate string            `json:"movementDate"`
 	MovedBy      UserResponse      `json:"movedBy"`
-	Notes        *string           `json:"notes,omitempty"`
-	CreatedAt    string            `json:"createdAt"`
-	UpdatedAt    string            `json:"updatedAt"`
 }
 
 // --- Payloads ---

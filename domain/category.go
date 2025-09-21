@@ -60,6 +60,7 @@ type UpdateCategoryTranslationPayload struct {
 
 // --- Statistics ---
 
+// Internal statistics structs (used in repository layer)
 type CategoryStatistics struct {
 	Total          CategoryCountStatistics     `json:"total"`
 	ByHierarchy    CategoryHierarchyStatistics `json:"byHierarchy"`
@@ -83,6 +84,41 @@ type CategoryCreationTrend struct {
 }
 
 type CategorySummaryStatistics struct {
+	TotalCategories                int     `json:"totalCategories"`
+	TopLevelPercentage             float64 `json:"topLevelPercentage"`
+	SubCategoriesPercentage        float64 `json:"subCategoriesPercentage"`
+	CategoriesWithChildrenCount    int     `json:"categoriesWithChildrenCount"`
+	CategoriesWithoutChildrenCount int     `json:"categoriesWithoutChildrenCount"`
+	MaxDepthLevel                  int     `json:"maxDepthLevel"`
+	AverageCategoriesPerDay        float64 `json:"averageCategoriesPerDay"`
+	LatestCreationDate             string  `json:"latestCreationDate"`
+	EarliestCreationDate           string  `json:"earliestCreationDate"`
+}
+
+// Response statistics structs (used in service/handler layer)
+type CategoryStatisticsResponse struct {
+	Total          CategoryCountStatisticsResponse     `json:"total"`
+	ByHierarchy    CategoryHierarchyStatisticsResponse `json:"byHierarchy"`
+	CreationTrends []CategoryCreationTrendResponse     `json:"creationTrends"`
+	Summary        CategorySummaryStatisticsResponse   `json:"summary"`
+}
+
+type CategoryCountStatisticsResponse struct {
+	Count int `json:"count"`
+}
+
+type CategoryHierarchyStatisticsResponse struct {
+	TopLevel     int `json:"topLevel"`
+	WithChildren int `json:"withChildren"`
+	WithParent   int `json:"withParent"`
+}
+
+type CategoryCreationTrendResponse struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type CategorySummaryStatisticsResponse struct {
 	TotalCategories                int     `json:"totalCategories"`
 	TopLevelPercentage             float64 `json:"topLevelPercentage"`
 	SubCategoriesPercentage        float64 `json:"subCategoriesPercentage"`

@@ -36,12 +36,16 @@ type NotificationTranslation struct {
 
 type NotificationResponse struct {
 	ID             string           `json:"id"`
+	UserID         string           `json:"userId"`
 	RelatedAssetID *string          `json:"relatedAssetId,omitempty"`
 	Type           NotificationType `json:"type"`
 	IsRead         bool             `json:"isRead"`
 	CreatedAt      string           `json:"createdAt"`
 	Title          string           `json:"title"`
 	Message        string           `json:"message"`
+	// * Populated
+	User         UserResponse   `json:"user"`
+	RelatedAsset *AssetResponse `json:"relatedAsset,omitempty"`
 }
 
 // --- Payloads ---

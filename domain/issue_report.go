@@ -48,17 +48,21 @@ type IssueReportTranslation struct {
 
 type IssueReportResponse struct {
 	ID              string        `json:"id"`
-	Asset           AssetResponse `json:"asset"`
-	ReportedBy      UserResponse  `json:"reportedBy"`
+	AssetID         string        `json:"assetId"`
+	ReportedByID    string        `json:"reportedById"`
 	ReportedDate    string        `json:"reportedDate"`
 	IssueType       string        `json:"issueType"`
 	Priority        IssuePriority `json:"priority"`
 	Status          IssueStatus   `json:"status"`
 	ResolvedDate    *string       `json:"resolvedDate,omitempty"`
-	ResolvedBy      *UserResponse `json:"resolvedBy,omitempty"`
+	ResolvedByID    *string       `json:"resolvedById,omitempty"`
 	Title           string        `json:"title"`
 	Description     *string       `json:"description,omitempty"`
 	ResolutionNotes *string       `json:"resolutionNotes,omitempty"`
+	// * Populated
+	Asset      AssetResponse `json:"asset"`
+	ReportedBy UserResponse  `json:"reportedBy"`
+	ResolvedBy *UserResponse `json:"resolvedBy,omitempty"`
 }
 
 // --- Payloads ---

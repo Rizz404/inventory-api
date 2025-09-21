@@ -145,7 +145,7 @@ func (h *AssetHandler) CreateAsset(c *fiber.Ctx) error {
 		}
 	}
 
-	asset, err := h.Service.CreateAsset(c.Context(), &payload, dataMatrixImageFile)
+	asset, err := h.Service.CreateAsset(c.Context(), &payload, dataMatrixImageFile, web.GetLanguageFromContext(c))
 	if err != nil {
 		return web.HandleError(c, err)
 	}
@@ -184,7 +184,7 @@ func (h *AssetHandler) UpdateAsset(c *fiber.Ctx) error {
 		}
 	}
 
-	asset, err := h.Service.UpdateAsset(c.Context(), id, &payload, dataMatrixImageFile)
+	asset, err := h.Service.UpdateAsset(c.Context(), id, &payload, dataMatrixImageFile, web.GetLanguageFromContext(c))
 	if err != nil {
 		return web.HandleError(c, err)
 	}
@@ -217,7 +217,10 @@ func (h *AssetHandler) GetAssetsPaginated(c *fiber.Ctx) error {
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
 	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
 
-	assets, total, err := h.Service.GetAssetsPaginated(c.Context(), params)
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	assets, total, err := h.Service.GetAssetsPaginated(c.Context(), params, langCode)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
@@ -235,7 +238,10 @@ func (h *AssetHandler) GetAssetsCursor(c *fiber.Ctx) error {
 	cursor := c.Query("cursor")
 	params.Pagination = &query.PaginationOptions{Limit: limit, Cursor: cursor}
 
-	assets, err := h.Service.GetAssetsCursor(c.Context(), params)
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	assets, err := h.Service.GetAssetsCursor(c.Context(), params, langCode)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
@@ -255,7 +261,10 @@ func (h *AssetHandler) GetAssetById(c *fiber.Ctx) error {
 		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrAssetIDRequiredKey))
 	}
 
-	asset, err := h.Service.GetAssetById(c.Context(), id)
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	asset, err := h.Service.GetAssetById(c.Context(), id, langCode)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
@@ -269,7 +278,10 @@ func (h *AssetHandler) GetAssetByAssetTag(c *fiber.Ctx) error {
 		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrAssetTagRequiredKey))
 	}
 
-	asset, err := h.Service.GetAssetByAssetTag(c.Context(), tag)
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	asset, err := h.Service.GetAssetByAssetTag(c.Context(), tag, langCode)
 	if err != nil {
 		return web.HandleError(c, err)
 	}

@@ -103,6 +103,14 @@ func ToDomainCategory(m *model.Category) domain.Category {
 	return domainCategory
 }
 
+func ToDomainCategories(models []model.Category) []domain.Category {
+	categories := make([]domain.Category, len(models))
+	for i, m := range models {
+		categories[i] = ToDomainCategory(&m)
+	}
+	return categories
+}
+
 func ToDomainCategoryTranslation(m *model.CategoryTranslation) domain.CategoryTranslation {
 	return domain.CategoryTranslation{
 		ID:           m.ID.String(),
@@ -113,45 +121,8 @@ func ToDomainCategoryTranslation(m *model.CategoryTranslation) domain.CategoryTr
 	}
 }
 
-func ToDomainCategoryResponse(m *model.Category, langCode string) domain.CategoryResponse {
-	response := domain.CategoryResponse{
-		ID:           m.ID.String(),
-		CategoryCode: m.CategoryCode,
-		CreatedAt:    m.CreatedAt.Format(TimeFormat),
-		UpdatedAt:    m.UpdatedAt.Format(TimeFormat),
-	}
-
-	if m.ParentID != nil && !m.ParentID.IsZero() {
-		parentIDStr := m.ParentID.String()
-		response.ParentID = &parentIDStr
-	}
-
-	for _, translation := range m.Translations {
-		if translation.LangCode == langCode {
-			response.Name = translation.CategoryName
-			response.Description = translation.Description
-			break
-		}
-	}
-
-	if response.Name == "" && len(m.Translations) > 0 {
-		response.Name = m.Translations[0].CategoryName
-		response.Description = m.Translations[0].Description
-	}
-
-	return response
-}
-
-func ToDomainCategoriesResponse(m []model.Category, langCode string) []domain.CategoryResponse {
-	responses := make([]domain.CategoryResponse, len(m))
-	for i, category := range m {
-		responses[i] = ToDomainCategoryResponse(&category, langCode)
-	}
-	return responses
-}
-
-// * Convert domain.Category directly to domain.CategoryResponse without going through model.Category
-func DomainCategoryToCategoryResponse(d *domain.Category, langCode string) domain.CategoryResponse {
+// Domain -> Response conversions (for service layer)
+func CategoryToResponse(d *domain.Category, langCode string) domain.CategoryResponse {
 	response := domain.CategoryResponse{
 		ID:           d.ID,
 		ParentID:     d.ParentID,
@@ -160,7 +131,7 @@ func DomainCategoryToCategoryResponse(d *domain.Category, langCode string) domai
 		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
 	}
 
-	// * Find translation for the requested language
+	// Find translation for the requested language
 	for _, translation := range d.Translations {
 		if translation.LangCode == langCode {
 			response.Name = translation.CategoryName
@@ -169,7 +140,7 @@ func DomainCategoryToCategoryResponse(d *domain.Category, langCode string) domai
 		}
 	}
 
-	// * If no translation found for requested language, use first available
+	// If no translation found for requested language, use first available
 	if response.Name == "" && len(d.Translations) > 0 {
 		response.Name = d.Translations[0].CategoryName
 		response.Description = d.Translations[0].Description
@@ -178,13 +149,46 @@ func DomainCategoryToCategoryResponse(d *domain.Category, langCode string) domai
 	return response
 }
 
-// * Convert slice of domain.Category to slice of domain.CategoryResponse
-func DomainCategoriesToCategoriesResponse(categories []domain.Category, langCode string) []domain.CategoryResponse {
+func CategoriesToResponses(categories []domain.Category, langCode string) []domain.CategoryResponse {
 	responses := make([]domain.CategoryResponse, len(categories))
 	for i, category := range categories {
-		responses[i] = DomainCategoryToCategoryResponse(&category, langCode)
+		responses[i] = CategoryToResponse(&category, langCode)
 	}
 	return responses
+}
+
+// Statistics conversions
+func CategoryStatisticsToResponse(stats *domain.CategoryStatistics) domain.CategoryStatisticsResponse {
+	trends := make([]domain.CategoryCreationTrendResponse, len(stats.CreationTrends))
+	for i, trend := range stats.CreationTrends {
+		trends[i] = domain.CategoryCreationTrendResponse{
+			Date:  trend.Date,
+			Count: trend.Count,
+		}
+	}
+
+	return domain.CategoryStatisticsResponse{
+		Total: domain.CategoryCountStatisticsResponse{
+			Count: stats.Total.Count,
+		},
+		ByHierarchy: domain.CategoryHierarchyStatisticsResponse{
+			TopLevel:     stats.ByHierarchy.TopLevel,
+			WithChildren: stats.ByHierarchy.WithChildren,
+			WithParent:   stats.ByHierarchy.WithParent,
+		},
+		CreationTrends: trends,
+		Summary: domain.CategorySummaryStatisticsResponse{
+			TotalCategories:                stats.Summary.TotalCategories,
+			TopLevelPercentage:             stats.Summary.TopLevelPercentage,
+			SubCategoriesPercentage:        stats.Summary.SubCategoriesPercentage,
+			CategoriesWithChildrenCount:    stats.Summary.CategoriesWithChildrenCount,
+			CategoriesWithoutChildrenCount: stats.Summary.CategoriesWithoutChildrenCount,
+			MaxDepthLevel:                  stats.Summary.MaxDepthLevel,
+			AverageCategoriesPerDay:        stats.Summary.AverageCategoriesPerDay,
+			LatestCreationDate:             stats.Summary.LatestCreationDate,
+			EarliestCreationDate:           stats.Summary.EarliestCreationDate,
+		},
+	}
 }
 
 func BuildCategoryHierarchy(categories []domain.CategoryResponse) []domain.CategoryResponse {

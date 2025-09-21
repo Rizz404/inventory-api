@@ -91,6 +91,7 @@ type UpdateUserPayload struct {
 
 // --- Statistics ---
 
+// Internal statistics structs (used in repository layer)
 type UserStatistics struct {
 	Total              UserCountStatistics   `json:"total"`
 	ByStatus           UserStatusStatistics  `json:"byStatus"`
@@ -120,6 +121,47 @@ type RegistrationTrend struct {
 }
 
 type UserSummaryStatistics struct {
+	TotalUsers               int     `json:"totalUsers"`
+	ActiveUsersPercentage    float64 `json:"activeUsersPercentage"`
+	InactiveUsersPercentage  float64 `json:"inactiveUsersPercentage"`
+	AdminPercentage          float64 `json:"adminPercentage"`
+	StaffPercentage          float64 `json:"staffPercentage"`
+	EmployeePercentage       float64 `json:"employeePercentage"`
+	AverageUsersPerDay       float64 `json:"averageUsersPerDay"`
+	LatestRegistrationDate   string  `json:"latestRegistrationDate"`
+	EarliestRegistrationDate string  `json:"earliestRegistrationDate"`
+}
+
+// Response statistics structs (used in service/handler layer)
+type UserStatisticsResponse struct {
+	Total              UserCountStatisticsResponse   `json:"total"`
+	ByStatus           UserStatusStatisticsResponse  `json:"byStatus"`
+	ByRole             UserRoleStatisticsResponse    `json:"byRole"`
+	RegistrationTrends []RegistrationTrendResponse   `json:"registrationTrends"`
+	Summary            UserSummaryStatisticsResponse `json:"summary"`
+}
+
+type UserCountStatisticsResponse struct {
+	Count int `json:"count"`
+}
+
+type UserStatusStatisticsResponse struct {
+	Active   int `json:"active"`
+	Inactive int `json:"inactive"`
+}
+
+type UserRoleStatisticsResponse struct {
+	Admin    int `json:"admin"`
+	Staff    int `json:"staff"`
+	Employee int `json:"employee"`
+}
+
+type RegistrationTrendResponse struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type UserSummaryStatisticsResponse struct {
 	TotalUsers               int     `json:"totalUsers"`
 	ActiveUsersPercentage    float64 `json:"activeUsersPercentage"`
 	InactiveUsersPercentage  float64 `json:"inactiveUsersPercentage"`

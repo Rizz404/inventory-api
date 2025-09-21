@@ -209,11 +209,7 @@ func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params q
 	}
 
 	// Convert to domain locations
-	domainLocations := make([]domain.Location, len(locations))
-	for i, location := range locations {
-		domainLocations[i] = mapper.ToDomainLocation(&location)
-	}
-	return domainLocations, nil
+	return mapper.ToDomainLocations(locations), nil
 }
 
 func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error) {
@@ -238,33 +234,7 @@ func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params quer
 	}
 
 	// Convert to domain locations
-	domainLocations := make([]domain.Location, len(locations))
-	for i, location := range locations {
-		domainLocations[i] = mapper.ToDomainLocation(&location)
-	}
-	return domainLocations, nil
-}
-
-func (r *LocationRepository) GetLocationsResponse(ctx context.Context, params query.Params, langCode string) ([]domain.LocationResponse, error) {
-	var locations []model.Location
-	db := r.db.WithContext(ctx).
-		Table("locations l").
-		Preload("Translations")
-
-	if params.SearchQuery != nil && *params.SearchQuery != "" {
-		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN location_translations lt ON l.id = lt.location_id").
-			Where("l.location_code ILIKE ? OR lt.location_name ILIKE ?", searchPattern, searchPattern).
-			Distinct("l.id")
-	}
-
-	db = query.Apply(db, params, r.applyLocationFilters, r.applyLocationSorts)
-
-	if err := db.Find(&locations).Error; err != nil {
-		return nil, domain.ErrInternal(err)
-	}
-
-	return mapper.ToDomainLocationsResponse(locations, langCode), nil
+	return mapper.ToDomainLocations(locations), nil
 }
 
 func (r *LocationRepository) GetLocationById(ctx context.Context, locationId string) (domain.Location, error) {
@@ -302,7 +272,7 @@ func (r *LocationRepository) GetLocationByCode(ctx context.Context, locationCode
 }
 
 func (r *LocationRepository) GetLocationHierarchy(ctx context.Context, langCode string) ([]domain.LocationResponse, error) {
-	locations, err := r.GetLocationsResponse(ctx, query.Params{
+	locations, err := r.GetLocationsPaginated(ctx, query.Params{
 		Pagination: &query.PaginationOptions{
 			Limit: 1000, // Large limit to get all locations
 		},
@@ -311,7 +281,10 @@ func (r *LocationRepository) GetLocationHierarchy(ctx context.Context, langCode 
 		return nil, err
 	}
 
-	return mapper.BuildLocationHierarchy(locations), nil
+	// Convert to LocationResponse using mapper
+	locationResponses := mapper.LocationsToResponses(locations, langCode)
+
+	return mapper.BuildLocationHierarchy(locationResponses), nil
 }
 
 func (r *LocationRepository) CheckLocationExist(ctx context.Context, locationId string) (bool, error) {

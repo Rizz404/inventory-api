@@ -46,24 +46,28 @@ type Asset struct {
 }
 
 type AssetResponse struct {
-	ID                 string            `json:"id"`
-	AssetTag           string            `json:"assetTag"`
-	DataMatrixImageUrl string            `json:"dataMatrixImageUrl"`
-	AssetName          string            `json:"assetName"`
-	Brand              *string           `json:"brand,omitempty"`
-	Model              *string           `json:"model,omitempty"`
-	SerialNumber       *string           `json:"serialNumber,omitempty"`
-	PurchaseDate       *string           `json:"purchaseDate,omitempty"`
-	PurchasePrice      *float64          `json:"purchasePrice,omitempty"`
-	VendorName         *string           `json:"vendorName,omitempty"`
-	WarrantyEnd        *string           `json:"warrantyEnd,omitempty"`
-	Status             AssetStatus       `json:"status"`
-	Condition          AssetCondition    `json:"condition"`
-	Category           *CategoryResponse `json:"category,omitempty"`
-	Location           *LocationResponse `json:"location,omitempty"`
-	AssignedTo         *UserResponse     `json:"assignedTo,omitempty"`
-	CreatedAt          string            `json:"createdAt"`
-	UpdatedAt          string            `json:"updatedAt"`
+	ID                 string         `json:"id"`
+	AssetTag           string         `json:"assetTag"`
+	DataMatrixImageUrl string         `json:"dataMatrixImageUrl"`
+	AssetName          string         `json:"assetName"`
+	CategoryID         string         `json:"categoryId"`
+	Brand              *string        `json:"brand,omitempty"`
+	Model              *string        `json:"model,omitempty"`
+	SerialNumber       *string        `json:"serialNumber,omitempty"`
+	PurchaseDate       *string        `json:"purchaseDate,omitempty"`
+	PurchasePrice      *float64       `json:"purchasePrice,omitempty"`
+	VendorName         *string        `json:"vendorName,omitempty"`
+	WarrantyEnd        *string        `json:"warrantyEnd,omitempty"`
+	Status             AssetStatus    `json:"status"`
+	Condition          AssetCondition `json:"condition"`
+	LocationID         *string        `json:"locationId,omitempty"`
+	AssignedToID       *string        `json:"assignedToId,omitempty"`
+	CreatedAt          string         `json:"createdAt"`
+	UpdatedAt          string         `json:"updatedAt"`
+	// * Populated
+	Category   *CategoryResponse `json:"category,omitempty"`
+	Location   *LocationResponse `json:"location,omitempty"`
+	AssignedTo *UserResponse     `json:"assignedTo,omitempty"`
 }
 
 // --- Payloads ---
@@ -106,6 +110,7 @@ type UpdateAssetPayload struct {
 
 // --- Statistics ---
 
+// Internal statistics structs (used in repository layer)
 type AssetStatistics struct {
 	Total              AssetCountStatistics      `json:"total"`
 	ByStatus           AssetStatusStatistics     `json:"byStatus"`
@@ -163,6 +168,90 @@ type AssetCreationTrend struct {
 }
 
 type AssetSummaryStatistics struct {
+	TotalAssets                 int      `json:"totalAssets"`
+	ActiveAssetsPercentage      float64  `json:"activeAssetsPercentage"`
+	MaintenanceAssetsPercentage float64  `json:"maintenanceAssetsPercentage"`
+	DisposedAssetsPercentage    float64  `json:"disposedAssetsPercentage"`
+	LostAssetsPercentage        float64  `json:"lostAssetsPercentage"`
+	GoodConditionPercentage     float64  `json:"goodConditionPercentage"`
+	FairConditionPercentage     float64  `json:"fairConditionPercentage"`
+	PoorConditionPercentage     float64  `json:"poorConditionPercentage"`
+	DamagedConditionPercentage  float64  `json:"damagedConditionPercentage"`
+	AssignedAssetsPercentage    float64  `json:"assignedAssetsPercentage"`
+	UnassignedAssetsPercentage  float64  `json:"unassignedAssetsPercentage"`
+	AssetsWithPurchasePrice     int      `json:"assetsWithPurchasePrice"`
+	PurchasePricePercentage     float64  `json:"purchasePricePercentage"`
+	AssetsWithDataMatrix        int      `json:"assetsWithDataMatrix"`
+	DataMatrixPercentage        float64  `json:"dataMatrixPercentage"`
+	AssetsWithWarranty          int      `json:"assetsWithWarranty"`
+	WarrantyPercentage          float64  `json:"warrantyPercentage"`
+	TotalCategories             int      `json:"totalCategories"`
+	TotalLocations              int      `json:"totalLocations"`
+	AverageAssetsPerDay         float64  `json:"averageAssetsPerDay"`
+	LatestCreationDate          string   `json:"latestCreationDate"`
+	EarliestCreationDate        string   `json:"earliestCreationDate"`
+	MostExpensiveAssetValue     *float64 `json:"mostExpensiveAssetValue"`
+	LeastExpensiveAssetValue    *float64 `json:"leastExpensiveAssetValue"`
+}
+
+// Response statistics structs (used in service/handler layer)
+type AssetStatisticsResponse struct {
+	Total              AssetCountStatisticsResponse      `json:"total"`
+	ByStatus           AssetStatusStatisticsResponse     `json:"byStatus"`
+	ByCondition        AssetConditionStatisticsResponse  `json:"byCondition"`
+	ByCategory         []CategoryStatisticsResponse      `json:"byCategory"`
+	ByLocation         []LocationStatisticsResponse      `json:"byLocation"`
+	ByAssignment       AssetAssignmentStatisticsResponse `json:"byAssignment"`
+	ValueStatistics    AssetValueStatisticsResponse      `json:"valueStatistics"`
+	WarrantyStatistics AssetWarrantyStatisticsResponse   `json:"warrantyStatistics"`
+	CreationTrends     []AssetCreationTrendResponse      `json:"creationTrends"`
+	Summary            AssetSummaryStatisticsResponse    `json:"summary"`
+}
+
+type AssetCountStatisticsResponse struct {
+	Count int `json:"count"`
+}
+
+type AssetStatusStatisticsResponse struct {
+	Active      int `json:"active"`
+	Maintenance int `json:"maintenance"`
+	Disposed    int `json:"disposed"`
+	Lost        int `json:"lost"`
+}
+
+type AssetConditionStatisticsResponse struct {
+	Good    int `json:"good"`
+	Fair    int `json:"fair"`
+	Poor    int `json:"poor"`
+	Damaged int `json:"damaged"`
+}
+
+type AssetAssignmentStatisticsResponse struct {
+	Assigned   int `json:"assigned"`
+	Unassigned int `json:"unassigned"`
+}
+
+type AssetValueStatisticsResponse struct {
+	TotalValue         *float64 `json:"totalValue"`
+	AverageValue       *float64 `json:"averageValue"`
+	MinValue           *float64 `json:"minValue"`
+	MaxValue           *float64 `json:"maxValue"`
+	AssetsWithValue    int      `json:"assetsWithValue"`
+	AssetsWithoutValue int      `json:"assetsWithoutValue"`
+}
+
+type AssetWarrantyStatisticsResponse struct {
+	ActiveWarranties  int `json:"activeWarranties"`
+	ExpiredWarranties int `json:"expiredWarranties"`
+	NoWarrantyInfo    int `json:"noWarrantyInfo"`
+}
+
+type AssetCreationTrendResponse struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type AssetSummaryStatisticsResponse struct {
 	TotalAssets                 int      `json:"totalAssets"`
 	ActiveAssetsPercentage      float64  `json:"activeAssetsPercentage"`
 	MaintenanceAssetsPercentage float64  `json:"maintenanceAssetsPercentage"`

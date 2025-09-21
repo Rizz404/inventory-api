@@ -130,49 +130,19 @@ func ToDomainNotificationTranslation(m *model.NotificationTranslation) domain.No
 	}
 }
 
-func ToDomainNotificationResponse(m *model.Notification, langCode string) domain.NotificationResponse {
-	response := domain.NotificationResponse{
-		ID:        m.ID.String(),
-		Type:      m.Type,
-		IsRead:    m.IsRead,
-		CreatedAt: m.CreatedAt.Format(TimeFormat),
+func ToDomainNotifications(models []model.Notification) []domain.Notification {
+	notifications := make([]domain.Notification, len(models))
+	for i, m := range models {
+		notifications[i] = ToDomainNotification(&m)
 	}
-
-	if m.RelatedAssetID != nil && !m.RelatedAssetID.IsZero() {
-		assetIDStr := m.RelatedAssetID.String()
-		response.RelatedAssetID = &assetIDStr
-	}
-
-	// Find translation for the requested language
-	for _, translation := range m.Translations {
-		if translation.LangCode == langCode {
-			response.Title = translation.Title
-			response.Message = translation.Message
-			break
-		}
-	}
-
-	// If no translation found for requested language, use first available
-	if response.Title == "" && len(m.Translations) > 0 {
-		response.Title = m.Translations[0].Title
-		response.Message = m.Translations[0].Message
-	}
-
-	return response
+	return notifications
 }
 
-func ToDomainNotificationsResponse(m []model.Notification, langCode string) []domain.NotificationResponse {
-	responses := make([]domain.NotificationResponse, len(m))
-	for i, notification := range m {
-		responses[i] = ToDomainNotificationResponse(&notification, langCode)
-	}
-	return responses
-}
-
-// * Convert domain.Notification directly to domain.NotificationResponse without going through model.Notification
-func DomainNotificationToNotificationResponse(d *domain.Notification, langCode string) domain.NotificationResponse {
+// Domain -> Response conversions (for service layer)
+func NotificationToResponse(d *domain.Notification, langCode string) domain.NotificationResponse {
 	response := domain.NotificationResponse{
 		ID:             d.ID,
+		UserID:         d.UserID,
 		RelatedAssetID: d.RelatedAssetID,
 		Type:           d.Type,
 		IsRead:         d.IsRead,
@@ -197,11 +167,10 @@ func DomainNotificationToNotificationResponse(d *domain.Notification, langCode s
 	return response
 }
 
-// * Convert slice of domain.Notification to slice of domain.NotificationResponse
-func DomainNotificationsToNotificationsResponse(notifications []domain.Notification, langCode string) []domain.NotificationResponse {
+func NotificationsToResponses(notifications []domain.Notification, langCode string) []domain.NotificationResponse {
 	responses := make([]domain.NotificationResponse, len(notifications))
 	for i, notification := range notifications {
-		responses[i] = DomainNotificationToNotificationResponse(&notification, langCode)
+		responses[i] = NotificationToResponse(&notification, langCode)
 	}
 	return responses
 }

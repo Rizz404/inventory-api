@@ -23,8 +23,8 @@ type Repository interface {
 	DeleteAsset(ctx context.Context, assetId string) error
 
 	// * QUERY
-	GetAssetsPaginated(ctx context.Context, params query.Params) ([]domain.Asset, error)
-	GetAssetsCursor(ctx context.Context, params query.Params) ([]domain.Asset, error)
+	GetAssetsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Asset, error)
+	GetAssetsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Asset, error)
 	GetAssetById(ctx context.Context, assetId string) (domain.Asset, error)
 	GetAssetByAssetTag(ctx context.Context, assetTag string) (domain.Asset, error)
 	CheckAssetExists(ctx context.Context, assetId string) (bool, error)
@@ -34,27 +34,25 @@ type Repository interface {
 	CheckSerialNumberExistsExcluding(ctx context.Context, serialNumber string, excludeAssetId string) (bool, error)
 	CountAssets(ctx context.Context, params query.Params) (int64, error)
 	GetAssetStatistics(ctx context.Context) (domain.AssetStatistics, error)
-	GetAssetsResponse(ctx context.Context, params query.Params, langCode string) ([]domain.AssetResponse, error)
-	GetAssetResponseById(ctx context.Context, assetId string, langCode string) (domain.AssetResponse, error)
 }
 
 // * AssetService interface defines the contract for asset business operations
 type AssetService interface {
 	// * MUTATION
-	CreateAsset(ctx context.Context, payload *domain.CreateAssetPayload, dataMatrixImageFile *multipart.FileHeader) (domain.AssetResponse, error)
-	UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload, dataMatrixImageFile *multipart.FileHeader) (domain.AssetResponse, error)
+	CreateAsset(ctx context.Context, payload *domain.CreateAssetPayload, dataMatrixImageFile *multipart.FileHeader, langCode string) (domain.AssetResponse, error)
+	UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload, dataMatrixImageFile *multipart.FileHeader, langCode string) (domain.AssetResponse, error)
 	DeleteAsset(ctx context.Context, assetId string) error
 
 	// * QUERY
-	GetAssetsPaginated(ctx context.Context, params query.Params) ([]domain.AssetResponse, int64, error)
-	GetAssetsCursor(ctx context.Context, params query.Params) ([]domain.AssetResponse, error)
-	GetAssetById(ctx context.Context, assetId string) (domain.AssetResponse, error)
-	GetAssetByAssetTag(ctx context.Context, assetTag string) (domain.AssetResponse, error)
+	GetAssetsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetResponse, int64, error)
+	GetAssetsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetResponse, error)
+	GetAssetById(ctx context.Context, assetId string, langCode string) (domain.AssetResponse, error)
+	GetAssetByAssetTag(ctx context.Context, assetTag string, langCode string) (domain.AssetResponse, error)
 	CheckAssetExists(ctx context.Context, assetId string) (bool, error)
 	CheckAssetTagExists(ctx context.Context, assetTag string) (bool, error)
 	CheckSerialNumberExists(ctx context.Context, serialNumber string) (bool, error)
 	CountAssets(ctx context.Context, params query.Params) (int64, error)
-	GetAssetStatistics(ctx context.Context) (domain.AssetStatistics, error)
+	GetAssetStatistics(ctx context.Context) (domain.AssetStatisticsResponse, error)
 }
 
 type Service struct {
@@ -73,7 +71,7 @@ func NewService(r Repository, cloudinaryClient *cloudinary.Client) AssetService 
 }
 
 // *===========================MUTATION===========================*
-func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPayload, dataMatrixImageFile *multipart.FileHeader) (domain.AssetResponse, error) {
+func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPayload, dataMatrixImageFile *multipart.FileHeader, langCode string) (domain.AssetResponse, error) {
 	// * Check if asset tag already exists
 	if tagExists, err := s.Repo.CheckAssetTagExists(ctx, payload.AssetTag); err != nil {
 		return domain.AssetResponse{}, err
@@ -182,11 +180,11 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 		// Note: We don't return error here to avoid failing asset creation if image re-upload fails
 	}
 
-	// * Convert to AssetResponse using direct mapper
-	return mapper.DomainAssetToAssetResponse(&createdAsset), nil
+	// * Convert to AssetResponse using mapper
+	return mapper.AssetToResponse(&createdAsset), nil
 }
 
-func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload, dataMatrixImageFile *multipart.FileHeader) (domain.AssetResponse, error) {
+func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload, dataMatrixImageFile *multipart.FileHeader, langCode string) (domain.AssetResponse, error) {
 	// Check if asset exists
 	existingAsset, err := s.Repo.GetAssetById(ctx, assetId)
 	if err != nil {
@@ -244,7 +242,7 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 	}
 
 	// Use the UpdateAssetWithPayload method
-	updatedAsset, err := s.Repo.UpdateAssetWithPayload(ctx, assetId, payload)
+	_, err = s.Repo.UpdateAssetWithPayload(ctx, assetId, payload)
 	if err != nil {
 		return domain.AssetResponse{}, err
 	}
@@ -258,8 +256,13 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 		}
 	}
 
-	// * Convert to AssetResponse using direct mapper
-	return mapper.DomainAssetToAssetResponse(&updatedAsset), nil
+	// * Update asset and convert to AssetResponse using mapper
+	updatedAsset, err := s.Repo.UpdateAssetWithPayload(ctx, assetId, payload)
+	if err != nil {
+		return domain.AssetResponse{}, err
+	}
+
+	return mapper.AssetToResponse(&updatedAsset), nil
 }
 
 func (s *Service) DeleteAsset(ctx context.Context, assetId string) error {
@@ -271,8 +274,8 @@ func (s *Service) DeleteAsset(ctx context.Context, assetId string) error {
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetAssetsPaginated(ctx context.Context, params query.Params) ([]domain.AssetResponse, int64, error) {
-	assets, err := s.Repo.GetAssetsPaginated(ctx, params)
+func (s *Service) GetAssetsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetResponse, int64, error) {
+	assets, err := s.Repo.GetAssetsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -283,42 +286,34 @@ func (s *Service) GetAssetsPaginated(ctx context.Context, params query.Params) (
 		return nil, 0, err
 	}
 
-	// * Convert to AssetResponse using direct mapper
-	assetResponses := mapper.DomainAssetsToAssetsResponse(assets)
-
-	return assetResponses, count, nil
+	return mapper.AssetsToResponses(assets), count, nil
 }
 
-func (s *Service) GetAssetsCursor(ctx context.Context, params query.Params) ([]domain.AssetResponse, error) {
-	assets, err := s.Repo.GetAssetsCursor(ctx, params)
+func (s *Service) GetAssetsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetResponse, error) {
+	assets, err := s.Repo.GetAssetsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	// * Convert to AssetResponse using direct mapper
-	assetResponses := mapper.DomainAssetsToAssetsResponse(assets)
-
-	return assetResponses, nil
+	return mapper.AssetsToResponses(assets), nil
 }
 
-func (s *Service) GetAssetById(ctx context.Context, assetId string) (domain.AssetResponse, error) {
+func (s *Service) GetAssetById(ctx context.Context, assetId string, langCode string) (domain.AssetResponse, error) {
 	asset, err := s.Repo.GetAssetById(ctx, assetId)
 	if err != nil {
 		return domain.AssetResponse{}, err
 	}
 
-	// * Convert to AssetResponse using direct mapper
-	return mapper.DomainAssetToAssetResponse(&asset), nil
+	return mapper.AssetToResponse(&asset), nil
 }
 
-func (s *Service) GetAssetByAssetTag(ctx context.Context, assetTag string) (domain.AssetResponse, error) {
+func (s *Service) GetAssetByAssetTag(ctx context.Context, assetTag string, langCode string) (domain.AssetResponse, error) {
 	asset, err := s.Repo.GetAssetByAssetTag(ctx, assetTag)
 	if err != nil {
 		return domain.AssetResponse{}, err
 	}
 
-	// * Convert to AssetResponse using direct mapper
-	return mapper.DomainAssetToAssetResponse(&asset), nil
+	return mapper.AssetToResponse(&asset), nil
 }
 
 func (s *Service) CheckAssetExists(ctx context.Context, assetId string) (bool, error) {
@@ -353,10 +348,10 @@ func (s *Service) CountAssets(ctx context.Context, params query.Params) (int64, 
 	return count, nil
 }
 
-func (s *Service) GetAssetStatistics(ctx context.Context) (domain.AssetStatistics, error) {
+func (s *Service) GetAssetStatistics(ctx context.Context) (domain.AssetStatisticsResponse, error) {
 	stats, err := s.Repo.GetAssetStatistics(ctx)
 	if err != nil {
-		return domain.AssetStatistics{}, err
+		return domain.AssetStatisticsResponse{}, err
 	}
-	return stats, nil
+	return mapper.AssetStatisticsToResponse(&stats), nil
 }

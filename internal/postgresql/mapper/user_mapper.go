@@ -5,6 +5,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 )
 
+// Model <-> Domain conversions (for repository layer)
 func ToModelUser(d *domain.User) model.User {
 	return model.User{
 		Name:          d.Name,
@@ -36,56 +37,78 @@ func ToDomainUser(m *model.User) domain.User {
 	}
 }
 
-func ToDomainUserResponse(m *model.User) domain.UserResponse {
+func ToDomainUsers(models []model.User) []domain.User {
+	users := make([]domain.User, len(models))
+	for i, m := range models {
+		users[i] = ToDomainUser(&m)
+	}
+	return users
+}
+
+// Domain -> Response conversions (for service layer)
+func UserToResponse(u *domain.User) domain.UserResponse {
 	return domain.UserResponse{
-		ID:            m.ID.String(),
-		Name:          m.Name,
-		Email:         m.Email,
-		FullName:      m.FullName,
-		Role:          m.Role,
-		EmployeeID:    m.EmployeeID,
-		PreferredLang: m.PreferredLang,
-		IsActive:      m.IsActive,
-		AvatarURL:     m.AvatarURL,
-		CreatedAt:     m.CreatedAt.Format(TimeFormat),
-		UpdatedAt:     m.UpdatedAt.Format(TimeFormat),
+		ID:            u.ID,
+		Name:          u.Name,
+		Email:         u.Email,
+		FullName:      u.FullName,
+		Role:          u.Role,
+		EmployeeID:    u.EmployeeID,
+		PreferredLang: u.PreferredLang,
+		IsActive:      u.IsActive,
+		AvatarURL:     u.AvatarURL,
+		CreatedAt:     u.CreatedAt.Format(TimeFormat),
+		UpdatedAt:     u.UpdatedAt.Format(TimeFormat),
 	}
 }
 
-func ToDomainUsersResponse(m []model.User) []domain.UserResponse {
-	responses := make([]domain.UserResponse, len(m))
-	for i, user := range m {
-		responses[i] = ToDomainUserResponse(&user)
-	}
-	return responses
-}
-
-// * Convert domain.User directly to domain.UserResponse without going through model.User
-func DomainUserToUserResponse(d *domain.User) domain.UserResponse {
-	return domain.UserResponse{
-		ID:            d.ID,
-		Name:          d.Name,
-		Email:         d.Email,
-		FullName:      d.FullName,
-		Role:          d.Role,
-		EmployeeID:    d.EmployeeID,
-		PreferredLang: d.PreferredLang,
-		IsActive:      d.IsActive,
-		AvatarURL:     d.AvatarURL,
-		CreatedAt:     d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:     d.UpdatedAt.Format(TimeFormat),
-	}
-}
-
-// * Convert slice of domain.User to slice of domain.UserResponse
-func DomainUsersToUsersResponse(users []domain.User) []domain.UserResponse {
+func UsersToResponses(users []domain.User) []domain.UserResponse {
 	responses := make([]domain.UserResponse, len(users))
 	for i, user := range users {
-		responses[i] = DomainUserToUserResponse(&user)
+		responses[i] = UserToResponse(&user)
 	}
 	return responses
 }
 
+// Statistics conversions
+func StatisticsToResponse(stats *domain.UserStatistics) domain.UserStatisticsResponse {
+	trends := make([]domain.RegistrationTrendResponse, len(stats.RegistrationTrends))
+	for i, trend := range stats.RegistrationTrends {
+		trends[i] = domain.RegistrationTrendResponse{
+			Date:  trend.Date,
+			Count: trend.Count,
+		}
+	}
+
+	return domain.UserStatisticsResponse{
+		Total: domain.UserCountStatisticsResponse{
+			Count: stats.Total.Count,
+		},
+		ByStatus: domain.UserStatusStatisticsResponse{
+			Active:   stats.ByStatus.Active,
+			Inactive: stats.ByStatus.Inactive,
+		},
+		ByRole: domain.UserRoleStatisticsResponse{
+			Admin:    stats.ByRole.Admin,
+			Staff:    stats.ByRole.Staff,
+			Employee: stats.ByRole.Employee,
+		},
+		RegistrationTrends: trends,
+		Summary: domain.UserSummaryStatisticsResponse{
+			TotalUsers:               stats.Summary.TotalUsers,
+			ActiveUsersPercentage:    stats.Summary.ActiveUsersPercentage,
+			InactiveUsersPercentage:  stats.Summary.InactiveUsersPercentage,
+			AdminPercentage:          stats.Summary.AdminPercentage,
+			StaffPercentage:          stats.Summary.StaffPercentage,
+			EmployeePercentage:       stats.Summary.EmployeePercentage,
+			AverageUsersPerDay:       stats.Summary.AverageUsersPerDay,
+			LatestRegistrationDate:   stats.Summary.LatestRegistrationDate,
+			EarliestRegistrationDate: stats.Summary.EarliestRegistrationDate,
+		},
+	}
+}
+
+// Update payload mapping
 func ToModelUserUpdateMap(payload *domain.UpdateUserPayload) map[string]any {
 	updates := make(map[string]any)
 
