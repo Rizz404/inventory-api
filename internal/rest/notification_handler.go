@@ -1,0 +1,349 @@
+package rest
+
+import (
+	"strconv"
+
+	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/postgresql"
+	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
+	"github.com/Rizz404/inventory-api/internal/rest/middleware"
+	"github.com/Rizz404/inventory-api/internal/utils"
+	"github.com/Rizz404/inventory-api/internal/web"
+	"github.com/Rizz404/inventory-api/services/notification"
+	"github.com/gofiber/fiber/v2"
+)
+
+type NotificationHandler struct {
+	Service notification.NotificationService
+}
+
+func NewNotificationHandler(app fiber.Router, s notification.NotificationService) {
+	handler := &NotificationHandler{
+		Service: s,
+	}
+
+	// * Bisa di group
+	// ! routenya bisa tabrakan hati-hati
+	notifications := app.Group("/notifications")
+
+	// * Create
+	notifications.Post("/",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.CreateNotification,
+	)
+
+	notifications.Get("/",
+		middleware.OptionalAuth(), // Optional auth to filter by user
+		handler.GetNotificationsPaginated,
+	)
+	notifications.Get("/statistics", handler.GetNotificationStatistics)
+	notifications.Get("/cursor",
+		middleware.OptionalAuth(), // Optional auth to filter by user
+		handler.GetNotificationsCursor,
+	)
+	notifications.Get("/count",
+		middleware.OptionalAuth(), // Optional auth to filter by user
+		handler.CountNotifications,
+	)
+	notifications.Get("/check/:id", handler.CheckNotificationExists)
+	notifications.Get("/:id", handler.GetNotificationById)
+
+	// * Mark operations
+	notifications.Patch("/:id/read",
+		middleware.AuthMiddleware(),
+		handler.MarkNotificationAsRead,
+	)
+	notifications.Patch("/:id/unread",
+		middleware.AuthMiddleware(),
+		handler.MarkNotificationAsUnread,
+	)
+	notifications.Patch("/mark-all-read",
+		middleware.AuthMiddleware(),
+		handler.MarkAllNotificationsAsRead,
+	)
+
+	notifications.Patch("/:id",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.UpdateNotification,
+	)
+	notifications.Delete("/:id",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.DeleteNotification,
+	)
+}
+
+func (h *NotificationHandler) parseNotificationFiltersAndSort(c *fiber.Ctx) (query.Params, error) {
+	params := query.Params{}
+
+	// * Parse search query
+	search := c.Query("search")
+	if search != "" {
+		params.SearchQuery = &search
+	}
+
+	// * Parse sorting options
+	sortBy := c.Query("sort_by")
+	if sortBy != "" {
+		params.Sort = &query.SortOptions{
+			Field: sortBy,
+			Order: c.Query("sort_order", "desc"),
+		}
+	}
+
+	// * Parse filtering options
+	filters := &postgresql.NotificationFilterOptions{}
+
+	if userID := c.Query("user_id"); userID != "" {
+		filters.UserID = &userID
+	}
+
+	if relatedAssetID := c.Query("related_asset_id"); relatedAssetID != "" {
+		filters.RelatedAssetID = &relatedAssetID
+	}
+
+	if notificationType := c.Query("type"); notificationType != "" {
+		if nType := domain.NotificationType(notificationType); nType != "" {
+			filters.Type = &nType
+		}
+	}
+
+	if isReadStr := c.Query("is_read"); isReadStr != "" {
+		isRead, err := strconv.ParseBool(isReadStr)
+		if err == nil {
+			filters.IsRead = &isRead
+		}
+	}
+
+	params.Filters = filters
+
+	return params, nil
+}
+
+// *===========================MUTATION===========================*
+func (h *NotificationHandler) CreateNotification(c *fiber.Ctx) error {
+	var payload domain.CreateNotificationPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	notification, err := h.Service.CreateNotification(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusCreated, utils.SuccessNotificationCreatedKey, notification)
+}
+
+func (h *NotificationHandler) UpdateNotification(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrNotificationIDRequiredKey))
+	}
+
+	var payload domain.UpdateNotificationPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	notification, err := h.Service.UpdateNotification(c.Context(), id, &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationUpdatedKey, notification)
+}
+
+func (h *NotificationHandler) DeleteNotification(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrNotificationIDRequiredKey))
+	}
+
+	err := h.Service.DeleteNotification(c.Context(), id)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationDeletedKey, nil)
+}
+
+func (h *NotificationHandler) MarkNotificationAsRead(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrNotificationIDRequiredKey))
+	}
+
+	err := h.Service.MarkNotificationAsRead(c.Context(), id, true)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationMarkedAsReadKey, nil)
+}
+
+func (h *NotificationHandler) MarkNotificationAsUnread(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrNotificationIDRequiredKey))
+	}
+
+	err := h.Service.MarkNotificationAsRead(c.Context(), id, false)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationMarkedAsUnreadKey, nil)
+}
+
+func (h *NotificationHandler) MarkAllNotificationsAsRead(c *fiber.Ctx) error {
+	// Get user ID from context (set by auth middleware)
+	userID := c.Locals("userID")
+	if userID == nil {
+		return web.HandleError(c, domain.ErrUnauthorized("user ID not found"))
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		return web.HandleError(c, domain.ErrUnauthorized("invalid user ID"))
+	}
+
+	err := h.Service.MarkAllNotificationsAsRead(c.Context(), userIDStr)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationMarkedAsReadKey, nil)
+}
+
+// *===========================QUERY===========================*
+func (h *NotificationHandler) GetNotificationsPaginated(c *fiber.Ctx) error {
+	params, err := h.parseNotificationFiltersAndSort(c)
+	if err != nil {
+		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+	}
+
+	// If user is authenticated, automatically filter by their notifications unless explicitly filtering by user_id
+	if userID := c.Locals("userID"); userID != nil && c.Query("user_id") == "" {
+		if userIDStr, ok := userID.(string); ok {
+			if filters, ok := params.Filters.(*postgresql.NotificationFilterOptions); ok {
+				filters.UserID = &userIDStr
+			}
+		}
+	}
+
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+	offset, _ := strconv.Atoi(c.Query("offset", "0"))
+	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
+
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	notifications, total, err := h.Service.GetNotificationsPaginated(c.Context(), params, langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.SuccessWithPageInfo(c, fiber.StatusOK, utils.SuccessNotificationRetrievedKey, notifications, int(total), limit, (offset/limit)+1)
+}
+
+func (h *NotificationHandler) GetNotificationsCursor(c *fiber.Ctx) error {
+	params, err := h.parseNotificationFiltersAndSort(c)
+	if err != nil {
+		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+	}
+
+	// If user is authenticated, automatically filter by their notifications unless explicitly filtering by user_id
+	if userID := c.Locals("userID"); userID != nil && c.Query("user_id") == "" {
+		if userIDStr, ok := userID.(string); ok {
+			if filters, ok := params.Filters.(*postgresql.NotificationFilterOptions); ok {
+				filters.UserID = &userIDStr
+			}
+		}
+	}
+
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+	cursor := c.Query("cursor")
+	params.Pagination = &query.PaginationOptions{Limit: limit, Cursor: cursor}
+
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	notifications, err := h.Service.GetNotificationsCursor(c.Context(), params, langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	var nextCursor string
+	hasNextPage := len(notifications) == limit
+	if hasNextPage {
+		nextCursor = notifications[len(notifications)-1].ID
+	}
+
+	return web.SuccessWithCursor(c, fiber.StatusOK, utils.SuccessNotificationRetrievedKey, notifications, nextCursor, hasNextPage, limit)
+}
+
+func (h *NotificationHandler) GetNotificationById(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrNotificationIDRequiredKey))
+	}
+
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	notification, err := h.Service.GetNotificationById(c.Context(), id, langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationRetrievedKey, notification)
+}
+
+func (h *NotificationHandler) CheckNotificationExists(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrNotificationIDRequiredKey))
+	}
+
+	exists, err := h.Service.CheckNotificationExists(c.Context(), id)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationExistenceCheckedKey, map[string]bool{"exists": exists})
+}
+
+func (h *NotificationHandler) CountNotifications(c *fiber.Ctx) error {
+	params, err := h.parseNotificationFiltersAndSort(c)
+	if err != nil {
+		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+	}
+
+	// If user is authenticated, automatically filter by their notifications unless explicitly filtering by user_id
+	if userID := c.Locals("userID"); userID != nil && c.Query("user_id") == "" {
+		if userIDStr, ok := userID.(string); ok {
+			if filters, ok := params.Filters.(*postgresql.NotificationFilterOptions); ok {
+				filters.UserID = &userIDStr
+			}
+		}
+	}
+
+	count, err := h.Service.CountNotifications(c.Context(), params)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationCountedKey, count)
+}
+
+func (h *NotificationHandler) GetNotificationStatistics(c *fiber.Ctx) error {
+	stats, err := h.Service.GetNotificationStatistics(c.Context())
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationStatisticsRetrievedKey, stats)
+}

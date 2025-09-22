@@ -116,3 +116,63 @@ func ScanLogsToResponses(scanLogs []domain.ScanLog) []domain.ScanLogResponse {
 	}
 	return responses
 }
+
+// Statistics mappings
+func ScanLogStatisticsToResponse(stats *domain.ScanLogStatistics) domain.ScanLogStatisticsResponse {
+	response := domain.ScanLogStatisticsResponse{
+		Total: domain.ScanLogCountStatisticsResponse{
+			Count: stats.Total.Count,
+		},
+		Geographic: domain.ScanGeographicStatisticsResponse{
+			WithCoordinates:    stats.Geographic.WithCoordinates,
+			WithoutCoordinates: stats.Geographic.WithoutCoordinates,
+		},
+		Summary: domain.ScanLogSummaryStatisticsResponse{
+			TotalScans:            stats.Summary.TotalScans,
+			SuccessRate:           stats.Summary.SuccessRate,
+			ScansWithCoordinates:  stats.Summary.ScansWithCoordinates,
+			CoordinatesPercentage: stats.Summary.CoordinatesPercentage,
+			AverageScansPerDay:    stats.Summary.AverageScansPerDay,
+			LatestScanDate:        stats.Summary.LatestScanDate,
+			EarliestScanDate:      stats.Summary.EarliestScanDate,
+		},
+	}
+
+	// Convert method statistics
+	response.ByMethod = make([]domain.ScanMethodStatisticsResponse, len(stats.ByMethod))
+	for i, method := range stats.ByMethod {
+		response.ByMethod[i] = domain.ScanMethodStatisticsResponse{
+			Method: method.Method,
+			Count:  method.Count,
+		}
+	}
+
+	// Convert result statistics
+	response.ByResult = make([]domain.ScanResultStatisticsResponse, len(stats.ByResult))
+	for i, result := range stats.ByResult {
+		response.ByResult[i] = domain.ScanResultStatisticsResponse{
+			Result: result.Result,
+			Count:  result.Count,
+		}
+	}
+
+	// Convert scan trends
+	response.ScanTrends = make([]domain.ScanTrendResponse, len(stats.ScanTrends))
+	for i, trend := range stats.ScanTrends {
+		response.ScanTrends[i] = domain.ScanTrendResponse{
+			Date:  trend.Date,
+			Count: trend.Count,
+		}
+	}
+
+	// Convert top scanners
+	response.TopScanners = make([]domain.ScannerStatisticsResponse, len(stats.TopScanners))
+	for i, scanner := range stats.TopScanners {
+		response.TopScanners[i] = domain.ScannerStatisticsResponse{
+			UserID: scanner.UserID,
+			Count:  scanner.Count,
+		}
+	}
+
+	return response
+}

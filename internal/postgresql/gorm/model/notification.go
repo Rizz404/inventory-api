@@ -16,8 +16,6 @@ type Notification struct {
 	Type           domain.NotificationType `gorm:"type:notification_type;not null"`
 	IsRead         bool                    `gorm:"default:false"`
 	CreatedAt      time.Time
-	User           User                      `gorm:"foreignKey:UserID"`
-	Asset          *Asset                    `gorm:"foreignKey:RelatedAssetID"`
 	Translations   []NotificationTranslation `gorm:"foreignKey:NotificationID"`
 }
 

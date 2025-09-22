@@ -212,3 +212,69 @@ func IssueReportsToResponses(reports []domain.IssueReport, langCode string) []do
 	}
 	return responses
 }
+
+// ToModelIssueReportUpdateMap converts UpdateIssueReportPayload to map for database updates
+func ToModelIssueReportUpdateMap(payload *domain.UpdateIssueReportPayload) map[string]interface{} {
+	updates := make(map[string]interface{})
+
+	if payload.Priority != nil {
+		updates["priority"] = *payload.Priority
+	}
+
+	if payload.Status != nil {
+		updates["status"] = *payload.Status
+	}
+
+	if payload.ResolutionNotes != nil {
+		updates["resolution_notes"] = *payload.ResolutionNotes
+	}
+
+	return updates
+}
+
+// IssueReportStatisticsToResponse converts IssueReportStatistics to IssueReportStatisticsResponse
+func IssueReportStatisticsToResponse(stats *domain.IssueReportStatistics) domain.IssueReportStatisticsResponse {
+	response := domain.IssueReportStatisticsResponse{
+		Total: domain.IssueReportCountStatisticsResponse{
+			Count: stats.Total.Count,
+		},
+		ByPriority: domain.IssueReportPriorityStatisticsResponse{
+			Low:      stats.ByPriority.Low,
+			Medium:   stats.ByPriority.Medium,
+			High:     stats.ByPriority.High,
+			Critical: stats.ByPriority.Critical,
+		},
+		ByStatus: domain.IssueReportStatusStatisticsResponse{
+			Open:       stats.ByStatus.Open,
+			InProgress: stats.ByStatus.InProgress,
+			Resolved:   stats.ByStatus.Resolved,
+			Closed:     stats.ByStatus.Closed,
+		},
+		ByType: domain.IssueReportTypeStatisticsResponse{
+			Types: stats.ByType.Types,
+		},
+		Summary: domain.IssueReportSummaryStatisticsResponse{
+			TotalReports:            stats.Summary.TotalReports,
+			OpenPercentage:          stats.Summary.OpenPercentage,
+			ResolvedPercentage:      stats.Summary.ResolvedPercentage,
+			AverageResolutionTime:   stats.Summary.AverageResolutionTime,
+			MostCommonPriority:      stats.Summary.MostCommonPriority,
+			MostCommonType:          stats.Summary.MostCommonType,
+			CriticalUnresolvedCount: stats.Summary.CriticalUnresolvedCount,
+			AverageReportsPerDay:    stats.Summary.AverageReportsPerDay,
+			LatestCreationDate:      stats.Summary.LatestCreationDate,
+			EarliestCreationDate:    stats.Summary.EarliestCreationDate,
+		},
+	}
+
+	// Convert creation trends
+	response.CreationTrends = make([]domain.IssueReportCreationTrendResponse, len(stats.CreationTrends))
+	for i, trend := range stats.CreationTrends {
+		response.CreationTrends[i] = domain.IssueReportCreationTrendResponse{
+			Date:  trend.Date,
+			Count: trend.Count,
+		}
+	}
+
+	return response
+}

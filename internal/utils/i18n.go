@@ -51,6 +51,37 @@ const (
 	ErrAssetDataMatrixRequiredKey   MessageKey = "error.asset.datamatrix_required"
 	ErrAssetSerialNumberRequiredKey MessageKey = "error.asset.serial_number_required"
 
+	// * Scan log-specific error keys
+	ErrScanLogNotFoundKey   MessageKey = "error.scan_log.not_found"
+	ErrScanLogIDRequiredKey MessageKey = "error.scan_log.id_required"
+
+	// * Notification-specific error keys
+	ErrNotificationNotFoundKey        MessageKey = "error.notification.not_found"
+	ErrNotificationIDRequiredKey      MessageKey = "error.notification.id_required"
+	ErrNotificationUserIDRequiredKey  MessageKey = "error.notification.user_id_required"
+	ErrNotificationTypeRequiredKey    MessageKey = "error.notification.type_required"
+	ErrNotificationTitleRequiredKey   MessageKey = "error.notification.title_required"
+	ErrNotificationMessageRequiredKey MessageKey = "error.notification.message_required"
+
+	// * Issue report-specific error keys
+	ErrIssueReportNotFoundKey         MessageKey = "error.issue_report.not_found"
+	ErrIssueReportIDRequiredKey       MessageKey = "error.issue_report.id_required"
+	ErrIssueReportAssetIDRequiredKey  MessageKey = "error.issue_report.asset_id_required"
+	ErrIssueReportTypeRequiredKey     MessageKey = "error.issue_report.type_required"
+	ErrIssueReportPriorityRequiredKey MessageKey = "error.issue_report.priority_required"
+	ErrIssueReportTitleRequiredKey    MessageKey = "error.issue_report.title_required"
+	ErrIssueReportAlreadyResolvedKey  MessageKey = "error.issue_report.already_resolved"
+	ErrIssueReportCannotReopenKey     MessageKey = "error.issue_report.cannot_reopen"
+
+	// * Asset movement-specific error keys
+	ErrAssetMovementNotFoundKey        MessageKey = "error.asset_movement.not_found"
+	ErrAssetMovementIDRequiredKey      MessageKey = "error.asset_movement.id_required"
+	ErrAssetMovementAssetIDRequiredKey MessageKey = "error.asset_movement.asset_id_required"
+	ErrAssetMovementInvalidLocationKey MessageKey = "error.asset_movement.invalid_location"
+	ErrAssetMovementInvalidUserKey     MessageKey = "error.asset_movement.invalid_user"
+	ErrAssetMovementNoChangeKey        MessageKey = "error.asset_movement.no_change"
+	ErrAssetMovementSameLocationKey    MessageKey = "error.asset_movement.same_location"
+
 	// * Auth-specific error keys
 	ErrInvalidCredentialsKey MessageKey = "error.auth.invalid_credentials"
 	ErrTokenExpiredKey       MessageKey = "error.auth.token_expired"
@@ -126,6 +157,45 @@ const (
 	SuccessAssetTagExistenceCheckedKey          MessageKey = "success.asset.tag_existence_checked"
 	SuccessAssetDataMatrixExistenceCheckedKey   MessageKey = "success.asset.datamatrix_existence_checked"
 	SuccessAssetSerialNumberExistenceCheckedKey MessageKey = "success.asset.serial_number_existence_checked"
+
+	// * Scan log-specific success keys
+	SuccessScanLogCreatedKey             MessageKey = "success.scan_log.created"
+	SuccessScanLogDeletedKey             MessageKey = "success.scan_log.deleted"
+	SuccessScanLogRetrievedKey           MessageKey = "success.scan_log.retrieved"
+	SuccessScanLogCountedKey             MessageKey = "success.scan_log.counted"
+	SuccessScanLogStatisticsRetrievedKey MessageKey = "success.scan_log.statistics_retrieved"
+	SuccessScanLogExistenceCheckedKey    MessageKey = "success.scan_log.existence_checked"
+
+	// * Notification-specific success keys
+	SuccessNotificationCreatedKey             MessageKey = "success.notification.created"
+	SuccessNotificationUpdatedKey             MessageKey = "success.notification.updated"
+	SuccessNotificationDeletedKey             MessageKey = "success.notification.deleted"
+	SuccessNotificationRetrievedKey           MessageKey = "success.notification.retrieved"
+	SuccessNotificationCountedKey             MessageKey = "success.notification.counted"
+	SuccessNotificationStatisticsRetrievedKey MessageKey = "success.notification.statistics_retrieved"
+	SuccessNotificationExistenceCheckedKey    MessageKey = "success.notification.existence_checked"
+	SuccessNotificationMarkedAsReadKey        MessageKey = "success.notification.marked_as_read"
+	SuccessNotificationMarkedAsUnreadKey      MessageKey = "success.notification.marked_as_unread"
+
+	// * Issue report-specific success keys
+	SuccessIssueReportCreatedKey             MessageKey = "success.issue_report.created"
+	SuccessIssueReportUpdatedKey             MessageKey = "success.issue_report.updated"
+	SuccessIssueReportDeletedKey             MessageKey = "success.issue_report.deleted"
+	SuccessIssueReportRetrievedKey           MessageKey = "success.issue_report.retrieved"
+	SuccessIssueReportCountedKey             MessageKey = "success.issue_report.counted"
+	SuccessIssueReportStatisticsRetrievedKey MessageKey = "success.issue_report.statistics_retrieved"
+	SuccessIssueReportExistenceCheckedKey    MessageKey = "success.issue_report.existence_checked"
+	SuccessIssueReportResolvedKey            MessageKey = "success.issue_report.resolved"
+	SuccessIssueReportReopenedKey            MessageKey = "success.issue_report.reopened"
+
+	// * Asset movement-specific success keys
+	SuccessAssetMovementCreatedKey             MessageKey = "success.asset_movement.created"
+	SuccessAssetMovementUpdatedKey             MessageKey = "success.asset_movement.updated"
+	SuccessAssetMovementDeletedKey             MessageKey = "success.asset_movement.deleted"
+	SuccessAssetMovementRetrievedKey           MessageKey = "success.asset_movement.retrieved"
+	SuccessAssetMovementCountedKey             MessageKey = "success.asset_movement.counted"
+	SuccessAssetMovementStatisticsRetrievedKey MessageKey = "success.asset_movement.statistics_retrieved"
+	SuccessAssetMovementExistenceCheckedKey    MessageKey = "success.asset_movement.existence_checked"
 
 	// * Auth-specific success keys
 	SuccessLoginKey   MessageKey = "success.auth.login"
@@ -548,6 +618,248 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Multiple files uploaded successfully",
 		"id-ID": "Beberapa file berhasil diunggah",
 		"ja-JP": "複数のファイルが正常にアップロードされました",
+	},
+
+	// * Notification error messages
+	ErrNotificationNotFoundKey: {
+		"en-US": "Notification not found",
+		"id-ID": "Notifikasi tidak ditemukan",
+		"ja-JP": "通知が見つかりません",
+	},
+	ErrNotificationIDRequiredKey: {
+		"en-US": "Notification ID is required",
+		"id-ID": "ID notifikasi diperlukan",
+		"ja-JP": "通知IDが必要です",
+	},
+	ErrNotificationUserIDRequiredKey: {
+		"en-US": "User ID is required",
+		"id-ID": "ID pengguna diperlukan",
+		"ja-JP": "ユーザーIDが必要です",
+	},
+	ErrNotificationTypeRequiredKey: {
+		"en-US": "Notification type is required",
+		"id-ID": "Jenis notifikasi diperlukan",
+		"ja-JP": "通知タイプが必要です",
+	},
+	ErrNotificationTitleRequiredKey: {
+		"en-US": "Notification title is required",
+		"id-ID": "Judul notifikasi diperlukan",
+		"ja-JP": "通知タイトルが必要です",
+	},
+	ErrNotificationMessageRequiredKey: {
+		"en-US": "Notification message is required",
+		"id-ID": "Pesan notifikasi diperlukan",
+		"ja-JP": "通知メッセージが必要です",
+	},
+
+	// * Notification success messages
+	SuccessNotificationCreatedKey: {
+		"en-US": "Notification created successfully",
+		"id-ID": "Notifikasi berhasil dibuat",
+		"ja-JP": "通知が正常に作成されました",
+	},
+	SuccessNotificationUpdatedKey: {
+		"en-US": "Notification updated successfully",
+		"id-ID": "Notifikasi berhasil diperbarui",
+		"ja-JP": "通知が正常に更新されました",
+	},
+	SuccessNotificationDeletedKey: {
+		"en-US": "Notification deleted successfully",
+		"id-ID": "Notifikasi berhasil dihapus",
+		"ja-JP": "通知が正常に削除されました",
+	},
+	SuccessNotificationRetrievedKey: {
+		"en-US": "Notification retrieved successfully",
+		"id-ID": "Notifikasi berhasil diambil",
+		"ja-JP": "通知が正常に取得されました",
+	},
+	SuccessNotificationCountedKey: {
+		"en-US": "Notification counted successfully",
+		"id-ID": "Notifikasi berhasil dihitung",
+		"ja-JP": "通知が正常にカウントされました",
+	},
+	SuccessNotificationStatisticsRetrievedKey: {
+		"en-US": "Notification statistics retrieved successfully",
+		"id-ID": "Statistik notifikasi berhasil diambil",
+		"ja-JP": "通知統計が正常に取得されました",
+	},
+	SuccessNotificationExistenceCheckedKey: {
+		"en-US": "Notification existence checked successfully",
+		"id-ID": "Keberadaan notifikasi berhasil diperiksa",
+		"ja-JP": "通知の存在が正常に確認されました",
+	},
+	SuccessNotificationMarkedAsReadKey: {
+		"en-US": "Notification marked as read successfully",
+		"id-ID": "Notifikasi berhasil ditandai sebagai sudah dibaca",
+		"ja-JP": "通知が既読として正常にマークされました",
+	},
+	SuccessNotificationMarkedAsUnreadKey: {
+		"en-US": "Notification marked as unread successfully",
+		"id-ID": "Notifikasi berhasil ditandai sebagai belum dibaca",
+		"ja-JP": "通知が未読として正常にマークされました",
+	},
+
+	// * Issue report error messages
+	ErrIssueReportNotFoundKey: {
+		"en-US": "Issue report not found",
+		"id-ID": "Laporan masalah tidak ditemukan",
+		"ja-JP": "問題レポートが見つかりません",
+	},
+	ErrIssueReportIDRequiredKey: {
+		"en-US": "Issue report ID is required",
+		"id-ID": "ID laporan masalah diperlukan",
+		"ja-JP": "問題レポートIDが必要です",
+	},
+	ErrIssueReportAssetIDRequiredKey: {
+		"en-US": "Asset ID is required",
+		"id-ID": "ID aset diperlukan",
+		"ja-JP": "アセットIDが必要です",
+	},
+	ErrIssueReportTypeRequiredKey: {
+		"en-US": "Issue type is required",
+		"id-ID": "Jenis masalah diperlukan",
+		"ja-JP": "問題タイプが必要です",
+	},
+	ErrIssueReportPriorityRequiredKey: {
+		"en-US": "Priority is required",
+		"id-ID": "Prioritas diperlukan",
+		"ja-JP": "優先度が必要です",
+	},
+	ErrIssueReportTitleRequiredKey: {
+		"en-US": "Title is required",
+		"id-ID": "Judul diperlukan",
+		"ja-JP": "タイトルが必要です",
+	},
+	ErrIssueReportAlreadyResolvedKey: {
+		"en-US": "Issue report is already resolved",
+		"id-ID": "Laporan masalah sudah diselesaikan",
+		"ja-JP": "問題レポートは既に解決されています",
+	},
+	ErrIssueReportCannotReopenKey: {
+		"en-US": "Cannot reopen closed issue report",
+		"id-ID": "Tidak dapat membuka kembali laporan masalah yang sudah ditutup",
+		"ja-JP": "閉じられた問題レポートを再開できません",
+	},
+
+	// * Issue report success messages
+	SuccessIssueReportCreatedKey: {
+		"en-US": "Issue report created successfully",
+		"id-ID": "Laporan masalah berhasil dibuat",
+		"ja-JP": "問題レポートが正常に作成されました",
+	},
+	SuccessIssueReportUpdatedKey: {
+		"en-US": "Issue report updated successfully",
+		"id-ID": "Laporan masalah berhasil diperbarui",
+		"ja-JP": "問題レポートが正常に更新されました",
+	},
+	SuccessIssueReportDeletedKey: {
+		"en-US": "Issue report deleted successfully",
+		"id-ID": "Laporan masalah berhasil dihapus",
+		"ja-JP": "問題レポートが正常に削除されました",
+	},
+	SuccessIssueReportRetrievedKey: {
+		"en-US": "Issue report retrieved successfully",
+		"id-ID": "Laporan masalah berhasil diambil",
+		"ja-JP": "問題レポートが正常に取得されました",
+	},
+	SuccessIssueReportCountedKey: {
+		"en-US": "Issue report counted successfully",
+		"id-ID": "Laporan masalah berhasil dihitung",
+		"ja-JP": "問題レポートが正常にカウントされました",
+	},
+	SuccessIssueReportStatisticsRetrievedKey: {
+		"en-US": "Issue report statistics retrieved successfully",
+		"id-ID": "Statistik laporan masalah berhasil diambil",
+		"ja-JP": "問題レポート統計が正常に取得されました",
+	},
+	SuccessIssueReportExistenceCheckedKey: {
+		"en-US": "Issue report existence checked successfully",
+		"id-ID": "Keberadaan laporan masalah berhasil diperiksa",
+		"ja-JP": "問題レポートの存在が正常に確認されました",
+	},
+	SuccessIssueReportResolvedKey: {
+		"en-US": "Issue report resolved successfully",
+		"id-ID": "Laporan masalah berhasil diselesaikan",
+		"ja-JP": "問題レポートが正常に解決されました",
+	},
+	SuccessIssueReportReopenedKey: {
+		"en-US": "Issue report reopened successfully",
+		"id-ID": "Laporan masalah berhasil dibuka kembali",
+		"ja-JP": "問題レポートが正常に再開されました",
+	},
+
+	// * Asset movement error messages
+	ErrAssetMovementNotFoundKey: {
+		"en-US": "Asset movement not found",
+		"id-ID": "Pergerakan aset tidak ditemukan",
+		"ja-JP": "アセット移動が見つかりません",
+	},
+	ErrAssetMovementIDRequiredKey: {
+		"en-US": "Asset movement ID is required",
+		"id-ID": "ID pergerakan aset diperlukan",
+		"ja-JP": "アセット移動IDが必要です",
+	},
+	ErrAssetMovementAssetIDRequiredKey: {
+		"en-US": "Asset ID is required",
+		"id-ID": "ID aset diperlukan",
+		"ja-JP": "アセットIDが必要です",
+	},
+	ErrAssetMovementInvalidLocationKey: {
+		"en-US": "Invalid location specified",
+		"id-ID": "Lokasi yang ditentukan tidak valid",
+		"ja-JP": "指定された場所が無効です",
+	},
+	ErrAssetMovementInvalidUserKey: {
+		"en-US": "Invalid user specified",
+		"id-ID": "Pengguna yang ditentukan tidak valid",
+		"ja-JP": "指定されたユーザーが無効です",
+	},
+	ErrAssetMovementNoChangeKey: {
+		"en-US": "No change detected in asset location or assignment",
+		"id-ID": "Tidak ada perubahan yang terdeteksi dalam lokasi atau penugasan aset",
+		"ja-JP": "アセットの場所または割り当てに変更が検出されませんでした",
+	},
+	ErrAssetMovementSameLocationKey: {
+		"en-US": "Asset is already at the specified location",
+		"id-ID": "Aset sudah berada di lokasi yang ditentukan",
+		"ja-JP": "アセットは既に指定された場所にあります",
+	},
+
+	// * Asset movement success messages
+	SuccessAssetMovementCreatedKey: {
+		"en-US": "Asset movement created successfully",
+		"id-ID": "Pergerakan aset berhasil dibuat",
+		"ja-JP": "アセット移動が正常に作成されました",
+	},
+	SuccessAssetMovementUpdatedKey: {
+		"en-US": "Asset movement updated successfully",
+		"id-ID": "Pergerakan aset berhasil diperbarui",
+		"ja-JP": "アセット移動が正常に更新されました",
+	},
+	SuccessAssetMovementDeletedKey: {
+		"en-US": "Asset movement deleted successfully",
+		"id-ID": "Pergerakan aset berhasil dihapus",
+		"ja-JP": "アセット移動が正常に削除されました",
+	},
+	SuccessAssetMovementRetrievedKey: {
+		"en-US": "Asset movement retrieved successfully",
+		"id-ID": "Pergerakan aset berhasil diambil",
+		"ja-JP": "アセット移動が正常に取得されました",
+	},
+	SuccessAssetMovementCountedKey: {
+		"en-US": "Asset movement counted successfully",
+		"id-ID": "Pergerakan aset berhasil dihitung",
+		"ja-JP": "アセット移動が正常にカウントされました",
+	},
+	SuccessAssetMovementStatisticsRetrievedKey: {
+		"en-US": "Asset movement statistics retrieved successfully",
+		"id-ID": "Statistik pergerakan aset berhasil diambil",
+		"ja-JP": "アセット移動統計が正常に取得されました",
+	},
+	SuccessAssetMovementExistenceCheckedKey: {
+		"en-US": "Asset movement existence checked successfully",
+		"id-ID": "Keberadaan pergerakan aset berhasil diperiksa",
+		"ja-JP": "アセット移動の存在が正常に確認されました",
 	},
 }
 

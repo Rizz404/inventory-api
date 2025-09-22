@@ -146,6 +146,34 @@ func ToModelAssetMovementTranslationForCreate(movementID string, d *domain.Asset
 	return modelTranslation
 }
 
+func ToModelAssetMovementUpdateMap(payload *domain.UpdateAssetMovementPayload) map[string]interface{} {
+	updates := make(map[string]interface{})
+
+	if payload.ToLocationID != nil {
+		if *payload.ToLocationID == "" {
+			updates["to_location_id"] = nil
+		} else {
+			if parsedToLocationID, err := ulid.Parse(*payload.ToLocationID); err == nil {
+				modelULID := model.SQLULID(parsedToLocationID)
+				updates["to_location_id"] = &modelULID
+			}
+		}
+	}
+
+	if payload.ToUserID != nil {
+		if *payload.ToUserID == "" {
+			updates["to_user_id"] = nil
+		} else {
+			if parsedToUserID, err := ulid.Parse(*payload.ToUserID); err == nil {
+				modelULID := model.SQLULID(parsedToUserID)
+				updates["to_user_id"] = &modelULID
+			}
+		}
+	}
+
+	return updates
+}
+
 func ToDomainAssetMovement(m *model.AssetMovement) domain.AssetMovement {
 	domainMovement := domain.AssetMovement{
 		ID:           m.ID.String(),
@@ -240,4 +268,119 @@ func AssetMovementsToResponses(movements []domain.AssetMovement, langCode string
 		responses[i] = AssetMovementToResponse(&movement, langCode)
 	}
 	return responses
+}
+
+// Statistics mapping functions
+func AssetMovementStatisticsToResponse(stats *domain.AssetMovementStatistics) domain.AssetMovementStatisticsResponse {
+	return domain.AssetMovementStatisticsResponse{
+		Total: domain.AssetMovementCountStatisticsResponse{
+			Count: stats.Total.Count,
+		},
+		ByAsset:         AssetMovementByAssetStatsToResponses(stats.ByAsset),
+		ByLocation:      AssetMovementByLocationStatsToResponses(stats.ByLocation),
+		ByUser:          AssetMovementByUserStatsToResponses(stats.ByUser),
+		ByMovementType:  AssetMovementTypeStatisticsToResponse(stats.ByMovementType),
+		RecentMovements: AssetMovementRecentStatsToResponses(stats.RecentMovements),
+		MovementTrends:  AssetMovementTrendsToResponses(stats.MovementTrends),
+		Summary:         AssetMovementSummaryStatisticsToResponse(stats.Summary),
+	}
+}
+
+func AssetMovementByAssetStatsToResponses(stats []domain.AssetMovementByAssetStats) []domain.AssetMovementByAssetStatsResponse {
+	responses := make([]domain.AssetMovementByAssetStatsResponse, len(stats))
+	for i, stat := range stats {
+		responses[i] = domain.AssetMovementByAssetStatsResponse{
+			AssetID:       stat.AssetID,
+			AssetTag:      stat.AssetTag,
+			AssetName:     stat.AssetName,
+			MovementCount: stat.MovementCount,
+		}
+	}
+	return responses
+}
+
+func AssetMovementByLocationStatsToResponses(stats []domain.AssetMovementByLocationStats) []domain.AssetMovementByLocationStatsResponse {
+	responses := make([]domain.AssetMovementByLocationStatsResponse, len(stats))
+	for i, stat := range stats {
+		responses[i] = domain.AssetMovementByLocationStatsResponse{
+			LocationID:    stat.LocationID,
+			LocationCode:  stat.LocationCode,
+			LocationName:  stat.LocationName,
+			IncomingCount: stat.IncomingCount,
+			OutgoingCount: stat.OutgoingCount,
+			NetMovement:   stat.NetMovement,
+		}
+	}
+	return responses
+}
+
+func AssetMovementByUserStatsToResponses(stats []domain.AssetMovementByUserStats) []domain.AssetMovementByUserStatsResponse {
+	responses := make([]domain.AssetMovementByUserStatsResponse, len(stats))
+	for i, stat := range stats {
+		responses[i] = domain.AssetMovementByUserStatsResponse{
+			UserID:        stat.UserID,
+			UserName:      stat.UserName,
+			MovementCount: stat.MovementCount,
+		}
+	}
+	return responses
+}
+
+func AssetMovementTypeStatisticsToResponse(stats domain.AssetMovementTypeStatistics) domain.AssetMovementTypeStatisticsResponse {
+	return domain.AssetMovementTypeStatisticsResponse{
+		LocationToLocation: stats.LocationToLocation,
+		LocationToUser:     stats.LocationToUser,
+		UserToLocation:     stats.UserToLocation,
+		UserToUser:         stats.UserToUser,
+		NewAsset:           stats.NewAsset,
+	}
+}
+
+func AssetMovementRecentStatsToResponses(stats []domain.AssetMovementRecentStats) []domain.AssetMovementRecentStatsResponse {
+	responses := make([]domain.AssetMovementRecentStatsResponse, len(stats))
+	for i, stat := range stats {
+		responses[i] = domain.AssetMovementRecentStatsResponse{
+			ID:           stat.ID,
+			AssetTag:     stat.AssetTag,
+			AssetName:    stat.AssetName,
+			FromLocation: stat.FromLocation,
+			ToLocation:   stat.ToLocation,
+			FromUser:     stat.FromUser,
+			ToUser:       stat.ToUser,
+			MovedBy:      stat.MovedBy,
+			MovementDate: stat.MovementDate,
+			MovementType: stat.MovementType,
+		}
+	}
+	return responses
+}
+
+func AssetMovementTrendsToResponses(trends []domain.AssetMovementTrend) []domain.AssetMovementTrendResponse {
+	responses := make([]domain.AssetMovementTrendResponse, len(trends))
+	for i, trend := range trends {
+		responses[i] = domain.AssetMovementTrendResponse{
+			Date:  trend.Date,
+			Count: trend.Count,
+		}
+	}
+	return responses
+}
+
+func AssetMovementSummaryStatisticsToResponse(summary domain.AssetMovementSummaryStatistics) domain.AssetMovementSummaryStatisticsResponse {
+	return domain.AssetMovementSummaryStatisticsResponse{
+		TotalMovements:            summary.TotalMovements,
+		MovementsToday:            summary.MovementsToday,
+		MovementsThisWeek:         summary.MovementsThisWeek,
+		MovementsThisMonth:        summary.MovementsThisMonth,
+		MostActiveAsset:           summary.MostActiveAsset,
+		MostActiveLocation:        summary.MostActiveLocation,
+		MostActiveUser:            summary.MostActiveUser,
+		AverageMovementsPerDay:    summary.AverageMovementsPerDay,
+		AverageMovementsPerAsset:  summary.AverageMovementsPerAsset,
+		LatestMovementDate:        summary.LatestMovementDate,
+		EarliestMovementDate:      summary.EarliestMovementDate,
+		UniqueAssetsWithMovements: summary.UniqueAssetsWithMovements,
+		UniqueLocationsInvolved:   summary.UniqueLocationsInvolved,
+		UniqueUsersInvolved:       summary.UniqueUsersInvolved,
+	}
 }

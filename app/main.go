@@ -8,9 +8,14 @@ import (
 	"github.com/Rizz404/inventory-api/internal/client/cloudinary"
 	"github.com/Rizz404/inventory-api/internal/postgresql"
 	"github.com/Rizz404/inventory-api/internal/rest"
+	"github.com/Rizz404/inventory-api/services/asset"
+	assetMovement "github.com/Rizz404/inventory-api/services/asset_movement"
 	"github.com/Rizz404/inventory-api/services/auth"
 	"github.com/Rizz404/inventory-api/services/category"
+	issueReport "github.com/Rizz404/inventory-api/services/issue_report"
 	"github.com/Rizz404/inventory-api/services/location"
+	"github.com/Rizz404/inventory-api/services/notification"
+	scanLog "github.com/Rizz404/inventory-api/services/scan_log"
 	"github.com/Rizz404/inventory-api/services/user"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -151,12 +156,24 @@ func main() {
 	userRepository := postgresql.NewUserRepository(db)
 	categoryRepository := postgresql.NewCategoryRepository(db)
 	locationRepository := postgresql.NewLocationRepository(db)
+	assetRepository := postgresql.NewAssetRepository(db)
+	scanLogRepository := postgresql.NewScanLogRepository(db)
+	notificationRepository := postgresql.NewNotificationRepository(db)
+	issueReportRepository := postgresql.NewIssueReportRepository(db)
+	assetMovementRepository := postgresql.NewAssetMovementRepository(db)
+	// maintenanceRepository := postgresql.NewMaintenanceRepository(db)
 
 	// *===================================SERVICE===================================*
 	authService := auth.NewService(userRepository)
 	userService := user.NewService(userRepository, cloudinaryClient)
 	categoryService := category.NewService(categoryRepository)
 	locationService := location.NewService(locationRepository)
+	assetService := asset.NewService(assetRepository, cloudinaryClient)
+	scanLogService := scanLog.NewService(scanLogRepository)
+	notificationService := notification.NewService(notificationRepository)
+	issueReportService := issueReport.NewService(issueReportRepository)
+	assetMovementService := assetMovement.NewService(assetMovementRepository, assetService, locationService, userService)
+	// maintenanceService := maintenance.NewService(maintenanceRepository, assetService, userService)
 
 	// *===================================SERVER CONFIG===================================*
 	app := fiber.New(fiber.Config{
@@ -190,6 +207,12 @@ func main() {
 	rest.NewUserHandler(v1, userService)
 	rest.NewCategoryHandler(v1, categoryService)
 	rest.NewLocationHandler(v1, locationService)
+	rest.NewAssetHandler(v1, assetService)
+	rest.NewScanLogHandler(v1, scanLogService)
+	rest.NewNotificationHandler(v1, notificationService)
+	rest.NewIssueReportHandler(v1, issueReportService)
+	rest.NewAssetMovementHandler(v1, assetMovementService)
+	// rest.NewMaintenanceHandler(v1, maintenanceService)
 
 	// *===================================SERVER===================================*
 	log.Printf("server running on http://localhost%s", addr)

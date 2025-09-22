@@ -19,8 +19,6 @@ type ScanLog struct {
 	ScanLocationLat *float64              `gorm:"type:decimal(11,8)"`
 	ScanLocationLng *float64              `gorm:"type:decimal(11,8)"`
 	ScanResult      domain.ScanResultType `gorm:"type:scan_result_type;not null"`
-	Asset           *Asset                `gorm:"foreignKey:AssetID"`
-	ScannedByUser   User                  `gorm:"foreignKey:ScannedBy"`
 }
 
 func (ScanLog) TableName() string {

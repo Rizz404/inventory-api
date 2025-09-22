@@ -85,3 +85,116 @@ type UpdateIssueReportPayload struct {
 	Status          *IssueStatus   `json:"status,omitempty" validate:"omitempty,oneof=Open 'In Progress' Resolved Closed"`
 	ResolutionNotes *string        `json:"resolutionNotes,omitempty"` // This should be updated via a specific action
 }
+
+type ResolveIssueReportPayload struct {
+	ResolutionNotes string `json:"resolutionNotes" validate:"required,max=1000"`
+}
+
+type UpdateIssueReportTranslationPayload struct {
+	LangCode        string  `json:"langCode" validate:"required,max=5"`
+	Title           *string `json:"title,omitempty" validate:"omitempty,max=200"`
+	Description     *string `json:"description,omitempty"`
+	ResolutionNotes *string `json:"resolutionNotes,omitempty"`
+}
+
+// --- Statistics ---
+
+// Internal statistics structs (used in repository layer)
+type IssueReportStatistics struct {
+	Total          IssueReportCountStatistics    `json:"total"`
+	ByPriority     IssueReportPriorityStatistics `json:"byPriority"`
+	ByStatus       IssueReportStatusStatistics   `json:"byStatus"`
+	ByType         IssueReportTypeStatistics     `json:"byType"`
+	CreationTrends []IssueReportCreationTrend    `json:"creationTrends"`
+	Summary        IssueReportSummaryStatistics  `json:"summary"`
+}
+
+type IssueReportCountStatistics struct {
+	Count int `json:"count"`
+}
+
+type IssueReportPriorityStatistics struct {
+	Low      int `json:"low"`
+	Medium   int `json:"medium"`
+	High     int `json:"high"`
+	Critical int `json:"critical"`
+}
+
+type IssueReportStatusStatistics struct {
+	Open       int `json:"open"`
+	InProgress int `json:"inProgress"`
+	Resolved   int `json:"resolved"`
+	Closed     int `json:"closed"`
+}
+
+type IssueReportTypeStatistics struct {
+	Types map[string]int `json:"types"`
+}
+
+type IssueReportCreationTrend struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type IssueReportSummaryStatistics struct {
+	TotalReports            int     `json:"totalReports"`
+	OpenPercentage          float64 `json:"openPercentage"`
+	ResolvedPercentage      float64 `json:"resolvedPercentage"`
+	AverageResolutionTime   float64 `json:"averageResolutionTimeInDays"`
+	MostCommonPriority      string  `json:"mostCommonPriority"`
+	MostCommonType          string  `json:"mostCommonType"`
+	CriticalUnresolvedCount int     `json:"criticalUnresolvedCount"`
+	AverageReportsPerDay    float64 `json:"averageReportsPerDay"`
+	LatestCreationDate      string  `json:"latestCreationDate"`
+	EarliestCreationDate    string  `json:"earliestCreationDate"`
+}
+
+// Response statistics structs (used in service/handler layer)
+type IssueReportStatisticsResponse struct {
+	Total          IssueReportCountStatisticsResponse    `json:"total"`
+	ByPriority     IssueReportPriorityStatisticsResponse `json:"byPriority"`
+	ByStatus       IssueReportStatusStatisticsResponse   `json:"byStatus"`
+	ByType         IssueReportTypeStatisticsResponse     `json:"byType"`
+	CreationTrends []IssueReportCreationTrendResponse    `json:"creationTrends"`
+	Summary        IssueReportSummaryStatisticsResponse  `json:"summary"`
+}
+
+type IssueReportCountStatisticsResponse struct {
+	Count int `json:"count"`
+}
+
+type IssueReportPriorityStatisticsResponse struct {
+	Low      int `json:"low"`
+	Medium   int `json:"medium"`
+	High     int `json:"high"`
+	Critical int `json:"critical"`
+}
+
+type IssueReportStatusStatisticsResponse struct {
+	Open       int `json:"open"`
+	InProgress int `json:"inProgress"`
+	Resolved   int `json:"resolved"`
+	Closed     int `json:"closed"`
+}
+
+type IssueReportTypeStatisticsResponse struct {
+	Types map[string]int `json:"types"`
+}
+
+type IssueReportCreationTrendResponse struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type IssueReportSummaryStatisticsResponse struct {
+	TotalReports            int     `json:"totalReports"`
+	OpenPercentage          float64 `json:"openPercentage"`
+	ResolvedPercentage      float64 `json:"resolvedPercentage"`
+	AverageResolutionTime   float64 `json:"averageResolutionTimeInDays"`
+	MostCommonPriority      string  `json:"mostCommonPriority"`
+	MostCommonType          string  `json:"mostCommonType"`
+	CriticalUnresolvedCount int     `json:"criticalUnresolvedCount"`
+	AverageReportsPerDay    float64 `json:"averageReportsPerDay"`
+	LatestCreationDate      string  `json:"latestCreationDate"`
+	EarliestCreationDate    string  `json:"earliestCreationDate"`
+}

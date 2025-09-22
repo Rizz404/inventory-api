@@ -174,3 +174,54 @@ func NotificationsToResponses(notifications []domain.Notification, langCode stri
 	}
 	return responses
 }
+
+// ToModelNotificationUpdateMap converts UpdateNotificationPayload to map for database updates
+func ToModelNotificationUpdateMap(payload *domain.UpdateNotificationPayload) map[string]interface{} {
+	updates := make(map[string]interface{})
+
+	if payload.IsRead != nil {
+		updates["is_read"] = *payload.IsRead
+	}
+
+	return updates
+}
+
+// NotificationStatisticsToResponse converts NotificationStatistics to NotificationStatisticsResponse
+func NotificationStatisticsToResponse(stats *domain.NotificationStatistics) domain.NotificationStatisticsResponse {
+	response := domain.NotificationStatisticsResponse{
+		Total: domain.NotificationCountStatisticsResponse{
+			Count: stats.Total.Count,
+		},
+		ByType: domain.NotificationTypeStatisticsResponse{
+			Maintenance:  stats.ByType.Maintenance,
+			Warranty:     stats.ByType.Warranty,
+			StatusChange: stats.ByType.StatusChange,
+			Movement:     stats.ByType.Movement,
+			IssueReport:  stats.ByType.IssueReport,
+		},
+		ByStatus: domain.NotificationStatusStatisticsResponse{
+			Read:   stats.ByStatus.Read,
+			Unread: stats.ByStatus.Unread,
+		},
+		Summary: domain.NotificationSummaryStatisticsResponse{
+			TotalNotifications:         stats.Summary.TotalNotifications,
+			ReadPercentage:             stats.Summary.ReadPercentage,
+			UnreadPercentage:           stats.Summary.UnreadPercentage,
+			MostCommonType:             stats.Summary.MostCommonType,
+			AverageNotificationsPerDay: stats.Summary.AverageNotificationsPerDay,
+			LatestCreationDate:         stats.Summary.LatestCreationDate,
+			EarliestCreationDate:       stats.Summary.EarliestCreationDate,
+		},
+	}
+
+	// Convert creation trends
+	response.CreationTrends = make([]domain.NotificationCreationTrendResponse, len(stats.CreationTrends))
+	for i, trend := range stats.CreationTrends {
+		response.CreationTrends[i] = domain.NotificationCreationTrendResponse{
+			Date:  trend.Date,
+			Count: trend.Count,
+		}
+	}
+
+	return response
+}

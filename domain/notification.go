@@ -44,8 +44,9 @@ type NotificationResponse struct {
 	Title          string           `json:"title"`
 	Message        string           `json:"message"`
 	// * Populated
-	User         UserResponse   `json:"user"`
-	RelatedAsset *AssetResponse `json:"relatedAsset,omitempty"`
+	// ! cuma notification gak perlu populated table biar gak berat
+	// User         UserResponse   `json:"user"`
+	// RelatedAsset *AssetResponse `json:"relatedAsset,omitempty"`
 }
 
 // --- Payloads ---
@@ -63,4 +64,93 @@ type CreateNotificationTranslationPayload struct {
 	LangCode string `json:"langCode"`
 	Title    string `json:"title"`
 	Message  string `json:"message"`
+}
+
+type UpdateNotificationPayload struct {
+	IsRead       *bool                                  `json:"isRead,omitempty"`
+	Translations []CreateNotificationTranslationPayload `json:"translations,omitempty"`
+}
+
+// --- Statistics ---
+
+// Internal statistics structs (used in repository layer)
+type NotificationStatistics struct {
+	Total          NotificationCountStatistics   `json:"total"`
+	ByType         NotificationTypeStatistics    `json:"byType"`
+	ByStatus       NotificationStatusStatistics  `json:"byStatus"`
+	CreationTrends []NotificationCreationTrend   `json:"creationTrends"`
+	Summary        NotificationSummaryStatistics `json:"summary"`
+}
+
+type NotificationCountStatistics struct {
+	Count int `json:"count"`
+}
+
+type NotificationTypeStatistics struct {
+	Maintenance  int `json:"maintenance"`
+	Warranty     int `json:"warranty"`
+	StatusChange int `json:"statusChange"`
+	Movement     int `json:"movement"`
+	IssueReport  int `json:"issueReport"`
+}
+
+type NotificationStatusStatistics struct {
+	Read   int `json:"read"`
+	Unread int `json:"unread"`
+}
+
+type NotificationCreationTrend struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type NotificationSummaryStatistics struct {
+	TotalNotifications         int     `json:"totalNotifications"`
+	ReadPercentage             float64 `json:"readPercentage"`
+	UnreadPercentage           float64 `json:"unreadPercentage"`
+	MostCommonType             string  `json:"mostCommonType"`
+	AverageNotificationsPerDay float64 `json:"averageNotificationsPerDay"`
+	LatestCreationDate         string  `json:"latestCreationDate"`
+	EarliestCreationDate       string  `json:"earliestCreationDate"`
+}
+
+// Response statistics structs (used in service/handler layer)
+type NotificationStatisticsResponse struct {
+	Total          NotificationCountStatisticsResponse   `json:"total"`
+	ByType         NotificationTypeStatisticsResponse    `json:"byType"`
+	ByStatus       NotificationStatusStatisticsResponse  `json:"byStatus"`
+	CreationTrends []NotificationCreationTrendResponse   `json:"creationTrends"`
+	Summary        NotificationSummaryStatisticsResponse `json:"summary"`
+}
+
+type NotificationCountStatisticsResponse struct {
+	Count int `json:"count"`
+}
+
+type NotificationTypeStatisticsResponse struct {
+	Maintenance  int `json:"maintenance"`
+	Warranty     int `json:"warranty"`
+	StatusChange int `json:"statusChange"`
+	Movement     int `json:"movement"`
+	IssueReport  int `json:"issueReport"`
+}
+
+type NotificationStatusStatisticsResponse struct {
+	Read   int `json:"read"`
+	Unread int `json:"unread"`
+}
+
+type NotificationCreationTrendResponse struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type NotificationSummaryStatisticsResponse struct {
+	TotalNotifications         int     `json:"totalNotifications"`
+	ReadPercentage             float64 `json:"readPercentage"`
+	UnreadPercentage           float64 `json:"unreadPercentage"`
+	MostCommonType             string  `json:"mostCommonType"`
+	AverageNotificationsPerDay float64 `json:"averageNotificationsPerDay"`
+	LatestCreationDate         string  `json:"latestCreationDate"`
+	EarliestCreationDate       string  `json:"earliestCreationDate"`
 }
