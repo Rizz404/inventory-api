@@ -371,3 +371,171 @@ func MaintenanceRecordsToResponses(records []domain.MaintenanceRecord, langCode 
 	}
 	return responses
 }
+
+// ===== Maintenance Statistics Mapper =====
+
+func MaintenanceStatisticsToResponse(stats *domain.MaintenanceStatistics) domain.MaintenanceStatisticsResponse {
+	resp := domain.MaintenanceStatisticsResponse{
+		Schedules: domain.MaintenanceScheduleStatisticsResponse{
+			Total: domain.MaintenanceCountStatisticsResponse{Count: stats.Schedules.Total.Count},
+			ByType: domain.MaintenanceTypeStatisticsResponse{
+				Preventive: stats.Schedules.ByType.Preventive,
+				Corrective: stats.Schedules.ByType.Corrective,
+			},
+			ByStatus: domain.MaintenanceScheduleStatusStatisticsResponse{
+				Scheduled: stats.Schedules.ByStatus.Scheduled,
+				Completed: stats.Schedules.ByStatus.Completed,
+				Cancelled: stats.Schedules.ByStatus.Cancelled,
+			},
+		},
+		Records: domain.MaintenanceRecordStatisticsResponse{
+			Total: domain.MaintenanceCountStatisticsResponse{Count: stats.Records.Total.Count},
+		},
+		Summary: domain.MaintenanceSummaryStatisticsResponse{
+			TotalSchedules:                  stats.Summary.TotalSchedules,
+			TotalRecords:                    stats.Summary.TotalRecords,
+			ScheduledMaintenancePercentage:  stats.Summary.ScheduledMaintenancePercentage,
+			CompletedMaintenancePercentage:  stats.Summary.CompletedMaintenancePercentage,
+			CancelledMaintenancePercentage:  stats.Summary.CancelledMaintenancePercentage,
+			PreventiveMaintenancePercentage: stats.Summary.PreventiveMaintenancePercentage,
+			CorrectiveMaintenancePercentage: stats.Summary.CorrectiveMaintenancePercentage,
+			AverageMaintenancePerAsset:      stats.Summary.AverageMaintenancePerAsset,
+			AssetsWithMaintenance:           stats.Summary.AssetsWithMaintenance,
+			AssetsWithoutMaintenance:        stats.Summary.AssetsWithoutMaintenance,
+			MaintenanceComplianceRate:       stats.Summary.MaintenanceComplianceRate,
+			AverageMaintenanceFrequency:     stats.Summary.AverageMaintenanceFrequency,
+			UpcomingMaintenanceCount:        stats.Summary.UpcomingMaintenanceCount,
+			OverdueMaintenanceCount:         stats.Summary.OverdueMaintenanceCount,
+			RecordsWithCostInfo:             stats.Summary.RecordsWithCostInfo,
+			CostInfoPercentage:              stats.Summary.CostInfoPercentage,
+			TotalUniqueVendors:              stats.Summary.TotalUniqueVendors,
+			TotalUniquePerformers:           stats.Summary.TotalUniquePerformers,
+			AverageRecordsPerDay:            stats.Summary.AverageRecordsPerDay,
+			LatestRecordDate:                stats.Summary.LatestRecordDate,
+			EarliestRecordDate:              stats.Summary.EarliestRecordDate,
+			MostExpensiveMaintenanceCost:    stats.Summary.MostExpensiveMaintenanceCost,
+			LeastExpensiveMaintenanceCost:   stats.Summary.LeastExpensiveMaintenanceCost,
+		},
+	}
+
+	// ByAsset schedules and records
+	resp.Schedules.ByAsset = make([]domain.AssetMaintenanceStatisticsResponse, len(stats.Schedules.ByAsset))
+	for i, a := range stats.Schedules.ByAsset {
+		resp.Schedules.ByAsset[i] = domain.AssetMaintenanceStatisticsResponse{
+			AssetID:         a.AssetID,
+			AssetName:       a.AssetName,
+			AssetTag:        a.AssetTag,
+			ScheduleCount:   a.ScheduleCount,
+			RecordCount:     a.RecordCount,
+			LastMaintenance: a.LastMaintenance,
+			NextMaintenance: a.NextMaintenance,
+		}
+	}
+
+	resp.Records.ByAsset = make([]domain.AssetMaintenanceStatisticsResponse, len(stats.Records.ByAsset))
+	for i, a := range stats.Records.ByAsset {
+		resp.Records.ByAsset[i] = domain.AssetMaintenanceStatisticsResponse{
+			AssetID:         a.AssetID,
+			AssetName:       a.AssetName,
+			AssetTag:        a.AssetTag,
+			ScheduleCount:   a.ScheduleCount,
+			RecordCount:     a.RecordCount,
+			LastMaintenance: a.LastMaintenance,
+			NextMaintenance: a.NextMaintenance,
+		}
+	}
+
+	// ByCreator / ByPerformer
+	resp.Schedules.ByCreator = make([]domain.UserMaintenanceStatisticsResponse, len(stats.Schedules.ByCreator))
+	for i, u := range stats.Schedules.ByCreator {
+		resp.Schedules.ByCreator[i] = domain.UserMaintenanceStatisticsResponse{
+			UserID:      u.UserID,
+			UserName:    u.UserName,
+			UserEmail:   u.UserEmail,
+			Count:       u.Count,
+			TotalCost:   u.TotalCost,
+			AverageCost: u.AverageCost,
+		}
+	}
+
+	resp.Records.ByPerformer = make([]domain.UserMaintenanceStatisticsResponse, len(stats.Records.ByPerformer))
+	for i, u := range stats.Records.ByPerformer {
+		resp.Records.ByPerformer[i] = domain.UserMaintenanceStatisticsResponse{
+			UserID:      u.UserID,
+			UserName:    u.UserName,
+			UserEmail:   u.UserEmail,
+			Count:       u.Count,
+			TotalCost:   u.TotalCost,
+			AverageCost: u.AverageCost,
+		}
+	}
+
+	// ByVendor
+	resp.Records.ByVendor = make([]domain.VendorMaintenanceStatisticsResponse, len(stats.Records.ByVendor))
+	for i, v := range stats.Records.ByVendor {
+		resp.Records.ByVendor[i] = domain.VendorMaintenanceStatisticsResponse{
+			VendorName:  v.VendorName,
+			Count:       v.Count,
+			TotalCost:   v.TotalCost,
+			AverageCost: v.AverageCost,
+		}
+	}
+
+	// Upcoming & Overdue schedules
+	resp.Schedules.UpcomingSchedule = make([]domain.UpcomingMaintenanceScheduleResponse, len(stats.Schedules.UpcomingSchedule))
+	for i, up := range stats.Schedules.UpcomingSchedule {
+		resp.Schedules.UpcomingSchedule[i] = domain.UpcomingMaintenanceScheduleResponse{
+			ID:              up.ID,
+			AssetID:         up.AssetID,
+			AssetName:       up.AssetName,
+			AssetTag:        up.AssetTag,
+			MaintenanceType: up.MaintenanceType,
+			ScheduledDate:   up.ScheduledDate,
+			DaysUntilDue:    up.DaysUntilDue,
+			Title:           up.Title,
+			Description:     up.Description,
+		}
+	}
+
+	resp.Schedules.OverdueSchedule = make([]domain.OverdueMaintenanceScheduleResponse, len(stats.Schedules.OverdueSchedule))
+	for i, od := range stats.Schedules.OverdueSchedule {
+		resp.Schedules.OverdueSchedule[i] = domain.OverdueMaintenanceScheduleResponse{
+			ID:              od.ID,
+			AssetID:         od.AssetID,
+			AssetName:       od.AssetName,
+			AssetTag:        od.AssetTag,
+			MaintenanceType: od.MaintenanceType,
+			ScheduledDate:   od.ScheduledDate,
+			DaysOverdue:     od.DaysOverdue,
+			Title:           od.Title,
+			Description:     od.Description,
+		}
+	}
+
+	// Frequency trends
+	resp.Schedules.FrequencyTrends = make([]domain.MaintenanceFrequencyTrendResponse, len(stats.Schedules.FrequencyTrends))
+	for i, ft := range stats.Schedules.FrequencyTrends {
+		resp.Schedules.FrequencyTrends[i] = domain.MaintenanceFrequencyTrendResponse{FrequencyMonths: ft.FrequencyMonths, Count: ft.Count}
+	}
+
+	// Completion trends
+	resp.Records.CompletionTrend = make([]domain.MaintenanceCompletionTrendResponse, len(stats.Records.CompletionTrend))
+	for i, ct := range stats.Records.CompletionTrend {
+		resp.Records.CompletionTrend[i] = domain.MaintenanceCompletionTrendResponse{Date: ct.Date, Count: ct.Count}
+	}
+
+	// Monthly trends
+	resp.Records.MonthlyTrends = make([]domain.MaintenanceMonthlyTrendResponse, len(stats.Records.MonthlyTrends))
+	for i, mt := range stats.Records.MonthlyTrends {
+		resp.Records.MonthlyTrends[i] = domain.MaintenanceMonthlyTrendResponse{
+			Month:           mt.Month,
+			ScheduleCount:   mt.ScheduleCount,
+			RecordCount:     mt.RecordCount,
+			TotalCost:       mt.TotalCost,
+			PreventiveCount: mt.PreventiveCount,
+			CorrectiveCount: mt.CorrectiveCount,
+		}
+	}
+
+	return resp
+}

@@ -14,6 +14,7 @@ import (
 	"github.com/Rizz404/inventory-api/services/category"
 	issueReport "github.com/Rizz404/inventory-api/services/issue_report"
 	"github.com/Rizz404/inventory-api/services/location"
+	"github.com/Rizz404/inventory-api/services/maintenance"
 	"github.com/Rizz404/inventory-api/services/notification"
 	scanLog "github.com/Rizz404/inventory-api/services/scan_log"
 	"github.com/Rizz404/inventory-api/services/user"
@@ -161,7 +162,7 @@ func main() {
 	notificationRepository := postgresql.NewNotificationRepository(db)
 	issueReportRepository := postgresql.NewIssueReportRepository(db)
 	assetMovementRepository := postgresql.NewAssetMovementRepository(db)
-	// maintenanceRepository := postgresql.NewMaintenanceRepository(db)
+	maintenanceRepository := postgresql.NewMaintenanceRepository(db)
 
 	// *===================================SERVICE===================================*
 	authService := auth.NewService(userRepository)
@@ -173,7 +174,7 @@ func main() {
 	notificationService := notification.NewService(notificationRepository)
 	issueReportService := issueReport.NewService(issueReportRepository)
 	assetMovementService := assetMovement.NewService(assetMovementRepository, assetService, locationService, userService)
-	// maintenanceService := maintenance.NewService(maintenanceRepository, assetService, userService)
+	maintenanceService := maintenance.NewService(maintenanceRepository, assetService, userService)
 
 	// *===================================SERVER CONFIG===================================*
 	app := fiber.New(fiber.Config{
@@ -212,7 +213,7 @@ func main() {
 	rest.NewNotificationHandler(v1, notificationService)
 	rest.NewIssueReportHandler(v1, issueReportService)
 	rest.NewAssetMovementHandler(v1, assetMovementService)
-	// rest.NewMaintenanceHandler(v1, maintenanceService)
+	rest.NewMaintenanceHandler(v1, maintenanceService)
 
 	// *===================================SERVER===================================*
 	log.Printf("server running on http://localhost%s", addr)

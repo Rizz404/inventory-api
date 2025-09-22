@@ -127,3 +127,299 @@ type CreateMaintenanceRecordTranslationPayload struct {
 	Title    string  `json:"title" validate:"required,max=200"`
 	Notes    *string `json:"notes,omitempty"`
 }
+
+// --- Statistics ---
+
+// Internal statistics structs (used in repository layer)
+type MaintenanceStatistics struct {
+	Schedules MaintenanceScheduleStatistics `json:"schedules"`
+	Records   MaintenanceRecordStatistics   `json:"records"`
+	Summary   MaintenanceSummaryStatistics  `json:"summary"`
+}
+
+type MaintenanceScheduleStatistics struct {
+	Total            MaintenanceCountStatistics          `json:"total"`
+	ByType           MaintenanceTypeStatistics           `json:"byType"`
+	ByStatus         MaintenanceScheduleStatusStatistics `json:"byStatus"`
+	ByAsset          []AssetMaintenanceStatistics        `json:"byAsset"`
+	ByCreator        []UserMaintenanceStatistics         `json:"byCreator"`
+	UpcomingSchedule []UpcomingMaintenanceSchedule       `json:"upcomingSchedule"`
+	OverdueSchedule  []OverdueMaintenanceSchedule        `json:"overdueSchedule"`
+	FrequencyTrends  []MaintenanceFrequencyTrend         `json:"frequencyTrends"`
+}
+
+type MaintenanceRecordStatistics struct {
+	Total           MaintenanceCountStatistics    `json:"total"`
+	ByPerformer     []UserMaintenanceStatistics   `json:"byPerformer"`
+	ByVendor        []VendorMaintenanceStatistics `json:"byVendor"`
+	ByAsset         []AssetMaintenanceStatistics  `json:"byAsset"`
+	CostStatistics  MaintenanceCostStatistics     `json:"costStatistics"`
+	CompletionTrend []MaintenanceCompletionTrend  `json:"completionTrend"`
+	MonthlyTrends   []MaintenanceMonthlyTrend     `json:"monthlyTrends"`
+}
+
+type MaintenanceCountStatistics struct {
+	Count int `json:"count"`
+}
+
+type MaintenanceTypeStatistics struct {
+	Preventive int `json:"preventive"`
+	Corrective int `json:"corrective"`
+}
+
+type MaintenanceScheduleStatusStatistics struct {
+	Scheduled int `json:"scheduled"`
+	Completed int `json:"completed"`
+	Cancelled int `json:"cancelled"`
+}
+
+type AssetMaintenanceStatistics struct {
+	AssetID         string `json:"assetId"`
+	AssetName       string `json:"assetName"`
+	AssetTag        string `json:"assetTag"`
+	ScheduleCount   int    `json:"scheduleCount"`
+	RecordCount     int    `json:"recordCount"`
+	LastMaintenance string `json:"lastMaintenance"`
+	NextMaintenance string `json:"nextMaintenance"`
+}
+
+type UserMaintenanceStatistics struct {
+	UserID      string  `json:"userId"`
+	UserName    string  `json:"userName"`
+	UserEmail   string  `json:"userEmail"`
+	Count       int     `json:"count"`
+	TotalCost   float64 `json:"totalCost"`
+	AverageCost float64 `json:"averageCost"`
+}
+
+type VendorMaintenanceStatistics struct {
+	VendorName  string  `json:"vendorName"`
+	Count       int     `json:"count"`
+	TotalCost   float64 `json:"totalCost"`
+	AverageCost float64 `json:"averageCost"`
+}
+
+type UpcomingMaintenanceSchedule struct {
+	ID              string                  `json:"id"`
+	AssetID         string                  `json:"assetId"`
+	AssetName       string                  `json:"assetName"`
+	AssetTag        string                  `json:"assetTag"`
+	MaintenanceType MaintenanceScheduleType `json:"maintenanceType"`
+	ScheduledDate   string                  `json:"scheduledDate"`
+	DaysUntilDue    int                     `json:"daysUntilDue"`
+	Title           string                  `json:"title"`
+	Description     *string                 `json:"description,omitempty"`
+}
+
+type OverdueMaintenanceSchedule struct {
+	ID              string                  `json:"id"`
+	AssetID         string                  `json:"assetId"`
+	AssetName       string                  `json:"assetName"`
+	AssetTag        string                  `json:"assetTag"`
+	MaintenanceType MaintenanceScheduleType `json:"maintenanceType"`
+	ScheduledDate   string                  `json:"scheduledDate"`
+	DaysOverdue     int                     `json:"daysOverdue"`
+	Title           string                  `json:"title"`
+	Description     *string                 `json:"description,omitempty"`
+}
+
+type MaintenanceFrequencyTrend struct {
+	FrequencyMonths int `json:"frequencyMonths"`
+	Count           int `json:"count"`
+}
+
+type MaintenanceCostStatistics struct {
+	TotalCost          *float64 `json:"totalCost"`
+	AverageCost        *float64 `json:"averageCost"`
+	MinCost            *float64 `json:"minCost"`
+	MaxCost            *float64 `json:"maxCost"`
+	RecordsWithCost    int      `json:"recordsWithCost"`
+	RecordsWithoutCost int      `json:"recordsWithoutCost"`
+}
+
+type MaintenanceCompletionTrend struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type MaintenanceMonthlyTrend struct {
+	Month           string  `json:"month"`
+	ScheduleCount   int     `json:"scheduleCount"`
+	RecordCount     int     `json:"recordCount"`
+	TotalCost       float64 `json:"totalCost"`
+	PreventiveCount int     `json:"preventiveCount"`
+	CorrectiveCount int     `json:"correctiveCount"`
+}
+
+type MaintenanceSummaryStatistics struct {
+	TotalSchedules                  int      `json:"totalSchedules"`
+	TotalRecords                    int      `json:"totalRecords"`
+	ScheduledMaintenancePercentage  float64  `json:"scheduledMaintenancePercentage"`
+	CompletedMaintenancePercentage  float64  `json:"completedMaintenancePercentage"`
+	CancelledMaintenancePercentage  float64  `json:"cancelledMaintenancePercentage"`
+	PreventiveMaintenancePercentage float64  `json:"preventiveMaintenancePercentage"`
+	CorrectiveMaintenancePercentage float64  `json:"correctiveMaintenancePercentage"`
+	AverageMaintenancePerAsset      float64  `json:"averageMaintenancePerAsset"`
+	AssetsWithMaintenance           int      `json:"assetsWithMaintenance"`
+	AssetsWithoutMaintenance        int      `json:"assetsWithoutMaintenance"`
+	MaintenanceComplianceRate       float64  `json:"maintenanceComplianceRate"`
+	AverageMaintenanceFrequency     float64  `json:"averageMaintenanceFrequency"`
+	UpcomingMaintenanceCount        int      `json:"upcomingMaintenanceCount"`
+	OverdueMaintenanceCount         int      `json:"overdueMaintenanceCount"`
+	RecordsWithCostInfo             int      `json:"recordsWithCostInfo"`
+	CostInfoPercentage              float64  `json:"costInfoPercentage"`
+	TotalUniqueVendors              int      `json:"totalUniqueVendors"`
+	TotalUniquePerformers           int      `json:"totalUniquePerformers"`
+	AverageRecordsPerDay            float64  `json:"averageRecordsPerDay"`
+	LatestRecordDate                string   `json:"latestRecordDate"`
+	EarliestRecordDate              string   `json:"earliestRecordDate"`
+	MostExpensiveMaintenanceCost    *float64 `json:"mostExpensiveMaintenanceCost"`
+	LeastExpensiveMaintenanceCost   *float64 `json:"leastExpensiveMaintenanceCost"`
+}
+
+// Response statistics structs (used in service/handler layer)
+type MaintenanceStatisticsResponse struct {
+	Schedules MaintenanceScheduleStatisticsResponse `json:"schedules"`
+	Records   MaintenanceRecordStatisticsResponse   `json:"records"`
+	Summary   MaintenanceSummaryStatisticsResponse  `json:"summary"`
+}
+
+type MaintenanceScheduleStatisticsResponse struct {
+	Total            MaintenanceCountStatisticsResponse          `json:"total"`
+	ByType           MaintenanceTypeStatisticsResponse           `json:"byType"`
+	ByStatus         MaintenanceScheduleStatusStatisticsResponse `json:"byStatus"`
+	ByAsset          []AssetMaintenanceStatisticsResponse        `json:"byAsset"`
+	ByCreator        []UserMaintenanceStatisticsResponse         `json:"byCreator"`
+	UpcomingSchedule []UpcomingMaintenanceScheduleResponse       `json:"upcomingSchedule"`
+	OverdueSchedule  []OverdueMaintenanceScheduleResponse        `json:"overdueSchedule"`
+	FrequencyTrends  []MaintenanceFrequencyTrendResponse         `json:"frequencyTrends"`
+}
+
+type MaintenanceRecordStatisticsResponse struct {
+	Total           MaintenanceCountStatisticsResponse    `json:"total"`
+	ByPerformer     []UserMaintenanceStatisticsResponse   `json:"byPerformer"`
+	ByVendor        []VendorMaintenanceStatisticsResponse `json:"byVendor"`
+	ByAsset         []AssetMaintenanceStatisticsResponse  `json:"byAsset"`
+	CostStatistics  MaintenanceCostStatisticsResponse     `json:"costStatistics"`
+	CompletionTrend []MaintenanceCompletionTrendResponse  `json:"completionTrend"`
+	MonthlyTrends   []MaintenanceMonthlyTrendResponse     `json:"monthlyTrends"`
+}
+
+type MaintenanceCountStatisticsResponse struct {
+	Count int `json:"count"`
+}
+
+type MaintenanceTypeStatisticsResponse struct {
+	Preventive int `json:"preventive"`
+	Corrective int `json:"corrective"`
+}
+
+type MaintenanceScheduleStatusStatisticsResponse struct {
+	Scheduled int `json:"scheduled"`
+	Completed int `json:"completed"`
+	Cancelled int `json:"cancelled"`
+}
+
+type AssetMaintenanceStatisticsResponse struct {
+	AssetID         string `json:"assetId"`
+	AssetName       string `json:"assetName"`
+	AssetTag        string `json:"assetTag"`
+	ScheduleCount   int    `json:"scheduleCount"`
+	RecordCount     int    `json:"recordCount"`
+	LastMaintenance string `json:"lastMaintenance"`
+	NextMaintenance string `json:"nextMaintenance"`
+}
+
+type UserMaintenanceStatisticsResponse struct {
+	UserID      string  `json:"userId"`
+	UserName    string  `json:"userName"`
+	UserEmail   string  `json:"userEmail"`
+	Count       int     `json:"count"`
+	TotalCost   float64 `json:"totalCost"`
+	AverageCost float64 `json:"averageCost"`
+}
+
+type VendorMaintenanceStatisticsResponse struct {
+	VendorName  string  `json:"vendorName"`
+	Count       int     `json:"count"`
+	TotalCost   float64 `json:"totalCost"`
+	AverageCost float64 `json:"averageCost"`
+}
+
+type UpcomingMaintenanceScheduleResponse struct {
+	ID              string                  `json:"id"`
+	AssetID         string                  `json:"assetId"`
+	AssetName       string                  `json:"assetName"`
+	AssetTag        string                  `json:"assetTag"`
+	MaintenanceType MaintenanceScheduleType `json:"maintenanceType"`
+	ScheduledDate   string                  `json:"scheduledDate"`
+	DaysUntilDue    int                     `json:"daysUntilDue"`
+	Title           string                  `json:"title"`
+	Description     *string                 `json:"description,omitempty"`
+}
+
+type OverdueMaintenanceScheduleResponse struct {
+	ID              string                  `json:"id"`
+	AssetID         string                  `json:"assetId"`
+	AssetName       string                  `json:"assetName"`
+	AssetTag        string                  `json:"assetTag"`
+	MaintenanceType MaintenanceScheduleType `json:"maintenanceType"`
+	ScheduledDate   string                  `json:"scheduledDate"`
+	DaysOverdue     int                     `json:"daysOverdue"`
+	Title           string                  `json:"title"`
+	Description     *string                 `json:"description,omitempty"`
+}
+
+type MaintenanceFrequencyTrendResponse struct {
+	FrequencyMonths int `json:"frequencyMonths"`
+	Count           int `json:"count"`
+}
+
+type MaintenanceCostStatisticsResponse struct {
+	TotalCost          *float64 `json:"totalCost"`
+	AverageCost        *float64 `json:"averageCost"`
+	MinCost            *float64 `json:"minCost"`
+	MaxCost            *float64 `json:"maxCost"`
+	RecordsWithCost    int      `json:"recordsWithCost"`
+	RecordsWithoutCost int      `json:"recordsWithoutCost"`
+}
+
+type MaintenanceCompletionTrendResponse struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type MaintenanceMonthlyTrendResponse struct {
+	Month           string  `json:"month"`
+	ScheduleCount   int     `json:"scheduleCount"`
+	RecordCount     int     `json:"recordCount"`
+	TotalCost       float64 `json:"totalCost"`
+	PreventiveCount int     `json:"preventiveCount"`
+	CorrectiveCount int     `json:"correctiveCount"`
+}
+
+type MaintenanceSummaryStatisticsResponse struct {
+	TotalSchedules                  int      `json:"totalSchedules"`
+	TotalRecords                    int      `json:"totalRecords"`
+	ScheduledMaintenancePercentage  float64  `json:"scheduledMaintenancePercentage"`
+	CompletedMaintenancePercentage  float64  `json:"completedMaintenancePercentage"`
+	CancelledMaintenancePercentage  float64  `json:"cancelledMaintenancePercentage"`
+	PreventiveMaintenancePercentage float64  `json:"preventiveMaintenancePercentage"`
+	CorrectiveMaintenancePercentage float64  `json:"correctiveMaintenancePercentage"`
+	AverageMaintenancePerAsset      float64  `json:"averageMaintenancePerAsset"`
+	AssetsWithMaintenance           int      `json:"assetsWithMaintenance"`
+	AssetsWithoutMaintenance        int      `json:"assetsWithoutMaintenance"`
+	MaintenanceComplianceRate       float64  `json:"maintenanceComplianceRate"`
+	AverageMaintenanceFrequency     float64  `json:"averageMaintenanceFrequency"`
+	UpcomingMaintenanceCount        int      `json:"upcomingMaintenanceCount"`
+	OverdueMaintenanceCount         int      `json:"overdueMaintenanceCount"`
+	RecordsWithCostInfo             int      `json:"recordsWithCostInfo"`
+	CostInfoPercentage              float64  `json:"costInfoPercentage"`
+	TotalUniqueVendors              int      `json:"totalUniqueVendors"`
+	TotalUniquePerformers           int      `json:"totalUniquePerformers"`
+	AverageRecordsPerDay            float64  `json:"averageRecordsPerDay"`
+	LatestRecordDate                string   `json:"latestRecordDate"`
+	EarliestRecordDate              string   `json:"earliestRecordDate"`
+	MostExpensiveMaintenanceCost    *float64 `json:"mostExpensiveMaintenanceCost"`
+	LeastExpensiveMaintenanceCost   *float64 `json:"leastExpensiveMaintenanceCost"`
+}

@@ -82,6 +82,17 @@ const (
 	ErrAssetMovementNoChangeKey        MessageKey = "error.asset_movement.no_change"
 	ErrAssetMovementSameLocationKey    MessageKey = "error.asset_movement.same_location"
 
+	// * Maintenance-specific error keys
+	ErrMaintenanceScheduleNotFoundKey      MessageKey = "error.maintenance.schedule_not_found"
+	ErrMaintenanceRecordNotFoundKey        MessageKey = "error.maintenance.record_not_found"
+	ErrMaintenanceScheduleIDRequiredKey    MessageKey = "error.maintenance.schedule_id_required"
+	ErrMaintenanceRecordIDRequiredKey      MessageKey = "error.maintenance.record_id_required"
+	ErrMaintenanceAssetIDRequiredKey       MessageKey = "error.maintenance.asset_id_required"
+	ErrMaintenanceScheduleDateRequiredKey  MessageKey = "error.maintenance.schedule_date_required"
+	ErrMaintenanceRecordDateRequiredKey    MessageKey = "error.maintenance.record_date_required"
+	ErrMaintenanceScheduleTitleRequiredKey MessageKey = "error.maintenance.schedule_title_required"
+	ErrMaintenanceRecordTitleRequiredKey   MessageKey = "error.maintenance.record_title_required"
+
 	// * Auth-specific error keys
 	ErrInvalidCredentialsKey MessageKey = "error.auth.invalid_credentials"
 	ErrTokenExpiredKey       MessageKey = "error.auth.token_expired"
@@ -196,6 +207,20 @@ const (
 	SuccessAssetMovementCountedKey             MessageKey = "success.asset_movement.counted"
 	SuccessAssetMovementStatisticsRetrievedKey MessageKey = "success.asset_movement.statistics_retrieved"
 	SuccessAssetMovementExistenceCheckedKey    MessageKey = "success.asset_movement.existence_checked"
+
+	// * Maintenance-specific success keys
+	SuccessMaintenanceScheduleCreatedKey             MessageKey = "success.maintenance.schedule_created"
+	SuccessMaintenanceScheduleUpdatedKey             MessageKey = "success.maintenance.schedule_updated"
+	SuccessMaintenanceScheduleDeletedKey             MessageKey = "success.maintenance.schedule_deleted"
+	SuccessMaintenanceScheduleRetrievedKey           MessageKey = "success.maintenance.schedule_retrieved"
+	SuccessMaintenanceScheduleCountedKey             MessageKey = "success.maintenance.schedule_counted"
+	SuccessMaintenanceScheduleStatisticsRetrievedKey MessageKey = "success.maintenance.schedule_statistics_retrieved"
+	SuccessMaintenanceRecordCreatedKey               MessageKey = "success.maintenance.record_created"
+	SuccessMaintenanceRecordUpdatedKey               MessageKey = "success.maintenance.record_updated"
+	SuccessMaintenanceRecordDeletedKey               MessageKey = "success.maintenance.record_deleted"
+	SuccessMaintenanceRecordRetrievedKey             MessageKey = "success.maintenance.record_retrieved"
+	SuccessMaintenanceRecordCountedKey               MessageKey = "success.maintenance.record_counted"
+	SuccessMaintenanceRecordStatisticsRetrievedKey   MessageKey = "success.maintenance.record_statistics_retrieved"
 
 	// * Auth-specific success keys
 	SuccessLoginKey   MessageKey = "success.auth.login"
@@ -860,6 +885,115 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Asset movement existence checked successfully",
 		"id-ID": "Keberadaan pergerakan aset berhasil diperiksa",
 		"ja-JP": "アセット移動の存在が正常に確認されました",
+	},
+
+	// * Maintenance error messages
+	ErrMaintenanceScheduleNotFoundKey: {
+		"en-US": "Maintenance schedule not found",
+		"id-ID": "Jadwal pemeliharaan tidak ditemukan",
+		"ja-JP": "保守スケジュールが見つかりません",
+	},
+	ErrMaintenanceRecordNotFoundKey: {
+		"en-US": "Maintenance record not found",
+		"id-ID": "Catatan pemeliharaan tidak ditemukan",
+		"ja-JP": "保守レコードが見つかりません",
+	},
+	ErrMaintenanceScheduleIDRequiredKey: {
+		"en-US": "Maintenance schedule ID is required",
+		"id-ID": "ID jadwal pemeliharaan diperlukan",
+		"ja-JP": "保守スケジュールIDが必要です",
+	},
+	ErrMaintenanceRecordIDRequiredKey: {
+		"en-US": "Maintenance record ID is required",
+		"id-ID": "ID catatan pemeliharaan diperlukan",
+		"ja-JP": "保守レコードIDが必要です",
+	},
+	ErrMaintenanceAssetIDRequiredKey: {
+		"en-US": "Asset ID is required",
+		"id-ID": "ID aset diperlukan",
+		"ja-JP": "アセットIDが必要です",
+	},
+	ErrMaintenanceScheduleDateRequiredKey: {
+		"en-US": "Scheduled date is required",
+		"id-ID": "Tanggal terjadwal diperlukan",
+		"ja-JP": "予定日が必要です",
+	},
+	ErrMaintenanceRecordDateRequiredKey: {
+		"en-US": "Maintenance date is required",
+		"id-ID": "Tanggal pemeliharaan diperlukan",
+		"ja-JP": "保守日が必要です",
+	},
+	ErrMaintenanceScheduleTitleRequiredKey: {
+		"en-US": "Schedule title is required",
+		"id-ID": "Judul jadwal diperlukan",
+		"ja-JP": "スケジュールタイトルが必要です",
+	},
+	ErrMaintenanceRecordTitleRequiredKey: {
+		"en-US": "Record title is required",
+		"id-ID": "Judul catatan diperlukan",
+		"ja-JP": "レコードタイトルが必要です",
+	},
+
+	// * Maintenance success messages
+	SuccessMaintenanceScheduleCreatedKey: {
+		"en-US": "Maintenance schedule created successfully",
+		"id-ID": "Jadwal pemeliharaan berhasil dibuat",
+		"ja-JP": "保守スケジュールが正常に作成されました",
+	},
+	SuccessMaintenanceScheduleUpdatedKey: {
+		"en-US": "Maintenance schedule updated successfully",
+		"id-ID": "Jadwal pemeliharaan berhasil diperbarui",
+		"ja-JP": "保守スケジュールが正常に更新されました",
+	},
+	SuccessMaintenanceScheduleDeletedKey: {
+		"en-US": "Maintenance schedule deleted successfully",
+		"id-ID": "Jadwal pemeliharaan berhasil dihapus",
+		"ja-JP": "保守スケジュールが正常に削除されました",
+	},
+	SuccessMaintenanceScheduleRetrievedKey: {
+		"en-US": "Maintenance schedules retrieved successfully",
+		"id-ID": "Jadwal pemeliharaan berhasil diambil",
+		"ja-JP": "保守スケジュールが正常に取得されました",
+	},
+	SuccessMaintenanceScheduleCountedKey: {
+		"en-US": "Maintenance schedules counted successfully",
+		"id-ID": "Jadwal pemeliharaan berhasil dihitung",
+		"ja-JP": "保守スケジュールが正常にカウントされました",
+	},
+	SuccessMaintenanceScheduleStatisticsRetrievedKey: {
+		"en-US": "Maintenance schedule statistics retrieved successfully",
+		"id-ID": "Statistik jadwal pemeliharaan berhasil diambil",
+		"ja-JP": "保守スケジュール統計が正常に取得されました",
+	},
+	SuccessMaintenanceRecordCreatedKey: {
+		"en-US": "Maintenance record created successfully",
+		"id-ID": "Catatan pemeliharaan berhasil dibuat",
+		"ja-JP": "保守レコードが正常に作成されました",
+	},
+	SuccessMaintenanceRecordUpdatedKey: {
+		"en-US": "Maintenance record updated successfully",
+		"id-ID": "Catatan pemeliharaan berhasil diperbarui",
+		"ja-JP": "保守レコードが正常に更新されました",
+	},
+	SuccessMaintenanceRecordDeletedKey: {
+		"en-US": "Maintenance record deleted successfully",
+		"id-ID": "Catatan pemeliharaan berhasil dihapus",
+		"ja-JP": "保守レコードが正常に削除されました",
+	},
+	SuccessMaintenanceRecordRetrievedKey: {
+		"en-US": "Maintenance records retrieved successfully",
+		"id-ID": "Catatan pemeliharaan berhasil diambil",
+		"ja-JP": "保守レコードが正常に取得されました",
+	},
+	SuccessMaintenanceRecordCountedKey: {
+		"en-US": "Maintenance records counted successfully",
+		"id-ID": "Catatan pemeliharaan berhasil dihitung",
+		"ja-JP": "保守レコードが正常にカウントされました",
+	},
+	SuccessMaintenanceRecordStatisticsRetrievedKey: {
+		"en-US": "Maintenance record statistics retrieved successfully",
+		"id-ID": "Statistik catatan pemeliharaan berhasil diambil",
+		"ja-JP": "保守レコード統計が正常に取得されました",
 	},
 }
 
