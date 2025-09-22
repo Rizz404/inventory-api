@@ -47,6 +47,26 @@ type IssueReportTranslation struct {
 }
 
 type IssueReportResponse struct {
+	ID              string                   `json:"id"`
+	AssetID         string                   `json:"assetId"`
+	ReportedByID    string                   `json:"reportedById"`
+	ReportedDate    string                   `json:"reportedDate"`
+	IssueType       string                   `json:"issueType"`
+	Priority        IssuePriority            `json:"priority"`
+	Status          IssueStatus              `json:"status"`
+	ResolvedDate    *string                  `json:"resolvedDate,omitempty"`
+	ResolvedByID    *string                  `json:"resolvedById,omitempty"`
+	Title           string                   `json:"title"`
+	Description     *string                  `json:"description,omitempty"`
+	ResolutionNotes *string                  `json:"resolutionNotes,omitempty"`
+	Translations    []IssueReportTranslation `json:"translations"`
+	// * Populated
+	Asset      AssetResponse `json:"asset"`
+	ReportedBy UserResponse  `json:"reportedBy"`
+	ResolvedBy *UserResponse `json:"resolvedBy,omitempty"`
+}
+
+type IssueReportListItem struct {
 	ID              string        `json:"id"`
 	AssetID         string        `json:"assetId"`
 	ReportedByID    string        `json:"reportedById"`
@@ -59,10 +79,21 @@ type IssueReportResponse struct {
 	Title           string        `json:"title"`
 	Description     *string       `json:"description,omitempty"`
 	ResolutionNotes *string       `json:"resolutionNotes,omitempty"`
-	// * Populated
-	Asset      AssetResponse `json:"asset"`
-	ReportedBy UserResponse  `json:"reportedBy"`
-	ResolvedBy *UserResponse `json:"resolvedBy,omitempty"`
+}
+
+type IssueReportListItemResponse struct {
+	ID              string        `json:"id"`
+	AssetID         string        `json:"assetId"`
+	ReportedByID    string        `json:"reportedById"`
+	ReportedDate    string        `json:"reportedDate"`
+	IssueType       string        `json:"issueType"`
+	Priority        IssuePriority `json:"priority"`
+	Status          IssueStatus   `json:"status"`
+	ResolvedDate    *string       `json:"resolvedDate,omitempty"`
+	ResolvedByID    *string       `json:"resolvedById,omitempty"`
+	Title           string        `json:"title"`
+	Description     *string       `json:"description,omitempty"`
+	ResolutionNotes *string       `json:"resolutionNotes,omitempty"`
 }
 
 // --- Payloads ---

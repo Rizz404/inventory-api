@@ -247,3 +247,38 @@ func ToModelCategoryTranslationUpdateMap(payload *domain.UpdateCategoryTranslati
 
 	return updates
 }
+
+func CategoryToListItem(d *domain.Category, langCode string) domain.CategoryListItem {
+	response := domain.CategoryListItem{
+		ID:           d.ID,
+		ParentID:     d.ParentID,
+		CategoryCode: d.CategoryCode,
+		CreatedAt:    d.CreatedAt.Format(TimeFormat),
+		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
+	}
+
+	// Find translation for the requested language
+	for _, translation := range d.Translations {
+		if translation.LangCode == langCode {
+			response.Name = translation.CategoryName
+			response.Description = translation.Description
+			break
+		}
+	}
+
+	// If no translation found for requested language, use first available
+	if response.Name == "" && len(d.Translations) > 0 {
+		response.Name = d.Translations[0].CategoryName
+		response.Description = d.Translations[0].Description
+	}
+
+	return response
+}
+
+func CategoriesToListItems(categories []domain.Category, langCode string) []domain.CategoryListItem {
+	responses := make([]domain.CategoryListItem, len(categories))
+	for i, category := range categories {
+		responses[i] = CategoryToListItem(&category, langCode)
+	}
+	return responses
+}

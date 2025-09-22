@@ -379,11 +379,13 @@ func (r *MaintenanceRepository) DeleteRecord(ctx context.Context, recordId strin
 
 // ===== QUERIES =====
 
-func (r *MaintenanceRepository) GetSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceSchedule, error) {
+func (r *MaintenanceRepository) GetSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListItem, error) {
 	var schedules []model.MaintenanceSchedule
 	db := r.db.WithContext(ctx).
 		Table("maintenance_schedules ms").
-		Preload("Translations")
+		Preload("Translations").
+		Preload("Asset").
+		Preload("CreatedByUser")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
@@ -398,14 +400,16 @@ func (r *MaintenanceRepository) GetSchedulesPaginated(ctx context.Context, param
 	if err := db.Find(&schedules).Error; err != nil {
 		return nil, domain.ErrInternal(err)
 	}
-	return mapper.ToDomainMaintenanceSchedules(schedules), nil
+	return mapper.MaintenanceSchedulesToListItems(mapper.ToDomainMaintenanceSchedules(schedules), langCode), nil
 }
 
-func (r *MaintenanceRepository) GetSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceSchedule, error) {
+func (r *MaintenanceRepository) GetSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListItem, error) {
 	var schedules []model.MaintenanceSchedule
 	db := r.db.WithContext(ctx).
 		Table("maintenance_schedules ms").
-		Preload("Translations")
+		Preload("Translations").
+		Preload("Asset").
+		Preload("CreatedByUser")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
@@ -420,7 +424,7 @@ func (r *MaintenanceRepository) GetSchedulesCursor(ctx context.Context, params q
 	if err := db.Find(&schedules).Error; err != nil {
 		return nil, domain.ErrInternal(err)
 	}
-	return mapper.ToDomainMaintenanceSchedules(schedules), nil
+	return mapper.MaintenanceSchedulesToListItems(mapper.ToDomainMaintenanceSchedules(schedules), langCode), nil
 }
 
 func (r *MaintenanceRepository) GetScheduleById(ctx context.Context, scheduleId string) (domain.MaintenanceSchedule, error) {
@@ -438,11 +442,13 @@ func (r *MaintenanceRepository) GetScheduleById(ctx context.Context, scheduleId 
 	return mapper.ToDomainMaintenanceSchedule(&m), nil
 }
 
-func (r *MaintenanceRepository) GetRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecord, error) {
+func (r *MaintenanceRepository) GetRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordListItem, error) {
 	var records []model.MaintenanceRecord
 	db := r.db.WithContext(ctx).
 		Table("maintenance_records mr").
-		Preload("Translations")
+		Preload("Translations").
+		Preload("Asset").
+		Preload("PerformedByUser")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
@@ -456,14 +462,16 @@ func (r *MaintenanceRepository) GetRecordsPaginated(ctx context.Context, params 
 	if err := db.Find(&records).Error; err != nil {
 		return nil, domain.ErrInternal(err)
 	}
-	return mapper.ToDomainMaintenanceRecords(records), nil
+	return mapper.MaintenanceRecordsToListItems(mapper.ToDomainMaintenanceRecords(records), langCode), nil
 }
 
-func (r *MaintenanceRepository) GetRecordsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecord, error) {
+func (r *MaintenanceRepository) GetRecordsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordListItem, error) {
 	var records []model.MaintenanceRecord
 	db := r.db.WithContext(ctx).
 		Table("maintenance_records mr").
-		Preload("Translations")
+		Preload("Translations").
+		Preload("Asset").
+		Preload("PerformedByUser")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
@@ -477,7 +485,7 @@ func (r *MaintenanceRepository) GetRecordsCursor(ctx context.Context, params que
 	if err := db.Find(&records).Error; err != nil {
 		return nil, domain.ErrInternal(err)
 	}
-	return mapper.ToDomainMaintenanceRecords(records), nil
+	return mapper.MaintenanceRecordsToListItems(mapper.ToDomainMaintenanceRecords(records), langCode), nil
 }
 
 func (r *MaintenanceRepository) GetRecordById(ctx context.Context, recordId string) (domain.MaintenanceRecord, error) {

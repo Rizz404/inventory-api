@@ -206,7 +206,7 @@ func (r *NotificationRepository) DeleteNotification(ctx context.Context, notific
 }
 
 // *===========================QUERY===========================*
-func (r *NotificationRepository) GetNotificationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Notification, error) {
+func (r *NotificationRepository) GetNotificationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationListItem, error) {
 	var notifications []model.Notification
 	db := r.db.WithContext(ctx).
 		Table("notifications n").
@@ -227,11 +227,12 @@ func (r *NotificationRepository) GetNotificationsPaginated(ctx context.Context, 
 		return nil, domain.ErrInternal(err)
 	}
 
-	// Convert to domain notifications
-	return mapper.ToDomainNotifications(notifications), nil
+	// Convert to domain notifications first, then to list items
+	domainNotifications := mapper.ToDomainNotifications(notifications)
+	return mapper.NotificationsToListItems(domainNotifications, langCode), nil
 }
 
-func (r *NotificationRepository) GetNotificationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Notification, error) {
+func (r *NotificationRepository) GetNotificationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationListItem, error) {
 	var notifications []model.Notification
 	db := r.db.WithContext(ctx).
 		Table("notifications n").
@@ -253,7 +254,8 @@ func (r *NotificationRepository) GetNotificationsCursor(ctx context.Context, par
 	}
 
 	// Convert to domain notifications
-	return mapper.ToDomainNotifications(notifications), nil
+	domainNotifications := mapper.ToDomainNotifications(notifications)
+	return mapper.NotificationsToListItems(domainNotifications, langCode), nil
 }
 
 func (r *NotificationRepository) GetNotificationById(ctx context.Context, notificationId string) (domain.Notification, error) {

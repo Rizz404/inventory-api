@@ -18,8 +18,8 @@ type Repository interface {
 	DeleteAssetMovement(ctx context.Context, movementId string) error
 
 	// * QUERY
-	GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovement, error)
-	GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovement, error)
+	GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListItem, error)
+	GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListItem, error)
 	GetAssetMovementById(ctx context.Context, movementId string) (domain.AssetMovement, error)
 	GetAssetMovementsByAssetId(ctx context.Context, assetId string, params query.Params) ([]domain.AssetMovement, error)
 	CheckAssetMovementExist(ctx context.Context, movementId string) (bool, error)
@@ -51,8 +51,8 @@ type AssetMovementService interface {
 	DeleteAssetMovement(ctx context.Context, movementId string) error
 
 	// * QUERY
-	GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementResponse, int64, error)
-	GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementResponse, error)
+	GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListItemResponse, int64, error)
+	GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListItemResponse, error)
 	GetAssetMovementById(ctx context.Context, movementId string, langCode string) (domain.AssetMovementResponse, error)
 	GetAssetMovementsByAssetId(ctx context.Context, assetId string, params query.Params, langCode string) ([]domain.AssetMovementResponse, error)
 	CheckAssetMovementExists(ctx context.Context, movementId string) (bool, error)
@@ -215,8 +215,8 @@ func (s *Service) DeleteAssetMovement(ctx context.Context, movementId string) er
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementResponse, int64, error) {
-	movements, err := s.Repo.GetAssetMovementsPaginated(ctx, params, langCode)
+func (s *Service) GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListItemResponse, int64, error) {
+	listItems, err := s.Repo.GetAssetMovementsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -227,22 +227,52 @@ func (s *Service) GetAssetMovementsPaginated(ctx context.Context, params query.P
 		return nil, 0, err
 	}
 
-	// * Convert to AssetMovementResponse using mapper
-	movementResponses := mapper.AssetMovementsToResponses(movements, langCode)
+	// Convert AssetMovementListItem to AssetMovementListItemResponse
+	responses := make([]domain.AssetMovementListItemResponse, len(listItems))
+	for i, item := range listItems {
+		responses[i] = domain.AssetMovementListItemResponse{
+			ID:             item.ID,
+			AssetID:        item.AssetID,
+			FromLocationID: item.FromLocationID,
+			ToLocationID:   item.ToLocationID,
+			FromUserID:     item.FromUserID,
+			ToUserID:       item.ToUserID,
+			MovedByID:      item.MovedByID,
+			MovementDate:   item.MovementDate,
+			Notes:          item.Notes,
+			CreatedAt:      item.CreatedAt,
+			UpdatedAt:      item.UpdatedAt,
+		}
+	}
 
-	return movementResponses, count, nil
+	return responses, count, nil
 }
 
-func (s *Service) GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementResponse, error) {
-	movements, err := s.Repo.GetAssetMovementsCursor(ctx, params, langCode)
+func (s *Service) GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListItemResponse, error) {
+	listItems, err := s.Repo.GetAssetMovementsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	// * Convert to AssetMovementResponse using mapper
-	movementResponses := mapper.AssetMovementsToResponses(movements, langCode)
+	// Convert AssetMovementListItem to AssetMovementListItemResponse
+	responses := make([]domain.AssetMovementListItemResponse, len(listItems))
+	for i, item := range listItems {
+		responses[i] = domain.AssetMovementListItemResponse{
+			ID:             item.ID,
+			AssetID:        item.AssetID,
+			FromLocationID: item.FromLocationID,
+			ToLocationID:   item.ToLocationID,
+			FromUserID:     item.FromUserID,
+			ToUserID:       item.ToUserID,
+			MovedByID:      item.MovedByID,
+			MovementDate:   item.MovementDate,
+			Notes:          item.Notes,
+			CreatedAt:      item.CreatedAt,
+			UpdatedAt:      item.UpdatedAt,
+		}
+	}
 
-	return movementResponses, nil
+	return responses, nil
 }
 
 func (s *Service) GetAssetMovementById(ctx context.Context, movementId string, langCode string) (domain.AssetMovementResponse, error) {

@@ -149,6 +149,37 @@ func MaintenanceScheduleToResponse(d *domain.MaintenanceSchedule, langCode strin
 		Status:          d.Status,
 		CreatedByID:     d.CreatedBy,
 		CreatedAt:       d.CreatedAt.Format(TimeFormat),
+		Translations:    d.Translations,
+	}
+
+	// Find translation for the requested language
+	for _, translation := range d.Translations {
+		if translation.LangCode == langCode {
+			response.Title = translation.Title
+			response.Description = translation.Description
+			break
+		}
+	}
+
+	// If no translation found for requested language, use first available
+	if response.Title == "" && len(d.Translations) > 0 {
+		response.Title = d.Translations[0].Title
+		response.Description = d.Translations[0].Description
+	}
+
+	return response
+}
+
+func MaintenanceScheduleToListItem(d *domain.MaintenanceSchedule, langCode string) domain.MaintenanceScheduleListItem {
+	response := domain.MaintenanceScheduleListItem{
+		ID:              d.ID,
+		AssetID:         d.AssetID,
+		MaintenanceType: d.MaintenanceType,
+		ScheduledDate:   d.ScheduledDate.Format(DateFormat),
+		FrequencyMonths: d.FrequencyMonths,
+		Status:          d.Status,
+		CreatedByID:     d.CreatedBy,
+		CreatedAt:       d.CreatedAt.Format(TimeFormat),
 	}
 
 	// Find translation for the requested language
@@ -173,6 +204,14 @@ func MaintenanceSchedulesToResponses(schedules []domain.MaintenanceSchedule, lan
 	responses := make([]domain.MaintenanceScheduleResponse, len(schedules))
 	for i, schedule := range schedules {
 		responses[i] = MaintenanceScheduleToResponse(&schedule, langCode)
+	}
+	return responses
+}
+
+func MaintenanceSchedulesToListItems(schedules []domain.MaintenanceSchedule, langCode string) []domain.MaintenanceScheduleListItem {
+	responses := make([]domain.MaintenanceScheduleListItem, len(schedules))
+	for i, schedule := range schedules {
+		responses[i] = MaintenanceScheduleToListItem(&schedule, langCode)
 	}
 	return responses
 }
@@ -344,6 +383,38 @@ func MaintenanceRecordToResponse(d *domain.MaintenanceRecord, langCode string) d
 		ActualCost:        d.ActualCost,
 		CreatedAt:         d.CreatedAt.Format(TimeFormat),
 		UpdatedAt:         d.UpdatedAt.Format(TimeFormat),
+		Translations:      d.Translations,
+	}
+
+	// Find translation for the requested language
+	for _, translation := range d.Translations {
+		if translation.LangCode == langCode {
+			response.Title = translation.Title
+			response.Notes = translation.Notes
+			break
+		}
+	}
+
+	// If no translation found for requested language, use first available
+	if response.Title == "" && len(d.Translations) > 0 {
+		response.Title = d.Translations[0].Title
+		response.Notes = d.Translations[0].Notes
+	}
+
+	return response
+}
+
+func MaintenanceRecordToListItem(d *domain.MaintenanceRecord, langCode string) domain.MaintenanceRecordListItem {
+	response := domain.MaintenanceRecordListItem{
+		ID:                d.ID,
+		ScheduleID:        d.ScheduleID,
+		AssetID:           d.AssetID,
+		MaintenanceDate:   d.MaintenanceDate.Format(DateFormat),
+		PerformedByUserID: d.PerformedByUser,
+		PerformedByVendor: d.PerformedByVendor,
+		ActualCost:        d.ActualCost,
+		CreatedAt:         d.CreatedAt.Format(TimeFormat),
+		UpdatedAt:         d.UpdatedAt.Format(TimeFormat),
 	}
 
 	// Find translation for the requested language
@@ -368,6 +439,14 @@ func MaintenanceRecordsToResponses(records []domain.MaintenanceRecord, langCode 
 	responses := make([]domain.MaintenanceRecordResponse, len(records))
 	for i, record := range records {
 		responses[i] = MaintenanceRecordToResponse(&record, langCode)
+	}
+	return responses
+}
+
+func MaintenanceRecordsToListItems(records []domain.MaintenanceRecord, langCode string) []domain.MaintenanceRecordListItem {
+	responses := make([]domain.MaintenanceRecordListItem, len(records))
+	for i, record := range records {
+		responses[i] = MaintenanceRecordToListItem(&record, langCode)
 	}
 	return responses
 }

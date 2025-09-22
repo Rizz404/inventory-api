@@ -224,7 +224,7 @@ func (r *AssetMovementRepository) DeleteAssetMovement(ctx context.Context, movem
 }
 
 // *===========================QUERY===========================*
-func (r *AssetMovementRepository) GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovement, error) {
+func (r *AssetMovementRepository) GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListItem, error) {
 	var movements []model.AssetMovement
 	db := r.db.WithContext(ctx).
 		Table("asset_movements am").
@@ -251,11 +251,12 @@ func (r *AssetMovementRepository) GetAssetMovementsPaginated(ctx context.Context
 		return nil, err
 	}
 
-	// Convert to domain asset movements
-	return mapper.ToDomainAssetMovements(movements), nil
+	// Convert to domain asset movements first, then to list items
+	domainMovements := mapper.ToDomainAssetMovements(movements)
+	return mapper.AssetMovementsToListItems(domainMovements, langCode), nil
 }
 
-func (r *AssetMovementRepository) GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovement, error) {
+func (r *AssetMovementRepository) GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListItem, error) {
 	var movements []model.AssetMovement
 	db := r.db.WithContext(ctx).
 		Table("asset_movements am").
@@ -283,7 +284,8 @@ func (r *AssetMovementRepository) GetAssetMovementsCursor(ctx context.Context, p
 	}
 
 	// Convert to domain asset movements
-	return mapper.ToDomainAssetMovements(movements), nil
+	domainMovements := mapper.ToDomainAssetMovements(movements)
+	return mapper.AssetMovementsToListItems(domainMovements, langCode), nil
 }
 
 func (r *AssetMovementRepository) GetAssetMovementById(ctx context.Context, movementId string) (domain.AssetMovement, error) {

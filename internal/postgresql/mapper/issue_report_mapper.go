@@ -172,6 +172,7 @@ func IssueReportToResponse(d *domain.IssueReport, langCode string) domain.IssueR
 		IssueType:    d.IssueType,
 		Priority:     d.Priority,
 		Status:       d.Status,
+		Translations: d.Translations, // Include translations for detail view
 	}
 
 	// Handle resolved by ID
@@ -209,6 +210,56 @@ func IssueReportsToResponses(reports []domain.IssueReport, langCode string) []do
 	responses := make([]domain.IssueReportResponse, len(reports))
 	for i, report := range reports {
 		responses[i] = IssueReportToResponse(&report, langCode)
+	}
+	return responses
+}
+
+func IssueReportToListItem(d *domain.IssueReport, langCode string) domain.IssueReportListItem {
+	response := domain.IssueReportListItem{
+		ID:           d.ID,
+		AssetID:      d.AssetID,
+		ReportedByID: d.ReportedBy,
+		ReportedDate: d.ReportedDate.Format(TimeFormat),
+		IssueType:    d.IssueType,
+		Priority:     d.Priority,
+		Status:       d.Status,
+	}
+
+	// Handle resolved by ID
+	if d.ResolvedBy != nil {
+		response.ResolvedByID = d.ResolvedBy
+	}
+
+	// Handle date formatting
+	if d.ResolvedDate != nil {
+		resolvedDateStr := d.ResolvedDate.Format(TimeFormat)
+		response.ResolvedDate = &resolvedDateStr
+	}
+
+	// Find translation for the requested language
+	for _, translation := range d.Translations {
+		if translation.LangCode == langCode {
+			response.Title = translation.Title
+			response.Description = translation.Description
+			response.ResolutionNotes = translation.ResolutionNotes
+			break
+		}
+	}
+
+	// If no translation found for requested language, use first available
+	if response.Title == "" && len(d.Translations) > 0 {
+		response.Title = d.Translations[0].Title
+		response.Description = d.Translations[0].Description
+		response.ResolutionNotes = d.Translations[0].ResolutionNotes
+	}
+
+	return response
+}
+
+func IssueReportsToListItems(reports []domain.IssueReport, langCode string) []domain.IssueReportListItem {
+	responses := make([]domain.IssueReportListItem, len(reports))
+	for i, report := range reports {
+		responses[i] = IssueReportToListItem(&report, langCode)
 	}
 	return responses
 }

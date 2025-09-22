@@ -187,7 +187,7 @@ func (r *LocationRepository) DeleteLocation(ctx context.Context, locationId stri
 }
 
 // *===========================QUERY===========================*
-func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error) {
+func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListItem, error) {
 	var locations []model.Location
 	db := r.db.WithContext(ctx).
 		Table("locations l").
@@ -208,11 +208,12 @@ func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params q
 		return nil, domain.ErrInternal(err)
 	}
 
-	// Convert to domain locations
-	return mapper.ToDomainLocations(locations), nil
+	// Convert to domain locations first, then to list items
+	domainLocations := mapper.ToDomainLocations(locations)
+	return mapper.LocationsToListItems(domainLocations, langCode), nil
 }
 
-func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error) {
+func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListItem, error) {
 	var locations []model.Location
 	db := r.db.WithContext(ctx).
 		Table("locations l").
@@ -234,7 +235,8 @@ func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params quer
 	}
 
 	// Convert to domain locations
-	return mapper.ToDomainLocations(locations), nil
+	domainLocations := mapper.ToDomainLocations(locations)
+	return mapper.LocationsToListItems(domainLocations, langCode), nil
 }
 
 func (r *LocationRepository) GetLocationById(ctx context.Context, locationId string) (domain.Location, error) {
@@ -272,11 +274,7 @@ func (r *LocationRepository) GetLocationByCode(ctx context.Context, locationCode
 }
 
 func (r *LocationRepository) GetLocationHierarchy(ctx context.Context, langCode string) ([]domain.LocationResponse, error) {
-	locations, err := r.GetLocationsPaginated(ctx, query.Params{
-		Pagination: &query.PaginationOptions{
-			Limit: 1000, // Large limit to get all locations
-		},
-	}, langCode)
+	locations, err := r.getLocationsForHierarchy(ctx, langCode)
 	if err != nil {
 		return nil, err
 	}
@@ -285,6 +283,21 @@ func (r *LocationRepository) GetLocationHierarchy(ctx context.Context, langCode 
 	locationResponses := mapper.LocationsToResponses(locations, langCode)
 
 	return mapper.BuildLocationHierarchy(locationResponses), nil
+}
+
+func (r *LocationRepository) getLocationsForHierarchy(ctx context.Context, langCode string) ([]domain.Location, error) {
+	var locations []model.Location
+	db := r.db.WithContext(ctx).
+		Table("locations l").
+		Preload("Translations").
+		Limit(1000) // Large limit to get all locations
+
+	if err := db.Find(&locations).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	// Convert to domain locations
+	return mapper.ToDomainLocations(locations), nil
 }
 
 func (r *LocationRepository) CheckLocationExist(ctx context.Context, locationId string) (bool, error) {

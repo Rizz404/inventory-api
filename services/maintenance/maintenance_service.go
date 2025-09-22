@@ -23,15 +23,15 @@ type Repository interface {
 	DeleteRecord(ctx context.Context, recordId string) error
 
 	// Schedule queries
-	GetSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceSchedule, error)
-	GetSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceSchedule, error)
+	GetSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListItem, error)
+	GetSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListItem, error)
 	GetScheduleById(ctx context.Context, scheduleId string) (domain.MaintenanceSchedule, error)
 	CountSchedules(ctx context.Context, params query.Params) (int64, error)
 	CheckScheduleExist(ctx context.Context, scheduleId string) (bool, error)
 
 	// Record queries
-	GetRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecord, error)
-	GetRecordsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecord, error)
+	GetRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordListItem, error)
+	GetRecordsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordListItem, error)
 	GetRecordById(ctx context.Context, recordId string) (domain.MaintenanceRecord, error)
 	CountRecords(ctx context.Context, params query.Params) (int64, error)
 	CheckRecordExist(ctx context.Context, recordId string) (bool, error)
@@ -58,8 +58,8 @@ type MaintenanceService interface {
 	CreateMaintenanceSchedule(ctx context.Context, payload *domain.CreateMaintenanceSchedulePayload, createdBy string) (domain.MaintenanceScheduleResponse, error)
 	UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.CreateMaintenanceSchedulePayload) (domain.MaintenanceScheduleResponse, error)
 	DeleteMaintenanceSchedule(ctx context.Context, scheduleId string) error
-	GetMaintenanceSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleResponse, int64, error)
-	GetMaintenanceSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleResponse, error)
+	GetMaintenanceSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListItem, int64, error)
+	GetMaintenanceSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListItem, error)
 	GetMaintenanceScheduleById(ctx context.Context, scheduleId string, langCode string) (domain.MaintenanceScheduleResponse, error)
 	CheckMaintenanceScheduleExists(ctx context.Context, scheduleId string) (bool, error)
 	CountMaintenanceSchedules(ctx context.Context, params query.Params) (int64, error)
@@ -68,8 +68,8 @@ type MaintenanceService interface {
 	CreateMaintenanceRecord(ctx context.Context, payload *domain.CreateMaintenanceRecordPayload, performedBy string) (domain.MaintenanceRecordResponse, error)
 	UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.CreateMaintenanceRecordPayload) (domain.MaintenanceRecordResponse, error)
 	DeleteMaintenanceRecord(ctx context.Context, recordId string) error
-	GetMaintenanceRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordResponse, int64, error)
-	GetMaintenanceRecordsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordResponse, error)
+	GetMaintenanceRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordListItem, int64, error)
+	GetMaintenanceRecordsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordListItem, error)
 	GetMaintenanceRecordById(ctx context.Context, recordId string, langCode string) (domain.MaintenanceRecordResponse, error)
 	CheckMaintenanceRecordExists(ctx context.Context, recordId string) (bool, error)
 	CountMaintenanceRecords(ctx context.Context, params query.Params) (int64, error)
@@ -193,7 +193,7 @@ func (s *Service) DeleteMaintenanceSchedule(ctx context.Context, scheduleId stri
 	return s.Repo.DeleteSchedule(ctx, scheduleId)
 }
 
-func (s *Service) GetMaintenanceSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleResponse, int64, error) {
+func (s *Service) GetMaintenanceSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListItem, int64, error) {
 	schedules, err := s.Repo.GetSchedulesPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -202,15 +202,15 @@ func (s *Service) GetMaintenanceSchedulesPaginated(ctx context.Context, params q
 	if err != nil {
 		return nil, 0, err
 	}
-	return mapper.MaintenanceSchedulesToResponses(schedules, langCode), count, nil
+	return schedules, count, nil
 }
 
-func (s *Service) GetMaintenanceSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleResponse, error) {
+func (s *Service) GetMaintenanceSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListItem, error) {
 	schedules, err := s.Repo.GetSchedulesCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
-	return mapper.MaintenanceSchedulesToResponses(schedules, langCode), nil
+	return schedules, nil
 }
 
 func (s *Service) GetMaintenanceScheduleById(ctx context.Context, scheduleId string, langCode string) (domain.MaintenanceScheduleResponse, error) {
@@ -351,7 +351,7 @@ func (s *Service) DeleteMaintenanceRecord(ctx context.Context, recordId string) 
 	return s.Repo.DeleteRecord(ctx, recordId)
 }
 
-func (s *Service) GetMaintenanceRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordResponse, int64, error) {
+func (s *Service) GetMaintenanceRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordListItem, int64, error) {
 	records, err := s.Repo.GetRecordsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -360,15 +360,15 @@ func (s *Service) GetMaintenanceRecordsPaginated(ctx context.Context, params que
 	if err != nil {
 		return nil, 0, err
 	}
-	return mapper.MaintenanceRecordsToResponses(records, langCode), count, nil
+	return records, count, nil
 }
 
-func (s *Service) GetMaintenanceRecordsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordResponse, error) {
+func (s *Service) GetMaintenanceRecordsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordListItem, error) {
 	records, err := s.Repo.GetRecordsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
-	return mapper.MaintenanceRecordsToResponses(records, langCode), nil
+	return records, nil
 }
 
 func (s *Service) GetMaintenanceRecordById(ctx context.Context, recordId string, langCode string) (domain.MaintenanceRecordResponse, error) {

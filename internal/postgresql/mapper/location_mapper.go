@@ -249,3 +249,39 @@ func ToModelLocationTranslationUpdateMap(payload *domain.UpdateLocationTranslati
 
 	return updates
 }
+
+func LocationToListItem(d *domain.Location, langCode string) domain.LocationListItem {
+	response := domain.LocationListItem{
+		ID:           d.ID,
+		LocationCode: d.LocationCode,
+		Building:     d.Building,
+		Floor:        d.Floor,
+		Latitude:     d.Latitude,
+		Longitude:    d.Longitude,
+		CreatedAt:    d.CreatedAt.Format(TimeFormat),
+		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
+	}
+
+	// Find translation for the requested language
+	for _, translation := range d.Translations {
+		if translation.LangCode == langCode {
+			response.Name = translation.LocationName
+			break
+		}
+	}
+
+	// If no translation found for requested language, use first available
+	if response.Name == "" && len(d.Translations) > 0 {
+		response.Name = d.Translations[0].LocationName
+	}
+
+	return response
+}
+
+func LocationsToListItems(locations []domain.Location, langCode string) []domain.LocationListItem {
+	responses := make([]domain.LocationListItem, len(locations))
+	for i, location := range locations {
+		responses[i] = LocationToListItem(&location, langCode)
+	}
+	return responses
+}

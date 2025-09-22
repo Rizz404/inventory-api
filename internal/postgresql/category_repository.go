@@ -200,7 +200,7 @@ func (r *CategoryRepository) DeleteCategory(ctx context.Context, categoryId stri
 }
 
 // *===========================QUERY===========================*
-func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error) {
+func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListItem, error) {
 	var categories []model.Category
 	db := r.db.WithContext(ctx).
 		Table("categories c").
@@ -221,11 +221,12 @@ func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params 
 		return nil, domain.ErrInternal(err)
 	}
 
-	// Convert to domain categories
-	return mapper.ToDomainCategories(categories), nil
+	// Convert to domain categories first, then to list items
+	domainCategories := mapper.ToDomainCategories(categories)
+	return mapper.CategoriesToListItems(domainCategories, langCode), nil
 }
 
-func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error) {
+func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListItem, error) {
 	var categories []model.Category
 	db := r.db.WithContext(ctx).
 		Table("categories c").
@@ -247,7 +248,8 @@ func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params que
 	}
 
 	// Convert to domain categories
-	return mapper.ToDomainCategories(categories), nil
+	domainCategories := mapper.ToDomainCategories(categories)
+	return mapper.CategoriesToListItems(domainCategories, langCode), nil
 }
 
 func (r *CategoryRepository) GetCategoryById(ctx context.Context, categoryId string) (domain.Category, error) {
@@ -285,11 +287,7 @@ func (r *CategoryRepository) GetCategoryByCode(ctx context.Context, categoryCode
 }
 
 func (r *CategoryRepository) GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error) {
-	categories, err := r.GetCategoriesPaginated(ctx, query.Params{
-		Pagination: &query.PaginationOptions{
-			Limit: 1000, // Large limit to get all categories
-		},
-	}, langCode)
+	categories, err := r.getCategoriesForHierarchy(ctx, langCode)
 	if err != nil {
 		return nil, err
 	}
@@ -298,6 +296,21 @@ func (r *CategoryRepository) GetCategoryHierarchy(ctx context.Context, langCode 
 	categoryResponses := mapper.CategoriesToResponses(categories, langCode)
 
 	return mapper.BuildCategoryHierarchy(categoryResponses), nil
+}
+
+func (r *CategoryRepository) getCategoriesForHierarchy(ctx context.Context, langCode string) ([]domain.Category, error) {
+	var categories []model.Category
+	db := r.db.WithContext(ctx).
+		Table("categories c").
+		Preload("Translations").
+		Limit(1000) // Large limit to get all categories
+
+	if err := db.Find(&categories).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	// Convert to domain categories
+	return mapper.ToDomainCategories(categories), nil
 }
 
 func (r *CategoryRepository) CheckCategoryExist(ctx context.Context, categoryId string) (bool, error) {

@@ -35,6 +35,30 @@ type LocationResponse struct {
 	UpdatedAt    string   `json:"updatedAt"`
 }
 
+type LocationListItem struct {
+	ID           string   `json:"id"`
+	LocationCode string   `json:"locationCode"`
+	Building     *string  `json:"building"`
+	Floor        *string  `json:"floor"`
+	Latitude     *float64 `json:"latitude"`
+	Longitude    *float64 `json:"longitude"`
+	Name         string   `json:"name"`
+	CreatedAt    string   `json:"createdAt"`
+	UpdatedAt    string   `json:"updatedAt"`
+}
+
+type LocationListItemResponse struct {
+	ID           string   `json:"id"`
+	LocationCode string   `json:"locationCode"`
+	Building     *string  `json:"building"`
+	Floor        *string  `json:"floor"`
+	Latitude     *float64 `json:"latitude"`
+	Longitude    *float64 `json:"longitude"`
+	Name         string   `json:"name"`
+	CreatedAt    string   `json:"createdAt"`
+	UpdatedAt    string   `json:"updatedAt"`
+}
+
 // --- Payloads ---
 
 type CreateLocationPayload struct {

@@ -147,6 +147,7 @@ func NotificationToResponse(d *domain.Notification, langCode string) domain.Noti
 		Type:           d.Type,
 		IsRead:         d.IsRead,
 		CreatedAt:      d.CreatedAt.Format(TimeFormat),
+		Translations:   d.Translations, // Include translations for detail view
 	}
 
 	// Find translation for the requested language
@@ -171,6 +172,42 @@ func NotificationsToResponses(notifications []domain.Notification, langCode stri
 	responses := make([]domain.NotificationResponse, len(notifications))
 	for i, notification := range notifications {
 		responses[i] = NotificationToResponse(&notification, langCode)
+	}
+	return responses
+}
+
+func NotificationToListItem(d *domain.Notification, langCode string) domain.NotificationListItem {
+	response := domain.NotificationListItem{
+		ID:             d.ID,
+		UserID:         d.UserID,
+		RelatedAssetID: d.RelatedAssetID,
+		Type:           d.Type,
+		IsRead:         d.IsRead,
+		CreatedAt:      d.CreatedAt.Format(TimeFormat),
+	}
+
+	// Find translation for the requested language
+	for _, translation := range d.Translations {
+		if translation.LangCode == langCode {
+			response.Title = translation.Title
+			response.Message = translation.Message
+			break
+		}
+	}
+
+	// If no translation found for requested language, use first available
+	if response.Title == "" && len(d.Translations) > 0 {
+		response.Title = d.Translations[0].Title
+		response.Message = d.Translations[0].Message
+	}
+
+	return response
+}
+
+func NotificationsToListItems(notifications []domain.Notification, langCode string) []domain.NotificationListItem {
+	responses := make([]domain.NotificationListItem, len(notifications))
+	for i, notification := range notifications {
+		responses[i] = NotificationToListItem(&notification, langCode)
 	}
 	return responses
 }

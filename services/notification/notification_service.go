@@ -18,8 +18,8 @@ type Repository interface {
 	MarkAllNotificationsAsRead(ctx context.Context, userId string) error
 
 	// * QUERY
-	GetNotificationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Notification, error)
-	GetNotificationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Notification, error)
+	GetNotificationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationListItem, error)
+	GetNotificationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationListItem, error)
 	GetNotificationById(ctx context.Context, notificationId string) (domain.Notification, error)
 	CheckNotificationExist(ctx context.Context, notificationId string) (bool, error)
 	CountNotifications(ctx context.Context, params query.Params) (int64, error)
@@ -36,8 +36,8 @@ type NotificationService interface {
 	MarkAllNotificationsAsRead(ctx context.Context, userId string) error
 
 	// * QUERY
-	GetNotificationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationResponse, int64, error)
-	GetNotificationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationResponse, error)
+	GetNotificationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationListItemResponse, int64, error)
+	GetNotificationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationListItemResponse, error)
 	GetNotificationById(ctx context.Context, notificationId string, langCode string) (domain.NotificationResponse, error)
 	CheckNotificationExists(ctx context.Context, notificationId string) (bool, error)
 	CountNotifications(ctx context.Context, params query.Params) (int64, error)
@@ -133,8 +133,8 @@ func (s *Service) MarkAllNotificationsAsRead(ctx context.Context, userId string)
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetNotificationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationResponse, int64, error) {
-	notifications, err := s.Repo.GetNotificationsPaginated(ctx, params, langCode)
+func (s *Service) GetNotificationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationListItemResponse, int64, error) {
+	listItems, err := s.Repo.GetNotificationsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -145,22 +145,46 @@ func (s *Service) GetNotificationsPaginated(ctx context.Context, params query.Pa
 		return nil, 0, err
 	}
 
-	// * Convert to NotificationResponse using mapper
-	notificationResponses := mapper.NotificationsToResponses(notifications, langCode)
+	// Convert NotificationListItem to NotificationListItemResponse
+	responses := make([]domain.NotificationListItemResponse, len(listItems))
+	for i, item := range listItems {
+		responses[i] = domain.NotificationListItemResponse{
+			ID:             item.ID,
+			UserID:         item.UserID,
+			RelatedAssetID: item.RelatedAssetID,
+			Type:           item.Type,
+			IsRead:         item.IsRead,
+			CreatedAt:      item.CreatedAt,
+			Title:          item.Title,
+			Message:        item.Message,
+		}
+	}
 
-	return notificationResponses, count, nil
+	return responses, count, nil
 }
 
-func (s *Service) GetNotificationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationResponse, error) {
-	notifications, err := s.Repo.GetNotificationsCursor(ctx, params, langCode)
+func (s *Service) GetNotificationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationListItemResponse, error) {
+	listItems, err := s.Repo.GetNotificationsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	// * Convert to NotificationResponse using mapper
-	notificationResponses := mapper.NotificationsToResponses(notifications, langCode)
+	// Convert NotificationListItem to NotificationListItemResponse
+	responses := make([]domain.NotificationListItemResponse, len(listItems))
+	for i, item := range listItems {
+		responses[i] = domain.NotificationListItemResponse{
+			ID:             item.ID,
+			UserID:         item.UserID,
+			RelatedAssetID: item.RelatedAssetID,
+			Type:           item.Type,
+			IsRead:         item.IsRead,
+			CreatedAt:      item.CreatedAt,
+			Title:          item.Title,
+			Message:        item.Message,
+		}
+	}
 
-	return notificationResponses, nil
+	return responses, nil
 }
 
 func (s *Service) GetNotificationById(ctx context.Context, notificationId string, langCode string) (domain.NotificationResponse, error) {

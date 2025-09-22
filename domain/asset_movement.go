@@ -28,17 +28,18 @@ type AssetMovementTranslation struct {
 }
 
 type AssetMovementResponse struct {
-	ID             string  `json:"id"`
-	AssetID        string  `json:"assetId"`
-	FromLocationID *string `json:"fromLocationId,omitempty"`
-	ToLocationID   *string `json:"toLocationId,omitempty"`
-	FromUserID     *string `json:"fromUserId,omitempty"`
-	ToUserID       *string `json:"toUserId,omitempty"`
-	MovedByID      string  `json:"movedById"`
-	MovementDate   string  `json:"movementDate"`
-	Notes          *string `json:"notes,omitempty"`
-	CreatedAt      string  `json:"createdAt"`
-	UpdatedAt      string  `json:"updatedAt"`
+	ID             string                     `json:"id"`
+	AssetID        string                     `json:"assetId"`
+	FromLocationID *string                    `json:"fromLocationId,omitempty"`
+	ToLocationID   *string                    `json:"toLocationId,omitempty"`
+	FromUserID     *string                    `json:"fromUserId,omitempty"`
+	ToUserID       *string                    `json:"toUserId,omitempty"`
+	MovedByID      string                     `json:"movedById"`
+	MovementDate   string                     `json:"movementDate"`
+	Notes          *string                    `json:"notes,omitempty"`
+	CreatedAt      string                     `json:"createdAt"`
+	UpdatedAt      string                     `json:"updatedAt"`
+	Translations   []AssetMovementTranslation `json:"translations"`
 	// * Populated
 	Asset        AssetResponse     `json:"asset"`
 	FromLocation *LocationResponse `json:"fromLocation,omitempty"`
@@ -46,6 +47,34 @@ type AssetMovementResponse struct {
 	FromUser     *UserResponse     `json:"fromUser,omitempty"`
 	ToUser       *UserResponse     `json:"toUser,omitempty"`
 	MovedBy      UserResponse      `json:"movedBy"`
+}
+
+type AssetMovementListItem struct {
+	ID             string  `json:"id"`
+	AssetID        string  `json:"assetId"`
+	FromLocationID *string `json:"fromLocationId"`
+	ToLocationID   *string `json:"toLocationId"`
+	FromUserID     *string `json:"fromUserId"`
+	ToUserID       *string `json:"toUserId"`
+	MovedByID      string  `json:"movedById"`
+	MovementDate   string  `json:"movementDate"`
+	Notes          *string `json:"notes"`
+	CreatedAt      string  `json:"createdAt"`
+	UpdatedAt      string  `json:"updatedAt"`
+}
+
+type AssetMovementListItemResponse struct {
+	ID             string  `json:"id"`
+	AssetID        string  `json:"assetId"`
+	FromLocationID *string `json:"fromLocationId"`
+	ToLocationID   *string `json:"toLocationId"`
+	FromUserID     *string `json:"fromUserId"`
+	ToUserID       *string `json:"toUserId"`
+	MovedByID      string  `json:"movedById"`
+	MovementDate   string  `json:"movementDate"`
+	Notes          *string `json:"notes"`
+	CreatedAt      string  `json:"createdAt"`
+	UpdatedAt      string  `json:"updatedAt"`
 }
 
 // --- Payloads ---

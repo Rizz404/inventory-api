@@ -244,6 +244,7 @@ func AssetMovementToResponse(d *domain.AssetMovement, langCode string) domain.As
 		MovementDate:   d.MovementDate.Format(TimeFormat),
 		CreatedAt:      d.CreatedAt.Format(TimeFormat),
 		UpdatedAt:      d.UpdatedAt.Format(TimeFormat),
+		Translations:   d.Translations, // Include translations for detail view
 	}
 
 	// Find translation for the requested language
@@ -266,6 +267,44 @@ func AssetMovementsToResponses(movements []domain.AssetMovement, langCode string
 	responses := make([]domain.AssetMovementResponse, len(movements))
 	for i, movement := range movements {
 		responses[i] = AssetMovementToResponse(&movement, langCode)
+	}
+	return responses
+}
+
+func AssetMovementToListItem(d *domain.AssetMovement, langCode string) domain.AssetMovementListItem {
+	response := domain.AssetMovementListItem{
+		ID:             d.ID,
+		AssetID:        d.AssetID,
+		FromLocationID: d.FromLocationID,
+		ToLocationID:   d.ToLocationID,
+		FromUserID:     d.FromUserID,
+		ToUserID:       d.ToUserID,
+		MovedByID:      d.MovedBy,
+		MovementDate:   d.MovementDate.Format(TimeFormat),
+		CreatedAt:      d.CreatedAt.Format(TimeFormat),
+		UpdatedAt:      d.UpdatedAt.Format(TimeFormat),
+	}
+
+	// Find translation for the requested language
+	for _, translation := range d.Translations {
+		if translation.LangCode == langCode {
+			response.Notes = translation.Notes
+			break
+		}
+	}
+
+	// If no translation found for requested language, use first available
+	if response.Notes == nil && len(d.Translations) > 0 {
+		response.Notes = d.Translations[0].Notes
+	}
+
+	return response
+}
+
+func AssetMovementsToListItems(movements []domain.AssetMovement, langCode string) []domain.AssetMovementListItem {
+	responses := make([]domain.AssetMovementListItem, len(movements))
+	for i, movement := range movements {
+		responses[i] = AssetMovementToListItem(&movement, langCode)
 	}
 	return responses
 }

@@ -32,6 +32,26 @@ type CategoryResponse struct {
 	UpdatedAt    string             `json:"updatedAt"`
 }
 
+type CategoryListItem struct {
+	ID           string  `json:"id"`
+	ParentID     *string `json:"parentId"`
+	CategoryCode string  `json:"categoryCode"`
+	Name         string  `json:"name"`
+	Description  *string `json:"description"`
+	CreatedAt    string  `json:"createdAt"`
+	UpdatedAt    string  `json:"updatedAt"`
+}
+
+type CategoryListItemResponse struct {
+	ID           string  `json:"id"`
+	ParentID     *string `json:"parentId"`
+	CategoryCode string  `json:"categoryCode"`
+	Name         string  `json:"name"`
+	Description  *string `json:"description"`
+	CreatedAt    string  `json:"createdAt"`
+	UpdatedAt    string  `json:"updatedAt"`
+}
+
 // --- Payloads ---
 
 type CreateCategoryPayload struct {

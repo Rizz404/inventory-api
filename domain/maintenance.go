@@ -76,6 +76,28 @@ type MaintenanceScheduleResponse struct {
 	// * Populated
 	Asset     AssetResponse `json:"asset"`
 	CreatedBy UserResponse  `json:"createdBy"`
+	// * Translations for detail view
+	Translations []MaintenanceScheduleTranslation `json:"translations,omitempty"`
+}
+
+type MaintenanceScheduleListItem struct {
+	ID              string                  `json:"id"`
+	AssetID         string                  `json:"assetId"`
+	MaintenanceType MaintenanceScheduleType `json:"maintenanceType"`
+	ScheduledDate   string                  `json:"scheduledDate"`
+	FrequencyMonths *int                    `json:"frequencyMonths,omitempty"`
+	Status          ScheduleStatus          `json:"status"`
+	CreatedByID     string                  `json:"createdById"`
+	CreatedAt       string                  `json:"createdAt"`
+	Title           string                  `json:"title"`
+	Description     *string                 `json:"description,omitempty"`
+	// * Populated
+	Asset     AssetResponse `json:"asset"`
+	CreatedBy UserResponse  `json:"createdBy"`
+}
+
+type MaintenanceScheduleListItemResponse struct {
+	Data []MaintenanceScheduleListItem `json:"data"`
 }
 
 type MaintenanceRecordResponse struct {
@@ -94,6 +116,30 @@ type MaintenanceRecordResponse struct {
 	Schedule        *MaintenanceScheduleResponse `json:"schedule,omitempty"`
 	Asset           AssetResponse                `json:"asset"`
 	PerformedByUser *UserResponse                `json:"performedByUser,omitempty"`
+	// * Translations for detail view
+	Translations []MaintenanceRecordTranslation `json:"translations,omitempty"`
+}
+
+type MaintenanceRecordListItem struct {
+	ID                string   `json:"id"`
+	ScheduleID        *string  `json:"scheduleId,omitempty"`
+	AssetID           string   `json:"assetId"`
+	MaintenanceDate   string   `json:"maintenanceDate"`
+	PerformedByUserID *string  `json:"performedByUserId,omitempty"`
+	PerformedByVendor *string  `json:"performedByVendor,omitempty"`
+	ActualCost        *float64 `json:"actualCost,omitempty"`
+	Title             string   `json:"title"`
+	Notes             *string  `json:"notes,omitempty"`
+	CreatedAt         string   `json:"createdAt"`
+	UpdatedAt         string   `json:"updatedAt"`
+	// * Populated
+	Schedule        *MaintenanceScheduleResponse `json:"schedule,omitempty"`
+	Asset           AssetResponse                `json:"asset"`
+	PerformedByUser *UserResponse                `json:"performedByUser,omitempty"`
+}
+
+type MaintenanceRecordListItemResponse struct {
+	Data []MaintenanceRecordListItem `json:"data"`
 }
 
 // --- Payloads ---

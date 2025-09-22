@@ -35,18 +35,41 @@ type NotificationTranslation struct {
 }
 
 type NotificationResponse struct {
+	ID             string                    `json:"id"`
+	UserID         string                    `json:"userId"`
+	RelatedAssetID *string                   `json:"relatedAssetId,omitempty"`
+	Type           NotificationType          `json:"type"`
+	IsRead         bool                      `json:"isRead"`
+	CreatedAt      string                    `json:"createdAt"`
+	Title          string                    `json:"title"`
+	Message        string                    `json:"message"`
+	Translations   []NotificationTranslation `json:"translations"`
+	// * Populated
+	// ! cuma notification gak perlu populated table biar gak berat
+	// User         UserResponse   `json:"user"`
+	// RelatedAsset *AssetResponse `json:"relatedAsset,omitempty"`
+}
+
+type NotificationListItem struct {
 	ID             string           `json:"id"`
 	UserID         string           `json:"userId"`
-	RelatedAssetID *string          `json:"relatedAssetId,omitempty"`
+	RelatedAssetID *string          `json:"relatedAssetId"`
 	Type           NotificationType `json:"type"`
 	IsRead         bool             `json:"isRead"`
 	CreatedAt      string           `json:"createdAt"`
 	Title          string           `json:"title"`
 	Message        string           `json:"message"`
-	// * Populated
-	// ! cuma notification gak perlu populated table biar gak berat
-	// User         UserResponse   `json:"user"`
-	// RelatedAsset *AssetResponse `json:"relatedAsset,omitempty"`
+}
+
+type NotificationListItemResponse struct {
+	ID             string           `json:"id"`
+	UserID         string           `json:"userId"`
+	RelatedAssetID *string          `json:"relatedAssetId"`
+	Type           NotificationType `json:"type"`
+	IsRead         bool             `json:"isRead"`
+	CreatedAt      string           `json:"createdAt"`
+	Title          string           `json:"title"`
+	Message        string           `json:"message"`
 }
 
 // --- Payloads ---
