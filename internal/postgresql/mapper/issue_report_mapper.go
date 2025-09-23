@@ -6,7 +6,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-// ===== Issue Report Mappers =====
+// *==================== Model conversions ====================
 
 func ToModelIssueReport(d *domain.IssueReport) model.IssueReport {
 	modelReport := model.IssueReport{
@@ -116,6 +116,7 @@ func ToModelIssueReportTranslationForCreate(reportID string, d *domain.IssueRepo
 	return modelTranslation
 }
 
+// *==================== Entity conversions ====================
 func ToDomainIssueReport(m *model.IssueReport) domain.IssueReport {
 	domainReport := domain.IssueReport{
 		ID:           m.ID.String(),
@@ -162,7 +163,7 @@ func ToDomainIssueReports(models []model.IssueReport) []domain.IssueReport {
 	return reports
 }
 
-// Domain -> Response conversions (for service layer)
+// *==================== Entity Response conversions ====================
 func IssueReportToResponse(d *domain.IssueReport, langCode string) domain.IssueReportResponse {
 	response := domain.IssueReportResponse{
 		ID:           d.ID,
@@ -172,7 +173,17 @@ func IssueReportToResponse(d *domain.IssueReport, langCode string) domain.IssueR
 		IssueType:    d.IssueType,
 		Priority:     d.Priority,
 		Status:       d.Status,
-		Translations: d.Translations, // Include translations for detail view
+		Translations: make([]domain.IssueReportTranslationResponse, len(d.Translations)),
+	}
+
+	// Populate translations
+	for i, translation := range d.Translations {
+		response.Translations[i] = domain.IssueReportTranslationResponse{
+			LangCode:        translation.LangCode,
+			Title:           translation.Title,
+			Description:     translation.Description,
+			ResolutionNotes: translation.ResolutionNotes,
+		}
 	}
 
 	// Handle resolved by ID
@@ -214,8 +225,8 @@ func IssueReportsToResponses(reports []domain.IssueReport, langCode string) []do
 	return responses
 }
 
-func IssueReportToListItem(d *domain.IssueReport, langCode string) domain.IssueReportListItem {
-	response := domain.IssueReportListItem{
+func IssueReportToListResponse(d *domain.IssueReport, langCode string) domain.IssueReportListResponse {
+	response := domain.IssueReportListResponse{
 		ID:           d.ID,
 		AssetID:      d.AssetID,
 		ReportedByID: d.ReportedBy,
@@ -256,10 +267,10 @@ func IssueReportToListItem(d *domain.IssueReport, langCode string) domain.IssueR
 	return response
 }
 
-func IssueReportsToListItems(reports []domain.IssueReport, langCode string) []domain.IssueReportListItem {
-	responses := make([]domain.IssueReportListItem, len(reports))
+func IssueReportsToListResponses(reports []domain.IssueReport, langCode string) []domain.IssueReportListResponse {
+	responses := make([]domain.IssueReportListResponse, len(reports))
 	for i, report := range reports {
-		responses[i] = IssueReportToListItem(&report, langCode)
+		responses[i] = IssueReportToListResponse(&report, langCode)
 	}
 	return responses
 }
@@ -283,6 +294,7 @@ func ToModelIssueReportUpdateMap(payload *domain.UpdateIssueReportPayload) map[s
 	return updates
 }
 
+// *==================== Statistics conversions ====================
 // IssueReportStatisticsToResponse converts IssueReportStatistics to IssueReportStatisticsResponse
 func IssueReportStatisticsToResponse(stats *domain.IssueReportStatistics) domain.IssueReportStatisticsResponse {
 	response := domain.IssueReportStatisticsResponse{

@@ -20,8 +20,8 @@ type Repository interface {
 	DeleteIssueReport(ctx context.Context, issueReportId string) error
 
 	// * QUERY
-	GetIssueReportsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListItem, error)
-	GetIssueReportsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListItem, error)
+	GetIssueReportsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReport, error)
+	GetIssueReportsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReport, error)
 	GetIssueReportById(ctx context.Context, issueReportId string) (domain.IssueReport, error)
 	CheckIssueReportExist(ctx context.Context, issueReportId string) (bool, error)
 	CountIssueReports(ctx context.Context, params query.Params) (int64, error)
@@ -38,8 +38,8 @@ type IssueReportService interface {
 	DeleteIssueReport(ctx context.Context, issueReportId string) error
 
 	// * QUERY
-	GetIssueReportsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListItemResponse, int64, error)
-	GetIssueReportsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListItemResponse, error)
+	GetIssueReportsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListResponse, int64, error)
+	GetIssueReportsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListResponse, error)
 	GetIssueReportById(ctx context.Context, issueReportId string, langCode string) (domain.IssueReportResponse, error)
 	CheckIssueReportExists(ctx context.Context, issueReportId string) (bool, error)
 	CountIssueReports(ctx context.Context, params query.Params) (int64, error)
@@ -166,7 +166,7 @@ func (s *Service) DeleteIssueReport(ctx context.Context, issueReportId string) e
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetIssueReportsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListItemResponse, int64, error) {
+func (s *Service) GetIssueReportsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListResponse, int64, error) {
 	listItems, err := s.Repo.GetIssueReportsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -178,52 +178,20 @@ func (s *Service) GetIssueReportsPaginated(ctx context.Context, params query.Par
 		return nil, 0, err
 	}
 
-	// Convert IssueReportListItem to IssueReportListItemResponse
-	responses := make([]domain.IssueReportListItemResponse, len(listItems))
-	for i, item := range listItems {
-		responses[i] = domain.IssueReportListItemResponse{
-			ID:              item.ID,
-			AssetID:         item.AssetID,
-			ReportedByID:    item.ReportedByID,
-			ReportedDate:    item.ReportedDate,
-			IssueType:       item.IssueType,
-			Priority:        item.Priority,
-			Status:          item.Status,
-			ResolvedDate:    item.ResolvedDate,
-			ResolvedByID:    item.ResolvedByID,
-			Title:           item.Title,
-			Description:     item.Description,
-			ResolutionNotes: item.ResolutionNotes,
-		}
-	}
+	// Convert IssueReport to IssueReportListResponse using mapper
+	responses := mapper.IssueReportsToListResponses(listItems, langCode)
 
 	return responses, count, nil
 }
 
-func (s *Service) GetIssueReportsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListItemResponse, error) {
+func (s *Service) GetIssueReportsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListResponse, error) {
 	listItems, err := s.Repo.GetIssueReportsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert IssueReportListItem to IssueReportListItemResponse
-	responses := make([]domain.IssueReportListItemResponse, len(listItems))
-	for i, item := range listItems {
-		responses[i] = domain.IssueReportListItemResponse{
-			ID:              item.ID,
-			AssetID:         item.AssetID,
-			ReportedByID:    item.ReportedByID,
-			ReportedDate:    item.ReportedDate,
-			IssueType:       item.IssueType,
-			Priority:        item.Priority,
-			Status:          item.Status,
-			ResolvedDate:    item.ResolvedDate,
-			ResolvedByID:    item.ResolvedByID,
-			Title:           item.Title,
-			Description:     item.Description,
-			ResolutionNotes: item.ResolutionNotes,
-		}
-	}
+	// Convert IssueReport to IssueReportListResponse using mapper
+	responses := mapper.IssueReportsToListResponses(listItems, langCode)
 
 	return responses, nil
 }

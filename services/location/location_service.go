@@ -21,7 +21,6 @@ type Repository interface {
 	GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error)
 	GetLocationById(ctx context.Context, locationId string) (domain.Location, error)
 	GetLocationByCode(ctx context.Context, locationCode string) (domain.Location, error)
-	GetLocationHierarchy(ctx context.Context, langCode string) ([]domain.LocationResponse, error)
 	CheckLocationExist(ctx context.Context, locationId string) (bool, error)
 	CheckLocationCodeExist(ctx context.Context, locationCode string) (bool, error)
 	CheckLocationCodeExistExcluding(ctx context.Context, locationCode string, excludeLocationId string) (bool, error)
@@ -41,7 +40,6 @@ type LocationService interface {
 	GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListResponse, error)
 	GetLocationById(ctx context.Context, locationId string, langCode string) (domain.LocationResponse, error)
 	GetLocationByCode(ctx context.Context, locationCode string, langCode string) (domain.LocationResponse, error)
-	GetLocationHierarchy(ctx context.Context, langCode string) ([]domain.LocationResponse, error)
 	CheckLocationExists(ctx context.Context, locationId string) (bool, error)
 	CheckLocationCodeExists(ctx context.Context, locationCode string) (bool, error)
 	CountLocations(ctx context.Context, params query.Params) (int64, error)
@@ -179,14 +177,6 @@ func (s *Service) GetLocationByCode(ctx context.Context, locationCode string, la
 
 	// * Convert to LocationResponse using mapper
 	return mapper.LocationToResponse(&location, langCode), nil
-}
-
-func (s *Service) GetLocationHierarchy(ctx context.Context, langCode string) ([]domain.LocationResponse, error) {
-	hierarchy, err := s.Repo.GetLocationHierarchy(ctx, langCode)
-	if err != nil {
-		return nil, err
-	}
-	return hierarchy, nil
 }
 
 func (s *Service) CheckLocationExists(ctx context.Context, locationId string) (bool, error) {

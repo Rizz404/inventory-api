@@ -169,16 +169,14 @@ func (r *AssetMovementRepository) UpdateAssetMovement(ctx context.Context, movem
 
 		// Create new translations
 		for _, translationPayload := range payload.Translations {
-			if translationPayload.Notes != nil && *translationPayload.Notes != "" {
-				translation := domain.AssetMovementTranslation{
-					LangCode: translationPayload.LangCode,
-					Notes:    translationPayload.Notes,
-				}
-				modelTranslation := mapper.ToModelAssetMovementTranslationForCreate(movementId, &translation)
-				if err := tx.Create(&modelTranslation).Error; err != nil {
-					tx.Rollback()
-					return domain.AssetMovement{}, err
-				}
+			translation := domain.AssetMovementTranslation{
+				LangCode: translationPayload.LangCode,
+				Notes:    translationPayload.Notes,
+			}
+			modelTranslation := mapper.ToModelAssetMovementTranslationForCreate(movementId, &translation)
+			if err := tx.Create(&modelTranslation).Error; err != nil {
+				tx.Rollback()
+				return domain.AssetMovement{}, err
 			}
 		}
 	}
@@ -224,7 +222,7 @@ func (r *AssetMovementRepository) DeleteAssetMovement(ctx context.Context, movem
 }
 
 // *===========================QUERY===========================*
-func (r *AssetMovementRepository) GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListItem, error) {
+func (r *AssetMovementRepository) GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovement, error) {
 	var movements []model.AssetMovement
 	db := r.db.WithContext(ctx).
 		Table("asset_movements am").
@@ -251,12 +249,11 @@ func (r *AssetMovementRepository) GetAssetMovementsPaginated(ctx context.Context
 		return nil, err
 	}
 
-	// Convert to domain asset movements first, then to list items
-	domainMovements := mapper.ToDomainAssetMovements(movements)
-	return mapper.AssetMovementsToListItems(domainMovements, langCode), nil
+	// Convert to domain asset movements
+	return mapper.ToDomainAssetMovements(movements), nil
 }
 
-func (r *AssetMovementRepository) GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListItem, error) {
+func (r *AssetMovementRepository) GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovement, error) {
 	var movements []model.AssetMovement
 	db := r.db.WithContext(ctx).
 		Table("asset_movements am").
@@ -284,8 +281,7 @@ func (r *AssetMovementRepository) GetAssetMovementsCursor(ctx context.Context, p
 	}
 
 	// Convert to domain asset movements
-	domainMovements := mapper.ToDomainAssetMovements(movements)
-	return mapper.AssetMovementsToListItems(domainMovements, langCode), nil
+	return mapper.ToDomainAssetMovements(movements), nil
 }
 
 func (r *AssetMovementRepository) GetAssetMovementById(ctx context.Context, movementId string) (domain.AssetMovement, error) {

@@ -103,7 +103,18 @@ func (r *CategoryRepository) CreateCategory(ctx context.Context, payload *domain
 	}
 
 	// Fetch created category with translations
-	return r.GetCategoryById(ctx, modelCategory.ID.String())
+	var createdCategory model.Category
+	err := r.db.WithContext(ctx).
+		Table("categories c").
+		Preload("Translations").
+		First(&createdCategory, "id = ?", modelCategory.ID.String()).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.Category{}, domain.ErrNotFound("category")
+		}
+		return domain.Category{}, domain.ErrInternal(err)
+	}
+	return mapper.ToDomainCategory(&createdCategory), nil
 }
 
 func (r *CategoryRepository) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.Category, error) {
@@ -166,7 +177,18 @@ func (r *CategoryRepository) UpdateCategory(ctx context.Context, categoryId stri
 	}
 
 	// Fetch updated category with translations
-	return r.GetCategoryById(ctx, categoryId)
+	var updatedCategory model.Category
+	err := r.db.WithContext(ctx).
+		Table("categories c").
+		Preload("Translations").
+		First(&updatedCategory, "id = ?", categoryId).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.Category{}, domain.ErrNotFound("category")
+		}
+		return domain.Category{}, domain.ErrInternal(err)
+	}
+	return mapper.ToDomainCategory(&updatedCategory), nil
 }
 
 func (r *CategoryRepository) DeleteCategory(ctx context.Context, categoryId string) error {
@@ -282,33 +304,6 @@ func (r *CategoryRepository) GetCategoryByCode(ctx context.Context, categoryCode
 	}
 
 	return mapper.ToDomainCategory(&category), nil
-}
-
-func (r *CategoryRepository) GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error) {
-	categories, err := r.getCategoriesForHierarchy(ctx, langCode)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert to CategoryResponse using mapper
-	categoryResponses := mapper.CategoriesToResponses(categories, langCode)
-
-	return mapper.BuildCategoryHierarchy(categoryResponses), nil
-}
-
-func (r *CategoryRepository) getCategoriesForHierarchy(ctx context.Context, langCode string) ([]domain.Category, error) {
-	var categories []model.Category
-	db := r.db.WithContext(ctx).
-		Table("categories c").
-		Preload("Translations").
-		Limit(1000) // Large limit to get all categories
-
-	if err := db.Find(&categories).Error; err != nil {
-		return nil, domain.ErrInternal(err)
-	}
-
-	// Convert to domain categories
-	return mapper.ToDomainCategories(categories), nil
 }
 
 func (r *CategoryRepository) CheckCategoryExist(ctx context.Context, categoryId string) (bool, error) {

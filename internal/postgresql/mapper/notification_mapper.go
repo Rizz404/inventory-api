@@ -6,7 +6,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-// ===== Notification Mappers =====
+// *==================== Model conversions ====================
 
 func ToModelNotification(d *domain.Notification) model.Notification {
 	modelNotification := model.Notification{
@@ -96,6 +96,7 @@ func ToModelNotificationTranslationForCreate(notificationID string, d *domain.No
 	return modelTranslation
 }
 
+// *==================== Entity conversions ====================
 func ToDomainNotification(m *model.Notification) domain.Notification {
 	domainNotification := domain.Notification{
 		ID:        m.ID.String(),
@@ -138,7 +139,7 @@ func ToDomainNotifications(models []model.Notification) []domain.Notification {
 	return notifications
 }
 
-// Domain -> Response conversions (for service layer)
+// *==================== Entity Response conversions ====================
 func NotificationToResponse(d *domain.Notification, langCode string) domain.NotificationResponse {
 	response := domain.NotificationResponse{
 		ID:             d.ID,
@@ -147,7 +148,16 @@ func NotificationToResponse(d *domain.Notification, langCode string) domain.Noti
 		Type:           d.Type,
 		IsRead:         d.IsRead,
 		CreatedAt:      d.CreatedAt.Format(TimeFormat),
-		Translations:   d.Translations, // Include translations for detail view
+		Translations:   make([]domain.NotificationTranslationResponse, len(d.Translations)),
+	}
+
+	// Populate translations
+	for i, translation := range d.Translations {
+		response.Translations[i] = domain.NotificationTranslationResponse{
+			LangCode: translation.LangCode,
+			Title:    translation.Title,
+			Message:  translation.Message,
+		}
 	}
 
 	// Find translation for the requested language
@@ -176,8 +186,8 @@ func NotificationsToResponses(notifications []domain.Notification, langCode stri
 	return responses
 }
 
-func NotificationToListItem(d *domain.Notification, langCode string) domain.NotificationListItem {
-	response := domain.NotificationListItem{
+func NotificationToListResponse(d *domain.Notification, langCode string) domain.NotificationListResponse {
+	response := domain.NotificationListResponse{
 		ID:             d.ID,
 		UserID:         d.UserID,
 		RelatedAssetID: d.RelatedAssetID,
@@ -204,10 +214,10 @@ func NotificationToListItem(d *domain.Notification, langCode string) domain.Noti
 	return response
 }
 
-func NotificationsToListItems(notifications []domain.Notification, langCode string) []domain.NotificationListItem {
-	responses := make([]domain.NotificationListItem, len(notifications))
+func NotificationsToListResponses(notifications []domain.Notification, langCode string) []domain.NotificationListResponse {
+	responses := make([]domain.NotificationListResponse, len(notifications))
 	for i, notification := range notifications {
-		responses[i] = NotificationToListItem(&notification, langCode)
+		responses[i] = NotificationToListResponse(&notification, langCode)
 	}
 	return responses
 }
@@ -223,6 +233,7 @@ func ToModelNotificationUpdateMap(payload *domain.UpdateNotificationPayload) map
 	return updates
 }
 
+// *==================== Statistics conversions ====================
 // NotificationStatisticsToResponse converts NotificationStatistics to NotificationStatisticsResponse
 func NotificationStatisticsToResponse(stats *domain.NotificationStatistics) domain.NotificationStatisticsResponse {
 	response := domain.NotificationStatisticsResponse{

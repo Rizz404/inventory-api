@@ -37,7 +37,6 @@ func NewLocationHandler(app fiber.Router, s location.LocationService) {
 	locations.Get("/statistics", handler.GetLocationStatistics)
 	locations.Get("/cursor", handler.GetLocationsCursor)
 	locations.Get("/count", handler.CountLocations)
-	locations.Get("/hierarchy", handler.GetLocationHierarchy)
 	locations.Get("/code/:code", handler.GetLocationByCode)
 	locations.Get("/check/code/:code", handler.CheckLocationCodeExists)
 	locations.Get("/check/:id", handler.CheckLocationExists)
@@ -209,18 +208,6 @@ func (h *LocationHandler) GetLocationByCode(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessLocationRetrievedByCodeKey, location)
-}
-
-func (h *LocationHandler) GetLocationHierarchy(c *fiber.Ctx) error {
-	// * Get language from headers
-	langCode := web.GetLanguageFromContext(c)
-
-	hierarchy, err := h.Service.GetLocationHierarchy(c.Context(), langCode)
-	if err != nil {
-		return web.HandleError(c, err)
-	}
-
-	return web.Success(c, fiber.StatusOK, utils.SuccessLocationHierarchyRetrievedKey, hierarchy)
 }
 
 func (h *LocationHandler) CheckLocationExists(c *fiber.Ctx) error {

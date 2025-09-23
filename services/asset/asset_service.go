@@ -18,8 +18,7 @@ import (
 type Repository interface {
 	// * MUTATION
 	CreateAsset(ctx context.Context, payload *domain.Asset) (domain.Asset, error)
-	UpdateAsset(ctx context.Context, payload *domain.Asset) (domain.Asset, error)
-	UpdateAssetWithPayload(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload) (domain.Asset, error)
+	UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload) (domain.Asset, error)
 	DeleteAsset(ctx context.Context, assetId string) error
 
 	// * QUERY
@@ -175,7 +174,7 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 			updatePayload := &domain.UpdateAssetPayload{
 				DataMatrixImageUrl: &uploadResult.SecureURL,
 			}
-			createdAsset, _ = s.Repo.UpdateAssetWithPayload(ctx, createdAsset.ID, updatePayload)
+			createdAsset, _ = s.Repo.UpdateAsset(ctx, createdAsset.ID, updatePayload)
 		}
 		// Note: We don't return error here to avoid failing asset creation if image re-upload fails
 	}
@@ -241,8 +240,8 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 		// If payload.DataMatrixImageUrl has a valid URL, it will be used as-is
 	}
 
-	// Use the UpdateAssetWithPayload method
-	_, err = s.Repo.UpdateAssetWithPayload(ctx, assetId, payload)
+	// Use the UpdateAsset method
+	_, err = s.Repo.UpdateAsset(ctx, assetId, payload)
 	if err != nil {
 		return domain.AssetResponse{}, err
 	}
@@ -257,7 +256,7 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 	}
 
 	// * Update asset and convert to AssetResponse using mapper
-	updatedAsset, err := s.Repo.UpdateAssetWithPayload(ctx, assetId, payload)
+	updatedAsset, err := s.Repo.UpdateAsset(ctx, assetId, payload)
 	if err != nil {
 		return domain.AssetResponse{}, err
 	}

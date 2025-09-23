@@ -6,6 +6,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
+// *==================== Model conversions ====================
 func ToModelCategory(d *domain.Category) model.Category {
 	modelCategory := model.Category{
 		CategoryCode: d.CategoryCode,
@@ -80,6 +81,7 @@ func ToModelCategoryTranslationForCreate(categoryID string, d *domain.CategoryTr
 	return modelTranslation
 }
 
+// *==================== Entity conversions ====================
 func ToDomainCategory(m *model.Category) domain.Category {
 	domainCategory := domain.Category{
 		ID:           m.ID.String(),
@@ -121,7 +123,7 @@ func ToDomainCategoryTranslation(m *model.CategoryTranslation) domain.CategoryTr
 	}
 }
 
-// Domain -> Response conversions (for service layer)
+// *==================== Entity Response conversions ====================
 func CategoryToResponse(d *domain.Category, langCode string) domain.CategoryResponse {
 	response := domain.CategoryResponse{
 		ID:           d.ID,
@@ -167,97 +169,6 @@ func CategoriesToResponses(categories []domain.Category, langCode string) []doma
 	return responses
 }
 
-// Statistics conversions
-func CategoryStatisticsToResponse(stats *domain.CategoryStatistics) domain.CategoryStatisticsResponse {
-	trends := make([]domain.CategoryCreationTrendResponse, len(stats.CreationTrends))
-	for i, trend := range stats.CreationTrends {
-		trends[i] = domain.CategoryCreationTrendResponse{
-			Date:  trend.Date,
-			Count: trend.Count,
-		}
-	}
-
-	return domain.CategoryStatisticsResponse{
-		Total: domain.CategoryCountStatisticsResponse{
-			Count: stats.Total.Count,
-		},
-		ByHierarchy: domain.CategoryHierarchyStatisticsResponse{
-			TopLevel:     stats.ByHierarchy.TopLevel,
-			WithChildren: stats.ByHierarchy.WithChildren,
-			WithParent:   stats.ByHierarchy.WithParent,
-		},
-		CreationTrends: trends,
-		Summary: domain.CategorySummaryStatisticsResponse{
-			TotalCategories:                stats.Summary.TotalCategories,
-			TopLevelPercentage:             stats.Summary.TopLevelPercentage,
-			SubCategoriesPercentage:        stats.Summary.SubCategoriesPercentage,
-			CategoriesWithChildrenCount:    stats.Summary.CategoriesWithChildrenCount,
-			CategoriesWithoutChildrenCount: stats.Summary.CategoriesWithoutChildrenCount,
-			MaxDepthLevel:                  stats.Summary.MaxDepthLevel,
-			AverageCategoriesPerDay:        stats.Summary.AverageCategoriesPerDay,
-			LatestCreationDate:             stats.Summary.LatestCreationDate,
-			EarliestCreationDate:           stats.Summary.EarliestCreationDate,
-		},
-	}
-}
-
-func BuildCategoryHierarchy(categories []domain.CategoryResponse) []domain.CategoryResponse {
-	categoryMap := make(map[string]*domain.CategoryResponse)
-	var rootCategories []domain.CategoryResponse
-
-	// Gunakan slice pointer agar bisa memodifikasi item di map secara langsung
-	for i := range categories {
-		categoryMap[categories[i].ID] = &categories[i]
-	}
-
-	for _, category := range categories {
-		// ParentID bisa nil, jadi cek dulu
-		if category.ParentID == nil || *category.ParentID == "" {
-			rootCategories = append(rootCategories, category)
-		} else {
-			if parent, exists := categoryMap[*category.ParentID]; exists {
-				if parent.Children == nil {
-					parent.Children = make([]domain.CategoryResponse, 0)
-				}
-				parent.Children = append(parent.Children, category)
-			}
-		}
-	}
-
-	return rootCategories
-}
-
-func ToModelCategoryUpdateMap(payload *domain.UpdateCategoryPayload) map[string]any {
-	updates := make(map[string]any)
-
-	// Mengizinkan untuk set ParentID menjadi NULL
-	if payload.ParentID != nil {
-		if *payload.ParentID == "" {
-			updates["parent_id"] = nil
-		} else {
-			updates["parent_id"] = *payload.ParentID
-		}
-	}
-	if payload.CategoryCode != nil {
-		updates["category_code"] = *payload.CategoryCode
-	}
-
-	return updates
-}
-
-func ToModelCategoryTranslationUpdateMap(payload *domain.UpdateCategoryTranslationPayload) map[string]any {
-	updates := make(map[string]any)
-
-	if payload.CategoryName != nil {
-		updates["category_name"] = *payload.CategoryName
-	}
-	if payload.Description != nil {
-		updates["description"] = payload.Description
-	}
-
-	return updates
-}
-
 func CategoryToListResponse(d *domain.Category, langCode string) domain.CategoryListResponse {
 	response := domain.CategoryListResponse{
 		ID:           d.ID,
@@ -291,4 +202,69 @@ func CategoriesToListResponses(categories []domain.Category, langCode string) []
 		responses[i] = CategoryToListResponse(&category, langCode)
 	}
 	return responses
+}
+
+func CategoryStatisticsToResponse(stats *domain.CategoryStatistics) domain.CategoryStatisticsResponse {
+	trends := make([]domain.CategoryCreationTrendResponse, len(stats.CreationTrends))
+	for i, trend := range stats.CreationTrends {
+		trends[i] = domain.CategoryCreationTrendResponse{
+			Date:  trend.Date,
+			Count: trend.Count,
+		}
+	}
+
+	return domain.CategoryStatisticsResponse{
+		Total: domain.CategoryCountStatisticsResponse{
+			Count: stats.Total.Count,
+		},
+		ByHierarchy: domain.CategoryHierarchyStatisticsResponse{
+			TopLevel:     stats.ByHierarchy.TopLevel,
+			WithChildren: stats.ByHierarchy.WithChildren,
+			WithParent:   stats.ByHierarchy.WithParent,
+		},
+		CreationTrends: trends,
+		Summary: domain.CategorySummaryStatisticsResponse{
+			TotalCategories:                stats.Summary.TotalCategories,
+			TopLevelPercentage:             stats.Summary.TopLevelPercentage,
+			SubCategoriesPercentage:        stats.Summary.SubCategoriesPercentage,
+			CategoriesWithChildrenCount:    stats.Summary.CategoriesWithChildrenCount,
+			CategoriesWithoutChildrenCount: stats.Summary.CategoriesWithoutChildrenCount,
+			MaxDepthLevel:                  stats.Summary.MaxDepthLevel,
+			AverageCategoriesPerDay:        stats.Summary.AverageCategoriesPerDay,
+			LatestCreationDate:             stats.Summary.LatestCreationDate,
+			EarliestCreationDate:           stats.Summary.EarliestCreationDate,
+		},
+	}
+}
+
+// *==================== Update Map conversions ====================
+func ToModelCategoryUpdateMap(payload *domain.UpdateCategoryPayload) map[string]any {
+	updates := make(map[string]any)
+
+	// Mengizinkan untuk set ParentID menjadi NULL
+	if payload.ParentID != nil {
+		if *payload.ParentID == "" {
+			updates["parent_id"] = nil
+		} else {
+			updates["parent_id"] = *payload.ParentID
+		}
+	}
+	if payload.CategoryCode != nil {
+		updates["category_code"] = *payload.CategoryCode
+	}
+
+	return updates
+}
+
+func ToModelCategoryTranslationUpdateMap(payload *domain.UpdateCategoryTranslationPayload) map[string]any {
+	updates := make(map[string]any)
+
+	if payload.CategoryName != nil {
+		updates["category_name"] = *payload.CategoryName
+	}
+	if payload.Description != nil {
+		updates["description"] = payload.Description
+	}
+
+	return updates
 }

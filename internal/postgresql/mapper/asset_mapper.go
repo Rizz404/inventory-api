@@ -8,6 +8,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
+// *==================== Model conversions ====================
 func ToModelAsset(d *domain.Asset) model.Asset {
 	modelAsset := model.Asset{
 		AssetTag:           d.AssetTag,
@@ -92,6 +93,7 @@ func ToModelAssetForCreate(d *domain.Asset) model.Asset {
 	return modelAsset
 }
 
+// *==================== Entity conversions ====================
 func ToDomainAsset(m *model.Asset) domain.Asset {
 	domainAsset := domain.Asset{
 		ID:                 m.ID.String(),
@@ -125,6 +127,15 @@ func ToDomainAsset(m *model.Asset) domain.Asset {
 	return domainAsset
 }
 
+func ToDomainAssets(models []model.Asset) []domain.Asset {
+	assets := make([]domain.Asset, len(models))
+	for i, model := range models {
+		assets[i] = ToDomainAsset(&model)
+	}
+	return assets
+}
+
+// *==================== Entity Response conversions ====================
 func AssetToResponse(d *domain.Asset) domain.AssetResponse {
 	response := domain.AssetResponse{
 		ID:                 d.ID,
@@ -167,16 +178,48 @@ func AssetsToResponses(assets []domain.Asset) []domain.AssetResponse {
 	return responses
 }
 
-// Helper function to convert domain Assets to domain Assets (for consistency)
-func ToDomainAssets(m []model.Asset) []domain.Asset {
-	assets := make([]domain.Asset, len(m))
-	for i, asset := range m {
-		assets[i] = ToDomainAsset(&asset)
+func AssetToListResponse(d *domain.Asset) domain.AssetListResponse {
+	response := domain.AssetListResponse{
+		ID:                 d.ID,
+		AssetTag:           d.AssetTag,
+		DataMatrixImageUrl: d.DataMatrixImageUrl,
+		AssetName:          d.AssetName,
+		CategoryID:         d.CategoryID,
+		Brand:              d.Brand,
+		Model:              d.Model,
+		SerialNumber:       d.SerialNumber,
+		PurchasePrice:      d.PurchasePrice,
+		VendorName:         d.VendorName,
+		Status:             d.Status,
+		Condition:          d.Condition,
+		LocationID:         d.LocationID,
+		AssignedToID:       d.AssignedTo,
+		CreatedAt:          d.CreatedAt.Format(TimeFormat),
+		UpdatedAt:          d.UpdatedAt.Format(TimeFormat),
 	}
-	return assets
+
+	// Handle date formatting
+	if d.PurchaseDate != nil {
+		purchaseDateStr := d.PurchaseDate.Format("2006-01-02")
+		response.PurchaseDate = &purchaseDateStr
+	}
+
+	if d.WarrantyEnd != nil {
+		warrantyEndStr := d.WarrantyEnd.Format("2006-01-02")
+		response.WarrantyEnd = &warrantyEndStr
+	}
+
+	return response
 }
 
-// Convert asset statistics from domain to response
+func AssetsToListResponses(assets []domain.Asset) []domain.AssetListResponse {
+	responses := make([]domain.AssetListResponse, len(assets))
+	for i, asset := range assets {
+		responses[i] = AssetToListResponse(&asset)
+	}
+	return responses
+}
+
 func AssetStatisticsToResponse(stats *domain.AssetStatistics) domain.AssetStatisticsResponse {
 	response := domain.AssetStatisticsResponse{
 		Total: domain.AssetCountStatisticsResponse{
@@ -263,6 +306,7 @@ func AssetStatisticsToResponse(stats *domain.AssetStatistics) domain.AssetStatis
 	return response
 }
 
+// *==================== Update Map conversions ====================
 func ToModelAssetUpdateMap(payload *domain.UpdateAssetPayload) map[string]any {
 	updates := make(map[string]any)
 

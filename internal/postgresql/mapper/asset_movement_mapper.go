@@ -6,7 +6,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-// ===== Asset Movement Mappers =====
+// *==================== Model conversions ====================
 
 func ToModelAssetMovement(d *domain.AssetMovement) model.AssetMovement {
 	modelMovement := model.AssetMovement{
@@ -174,6 +174,7 @@ func ToModelAssetMovementUpdateMap(payload *domain.UpdateAssetMovementPayload) m
 	return updates
 }
 
+// *==================== Entity conversions ====================
 func ToDomainAssetMovement(m *model.AssetMovement) domain.AssetMovement {
 	domainMovement := domain.AssetMovement{
 		ID:           m.ID.String(),
@@ -231,7 +232,7 @@ func ToDomainAssetMovementTranslation(m *model.AssetMovementTranslation) domain.
 	}
 }
 
-// Domain -> Response conversions (for service layer)
+// *==================== Entity Response conversions ====================
 func AssetMovementToResponse(d *domain.AssetMovement, langCode string) domain.AssetMovementResponse {
 	response := domain.AssetMovementResponse{
 		ID:             d.ID,
@@ -244,7 +245,15 @@ func AssetMovementToResponse(d *domain.AssetMovement, langCode string) domain.As
 		MovementDate:   d.MovementDate.Format(TimeFormat),
 		CreatedAt:      d.CreatedAt.Format(TimeFormat),
 		UpdatedAt:      d.UpdatedAt.Format(TimeFormat),
-		Translations:   d.Translations, // Include translations for detail view
+		Translations:   make([]domain.AssetMovementTranslationResponse, len(d.Translations)),
+	}
+
+	// Populate translations
+	for i, translation := range d.Translations {
+		response.Translations[i] = domain.AssetMovementTranslationResponse{
+			LangCode: translation.LangCode,
+			Notes:    translation.Notes,
+		}
 	}
 
 	// Find translation for the requested language
@@ -271,8 +280,8 @@ func AssetMovementsToResponses(movements []domain.AssetMovement, langCode string
 	return responses
 }
 
-func AssetMovementToListItem(d *domain.AssetMovement, langCode string) domain.AssetMovementListItem {
-	response := domain.AssetMovementListItem{
+func AssetMovementToListResponse(d *domain.AssetMovement, langCode string) domain.AssetMovementListResponse {
+	response := domain.AssetMovementListResponse{
 		ID:             d.ID,
 		AssetID:        d.AssetID,
 		FromLocationID: d.FromLocationID,
@@ -301,15 +310,15 @@ func AssetMovementToListItem(d *domain.AssetMovement, langCode string) domain.As
 	return response
 }
 
-func AssetMovementsToListItems(movements []domain.AssetMovement, langCode string) []domain.AssetMovementListItem {
-	responses := make([]domain.AssetMovementListItem, len(movements))
+func AssetMovementsToListResponses(movements []domain.AssetMovement, langCode string) []domain.AssetMovementListResponse {
+	responses := make([]domain.AssetMovementListResponse, len(movements))
 	for i, movement := range movements {
-		responses[i] = AssetMovementToListItem(&movement, langCode)
+		responses[i] = AssetMovementToListResponse(&movement, langCode)
 	}
 	return responses
 }
 
-// Statistics mapping functions
+// *==================== Statistics conversions ====================
 func AssetMovementStatisticsToResponse(stats *domain.AssetMovementStatistics) domain.AssetMovementStatisticsResponse {
 	return domain.AssetMovementStatisticsResponse{
 		Total: domain.AssetMovementCountStatisticsResponse{

@@ -21,7 +21,6 @@ type Repository interface {
 	GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error)
 	GetCategoryById(ctx context.Context, categoryId string) (domain.Category, error)
 	GetCategoryByCode(ctx context.Context, categoryCode string) (domain.Category, error)
-	GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error)
 	CheckCategoryExist(ctx context.Context, categoryId string) (bool, error)
 	CheckCategoryCodeExist(ctx context.Context, categoryCode string) (bool, error)
 	CheckCategoryCodeExistExcluding(ctx context.Context, categoryCode string, excludeCategoryId string) (bool, error)
@@ -41,7 +40,6 @@ type CategoryService interface {
 	GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListResponse, error)
 	GetCategoryById(ctx context.Context, categoryId string, langCode string) (domain.CategoryResponse, error)
 	GetCategoryByCode(ctx context.Context, categoryCode string, langCode string) (domain.CategoryResponse, error)
-	GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error)
 	CheckCategoryExists(ctx context.Context, categoryId string) (bool, error)
 	CheckCategoryCodeExists(ctx context.Context, categoryCode string) (bool, error)
 	CountCategories(ctx context.Context, params query.Params) (int64, error)
@@ -195,14 +193,6 @@ func (s *Service) GetCategoryByCode(ctx context.Context, categoryCode string, la
 
 	// * Convert to CategoryResponse using mapper
 	return mapper.CategoryToResponse(&category, langCode), nil
-}
-
-func (s *Service) GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error) {
-	hierarchy, err := s.Repo.GetCategoryHierarchy(ctx, langCode)
-	if err != nil {
-		return nil, err
-	}
-	return hierarchy, nil
 }
 
 func (s *Service) CheckCategoryExists(ctx context.Context, categoryId string) (bool, error) {

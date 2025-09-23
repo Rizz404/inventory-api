@@ -91,7 +91,18 @@ func (r *LocationRepository) CreateLocation(ctx context.Context, payload *domain
 	}
 
 	// Fetch created location with translations
-	return r.GetLocationById(ctx, modelLocation.ID.String())
+	var createdLocation model.Location
+	err := r.db.WithContext(ctx).
+		Table("locations l").
+		Preload("Translations").
+		First(&createdLocation, "l.id = ?", modelLocation.ID.String()).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.Location{}, domain.ErrNotFound("location")
+		}
+		return domain.Location{}, domain.ErrInternal(err)
+	}
+	return mapper.ToDomainLocation(&createdLocation), nil
 }
 
 func (r *LocationRepository) UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload) (domain.Location, error) {
@@ -153,7 +164,18 @@ func (r *LocationRepository) UpdateLocation(ctx context.Context, locationId stri
 	}
 
 	// Fetch updated location with translations
-	return r.GetLocationById(ctx, locationId)
+	var updatedLocation model.Location
+	err := r.db.WithContext(ctx).
+		Table("locations l").
+		Preload("Translations").
+		First(&updatedLocation, "l.id = ?", locationId).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.Location{}, domain.ErrNotFound("location")
+		}
+		return domain.Location{}, domain.ErrInternal(err)
+	}
+	return mapper.ToDomainLocation(&updatedLocation), nil
 }
 
 func (r *LocationRepository) DeleteLocation(ctx context.Context, locationId string) error {
@@ -269,33 +291,6 @@ func (r *LocationRepository) GetLocationByCode(ctx context.Context, locationCode
 	}
 
 	return mapper.ToDomainLocation(&location), nil
-}
-
-func (r *LocationRepository) GetLocationHierarchy(ctx context.Context, langCode string) ([]domain.LocationResponse, error) {
-	locations, err := r.getLocationsForHierarchy(ctx, langCode)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert to LocationResponse using mapper
-	locationResponses := mapper.LocationsToResponses(locations, langCode)
-
-	return mapper.BuildLocationHierarchy(locationResponses), nil
-}
-
-func (r *LocationRepository) getLocationsForHierarchy(ctx context.Context, langCode string) ([]domain.Location, error) {
-	var locations []model.Location
-	db := r.db.WithContext(ctx).
-		Table("locations l").
-		Preload("Translations").
-		Limit(1000) // Large limit to get all locations
-
-	if err := db.Find(&locations).Error; err != nil {
-		return nil, domain.ErrInternal(err)
-	}
-
-	// Convert to domain locations
-	return mapper.ToDomainLocations(locations), nil
 }
 
 func (r *LocationRepository) CheckLocationExist(ctx context.Context, locationId string) (bool, error) {

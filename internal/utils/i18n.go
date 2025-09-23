@@ -137,7 +137,6 @@ const (
 	SuccessCategoryDeletedKey              MessageKey = "success.category.deleted"
 	SuccessCategoryRetrievedKey            MessageKey = "success.category.retrieved"
 	SuccessCategoryRetrievedByCodeKey      MessageKey = "success.category.retrieved_by_code"
-	SuccessCategoryHierarchyRetrievedKey   MessageKey = "success.category.hierarchy_retrieved"
 	SuccessCategoryCountedKey              MessageKey = "success.category.counted"
 	SuccessCategoryStatisticsRetrievedKey  MessageKey = "success.category.statistics_retrieved"
 	SuccessCategoryExistenceCheckedKey     MessageKey = "success.category.existence_checked"
@@ -149,7 +148,6 @@ const (
 	SuccessLocationDeletedKey              MessageKey = "success.location.deleted"
 	SuccessLocationRetrievedKey            MessageKey = "success.location.retrieved"
 	SuccessLocationRetrievedByCodeKey      MessageKey = "success.location.retrieved_by_code"
-	SuccessLocationHierarchyRetrievedKey   MessageKey = "success.location.hierarchy_retrieved"
 	SuccessLocationCountedKey              MessageKey = "success.location.counted"
 	SuccessLocationStatisticsRetrievedKey  MessageKey = "success.location.statistics_retrieved"
 	SuccessLocationExistenceCheckedKey     MessageKey = "success.location.existence_checked"
@@ -528,11 +526,6 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"id-ID": "Kategori berhasil diambil berdasarkan kode",
 		"ja-JP": "コードでカテゴリが正常に取得されました",
 	},
-	SuccessCategoryHierarchyRetrievedKey: {
-		"en-US": "Category hierarchy retrieved successfully",
-		"id-ID": "Hierarki kategori berhasil diambil",
-		"ja-JP": "カテゴリ階層が正常に取得されました",
-	},
 	SuccessCategoryCountedKey: {
 		"en-US": "Categories counted successfully",
 		"id-ID": "Kategori berhasil dihitung",
@@ -579,11 +572,6 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Location retrieved successfully by code",
 		"id-ID": "Lokasi berhasil diambil berdasarkan kode",
 		"ja-JP": "コードでロケーションが正常に取得されました",
-	},
-	SuccessLocationHierarchyRetrievedKey: {
-		"en-US": "Location hierarchy retrieved successfully",
-		"id-ID": "Hierarki lokasi berhasil diambil",
-		"ja-JP": "ロケーション階層が正常に取得されました",
 	},
 	SuccessLocationCountedKey: {
 		"en-US": "Locations counted successfully",

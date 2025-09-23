@@ -6,6 +6,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
+// *==================== Model conversions ====================
 func ToModelLocation(d *domain.Location) model.Location {
 	modelLocation := model.Location{
 		LocationCode: d.LocationCode,
@@ -72,6 +73,7 @@ func ToModelLocationTranslationForCreate(locationID string, d *domain.LocationTr
 	return modelTranslation
 }
 
+// *==================== Entity conversions ====================
 func ToDomainLocation(m *model.Location) domain.Location {
 	domainLocation := domain.Location{
 		ID:           m.ID.String(),
@@ -111,7 +113,7 @@ func ToDomainLocationTranslation(m *model.LocationTranslation) domain.LocationTr
 	}
 }
 
-// Domain -> Response conversions (for service layer)
+// *==================== Entity Response conversions ====================
 func LocationToResponse(d *domain.Location, langCode string) domain.LocationResponse {
 	response := domain.LocationResponse{
 		ID:           d.ID,
@@ -157,7 +159,42 @@ func LocationsToResponses(locations []domain.Location, langCode string) []domain
 	return responses
 }
 
-// Statistics conversions
+func LocationToListResponse(d *domain.Location, langCode string) domain.LocationListResponse {
+	response := domain.LocationListResponse{
+		ID:           d.ID,
+		LocationCode: d.LocationCode,
+		Building:     d.Building,
+		Floor:        d.Floor,
+		Latitude:     d.Latitude,
+		Longitude:    d.Longitude,
+		CreatedAt:    d.CreatedAt.Format(TimeFormat),
+		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
+	}
+
+	// Find translation for the requested language
+	for _, translation := range d.Translations {
+		if translation.LangCode == langCode {
+			response.LocationName = translation.LocationName
+			break
+		}
+	}
+
+	// If no translation found for requested language, use first available
+	if response.LocationName == "" && len(d.Translations) > 0 {
+		response.LocationName = d.Translations[0].LocationName
+	}
+
+	return response
+}
+
+func LocationsToListResponses(locations []domain.Location, langCode string) []domain.LocationListResponse {
+	responses := make([]domain.LocationListResponse, len(locations))
+	for i, location := range locations {
+		responses[i] = LocationToListResponse(&location, langCode)
+	}
+	return responses
+}
+
 func LocationStatisticsToResponse(stats *domain.LocationStatistics) domain.LocationStatisticsResponse {
 	buildingStats := make([]domain.BuildingStatisticsResponse, len(stats.ByBuilding))
 	for i, building := range stats.ByBuilding {
@@ -215,18 +252,7 @@ func LocationStatisticsToResponse(stats *domain.LocationStatistics) domain.Locat
 	}
 }
 
-func BuildLocationHierarchy(locations []domain.LocationResponse) []domain.LocationResponse {
-	locationMap := make(map[string]*domain.LocationResponse)
-	var rootLocations []domain.LocationResponse
-
-	// Gunakan slice pointer agar bisa memodifikasi item di map secara langsung
-	for i := range locations {
-		locationMap[locations[i].ID] = &locations[i]
-	}
-
-	return rootLocations
-}
-
+// *==================== Update Map conversions ====================
 func ToModelLocationUpdateMap(payload *domain.UpdateLocationPayload) map[string]any {
 	updates := make(map[string]any)
 
@@ -257,40 +283,4 @@ func ToModelLocationTranslationUpdateMap(payload *domain.UpdateLocationTranslati
 	}
 
 	return updates
-}
-
-func LocationToListResponse(d *domain.Location, langCode string) domain.LocationListResponse {
-	response := domain.LocationListResponse{
-		ID:           d.ID,
-		LocationCode: d.LocationCode,
-		Building:     d.Building,
-		Floor:        d.Floor,
-		Latitude:     d.Latitude,
-		Longitude:    d.Longitude,
-		CreatedAt:    d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
-	}
-
-	// Find translation for the requested language
-	for _, translation := range d.Translations {
-		if translation.LangCode == langCode {
-			response.LocationName = translation.LocationName
-			break
-		}
-	}
-
-	// If no translation found for requested language, use first available
-	if response.LocationName == "" && len(d.Translations) > 0 {
-		response.LocationName = d.Translations[0].LocationName
-	}
-
-	return response
-}
-
-func LocationsToListResponses(locations []domain.Location, langCode string) []domain.LocationListResponse {
-	responses := make([]domain.LocationListResponse, len(locations))
-	for i, location := range locations {
-		responses[i] = LocationToListResponse(&location, langCode)
-	}
-	return responses
 }

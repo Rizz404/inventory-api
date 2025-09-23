@@ -270,7 +270,7 @@ func (r *IssueReportRepository) DeleteIssueReport(ctx context.Context, issueRepo
 }
 
 // *===========================QUERY===========================*
-func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListItem, error) {
+func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReport, error) {
 	var issueReports []model.IssueReport
 	db := r.db.WithContext(ctx).
 		Table("issue_reports ir").
@@ -294,12 +294,11 @@ func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, pa
 		return nil, domain.ErrInternal(err)
 	}
 
-	// Convert to domain issue reports first, then to list items
-	domainIssueReports := mapper.ToDomainIssueReports(issueReports)
-	return mapper.IssueReportsToListItems(domainIssueReports, langCode), nil
+	// Convert to domain issue reports
+	return mapper.ToDomainIssueReports(issueReports), nil
 }
 
-func (r *IssueReportRepository) GetIssueReportsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListItem, error) {
+func (r *IssueReportRepository) GetIssueReportsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReport, error) {
 	var issueReports []model.IssueReport
 	db := r.db.WithContext(ctx).
 		Table("issue_reports ir").
@@ -324,8 +323,7 @@ func (r *IssueReportRepository) GetIssueReportsCursor(ctx context.Context, param
 	}
 
 	// Convert to domain issue reports
-	domainIssueReports := mapper.ToDomainIssueReports(issueReports)
-	return mapper.IssueReportsToListItems(domainIssueReports, langCode), nil
+	return mapper.ToDomainIssueReports(issueReports), nil
 }
 
 func (r *IssueReportRepository) GetIssueReportById(ctx context.Context, issueReportId string) (domain.IssueReport, error) {

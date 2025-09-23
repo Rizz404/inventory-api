@@ -6,7 +6,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-// ===== Scan Log Mappers =====
+// *==================== Model conversions ====================
 
 func ToModelScanLog(d *domain.ScanLog) model.ScanLog {
 	modelScanLog := model.ScanLog{
@@ -66,6 +66,7 @@ func ToModelScanLogForCreate(d *domain.ScanLog) model.ScanLog {
 	return modelScanLog
 }
 
+// *==================== Entity conversions ====================
 func ToDomainScanLog(m *model.ScanLog) domain.ScanLog {
 	scanLog := domain.ScanLog{
 		ID:              m.ID.String(),
@@ -94,7 +95,7 @@ func ToDomainScanLogs(models []model.ScanLog) []domain.ScanLog {
 	return scanLogs
 }
 
-// Domain -> Response conversions (for service layer)
+// *==================== Entity Response conversions ====================
 func ScanLogToResponse(d *domain.ScanLog) domain.ScanLogResponse {
 	return domain.ScanLogResponse{
 		ID:              d.ID,
@@ -117,7 +118,7 @@ func ScanLogsToResponses(scanLogs []domain.ScanLog) []domain.ScanLogResponse {
 	return responses
 }
 
-// Statistics mappings
+// *==================== Statistics conversions ====================
 func ScanLogStatisticsToResponse(stats *domain.ScanLogStatistics) domain.ScanLogStatisticsResponse {
 	response := domain.ScanLogStatisticsResponse{
 		Total: domain.ScanLogCountStatisticsResponse{

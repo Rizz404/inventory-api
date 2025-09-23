@@ -37,7 +37,6 @@ func NewCategoryHandler(app fiber.Router, s category.CategoryService) {
 	categories.Get("/statistics", handler.GetCategoryStatistics)
 	categories.Get("/cursor", handler.GetCategoriesCursor)
 	categories.Get("/count", handler.CountCategories)
-	categories.Get("/hierarchy", handler.GetCategoryHierarchy)
 	categories.Get("/code/:code", handler.GetCategoryByCode)
 	categories.Get("/check/code/:code", handler.CheckCategoryCodeExists)
 	categories.Get("/check/:id", handler.CheckCategoryExists)
@@ -220,18 +219,6 @@ func (h *CategoryHandler) GetCategoryByCode(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryRetrievedByCodeKey, category)
-}
-
-func (h *CategoryHandler) GetCategoryHierarchy(c *fiber.Ctx) error {
-	// * Get language from headers
-	langCode := web.GetLanguageFromContext(c)
-
-	hierarchy, err := h.Service.GetCategoryHierarchy(c.Context(), langCode)
-	if err != nil {
-		return web.HandleError(c, err)
-	}
-
-	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryHierarchyRetrievedKey, hierarchy)
 }
 
 func (h *CategoryHandler) CheckCategoryExists(c *fiber.Ctx) error {

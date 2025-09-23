@@ -306,7 +306,6 @@ Response:
 - `SuccessCategoryDeletedKey` - Category deleted successfully
 - `SuccessCategoryRetrievedKey` - Categories retrieved successfully
 - `SuccessCategoryRetrievedByCodeKey` - Category retrieved successfully by code
-- `SuccessCategoryHierarchyRetrievedKey` - Category hierarchy retrieved successfully
 - `SuccessCategoryCountedKey` - Categories counted successfully
 - `SuccessCategoryExistenceCheckedKey` - Category existence checked successfully
 

@@ -5,7 +5,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 )
 
-// Model <-> Domain conversions (for repository layer)
+// *==================== Model conversions ====================
 func ToModelUser(d *domain.User) model.User {
 	return model.User{
 		Name:          d.Name,
@@ -34,6 +34,7 @@ func ToModelUserForCreate(d *domain.User) model.User {
 	}
 }
 
+// *==================== Entity conversions ====================
 func ToDomainUser(m *model.User) domain.User {
 	return domain.User{
 		ID:            m.ID.String(),
@@ -59,7 +60,7 @@ func ToDomainUsers(models []model.User) []domain.User {
 	return users
 }
 
-// Domain -> Response conversions (for service layer)
+// *==================== Entity Response conversions ====================
 func UserToResponse(u *domain.User) domain.UserResponse {
 	return domain.UserResponse{
 		ID:            u.ID,
@@ -84,7 +85,31 @@ func UsersToResponses(users []domain.User) []domain.UserResponse {
 	return responses
 }
 
-// Statistics conversions
+func UserToListResponse(u *domain.User) domain.UserListResponse {
+	return domain.UserListResponse{
+		ID:            u.ID,
+		Name:          u.Name,
+		Email:         u.Email,
+		FullName:      u.FullName,
+		Role:          u.Role,
+		EmployeeID:    u.EmployeeID,
+		PreferredLang: u.PreferredLang,
+		IsActive:      u.IsActive,
+		AvatarURL:     u.AvatarURL,
+		CreatedAt:     u.CreatedAt.Format(TimeFormat),
+		UpdatedAt:     u.UpdatedAt.Format(TimeFormat),
+	}
+}
+
+func UsersToListResponses(users []domain.User) []domain.UserListResponse {
+	responses := make([]domain.UserListResponse, len(users))
+	for i, user := range users {
+		responses[i] = UserToListResponse(&user)
+	}
+	return responses
+}
+
+// *==================== Statistics conversions ====================
 func StatisticsToResponse(stats *domain.UserStatistics) domain.UserStatisticsResponse {
 	trends := make([]domain.RegistrationTrendResponse, len(stats.RegistrationTrends))
 	for i, trend := range stats.RegistrationTrends {
@@ -122,7 +147,7 @@ func StatisticsToResponse(stats *domain.UserStatistics) domain.UserStatisticsRes
 	}
 }
 
-// Update payload mapping
+// *==================== Update Map conversions ====================
 func ToModelUserUpdateMap(payload *domain.UpdateUserPayload) map[string]any {
 	updates := make(map[string]any)
 

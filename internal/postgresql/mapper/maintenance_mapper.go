@@ -6,7 +6,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-// ===== Maintenance Schedule Mappers =====
+// *==================== Model conversions ====================
 
 func ToModelMaintenanceSchedule(d *domain.MaintenanceSchedule) model.MaintenanceSchedule {
 	modelSchedule := model.MaintenanceSchedule{
@@ -138,7 +138,7 @@ func ToDomainMaintenanceSchedules(models []model.MaintenanceSchedule) []domain.M
 	return schedules
 }
 
-// Domain -> Response conversions (for service layer)
+// *==================== Entity Response conversions ====================
 func MaintenanceScheduleToResponse(d *domain.MaintenanceSchedule, langCode string) domain.MaintenanceScheduleResponse {
 	response := domain.MaintenanceScheduleResponse{
 		ID:              d.ID,
@@ -149,7 +149,16 @@ func MaintenanceScheduleToResponse(d *domain.MaintenanceSchedule, langCode strin
 		Status:          d.Status,
 		CreatedByID:     d.CreatedBy,
 		CreatedAt:       d.CreatedAt.Format(TimeFormat),
-		Translations:    d.Translations,
+		Translations:    make([]domain.MaintenanceScheduleTranslationResponse, len(d.Translations)),
+	}
+
+	// Populate translations
+	for i, translation := range d.Translations {
+		response.Translations[i] = domain.MaintenanceScheduleTranslationResponse{
+			LangCode:    translation.LangCode,
+			Title:       translation.Title,
+			Description: translation.Description,
+		}
 	}
 
 	// Find translation for the requested language
@@ -170,8 +179,8 @@ func MaintenanceScheduleToResponse(d *domain.MaintenanceSchedule, langCode strin
 	return response
 }
 
-func MaintenanceScheduleToListItem(d *domain.MaintenanceSchedule, langCode string) domain.MaintenanceScheduleListItem {
-	response := domain.MaintenanceScheduleListItem{
+func MaintenanceScheduleToListResponse(d *domain.MaintenanceSchedule, langCode string) domain.MaintenanceScheduleListResponse {
+	response := domain.MaintenanceScheduleListResponse{
 		ID:              d.ID,
 		AssetID:         d.AssetID,
 		MaintenanceType: d.MaintenanceType,
@@ -208,15 +217,15 @@ func MaintenanceSchedulesToResponses(schedules []domain.MaintenanceSchedule, lan
 	return responses
 }
 
-func MaintenanceSchedulesToListItems(schedules []domain.MaintenanceSchedule, langCode string) []domain.MaintenanceScheduleListItem {
-	responses := make([]domain.MaintenanceScheduleListItem, len(schedules))
+func MaintenanceSchedulesToListResponses(schedules []domain.MaintenanceSchedule, langCode string) []domain.MaintenanceScheduleListResponse {
+	responses := make([]domain.MaintenanceScheduleListResponse, len(schedules))
 	for i, schedule := range schedules {
-		responses[i] = MaintenanceScheduleToListItem(&schedule, langCode)
+		responses[i] = MaintenanceScheduleToListResponse(&schedule, langCode)
 	}
 	return responses
 }
 
-// ===== Maintenance Record Mappers =====
+// *==================== Entity conversions ====================
 
 func ToModelMaintenanceRecord(d *domain.MaintenanceRecord) model.MaintenanceRecord {
 	modelRecord := model.MaintenanceRecord{
@@ -371,7 +380,7 @@ func ToDomainMaintenanceRecords(models []model.MaintenanceRecord) []domain.Maint
 	return records
 }
 
-// Domain -> Response conversions (for service layer)
+// *==================== Entity Response conversions ====================
 func MaintenanceRecordToResponse(d *domain.MaintenanceRecord, langCode string) domain.MaintenanceRecordResponse {
 	response := domain.MaintenanceRecordResponse{
 		ID:                d.ID,
@@ -383,7 +392,16 @@ func MaintenanceRecordToResponse(d *domain.MaintenanceRecord, langCode string) d
 		ActualCost:        d.ActualCost,
 		CreatedAt:         d.CreatedAt.Format(TimeFormat),
 		UpdatedAt:         d.UpdatedAt.Format(TimeFormat),
-		Translations:      d.Translations,
+		Translations:      make([]domain.MaintenanceRecordTranslationResponse, len(d.Translations)),
+	}
+
+	// Populate translations
+	for i, translation := range d.Translations {
+		response.Translations[i] = domain.MaintenanceRecordTranslationResponse{
+			LangCode: translation.LangCode,
+			Title:    translation.Title,
+			Notes:    translation.Notes,
+		}
 	}
 
 	// Find translation for the requested language
@@ -404,8 +422,8 @@ func MaintenanceRecordToResponse(d *domain.MaintenanceRecord, langCode string) d
 	return response
 }
 
-func MaintenanceRecordToListItem(d *domain.MaintenanceRecord, langCode string) domain.MaintenanceRecordListItem {
-	response := domain.MaintenanceRecordListItem{
+func MaintenanceRecordToListResponse(d *domain.MaintenanceRecord, langCode string) domain.MaintenanceRecordListResponse {
+	response := domain.MaintenanceRecordListResponse{
 		ID:                d.ID,
 		ScheduleID:        d.ScheduleID,
 		AssetID:           d.AssetID,
@@ -443,15 +461,15 @@ func MaintenanceRecordsToResponses(records []domain.MaintenanceRecord, langCode 
 	return responses
 }
 
-func MaintenanceRecordsToListItems(records []domain.MaintenanceRecord, langCode string) []domain.MaintenanceRecordListItem {
-	responses := make([]domain.MaintenanceRecordListItem, len(records))
+func MaintenanceRecordsToListResponses(records []domain.MaintenanceRecord, langCode string) []domain.MaintenanceRecordListResponse {
+	responses := make([]domain.MaintenanceRecordListResponse, len(records))
 	for i, record := range records {
-		responses[i] = MaintenanceRecordToListItem(&record, langCode)
+		responses[i] = MaintenanceRecordToListResponse(&record, langCode)
 	}
 	return responses
 }
 
-// ===== Maintenance Statistics Mapper =====
+// *==================== Statistics conversions ====================
 
 func MaintenanceStatisticsToResponse(stats *domain.MaintenanceStatistics) domain.MaintenanceStatisticsResponse {
 	resp := domain.MaintenanceStatisticsResponse{

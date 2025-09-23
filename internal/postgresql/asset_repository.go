@@ -11,7 +11,6 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
-	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
 )
 
@@ -97,65 +96,7 @@ func (r *AssetRepository) CreateAsset(ctx context.Context, payload *domain.Asset
 	return mapper.ToDomainAsset(&modelAsset), nil
 }
 
-func (r *AssetRepository) UpdateAsset(ctx context.Context, payload *domain.Asset) (domain.Asset, error) {
-	var updatedAsset model.Asset
-	assetID := payload.ID
-
-	// Update asset in database
-	assetUpdates := model.Asset{
-		AssetTag:           payload.AssetTag,
-		DataMatrixImageUrl: payload.DataMatrixImageUrl,
-		AssetName:          payload.AssetName,
-		Brand:              payload.Brand,
-		Model:              payload.Model,
-		SerialNumber:       payload.SerialNumber,
-		PurchaseDate:       payload.PurchaseDate,
-		PurchasePrice:      payload.PurchasePrice,
-		VendorName:         payload.VendorName,
-		WarrantyEnd:        payload.WarrantyEnd,
-		Status:             payload.Status,
-		Condition:          payload.Condition,
-	}
-
-	// Handle foreign keys
-	if payload.CategoryID != "" {
-		if parsedCategoryID, err := ulid.Parse(payload.CategoryID); err == nil {
-			assetUpdates.CategoryID = model.SQLULID(parsedCategoryID)
-		}
-	}
-
-	if payload.LocationID != nil && *payload.LocationID != "" {
-		if parsedLocationID, err := ulid.Parse(*payload.LocationID); err == nil {
-			modelULID := model.SQLULID(parsedLocationID)
-			assetUpdates.LocationID = &modelULID
-		}
-	}
-
-	if payload.AssignedTo != nil && *payload.AssignedTo != "" {
-		if parsedAssignedTo, err := ulid.Parse(*payload.AssignedTo); err == nil {
-			modelULID := model.SQLULID(parsedAssignedTo)
-			assetUpdates.AssignedTo = &modelULID
-		}
-	}
-
-	err := r.db.WithContext(ctx).Model(&model.Asset{}).Where("id = ?", assetID).Updates(assetUpdates).Error
-	if err != nil {
-		return domain.Asset{}, domain.ErrInternal(err)
-	}
-
-	// Get updated asset
-	err = r.db.WithContext(ctx).Preload("Category").Preload("Category.Translations").Preload("Location").Preload("Location.Translations").Preload("User").First(&updatedAsset, "id = ?", assetID).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.Asset{}, domain.ErrNotFound("asset")
-		}
-		return domain.Asset{}, domain.ErrInternal(err)
-	}
-
-	return mapper.ToDomainAsset(&updatedAsset), nil
-}
-
-func (r *AssetRepository) UpdateAssetWithPayload(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload) (domain.Asset, error) {
+func (r *AssetRepository) UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload) (domain.Asset, error) {
 	var updatedAsset model.Asset
 
 	// Build update map from payload
