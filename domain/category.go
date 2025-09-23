@@ -21,32 +21,29 @@ type CategoryTranslation struct {
 	Description  *string `json:"description"`
 }
 
-type CategoryResponse struct {
-	ID           string             `json:"id"`
-	ParentID     *string            `json:"parentId"`
-	CategoryCode string             `json:"categoryCode"`
-	Name         string             `json:"name"`
-	Description  *string            `json:"description"`
-	Children     []CategoryResponse `json:"children"`
-	CreatedAt    string             `json:"createdAt"`
-	UpdatedAt    string             `json:"updatedAt"`
-}
-
-type CategoryListItem struct {
-	ID           string  `json:"id"`
-	ParentID     *string `json:"parentId"`
-	CategoryCode string  `json:"categoryCode"`
-	Name         string  `json:"name"`
+type CategoryTranslationResponse struct {
+	LangCode     string  `json:"langCode"`
+	CategoryName string  `json:"categoryName"`
 	Description  *string `json:"description"`
-	CreatedAt    string  `json:"createdAt"`
-	UpdatedAt    string  `json:"updatedAt"`
 }
 
-type CategoryListItemResponse struct {
+type CategoryResponse struct {
+	ID           string                        `json:"id"`
+	ParentID     *string                       `json:"parentId"`
+	CategoryCode string                        `json:"categoryCode"`
+	CategoryName string                        `json:"categoryName"`
+	Description  *string                       `json:"description"`
+	Children     []CategoryResponse            `json:"children"`
+	CreatedAt    string                        `json:"createdAt"`
+	UpdatedAt    string                        `json:"updatedAt"`
+	Translations []CategoryTranslationResponse `json:"translations"`
+}
+
+type CategoryListResponse struct {
 	ID           string  `json:"id"`
 	ParentID     *string `json:"parentId"`
 	CategoryCode string  `json:"categoryCode"`
-	Name         string  `json:"name"`
+	CategoryName string  `json:"categoryName"`
 	Description  *string `json:"description"`
 	CreatedAt    string  `json:"createdAt"`
 	UpdatedAt    string  `json:"updatedAt"`

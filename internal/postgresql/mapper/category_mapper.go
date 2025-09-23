@@ -129,20 +129,30 @@ func CategoryToResponse(d *domain.Category, langCode string) domain.CategoryResp
 		CategoryCode: d.CategoryCode,
 		CreatedAt:    d.CreatedAt.Format(TimeFormat),
 		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
+		Translations: make([]domain.CategoryTranslationResponse, len(d.Translations)),
+	}
+
+	// Populate translations
+	for i, translation := range d.Translations {
+		response.Translations[i] = domain.CategoryTranslationResponse{
+			LangCode:     translation.LangCode,
+			CategoryName: translation.CategoryName,
+			Description:  translation.Description,
+		}
 	}
 
 	// Find translation for the requested language
 	for _, translation := range d.Translations {
 		if translation.LangCode == langCode {
-			response.Name = translation.CategoryName
+			response.CategoryName = translation.CategoryName
 			response.Description = translation.Description
 			break
 		}
 	}
 
 	// If no translation found for requested language, use first available
-	if response.Name == "" && len(d.Translations) > 0 {
-		response.Name = d.Translations[0].CategoryName
+	if response.CategoryName == "" && len(d.Translations) > 0 {
+		response.CategoryName = d.Translations[0].CategoryName
 		response.Description = d.Translations[0].Description
 	}
 
@@ -248,8 +258,8 @@ func ToModelCategoryTranslationUpdateMap(payload *domain.UpdateCategoryTranslati
 	return updates
 }
 
-func CategoryToListItem(d *domain.Category, langCode string) domain.CategoryListItem {
-	response := domain.CategoryListItem{
+func CategoryToListResponse(d *domain.Category, langCode string) domain.CategoryListResponse {
+	response := domain.CategoryListResponse{
 		ID:           d.ID,
 		ParentID:     d.ParentID,
 		CategoryCode: d.CategoryCode,
@@ -260,25 +270,25 @@ func CategoryToListItem(d *domain.Category, langCode string) domain.CategoryList
 	// Find translation for the requested language
 	for _, translation := range d.Translations {
 		if translation.LangCode == langCode {
-			response.Name = translation.CategoryName
+			response.CategoryName = translation.CategoryName
 			response.Description = translation.Description
 			break
 		}
 	}
 
 	// If no translation found for requested language, use first available
-	if response.Name == "" && len(d.Translations) > 0 {
-		response.Name = d.Translations[0].CategoryName
+	if response.CategoryName == "" && len(d.Translations) > 0 {
+		response.CategoryName = d.Translations[0].CategoryName
 		response.Description = d.Translations[0].Description
 	}
 
 	return response
 }
 
-func CategoriesToListItems(categories []domain.Category, langCode string) []domain.CategoryListItem {
-	responses := make([]domain.CategoryListItem, len(categories))
+func CategoriesToListResponses(categories []domain.Category, langCode string) []domain.CategoryListResponse {
+	responses := make([]domain.CategoryListResponse, len(categories))
 	for i, category := range categories {
-		responses[i] = CategoryToListItem(&category, langCode)
+		responses[i] = CategoryToListResponse(&category, langCode)
 	}
 	return responses
 }

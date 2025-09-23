@@ -46,27 +46,36 @@ type IssueReportTranslation struct {
 	ResolutionNotes *string `json:"resolutionNotes"`
 }
 
+type IssueReportTranslationResponse struct {
+	LangCode        string  `json:"langCode"`
+	Title           string  `json:"title"`
+	Description     *string `json:"description"`
+	ResolutionNotes *string `json:"resolutionNotes"`
+}
+
 type IssueReportResponse struct {
-	ID              string                   `json:"id"`
-	AssetID         string                   `json:"assetId"`
-	ReportedByID    string                   `json:"reportedById"`
-	ReportedDate    string                   `json:"reportedDate"`
-	IssueType       string                   `json:"issueType"`
-	Priority        IssuePriority            `json:"priority"`
-	Status          IssueStatus              `json:"status"`
-	ResolvedDate    *string                  `json:"resolvedDate,omitempty"`
-	ResolvedByID    *string                  `json:"resolvedById,omitempty"`
-	Title           string                   `json:"title"`
-	Description     *string                  `json:"description,omitempty"`
-	ResolutionNotes *string                  `json:"resolutionNotes,omitempty"`
-	Translations    []IssueReportTranslation `json:"translations"`
+	ID              string                           `json:"id"`
+	AssetID         string                           `json:"assetId"`
+	ReportedByID    string                           `json:"reportedById"`
+	ReportedDate    string                           `json:"reportedDate"`
+	IssueType       string                           `json:"issueType"`
+	Priority        IssuePriority                    `json:"priority"`
+	Status          IssueStatus                      `json:"status"`
+	ResolvedDate    *string                          `json:"resolvedDate,omitempty"`
+	ResolvedByID    *string                          `json:"resolvedById,omitempty"`
+	Title           string                           `json:"title"`
+	Description     *string                          `json:"description,omitempty"`
+	ResolutionNotes *string                          `json:"resolutionNotes,omitempty"`
+	CreatedAt       string                           `json:"createdAt"`
+	UpdatedAt       string                           `json:"updatedAt"`
+	Translations    []IssueReportTranslationResponse `json:"translations"`
 	// * Populated
 	Asset      AssetResponse `json:"asset"`
 	ReportedBy UserResponse  `json:"reportedBy"`
 	ResolvedBy *UserResponse `json:"resolvedBy,omitempty"`
 }
 
-type IssueReportListItem struct {
+type IssueReportListResponse struct {
 	ID              string        `json:"id"`
 	AssetID         string        `json:"assetId"`
 	ReportedByID    string        `json:"reportedById"`
@@ -79,21 +88,12 @@ type IssueReportListItem struct {
 	Title           string        `json:"title"`
 	Description     *string       `json:"description,omitempty"`
 	ResolutionNotes *string       `json:"resolutionNotes,omitempty"`
-}
-
-type IssueReportListItemResponse struct {
-	ID              string        `json:"id"`
-	AssetID         string        `json:"assetId"`
-	ReportedByID    string        `json:"reportedById"`
-	ReportedDate    string        `json:"reportedDate"`
-	IssueType       string        `json:"issueType"`
-	Priority        IssuePriority `json:"priority"`
-	Status          IssueStatus   `json:"status"`
-	ResolvedDate    *string       `json:"resolvedDate,omitempty"`
-	ResolvedByID    *string       `json:"resolvedById,omitempty"`
-	Title           string        `json:"title"`
-	Description     *string       `json:"description,omitempty"`
-	ResolutionNotes *string       `json:"resolutionNotes,omitempty"`
+	CreatedAt       string        `json:"createdAt"`
+	UpdatedAt       string        `json:"updatedAt"`
+	// * Populated
+	Asset      AssetResponse `json:"asset"`
+	ReportedBy UserResponse  `json:"reportedBy"`
+	ResolvedBy *UserResponse `json:"resolvedBy,omitempty"`
 }
 
 // --- Payloads ---

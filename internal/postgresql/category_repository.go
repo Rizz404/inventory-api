@@ -200,7 +200,7 @@ func (r *CategoryRepository) DeleteCategory(ctx context.Context, categoryId stri
 }
 
 // *===========================QUERY===========================*
-func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListItem, error) {
+func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error) {
 	var categories []model.Category
 	db := r.db.WithContext(ctx).
 		Table("categories c").
@@ -221,12 +221,11 @@ func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params 
 		return nil, domain.ErrInternal(err)
 	}
 
-	// Convert to domain categories first, then to list items
-	domainCategories := mapper.ToDomainCategories(categories)
-	return mapper.CategoriesToListItems(domainCategories, langCode), nil
+	// Convert to domain categories
+	return mapper.ToDomainCategories(categories), nil
 }
 
-func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListItem, error) {
+func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error) {
 	var categories []model.Category
 	db := r.db.WithContext(ctx).
 		Table("categories c").
@@ -248,8 +247,7 @@ func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params que
 	}
 
 	// Convert to domain categories
-	domainCategories := mapper.ToDomainCategories(categories)
-	return mapper.CategoriesToListItems(domainCategories, langCode), nil
+	return mapper.ToDomainCategories(categories), nil
 }
 
 func (r *CategoryRepository) GetCategoryById(ctx context.Context, categoryId string) (domain.Category, error) {

@@ -70,6 +70,31 @@ type AssetResponse struct {
 	AssignedTo *UserResponse     `json:"assignedTo,omitempty"`
 }
 
+type AssetListResponse struct {
+	ID                 string         `json:"id"`
+	AssetTag           string         `json:"assetTag"`
+	DataMatrixImageUrl string         `json:"dataMatrixImageUrl"`
+	AssetName          string         `json:"assetName"`
+	CategoryID         string         `json:"categoryId"`
+	Brand              *string        `json:"brand,omitempty"`
+	Model              *string        `json:"model,omitempty"`
+	SerialNumber       *string        `json:"serialNumber,omitempty"`
+	PurchaseDate       *string        `json:"purchaseDate,omitempty"`
+	PurchasePrice      *float64       `json:"purchasePrice,omitempty"`
+	VendorName         *string        `json:"vendorName,omitempty"`
+	WarrantyEnd        *string        `json:"warrantyEnd,omitempty"`
+	Status             AssetStatus    `json:"status"`
+	Condition          AssetCondition `json:"condition"`
+	LocationID         *string        `json:"locationId,omitempty"`
+	AssignedToID       *string        `json:"assignedToId,omitempty"`
+	CreatedAt          string         `json:"createdAt"`
+	UpdatedAt          string         `json:"updatedAt"`
+	// * Populated
+	Category   *CategoryResponse `json:"category,omitempty"`
+	Location   *LocationResponse `json:"location,omitempty"`
+	AssignedTo *UserResponse     `json:"assignedTo,omitempty"`
+}
+
 // --- Payloads ---
 
 type CreateAssetPayload struct {

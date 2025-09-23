@@ -46,6 +46,20 @@ type UserResponse struct {
 	UpdatedAt     string   `json:"updatedAt"`
 }
 
+type UserListResponse struct {
+	ID            string   `json:"id"`
+	Name          string   `json:"name"`
+	Email         string   `json:"email"`
+	FullName      string   `json:"fullName"`
+	Role          UserRole `json:"role"`
+	EmployeeID    *string  `json:"employeeId"`
+	PreferredLang string   `json:"preferredLang"`
+	IsActive      bool     `json:"isActive"`
+	AvatarURL     *string  `json:"avatarUrl"`
+	CreatedAt     string   `json:"createdAt"`
+	UpdatedAt     string   `json:"updatedAt"`
+}
+
 type LoginResponse struct {
 	User         UserResponse `json:"user"`
 	AccessToken  string       `json:"accessToken"`

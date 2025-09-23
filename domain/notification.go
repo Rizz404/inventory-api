@@ -34,37 +34,32 @@ type NotificationTranslation struct {
 	Message        string `json:"message"`
 }
 
+type NotificationTranslationResponse struct {
+	LangCode string `json:"langCode"`
+	Title    string `json:"title"`
+	Message  string `json:"message"`
+}
+
 type NotificationResponse struct {
-	ID             string                    `json:"id"`
-	UserID         string                    `json:"userId"`
-	RelatedAssetID *string                   `json:"relatedAssetId,omitempty"`
-	Type           NotificationType          `json:"type"`
-	IsRead         bool                      `json:"isRead"`
-	CreatedAt      string                    `json:"createdAt"`
-	Title          string                    `json:"title"`
-	Message        string                    `json:"message"`
-	Translations   []NotificationTranslation `json:"translations"`
+	ID             string                            `json:"id"`
+	UserID         string                            `json:"userId"`
+	RelatedAssetID *string                           `json:"relatedAssetId,omitempty"`
+	Type           NotificationType                  `json:"type"`
+	IsRead         bool                              `json:"isRead"`
+	CreatedAt      string                            `json:"createdAt"`
+	Title          string                            `json:"title"`
+	Message        string                            `json:"message"`
+	Translations   []NotificationTranslationResponse `json:"translations"`
 	// * Populated
 	// ! cuma notification gak perlu populated table biar gak berat
 	// User         UserResponse   `json:"user"`
 	// RelatedAsset *AssetResponse `json:"relatedAsset,omitempty"`
 }
 
-type NotificationListItem struct {
+type NotificationListResponse struct {
 	ID             string           `json:"id"`
 	UserID         string           `json:"userId"`
-	RelatedAssetID *string          `json:"relatedAssetId"`
-	Type           NotificationType `json:"type"`
-	IsRead         bool             `json:"isRead"`
-	CreatedAt      string           `json:"createdAt"`
-	Title          string           `json:"title"`
-	Message        string           `json:"message"`
-}
-
-type NotificationListItemResponse struct {
-	ID             string           `json:"id"`
-	UserID         string           `json:"userId"`
-	RelatedAssetID *string          `json:"relatedAssetId"`
+	RelatedAssetID *string          `json:"relatedAssetId,omitempty"`
 	Type           NotificationType `json:"type"`
 	IsRead         bool             `json:"isRead"`
 	CreatedAt      string           `json:"createdAt"`

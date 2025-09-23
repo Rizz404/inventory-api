@@ -17,8 +17,8 @@ type Repository interface {
 	DeleteCategory(ctx context.Context, categoryId string) error
 
 	// * QUERY
-	GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListItem, error)
-	GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListItem, error)
+	GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error)
+	GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error)
 	GetCategoryById(ctx context.Context, categoryId string) (domain.Category, error)
 	GetCategoryByCode(ctx context.Context, categoryCode string) (domain.Category, error)
 	GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error)
@@ -37,8 +37,8 @@ type CategoryService interface {
 	DeleteCategory(ctx context.Context, categoryId string) error
 
 	// * QUERY
-	GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListItemResponse, int64, error)
-	GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListItemResponse, error)
+	GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListResponse, int64, error)
+	GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListResponse, error)
 	GetCategoryById(ctx context.Context, categoryId string, langCode string) (domain.CategoryResponse, error)
 	GetCategoryByCode(ctx context.Context, categoryCode string, langCode string) (domain.CategoryResponse, error)
 	GetCategoryHierarchy(ctx context.Context, langCode string) ([]domain.CategoryResponse, error)
@@ -147,7 +147,7 @@ func (s *Service) DeleteCategory(ctx context.Context, categoryId string) error {
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListItemResponse, int64, error) {
+func (s *Service) GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListResponse, int64, error) {
 	categories, err := s.Repo.GetCategoriesPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -159,42 +159,20 @@ func (s *Service) GetCategoriesPaginated(ctx context.Context, params query.Param
 		return nil, 0, err
 	}
 
-	// Convert CategoryListItem to CategoryListItemResponse
-	responses := make([]domain.CategoryListItemResponse, len(categories))
-	for i, item := range categories {
-		responses[i] = domain.CategoryListItemResponse{
-			ID:           item.ID,
-			ParentID:     item.ParentID,
-			CategoryCode: item.CategoryCode,
-			Name:         item.Name,
-			Description:  item.Description,
-			CreatedAt:    item.CreatedAt,
-			UpdatedAt:    item.UpdatedAt,
-		}
-	}
+	// Convert Category to CategoryListResponse using mapper
+	responses := mapper.CategoriesToListResponses(categories, langCode)
 
 	return responses, count, nil
 }
 
-func (s *Service) GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListItemResponse, error) {
+func (s *Service) GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListResponse, error) {
 	categories, err := s.Repo.GetCategoriesCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert CategoryListItem to CategoryListItemResponse
-	responses := make([]domain.CategoryListItemResponse, len(categories))
-	for i, item := range categories {
-		responses[i] = domain.CategoryListItemResponse{
-			ID:           item.ID,
-			ParentID:     item.ParentID,
-			CategoryCode: item.CategoryCode,
-			Name:         item.Name,
-			Description:  item.Description,
-			CreatedAt:    item.CreatedAt,
-			UpdatedAt:    item.UpdatedAt,
-		}
-	}
+	// Convert Category to CategoryListResponse using mapper
+	responses := mapper.CategoriesToListResponses(categories, langCode)
 
 	return responses, nil
 }
