@@ -23,38 +23,32 @@ type LocationTranslation struct {
 	LocationName string `json:"locationName"`
 }
 
+type LocationTranslationResponse struct {
+	LangCode     string `json:"langCode"`
+	LocationName string `json:"locationName"`
+}
+
 type LocationResponse struct {
-	ID           string   `json:"id"`
-	LocationCode string   `json:"locationCode"`
-	Building     *string  `json:"building"`
-	Floor        *string  `json:"floor"`
-	Latitude     *float64 `json:"latitude"`
-	Longitude    *float64 `json:"longitude"`
-	Name         string   `json:"name"`
-	CreatedAt    string   `json:"createdAt"`
-	UpdatedAt    string   `json:"updatedAt"`
+	ID           string                        `json:"id"`
+	LocationName string                        `json:"locationName"`
+	LocationCode string                        `json:"locationCode"`
+	Building     *string                       `json:"building"`
+	Floor        *string                       `json:"floor"`
+	Latitude     *float64                      `json:"latitude"`
+	Longitude    *float64                      `json:"longitude"`
+	CreatedAt    string                        `json:"createdAt"`
+	UpdatedAt    string                        `json:"updatedAt"`
+	Translations []LocationTranslationResponse `json:"translations"`
 }
 
-type LocationListItem struct {
+type LocationListResponse struct {
 	ID           string   `json:"id"`
+	LocationName string   `json:"locationName"`
 	LocationCode string   `json:"locationCode"`
 	Building     *string  `json:"building"`
 	Floor        *string  `json:"floor"`
 	Latitude     *float64 `json:"latitude"`
 	Longitude    *float64 `json:"longitude"`
-	Name         string   `json:"name"`
-	CreatedAt    string   `json:"createdAt"`
-	UpdatedAt    string   `json:"updatedAt"`
-}
-
-type LocationListItemResponse struct {
-	ID           string   `json:"id"`
-	LocationCode string   `json:"locationCode"`
-	Building     *string  `json:"building"`
-	Floor        *string  `json:"floor"`
-	Latitude     *float64 `json:"latitude"`
-	Longitude    *float64 `json:"longitude"`
-	Name         string   `json:"name"`
 	CreatedAt    string   `json:"createdAt"`
 	UpdatedAt    string   `json:"updatedAt"`
 }

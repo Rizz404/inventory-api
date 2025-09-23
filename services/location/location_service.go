@@ -17,8 +17,8 @@ type Repository interface {
 	DeleteLocation(ctx context.Context, locationId string) error
 
 	// * QUERY
-	GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListItem, error)
-	GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListItem, error)
+	GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error)
+	GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error)
 	GetLocationById(ctx context.Context, locationId string) (domain.Location, error)
 	GetLocationByCode(ctx context.Context, locationCode string) (domain.Location, error)
 	GetLocationHierarchy(ctx context.Context, langCode string) ([]domain.LocationResponse, error)
@@ -37,8 +37,8 @@ type LocationService interface {
 	DeleteLocation(ctx context.Context, locationId string) error
 
 	// * QUERY
-	GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListItemResponse, int64, error)
-	GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListItemResponse, error)
+	GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListResponse, int64, error)
+	GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListResponse, error)
 	GetLocationById(ctx context.Context, locationId string, langCode string) (domain.LocationResponse, error)
 	GetLocationByCode(ctx context.Context, locationCode string, langCode string) (domain.LocationResponse, error)
 	GetLocationHierarchy(ctx context.Context, langCode string) ([]domain.LocationResponse, error)
@@ -131,7 +131,7 @@ func (s *Service) DeleteLocation(ctx context.Context, locationId string) error {
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListItemResponse, int64, error) {
+func (s *Service) GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListResponse, int64, error) {
 	locations, err := s.Repo.GetLocationsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -143,46 +143,20 @@ func (s *Service) GetLocationsPaginated(ctx context.Context, params query.Params
 		return nil, 0, err
 	}
 
-	// Convert LocationListItem to LocationListItemResponse
-	responses := make([]domain.LocationListItemResponse, len(locations))
-	for i, item := range locations {
-		responses[i] = domain.LocationListItemResponse{
-			ID:           item.ID,
-			LocationCode: item.LocationCode,
-			Building:     item.Building,
-			Floor:        item.Floor,
-			Latitude:     item.Latitude,
-			Longitude:    item.Longitude,
-			Name:         item.Name,
-			CreatedAt:    item.CreatedAt,
-			UpdatedAt:    item.UpdatedAt,
-		}
-	}
+	// Convert Location to LocationListResponse using mapper
+	responses := mapper.LocationsToListResponses(locations, langCode)
 
 	return responses, count, nil
 }
 
-func (s *Service) GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListItemResponse, error) {
+func (s *Service) GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListResponse, error) {
 	locations, err := s.Repo.GetLocationsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert LocationListItem to LocationListItemResponse
-	responses := make([]domain.LocationListItemResponse, len(locations))
-	for i, item := range locations {
-		responses[i] = domain.LocationListItemResponse{
-			ID:           item.ID,
-			LocationCode: item.LocationCode,
-			Building:     item.Building,
-			Floor:        item.Floor,
-			Latitude:     item.Latitude,
-			Longitude:    item.Longitude,
-			Name:         item.Name,
-			CreatedAt:    item.CreatedAt,
-			UpdatedAt:    item.UpdatedAt,
-		}
-	}
+	// Convert Location to LocationListResponse using mapper
+	responses := mapper.LocationsToListResponses(locations, langCode)
 
 	return responses, nil
 }

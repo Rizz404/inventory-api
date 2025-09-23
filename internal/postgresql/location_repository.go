@@ -187,7 +187,7 @@ func (r *LocationRepository) DeleteLocation(ctx context.Context, locationId stri
 }
 
 // *===========================QUERY===========================*
-func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListItem, error) {
+func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error) {
 	var locations []model.Location
 	db := r.db.WithContext(ctx).
 		Table("locations l").
@@ -208,12 +208,11 @@ func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params q
 		return nil, domain.ErrInternal(err)
 	}
 
-	// Convert to domain locations first, then to list items
-	domainLocations := mapper.ToDomainLocations(locations)
-	return mapper.LocationsToListItems(domainLocations, langCode), nil
+	// Convert to domain locations
+	return mapper.ToDomainLocations(locations), nil
 }
 
-func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListItem, error) {
+func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error) {
 	var locations []model.Location
 	db := r.db.WithContext(ctx).
 		Table("locations l").
@@ -235,8 +234,7 @@ func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params quer
 	}
 
 	// Convert to domain locations
-	domainLocations := mapper.ToDomainLocations(locations)
-	return mapper.LocationsToListItems(domainLocations, langCode), nil
+	return mapper.ToDomainLocations(locations), nil
 }
 
 func (r *LocationRepository) GetLocationById(ctx context.Context, locationId string) (domain.Location, error) {
