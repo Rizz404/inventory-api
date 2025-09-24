@@ -1,4 +1,4 @@
-package maintenance
+package maintenance_record
 
 import (
 	"context"
@@ -10,24 +10,12 @@ import (
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
 
-// Repository defines data operations for maintenance schedules and records
+// Repository defines data operations for maintenance records
 type Repository interface {
-	// Schedule mutations
-	CreateSchedule(ctx context.Context, payload *domain.MaintenanceSchedule) (domain.MaintenanceSchedule, error)
-	UpdateSchedule(ctx context.Context, scheduleId string, payload *domain.MaintenanceSchedule) (domain.MaintenanceSchedule, error)
-	DeleteSchedule(ctx context.Context, scheduleId string) error
-
 	// Record mutations
 	CreateRecord(ctx context.Context, payload *domain.MaintenanceRecord) (domain.MaintenanceRecord, error)
 	UpdateRecord(ctx context.Context, recordId string, payload *domain.MaintenanceRecord) (domain.MaintenanceRecord, error)
 	DeleteRecord(ctx context.Context, recordId string) error
-
-	// Schedule queries
-	GetSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceSchedule, error)
-	GetSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceSchedule, error)
-	GetScheduleById(ctx context.Context, scheduleId string) (domain.MaintenanceSchedule, error)
-	CountSchedules(ctx context.Context, params query.Params) (int64, error)
-	CheckScheduleExist(ctx context.Context, scheduleId string) (bool, error)
 
 	// Record queries
 	GetRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecord, error)
@@ -37,7 +25,7 @@ type Repository interface {
 	CheckRecordExist(ctx context.Context, recordId string) (bool, error)
 
 	// Statistics
-	GetMaintenanceStatistics(ctx context.Context) (domain.MaintenanceStatistics, error)
+	GetMaintenanceRecordStatistics(ctx context.Context) (domain.MaintenanceRecordStatistics, error)
 }
 
 // AssetService for existence checks and populating asset info
@@ -52,19 +40,8 @@ type UserService interface {
 	GetUserById(ctx context.Context, userId string) (domain.UserResponse, error)
 }
 
-// MaintenanceService business operations
-type MaintenanceService interface {
-	// Schedules
-	CreateMaintenanceSchedule(ctx context.Context, payload *domain.CreateMaintenanceSchedulePayload, createdBy string) (domain.MaintenanceScheduleResponse, error)
-	UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.CreateMaintenanceSchedulePayload) (domain.MaintenanceScheduleResponse, error)
-	DeleteMaintenanceSchedule(ctx context.Context, scheduleId string) error
-	GetMaintenanceSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListResponse, int64, error)
-	GetMaintenanceSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListResponse, error)
-	GetMaintenanceScheduleById(ctx context.Context, scheduleId string, langCode string) (domain.MaintenanceScheduleResponse, error)
-	CheckMaintenanceScheduleExists(ctx context.Context, scheduleId string) (bool, error)
-	CountMaintenanceSchedules(ctx context.Context, params query.Params) (int64, error)
-
-	// Records
+// MaintenanceRecordService business operations
+type MaintenanceRecordService interface {
 	CreateMaintenanceRecord(ctx context.Context, payload *domain.CreateMaintenanceRecordPayload, performedBy string) (domain.MaintenanceRecordResponse, error)
 	UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.CreateMaintenanceRecordPayload) (domain.MaintenanceRecordResponse, error)
 	DeleteMaintenanceRecord(ctx context.Context, recordId string) error
@@ -73,9 +50,7 @@ type MaintenanceService interface {
 	GetMaintenanceRecordById(ctx context.Context, recordId string, langCode string) (domain.MaintenanceRecordResponse, error)
 	CheckMaintenanceRecordExists(ctx context.Context, recordId string) (bool, error)
 	CountMaintenanceRecords(ctx context.Context, params query.Params) (int64, error)
-
-	// Statistics
-	GetMaintenanceStatistics(ctx context.Context) (domain.MaintenanceStatisticsResponse, error)
+	GetMaintenanceRecordStatistics(ctx context.Context) (domain.MaintenanceRecordStatisticsResponse, error)
 }
 
 type Service struct {
@@ -84,158 +59,11 @@ type Service struct {
 	UserService  UserService
 }
 
-var _ MaintenanceService = (*Service)(nil)
+var _ MaintenanceRecordService = (*Service)(nil)
 
-func NewService(r Repository, assetSvc AssetService, userSvc UserService) MaintenanceService {
+func NewService(r Repository, assetSvc AssetService, userSvc UserService) MaintenanceRecordService {
 	return &Service{Repo: r, AssetService: assetSvc, UserService: userSvc}
 }
-
-// =========================== SCHEDULES ===========================
-
-func (s *Service) CreateMaintenanceSchedule(ctx context.Context, payload *domain.CreateMaintenanceSchedulePayload, createdBy string) (domain.MaintenanceScheduleResponse, error) {
-	// Validate creator user exists
-	if createdBy != "" {
-		if exists, err := s.UserService.CheckUserExists(ctx, createdBy); err != nil {
-			return domain.MaintenanceScheduleResponse{}, err
-		} else if !exists {
-			return domain.MaintenanceScheduleResponse{}, domain.ErrNotFoundWithKey(utils.ErrUserNotFoundKey)
-		}
-	}
-	// Validate asset exists
-	if exists, err := s.AssetService.CheckAssetExists(ctx, payload.AssetID); err != nil {
-		return domain.MaintenanceScheduleResponse{}, err
-	} else if !exists {
-		return domain.MaintenanceScheduleResponse{}, domain.ErrNotFoundWithKey(utils.ErrAssetNotFoundKey)
-	}
-
-	// Parse scheduled date
-	scheduledDate, err := time.Parse("2006-01-02", payload.ScheduledDate)
-	if err != nil {
-		return domain.MaintenanceScheduleResponse{}, domain.ErrBadRequestWithKey(utils.ErrMaintenanceScheduleDateRequiredKey)
-	}
-
-	// Build domain entity
-	schedule := domain.MaintenanceSchedule{
-		AssetID:         payload.AssetID,
-		MaintenanceType: payload.MaintenanceType,
-		ScheduledDate:   scheduledDate,
-		FrequencyMonths: payload.FrequencyMonths,
-		Status:          domain.StatusScheduled,
-		CreatedBy:       createdBy,
-		Translations:    make([]domain.MaintenanceScheduleTranslation, len(payload.Translations)),
-	}
-	for i, t := range payload.Translations {
-		schedule.Translations[i] = domain.MaintenanceScheduleTranslation{
-			LangCode:    t.LangCode,
-			Title:       t.Title,
-			Description: t.Description,
-		}
-	}
-
-	created, err := s.Repo.CreateSchedule(ctx, &schedule)
-	if err != nil {
-		return domain.MaintenanceScheduleResponse{}, err
-	}
-	return mapper.MaintenanceScheduleToResponse(&created, mapper.DefaultLangCode), nil
-}
-
-func (s *Service) UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.CreateMaintenanceSchedulePayload) (domain.MaintenanceScheduleResponse, error) {
-	// Ensure schedule exists
-	if exists, err := s.Repo.CheckScheduleExist(ctx, scheduleId); err != nil {
-		return domain.MaintenanceScheduleResponse{}, err
-	} else if !exists {
-		return domain.MaintenanceScheduleResponse{}, domain.ErrNotFoundWithKey(utils.ErrMaintenanceScheduleNotFoundKey)
-	}
-
-	// Validate asset if provided
-	if payload.AssetID != "" {
-		if exists, err := s.AssetService.CheckAssetExists(ctx, payload.AssetID); err != nil {
-			return domain.MaintenanceScheduleResponse{}, err
-		} else if !exists {
-			return domain.MaintenanceScheduleResponse{}, domain.ErrNotFoundWithKey(utils.ErrAssetNotFoundKey)
-		}
-	}
-
-	// Parse scheduled date
-	var scheduledDate time.Time
-	if payload.ScheduledDate != "" {
-		d, err := time.Parse("2006-01-02", payload.ScheduledDate)
-		if err != nil {
-			return domain.MaintenanceScheduleResponse{}, domain.ErrBadRequestWithKey(utils.ErrMaintenanceScheduleDateRequiredKey)
-		}
-		scheduledDate = d
-	}
-
-	// Build partial domain for update
-	schedule := domain.MaintenanceSchedule{
-		AssetID:         payload.AssetID,
-		MaintenanceType: payload.MaintenanceType,
-		ScheduledDate:   scheduledDate,
-		FrequencyMonths: payload.FrequencyMonths,
-		Translations:    make([]domain.MaintenanceScheduleTranslation, len(payload.Translations)),
-	}
-	for i, t := range payload.Translations {
-		schedule.Translations[i] = domain.MaintenanceScheduleTranslation{
-			LangCode:    t.LangCode,
-			Title:       t.Title,
-			Description: t.Description,
-		}
-	}
-
-	updated, err := s.Repo.UpdateSchedule(ctx, scheduleId, &schedule)
-	if err != nil {
-		return domain.MaintenanceScheduleResponse{}, err
-	}
-	return mapper.MaintenanceScheduleToResponse(&updated, mapper.DefaultLangCode), nil
-}
-
-func (s *Service) DeleteMaintenanceSchedule(ctx context.Context, scheduleId string) error {
-	return s.Repo.DeleteSchedule(ctx, scheduleId)
-}
-
-func (s *Service) GetMaintenanceSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListResponse, int64, error) {
-	schedules, err := s.Repo.GetSchedulesPaginated(ctx, params, langCode)
-	if err != nil {
-		return nil, 0, err
-	}
-	count, err := s.Repo.CountSchedules(ctx, params)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	schedulesResponses := mapper.MaintenanceSchedulesToListResponses(schedules, langCode)
-
-	return schedulesResponses, count, nil
-}
-
-func (s *Service) GetMaintenanceSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListResponse, error) {
-	schedules, err := s.Repo.GetSchedulesCursor(ctx, params, langCode)
-	if err != nil {
-		return nil, err
-	}
-
-	schedulesResponses := mapper.MaintenanceSchedulesToListResponses(schedules, langCode)
-
-	return schedulesResponses, nil
-}
-
-func (s *Service) GetMaintenanceScheduleById(ctx context.Context, scheduleId string, langCode string) (domain.MaintenanceScheduleResponse, error) {
-	schedule, err := s.Repo.GetScheduleById(ctx, scheduleId)
-	if err != nil {
-		return domain.MaintenanceScheduleResponse{}, err
-	}
-	return mapper.MaintenanceScheduleToResponse(&schedule, langCode), nil
-}
-
-func (s *Service) CheckMaintenanceScheduleExists(ctx context.Context, scheduleId string) (bool, error) {
-	return s.Repo.CheckScheduleExist(ctx, scheduleId)
-}
-
-func (s *Service) CountMaintenanceSchedules(ctx context.Context, params query.Params) (int64, error) {
-	return s.Repo.CountSchedules(ctx, params)
-}
-
-// =========================== RECORDS ===========================
 
 func (s *Service) CreateMaintenanceRecord(ctx context.Context, payload *domain.CreateMaintenanceRecordPayload, performedBy string) (domain.MaintenanceRecordResponse, error) {
 	// Validate asset exists
@@ -399,12 +227,10 @@ func (s *Service) CountMaintenanceRecords(ctx context.Context, params query.Para
 	return s.Repo.CountRecords(ctx, params)
 }
 
-// =========================== STATISTICS ===========================
-
-func (s *Service) GetMaintenanceStatistics(ctx context.Context) (domain.MaintenanceStatisticsResponse, error) {
-	stats, err := s.Repo.GetMaintenanceStatistics(ctx)
+func (s *Service) GetMaintenanceRecordStatistics(ctx context.Context) (domain.MaintenanceRecordStatisticsResponse, error) {
+	stats, err := s.Repo.GetMaintenanceRecordStatistics(ctx)
 	if err != nil {
-		return domain.MaintenanceStatisticsResponse{}, err
+		return domain.MaintenanceRecordStatisticsResponse{}, err
 	}
-	return mapper.MaintenanceStatisticsToResponse(&stats), nil
+	return mapper.MaintenanceRecordStatisticsToResponse(&stats), nil
 }
