@@ -1,29 +1,42 @@
 # Inventory API Makefile
 
-.PHONY: help seed seed-users seed-categories seed-locations seed-all seed-quick seed-demo seed-load-test clean-db build-seeder
+.PHONY: help seed seed-users seed-categories seed-locations seed-all seed-quick seed-demo seed-load-test clean-db build-seeder swagger-gen build run dev
 
 # Default target
 help:
-	@echo "Inventory API Seeder Commands"
-	@echo "============================"
+	@echo "Inventory API Commands"
+	@echo "===================="
 	@echo ""
-	@echo "Seeding Commands:"
+	@echo "🚀 Development Commands:"
+	@echo "  make dev               - Generate swagger + build + run (development mode)"
+	@echo "  make build             - Build the application"
+	@echo "  make run               - Build and run the application"
+	@echo "  make swagger-gen       - Generate Swagger documentation"
+	@echo "  make clean             - Clean build artifacts and docs"
+	@echo ""
+	@echo "📚 Documentation:"
+	@echo "  After running 'make dev' or 'make run', access:"
+	@echo "  • Swagger UI: http://localhost:8080/docs/"
+	@echo "  • API Base: http://localhost:8080/api/v1/"
+	@echo ""
+	@echo "🌱 Seeding Commands:"
 	@echo "  make seed              - Run seeder with interactive prompts"
 	@echo "  make seed-users        - Seed 20 users"
 	@echo "  make seed-categories   - Seed 20 categories (with hierarchy)"
 	@echo "  make seed-locations    - Seed 20 locations"
 	@echo "  make seed-all          - Seed all data types (20 each)"
 	@echo ""
-	@echo "Quick Presets:"
+	@echo "⚡ Quick Presets:"
 	@echo "  make seed-quick        - Quick setup (10 records each)"
 	@echo "  make seed-demo         - Demo data (50 records each)"
 	@echo "  make seed-load-test    - Load test data (500 records each)"
 	@echo ""
-	@echo "Utility Commands:"
+	@echo "🔧 Utility Commands:"
 	@echo "  make build-seeder      - Build seeder binary"
 	@echo "  make clean-db          - Clean database (requires confirmation)"
+	@echo "  make install-swagger   - Install Swagger CLI"
 	@echo ""
-	@echo "Custom Usage:"
+	@echo "📝 Custom Usage:"
 	@echo "  make seed TYPE=users COUNT=100"
 	@echo "  make seed TYPE=categories COUNT=50"
 	@echo ""
@@ -157,5 +170,51 @@ db-stats:
 	@echo "Current Database Statistics:"
 	@echo "=========================="
 	@psql $(DSN) -c "SELECT 'Users' as table_name, COUNT(*) as count FROM users UNION ALL SELECT 'Categories', COUNT(*) FROM categories UNION ALL SELECT 'Locations', COUNT(*) FROM locations ORDER BY table_name;"
+
+# ==============================================================================
+# SWAGGER DOCUMENTATION
+# ==============================================================================
+
+# Generate Swagger documentation
+swagger-gen:
+	@echo "🔄 Generating Swagger documentation..."
+	swag init -g app/main.go -o docs --parseDependency --parseInternal
+	@echo "✅ Swagger documentation generated successfully"
+	@echo "📖 Documentation available at: http://localhost:8080/docs/"
+
+# ==============================================================================
+# BUILD & RUN COMMANDS
+# ==============================================================================
+
+# Build the application
+build:
+	@echo "🔨 Building application..."
+	go build -o bin/app.exe app/main.go
+	@echo "✅ Build completed: bin/app.exe"
+
+# Run the application
+run: build
+	@echo "🚀 Starting application..."
+	./bin/app.exe
+
+# Development mode (with swagger generation)
+dev: swagger-gen build
+	@echo "🚀 Starting application in development mode..."
+	./bin/app.exe
+
+# Install swagger CLI if not available
+install-swagger:
+	@echo "📦 Installing Swagger CLI..."
+	go install github.com/swaggo/swag/cmd/swag@latest
+	@echo "✅ Swagger CLI installed"
+
+# Clean build artifacts
+clean:
+	@echo "🧹 Cleaning build artifacts..."
+	@if exist bin\\app.exe del bin\\app.exe
+	@if exist docs\\docs.go del docs\\docs.go
+	@if exist docs\\swagger.json del docs\\swagger.json
+	@if exist docs\\swagger.yaml del docs\\swagger.yaml
+	@echo "✅ Clean completed"
 
 .DEFAULT_GOAL := help

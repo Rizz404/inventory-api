@@ -1,0 +1,249 @@
+definitions:
+  domain.LoginPayload:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 5
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  domain.LoginResponse:
+    properties:
+      accessToken:
+        type: string
+      refreshToken:
+        type: string
+      user:
+        $ref: '#/definitions/domain.UserResponse'
+    type: object
+  domain.RegisterPayload:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 50
+        minLength: 3
+        type: string
+      password:
+        minLength: 5
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  domain.User:
+    properties:
+      avatarUrl:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      employeeId:
+        description: '! gak usah diapa-apain dulu, soalnya belum ada'
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+      isActive:
+        type: boolean
+      name:
+        type: string
+      passwordHash:
+        type: string
+      preferredLang:
+        type: string
+      role:
+        $ref: '#/definitions/domain.UserRole'
+      updatedAt:
+        type: string
+    type: object
+  domain.UserResponse:
+    properties:
+      avatarUrl:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      employeeId:
+        description: '! gak usah diapa-apain dulu, soalnya belum ada'
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+      isActive:
+        type: boolean
+      name:
+        type: string
+      preferredLang:
+        type: string
+      role:
+        $ref: '#/definitions/domain.UserRole'
+      updatedAt:
+        type: string
+    type: object
+  domain.UserRole:
+    enum:
+    - Admin
+    - Staff
+    - Employee
+    type: string
+    x-enum-varnames:
+    - RoleAdmin
+    - RoleStaff
+    - RoleEmployee
+  github_com_Rizz404_inventory-api_internal_web.CursorInfo:
+    properties:
+      has_next_page:
+        type: boolean
+      next_cursor:
+        type: string
+      per_page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  github_com_Rizz404_inventory-api_internal_web.JSONResponse:
+    properties:
+      cursor:
+        $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.CursorInfo'
+      data: {}
+      error: {}
+      message:
+        type: string
+      pagination:
+        allOf:
+        - $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.PageInfo'
+        description: '* Tergantung datanya jadi bisa gak ada'
+      status:
+        type: string
+    type: object
+  github_com_Rizz404_inventory-api_internal_web.PageInfo:
+    properties:
+      current_page:
+        type: integer
+      has_next_page:
+        type: boolean
+      has_prev_page:
+        type: boolean
+      per_page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  github_com_Rizz404_inventory-api_internal_web.ValidationError:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+      tag:
+        type: string
+      value:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password, returns JWT tokens
+      parameters:
+      - description: User login credentials
+        in: body
+        name: loginPayload
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LoginPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.LoginResponse'
+              type: object
+        "400":
+          description: Validation failed
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.ValidationError'
+                  type: array
+              type: object
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+      summary: User login
+      tags:
+      - Authentication
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user account with name, email, and password
+      parameters:
+      - description: User registration data
+        in: body
+        name: registerPayload
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RegisterPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.User'
+              type: object
+        "400":
+          description: Validation failed
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+            - properties:
+                error:
+                  items:
+                    $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.ValidationError'
+                  type: array
+              type: object
+        "409":
+          description: User already exists
+          schema:
+            $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+      summary: Register a new user
+      tags:
+      - Authentication
+swagger: "2.0"

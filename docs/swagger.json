@@ -1,0 +1,395 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/auth/login": {
+            "post": {
+                "description": "Authenticate user with email and password, returns JWT tokens",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User login",
+                "parameters": [
+                    {
+                        "description": "User login credentials",
+                        "name": "loginPayload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.LoginPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.LoginResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Validation failed",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.ValidationError"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "description": "Register a new user account with name, email, and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "User registration data",
+                        "name": "registerPayload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.RegisterPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Validation failed",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.ValidationError"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "User already exists",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "domain.LoginPayload": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 5
+                }
+            }
+        },
+        "domain.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "refreshToken": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/domain.UserResponse"
+                }
+            }
+        },
+        "domain.RegisterPayload": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 5
+                }
+            }
+        },
+        "domain.User": {
+            "type": "object",
+            "properties": {
+                "avatarUrl": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "employeeId": {
+                    "description": "! gak usah diapa-apain dulu, soalnya belum ada",
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "passwordHash": {
+                    "type": "string"
+                },
+                "preferredLang": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/domain.UserRole"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.UserResponse": {
+            "type": "object",
+            "properties": {
+                "avatarUrl": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "employeeId": {
+                    "description": "! gak usah diapa-apain dulu, soalnya belum ada",
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "preferredLang": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/domain.UserRole"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.UserRole": {
+            "type": "string",
+            "enum": [
+                "Admin",
+                "Staff",
+                "Employee"
+            ],
+            "x-enum-varnames": [
+                "RoleAdmin",
+                "RoleStaff",
+                "RoleEmployee"
+            ]
+        },
+        "github_com_Rizz404_inventory-api_internal_web.CursorInfo": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                },
+                "per_page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Rizz404_inventory-api_internal_web.JSONResponse": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.CursorInfo"
+                },
+                "data": {},
+                "error": {},
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "description": "* Tergantung datanya jadi bisa gak ada",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.PageInfo"
+                        }
+                    ]
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Rizz404_inventory-api_internal_web.PageInfo": {
+            "type": "object",
+            "properties": {
+                "current_page": {
+                    "type": "integer"
+                },
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "has_prev_page": {
+                    "type": "boolean"
+                },
+                "per_page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Rizz404_inventory-api_internal_web.ValidationError": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

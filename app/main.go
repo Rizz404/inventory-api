@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/Rizz404/inventory-api/docs"
 	"github.com/Rizz404/inventory-api/internal/client/cloudinary"
 	"github.com/Rizz404/inventory-api/internal/postgresql"
 	"github.com/Rizz404/inventory-api/internal/rest"
@@ -28,6 +29,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	recovermw "github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/swagger"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -202,6 +204,9 @@ func main() {
 
 	// *===================================ROUTES===================================*
 	app.Get("/metrics", monitor.New())
+
+	// Swagger documentation route
+	app.Get("/docs/*", swagger.HandlerDefault)
 
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
