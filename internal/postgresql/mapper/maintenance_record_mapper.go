@@ -167,12 +167,12 @@ func MaintenanceRecordToResponse(d *domain.MaintenanceRecord, langCode string) d
 		ID:                d.ID,
 		ScheduleID:        d.ScheduleID,
 		AssetID:           d.AssetID,
-		MaintenanceDate:   d.MaintenanceDate.Format(DateFormat),
+		MaintenanceDate:   d.MaintenanceDate,
 		PerformedByUserID: d.PerformedByUser,
 		PerformedByVendor: d.PerformedByVendor,
 		ActualCost:        d.ActualCost,
-		CreatedAt:         d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:         d.UpdatedAt.Format(TimeFormat),
+		CreatedAt:         d.CreatedAt,
+		UpdatedAt:         d.UpdatedAt,
 		Translations:      make([]domain.MaintenanceRecordTranslationResponse, len(d.Translations)),
 	}
 
@@ -208,12 +208,12 @@ func MaintenanceRecordToListResponse(d *domain.MaintenanceRecord, langCode strin
 		ID:                d.ID,
 		ScheduleID:        d.ScheduleID,
 		AssetID:           d.AssetID,
-		MaintenanceDate:   d.MaintenanceDate.Format(DateFormat),
+		MaintenanceDate:   d.MaintenanceDate,
 		PerformedByUserID: d.PerformedByUser,
 		PerformedByVendor: d.PerformedByVendor,
 		ActualCost:        d.ActualCost,
-		CreatedAt:         d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:         d.UpdatedAt.Format(TimeFormat),
+		CreatedAt:         d.CreatedAt,
+		UpdatedAt:         d.UpdatedAt,
 	}
 
 	// Find translation for the requested language

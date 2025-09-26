@@ -34,19 +34,19 @@ type CategoryResponse struct {
 	CategoryName string                        `json:"categoryName"`
 	Description  *string                       `json:"description"`
 	Children     []CategoryResponse            `json:"children"`
-	CreatedAt    string                        `json:"createdAt"`
-	UpdatedAt    string                        `json:"updatedAt"`
+	CreatedAt    time.Time                     `json:"createdAt"`
+	UpdatedAt    time.Time                     `json:"updatedAt"`
 	Translations []CategoryTranslationResponse `json:"translations"`
 }
 
 type CategoryListResponse struct {
-	ID           string  `json:"id"`
-	ParentID     *string `json:"parentId"`
-	CategoryCode string  `json:"categoryCode"`
-	CategoryName string  `json:"categoryName"`
-	Description  *string `json:"description"`
-	CreatedAt    string  `json:"createdAt"`
-	UpdatedAt    string  `json:"updatedAt"`
+	ID           string    `json:"id"`
+	ParentID     *string   `json:"parentId"`
+	CategoryCode string    `json:"categoryCode"`
+	CategoryName string    `json:"categoryName"`
+	Description  *string   `json:"description"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 // --- Payloads ---

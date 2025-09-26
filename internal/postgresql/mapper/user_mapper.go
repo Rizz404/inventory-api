@@ -72,8 +72,8 @@ func UserToResponse(u *domain.User) domain.UserResponse {
 		PreferredLang: u.PreferredLang,
 		IsActive:      u.IsActive,
 		AvatarURL:     u.AvatarURL,
-		CreatedAt:     u.CreatedAt.Format(TimeFormat),
-		UpdatedAt:     u.UpdatedAt.Format(TimeFormat),
+		CreatedAt:     u.CreatedAt,
+		UpdatedAt:     u.UpdatedAt,
 	}
 }
 
@@ -96,8 +96,8 @@ func UserToListResponse(u *domain.User) domain.UserListResponse {
 		PreferredLang: u.PreferredLang,
 		IsActive:      u.IsActive,
 		AvatarURL:     u.AvatarURL,
-		CreatedAt:     u.CreatedAt.Format(TimeFormat),
-		UpdatedAt:     u.UpdatedAt.Format(TimeFormat),
+		CreatedAt:     u.CreatedAt,
+		UpdatedAt:     u.UpdatedAt,
 	}
 }
 

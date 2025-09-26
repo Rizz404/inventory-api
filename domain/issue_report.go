@@ -57,17 +57,17 @@ type IssueReportResponse struct {
 	ID              string                           `json:"id"`
 	AssetID         string                           `json:"assetId"`
 	ReportedByID    string                           `json:"reportedById"`
-	ReportedDate    string                           `json:"reportedDate"`
+	ReportedDate    time.Time                        `json:"reportedDate"`
 	IssueType       string                           `json:"issueType"`
 	Priority        IssuePriority                    `json:"priority"`
 	Status          IssueStatus                      `json:"status"`
-	ResolvedDate    *string                          `json:"resolvedDate,omitempty"`
+	ResolvedDate    *time.Time                       `json:"resolvedDate,omitempty"`
 	ResolvedByID    *string                          `json:"resolvedById,omitempty"`
 	Title           string                           `json:"title"`
 	Description     *string                          `json:"description,omitempty"`
 	ResolutionNotes *string                          `json:"resolutionNotes,omitempty"`
-	CreatedAt       string                           `json:"createdAt"`
-	UpdatedAt       string                           `json:"updatedAt"`
+	CreatedAt       time.Time                        `json:"createdAt"`
+	UpdatedAt       time.Time                        `json:"updatedAt"`
 	Translations    []IssueReportTranslationResponse `json:"translations"`
 	// * Populated
 	Asset      AssetResponse `json:"asset"`
@@ -79,17 +79,17 @@ type IssueReportListResponse struct {
 	ID              string        `json:"id"`
 	AssetID         string        `json:"assetId"`
 	ReportedByID    string        `json:"reportedById"`
-	ReportedDate    string        `json:"reportedDate"`
+	ReportedDate    time.Time     `json:"reportedDate"`
 	IssueType       string        `json:"issueType"`
 	Priority        IssuePriority `json:"priority"`
 	Status          IssueStatus   `json:"status"`
-	ResolvedDate    *string       `json:"resolvedDate,omitempty"`
+	ResolvedDate    *time.Time    `json:"resolvedDate,omitempty"`
 	ResolvedByID    *string       `json:"resolvedById,omitempty"`
 	Title           string        `json:"title"`
 	Description     *string       `json:"description,omitempty"`
 	ResolutionNotes *string       `json:"resolutionNotes,omitempty"`
-	CreatedAt       string        `json:"createdAt"`
-	UpdatedAt       string        `json:"updatedAt"`
+	CreatedAt       time.Time     `json:"createdAt"`
+	UpdatedAt       time.Time     `json:"updatedAt"`
 	// * Populated
 	Asset      AssetResponse `json:"asset"`
 	ReportedBy UserResponse  `json:"reportedBy"`

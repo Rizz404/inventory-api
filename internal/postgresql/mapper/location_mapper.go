@@ -122,8 +122,8 @@ func LocationToResponse(d *domain.Location, langCode string) domain.LocationResp
 		Floor:        d.Floor,
 		Latitude:     d.Latitude,
 		Longitude:    d.Longitude,
-		CreatedAt:    d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
+		CreatedAt:    d.CreatedAt,
+		UpdatedAt:    d.UpdatedAt,
 		Translations: make([]domain.LocationTranslationResponse, len(d.Translations)),
 	}
 
@@ -167,8 +167,8 @@ func LocationToListResponse(d *domain.Location, langCode string) domain.Location
 		Floor:        d.Floor,
 		Latitude:     d.Latitude,
 		Longitude:    d.Longitude,
-		CreatedAt:    d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
+		CreatedAt:    d.CreatedAt,
+		UpdatedAt:    d.UpdatedAt,
 	}
 
 	// Find translation for the requested language

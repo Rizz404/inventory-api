@@ -39,7 +39,7 @@ type ScanLogResponse struct {
 	ScannedValue    string         `json:"scannedValue"`
 	ScanMethod      ScanMethodType `json:"scanMethod"`
 	ScannedByID     string         `json:"scannedById"`
-	ScanTimestamp   string         `json:"scanTimestamp"`
+	ScanTimestamp   time.Time      `json:"scanTimestamp"`
 	ScanLocationLat *float64       `json:"scanLocationLat,omitempty"`
 	ScanLocationLng *float64       `json:"scanLocationLng,omitempty"`
 	ScanResult      ScanResultType `json:"scanResult"`
@@ -55,7 +55,7 @@ type ScanLogListResponse struct {
 	ScannedValue    string         `json:"scannedValue"`
 	ScanMethod      ScanMethodType `json:"scanMethod"`
 	ScannedByID     string         `json:"scannedById"`
-	ScanTimestamp   string         `json:"scanTimestamp"`
+	ScanTimestamp   time.Time      `json:"scanTimestamp"`
 	ScanLocationLat *float64       `json:"scanLocationLat,omitempty"`
 	ScanLocationLng *float64       `json:"scanLocationLng,omitempty"`
 	ScanResult      ScanResultType `json:"scanResult"`

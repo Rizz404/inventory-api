@@ -147,7 +147,7 @@ func NotificationToResponse(d *domain.Notification, langCode string) domain.Noti
 		RelatedAssetID: d.RelatedAssetID,
 		Type:           d.Type,
 		IsRead:         d.IsRead,
-		CreatedAt:      d.CreatedAt.Format(TimeFormat),
+		CreatedAt:      d.CreatedAt,
 		Translations:   make([]domain.NotificationTranslationResponse, len(d.Translations)),
 	}
 
@@ -193,7 +193,7 @@ func NotificationToListResponse(d *domain.Notification, langCode string) domain.
 		RelatedAssetID: d.RelatedAssetID,
 		Type:           d.Type,
 		IsRead:         d.IsRead,
-		CreatedAt:      d.CreatedAt.Format(TimeFormat),
+		CreatedAt:      d.CreatedAt,
 	}
 
 	// Find translation for the requested language

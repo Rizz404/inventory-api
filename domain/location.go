@@ -36,21 +36,21 @@ type LocationResponse struct {
 	Floor        *string                       `json:"floor"`
 	Latitude     *float64                      `json:"latitude"`
 	Longitude    *float64                      `json:"longitude"`
-	CreatedAt    string                        `json:"createdAt"`
-	UpdatedAt    string                        `json:"updatedAt"`
+	CreatedAt    time.Time                     `json:"createdAt"`
+	UpdatedAt    time.Time                     `json:"updatedAt"`
 	Translations []LocationTranslationResponse `json:"translations"`
 }
 
 type LocationListResponse struct {
-	ID           string   `json:"id"`
-	LocationName string   `json:"locationName"`
-	LocationCode string   `json:"locationCode"`
-	Building     *string  `json:"building"`
-	Floor        *string  `json:"floor"`
-	Latitude     *float64 `json:"latitude"`
-	Longitude    *float64 `json:"longitude"`
-	CreatedAt    string   `json:"createdAt"`
-	UpdatedAt    string   `json:"updatedAt"`
+	ID           string    `json:"id"`
+	LocationName string    `json:"locationName"`
+	LocationCode string    `json:"locationCode"`
+	Building     *string   `json:"building"`
+	Floor        *string   `json:"floor"`
+	Latitude     *float64  `json:"latitude"`
+	Longitude    *float64  `json:"longitude"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 // --- Payloads ---

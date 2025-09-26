@@ -40,10 +40,10 @@ type AssetMovementResponse struct {
 	FromUserID     *string                            `json:"fromUserId,omitempty"`
 	ToUserID       *string                            `json:"toUserId,omitempty"`
 	MovedByID      string                             `json:"movedById"`
-	MovementDate   string                             `json:"movementDate"`
+	MovementDate   time.Time                          `json:"movementDate"`
 	Notes          *string                            `json:"notes,omitempty"`
-	CreatedAt      string                             `json:"createdAt"`
-	UpdatedAt      string                             `json:"updatedAt"`
+	CreatedAt      time.Time                          `json:"createdAt"`
+	UpdatedAt      time.Time                          `json:"updatedAt"`
 	Translations   []AssetMovementTranslationResponse `json:"translations"`
 	// * Populated
 	Asset        AssetResponse     `json:"asset"`
@@ -55,17 +55,17 @@ type AssetMovementResponse struct {
 }
 
 type AssetMovementListResponse struct {
-	ID             string  `json:"id"`
-	AssetID        string  `json:"assetId"`
-	FromLocationID *string `json:"fromLocationId,omitempty"`
-	ToLocationID   *string `json:"toLocationId,omitempty"`
-	FromUserID     *string `json:"fromUserId,omitempty"`
-	ToUserID       *string `json:"toUserId,omitempty"`
-	MovedByID      string  `json:"movedById"`
-	MovementDate   string  `json:"movementDate"`
-	Notes          *string `json:"notes,omitempty"`
-	CreatedAt      string  `json:"createdAt"`
-	UpdatedAt      string  `json:"updatedAt"`
+	ID             string    `json:"id"`
+	AssetID        string    `json:"assetId"`
+	FromLocationID *string   `json:"fromLocationId,omitempty"`
+	ToLocationID   *string   `json:"toLocationId,omitempty"`
+	FromUserID     *string   `json:"fromUserId,omitempty"`
+	ToUserID       *string   `json:"toUserId,omitempty"`
+	MovedByID      string    `json:"movedById"`
+	MovementDate   time.Time `json:"movementDate"`
+	Notes          *string   `json:"notes,omitempty"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
 	// * Populated
 	Asset        AssetResponse     `json:"asset"`
 	FromLocation *LocationResponse `json:"fromLocation,omitempty"`

@@ -146,25 +146,16 @@ func AssetToResponse(d *domain.Asset) domain.AssetResponse {
 		Brand:              d.Brand,
 		Model:              d.Model,
 		SerialNumber:       d.SerialNumber,
+		PurchaseDate:       d.PurchaseDate,
 		PurchasePrice:      d.PurchasePrice,
 		VendorName:         d.VendorName,
+		WarrantyEnd:        d.WarrantyEnd,
 		Status:             d.Status,
 		Condition:          d.Condition,
 		LocationID:         d.LocationID,
 		AssignedToID:       d.AssignedTo,
-		CreatedAt:          d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:          d.UpdatedAt.Format(TimeFormat),
-	}
-
-	// Handle date formatting
-	if d.PurchaseDate != nil {
-		purchaseDateStr := d.PurchaseDate.Format("2006-01-02")
-		response.PurchaseDate = &purchaseDateStr
-	}
-
-	if d.WarrantyEnd != nil {
-		warrantyEndStr := d.WarrantyEnd.Format("2006-01-02")
-		response.WarrantyEnd = &warrantyEndStr
+		CreatedAt:          d.CreatedAt,
+		UpdatedAt:          d.UpdatedAt,
 	}
 
 	return response
@@ -188,25 +179,16 @@ func AssetToListResponse(d *domain.Asset) domain.AssetListResponse {
 		Brand:              d.Brand,
 		Model:              d.Model,
 		SerialNumber:       d.SerialNumber,
+		PurchaseDate:       d.PurchaseDate,
 		PurchasePrice:      d.PurchasePrice,
 		VendorName:         d.VendorName,
+		WarrantyEnd:        d.WarrantyEnd,
 		Status:             d.Status,
 		Condition:          d.Condition,
 		LocationID:         d.LocationID,
 		AssignedToID:       d.AssignedTo,
-		CreatedAt:          d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:          d.UpdatedAt.Format(TimeFormat),
-	}
-
-	// Handle date formatting
-	if d.PurchaseDate != nil {
-		purchaseDateStr := d.PurchaseDate.Format("2006-01-02")
-		response.PurchaseDate = &purchaseDateStr
-	}
-
-	if d.WarrantyEnd != nil {
-		warrantyEndStr := d.WarrantyEnd.Format("2006-01-02")
-		response.WarrantyEnd = &warrantyEndStr
+		CreatedAt:          d.CreatedAt,
+		UpdatedAt:          d.UpdatedAt,
 	}
 
 	return response

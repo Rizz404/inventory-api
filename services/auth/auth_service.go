@@ -112,8 +112,8 @@ func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (doma
 		PreferredLang: user.PreferredLang,
 		IsActive:      user.IsActive,
 		AvatarURL:     user.AvatarURL,
-		CreatedAt:     user.CreatedAt.Format("2006-01-02 15:04:05"),
-		UpdatedAt:     user.UpdatedAt.Format("2006-01-02 15:04:05"),
+		CreatedAt:     user.CreatedAt,
+		UpdatedAt:     user.UpdatedAt,
 	}
 
 	loginResponse := domain.LoginResponse{

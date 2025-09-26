@@ -129,8 +129,8 @@ func CategoryToResponse(d *domain.Category, langCode string) domain.CategoryResp
 		ID:           d.ID,
 		ParentID:     d.ParentID,
 		CategoryCode: d.CategoryCode,
-		CreatedAt:    d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
+		CreatedAt:    d.CreatedAt,
+		UpdatedAt:    d.UpdatedAt,
 		Translations: make([]domain.CategoryTranslationResponse, len(d.Translations)),
 	}
 
@@ -174,8 +174,8 @@ func CategoryToListResponse(d *domain.Category, langCode string) domain.Category
 		ID:           d.ID,
 		ParentID:     d.ParentID,
 		CategoryCode: d.CategoryCode,
-		CreatedAt:    d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:    d.UpdatedAt.Format(TimeFormat),
+		CreatedAt:    d.CreatedAt,
+		UpdatedAt:    d.UpdatedAt,
 	}
 
 	// Find translation for the requested language

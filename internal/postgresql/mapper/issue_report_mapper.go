@@ -169,10 +169,14 @@ func IssueReportToResponse(d *domain.IssueReport, langCode string) domain.IssueR
 		ID:           d.ID,
 		AssetID:      d.AssetID,
 		ReportedByID: d.ReportedBy,
-		ReportedDate: d.ReportedDate.Format(TimeFormat),
+		ReportedDate: d.ReportedDate,
 		IssueType:    d.IssueType,
 		Priority:     d.Priority,
 		Status:       d.Status,
+		ResolvedDate: d.ResolvedDate,
+		ResolvedByID: d.ResolvedBy,
+		CreatedAt:    d.ReportedDate, // Use ReportedDate as CreatedAt since domain doesn't have CreatedAt
+		UpdatedAt:    d.ReportedDate, // Use ReportedDate as UpdatedAt since domain doesn't have UpdatedAt
 		Translations: make([]domain.IssueReportTranslationResponse, len(d.Translations)),
 	}
 
@@ -184,17 +188,6 @@ func IssueReportToResponse(d *domain.IssueReport, langCode string) domain.IssueR
 			Description:     translation.Description,
 			ResolutionNotes: translation.ResolutionNotes,
 		}
-	}
-
-	// Handle resolved by ID
-	if d.ResolvedBy != nil {
-		response.ResolvedByID = d.ResolvedBy
-	}
-
-	// Handle date formatting
-	if d.ResolvedDate != nil {
-		resolvedDateStr := d.ResolvedDate.Format(TimeFormat)
-		response.ResolvedDate = &resolvedDateStr
 	}
 
 	// Find translation for the requested language
@@ -230,21 +223,14 @@ func IssueReportToListResponse(d *domain.IssueReport, langCode string) domain.Is
 		ID:           d.ID,
 		AssetID:      d.AssetID,
 		ReportedByID: d.ReportedBy,
-		ReportedDate: d.ReportedDate.Format(TimeFormat),
+		ReportedDate: d.ReportedDate,
 		IssueType:    d.IssueType,
 		Priority:     d.Priority,
 		Status:       d.Status,
-	}
-
-	// Handle resolved by ID
-	if d.ResolvedBy != nil {
-		response.ResolvedByID = d.ResolvedBy
-	}
-
-	// Handle date formatting
-	if d.ResolvedDate != nil {
-		resolvedDateStr := d.ResolvedDate.Format(TimeFormat)
-		response.ResolvedDate = &resolvedDateStr
+		ResolvedDate: d.ResolvedDate,
+		ResolvedByID: d.ResolvedBy,
+		CreatedAt:    d.ReportedDate, // Use ReportedDate as CreatedAt since domain doesn't have CreatedAt
+		UpdatedAt:    d.ReportedDate, // Use ReportedDate as UpdatedAt since domain doesn't have UpdatedAt
 	}
 
 	// Find translation for the requested language

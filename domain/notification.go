@@ -46,7 +46,7 @@ type NotificationResponse struct {
 	RelatedAssetID *string                           `json:"relatedAssetId,omitempty"`
 	Type           NotificationType                  `json:"type"`
 	IsRead         bool                              `json:"isRead"`
-	CreatedAt      string                            `json:"createdAt"`
+	CreatedAt      time.Time                         `json:"createdAt"`
 	Title          string                            `json:"title"`
 	Message        string                            `json:"message"`
 	Translations   []NotificationTranslationResponse `json:"translations"`
@@ -62,7 +62,7 @@ type NotificationListResponse struct {
 	RelatedAssetID *string          `json:"relatedAssetId,omitempty"`
 	Type           NotificationType `json:"type"`
 	IsRead         bool             `json:"isRead"`
-	CreatedAt      string           `json:"createdAt"`
+	CreatedAt      time.Time        `json:"createdAt"`
 	Title          string           `json:"title"`
 	Message        string           `json:"message"`
 }

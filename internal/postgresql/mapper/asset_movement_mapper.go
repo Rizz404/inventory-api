@@ -242,9 +242,9 @@ func AssetMovementToResponse(d *domain.AssetMovement, langCode string) domain.As
 		FromUserID:     d.FromUserID,
 		ToUserID:       d.ToUserID,
 		MovedByID:      d.MovedBy,
-		MovementDate:   d.MovementDate.Format(TimeFormat),
-		CreatedAt:      d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:      d.UpdatedAt.Format(TimeFormat),
+		MovementDate:   d.MovementDate,
+		CreatedAt:      d.CreatedAt,
+		UpdatedAt:      d.UpdatedAt,
 		Translations:   make([]domain.AssetMovementTranslationResponse, len(d.Translations)),
 	}
 
@@ -289,9 +289,9 @@ func AssetMovementToListResponse(d *domain.AssetMovement, langCode string) domai
 		FromUserID:     d.FromUserID,
 		ToUserID:       d.ToUserID,
 		MovedByID:      d.MovedBy,
-		MovementDate:   d.MovementDate.Format(TimeFormat),
-		CreatedAt:      d.CreatedAt.Format(TimeFormat),
-		UpdatedAt:      d.UpdatedAt.Format(TimeFormat),
+		MovementDate:   d.MovementDate,
+		CreatedAt:      d.CreatedAt,
+		UpdatedAt:      d.UpdatedAt,
 	}
 
 	// Find translation for the requested language

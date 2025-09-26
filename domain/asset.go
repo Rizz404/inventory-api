@@ -54,16 +54,16 @@ type AssetResponse struct {
 	Brand              *string        `json:"brand,omitempty"`
 	Model              *string        `json:"model,omitempty"`
 	SerialNumber       *string        `json:"serialNumber,omitempty"`
-	PurchaseDate       *string        `json:"purchaseDate,omitempty"`
+	PurchaseDate       *time.Time     `json:"purchaseDate,omitempty"`
 	PurchasePrice      *float64       `json:"purchasePrice,omitempty"`
 	VendorName         *string        `json:"vendorName,omitempty"`
-	WarrantyEnd        *string        `json:"warrantyEnd,omitempty"`
+	WarrantyEnd        *time.Time     `json:"warrantyEnd,omitempty"`
 	Status             AssetStatus    `json:"status"`
 	Condition          AssetCondition `json:"condition"`
 	LocationID         *string        `json:"locationId,omitempty"`
 	AssignedToID       *string        `json:"assignedToId,omitempty"`
-	CreatedAt          string         `json:"createdAt"`
-	UpdatedAt          string         `json:"updatedAt"`
+	CreatedAt          time.Time      `json:"createdAt"`
+	UpdatedAt          time.Time      `json:"updatedAt"`
 	// * Populated
 	Category   *CategoryResponse `json:"category,omitempty"`
 	Location   *LocationResponse `json:"location,omitempty"`
@@ -79,16 +79,16 @@ type AssetListResponse struct {
 	Brand              *string        `json:"brand,omitempty"`
 	Model              *string        `json:"model,omitempty"`
 	SerialNumber       *string        `json:"serialNumber,omitempty"`
-	PurchaseDate       *string        `json:"purchaseDate,omitempty"`
+	PurchaseDate       *time.Time     `json:"purchaseDate,omitempty"`
 	PurchasePrice      *float64       `json:"purchasePrice,omitempty"`
 	VendorName         *string        `json:"vendorName,omitempty"`
-	WarrantyEnd        *string        `json:"warrantyEnd,omitempty"`
+	WarrantyEnd        *time.Time     `json:"warrantyEnd,omitempty"`
 	Status             AssetStatus    `json:"status"`
 	Condition          AssetCondition `json:"condition"`
 	LocationID         *string        `json:"locationId,omitempty"`
 	AssignedToID       *string        `json:"assignedToId,omitempty"`
-	CreatedAt          string         `json:"createdAt"`
-	UpdatedAt          string         `json:"updatedAt"`
+	CreatedAt          time.Time      `json:"createdAt"`
+	UpdatedAt          time.Time      `json:"updatedAt"`
 	// * Populated
 	Category   *CategoryResponse `json:"category,omitempty"`
 	Location   *LocationResponse `json:"location,omitempty"`

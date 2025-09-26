@@ -103,7 +103,7 @@ func ScanLogToResponse(d *domain.ScanLog) domain.ScanLogResponse {
 		ScannedValue:    d.ScannedValue,
 		ScanMethod:      d.ScanMethod,
 		ScannedByID:     d.ScannedBy,
-		ScanTimestamp:   d.ScanTimestamp.Format(TimeFormat),
+		ScanTimestamp:   d.ScanTimestamp,
 		ScanLocationLat: d.ScanLocationLat,
 		ScanLocationLng: d.ScanLocationLng,
 		ScanResult:      d.ScanResult,
@@ -114,6 +114,28 @@ func ScanLogsToResponses(scanLogs []domain.ScanLog) []domain.ScanLogResponse {
 	responses := make([]domain.ScanLogResponse, len(scanLogs))
 	for i, scanLog := range scanLogs {
 		responses[i] = ScanLogToResponse(&scanLog)
+	}
+	return responses
+}
+
+func ScanLogToListResponse(d *domain.ScanLog) domain.ScanLogListResponse {
+	return domain.ScanLogListResponse{
+		ID:              d.ID,
+		AssetID:         d.AssetID,
+		ScannedValue:    d.ScannedValue,
+		ScanMethod:      d.ScanMethod,
+		ScannedByID:     d.ScannedBy,
+		ScanTimestamp:   d.ScanTimestamp,
+		ScanLocationLat: d.ScanLocationLat,
+		ScanLocationLng: d.ScanLocationLng,
+		ScanResult:      d.ScanResult,
+	}
+}
+
+func ScanLogsToListResponses(scanLogs []domain.ScanLog) []domain.ScanLogListResponse {
+	responses := make([]domain.ScanLogListResponse, len(scanLogs))
+	for i, scanLog := range scanLogs {
+		responses[i] = ScanLogToListResponse(&scanLog)
 	}
 	return responses
 }
