@@ -117,25 +117,25 @@ type GeographicStatistics struct {
 }
 
 type LocationCreationTrend struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type LocationSummaryStatistics struct {
-	TotalLocations           int     `json:"totalLocations"`
-	LocationsWithBuilding    int     `json:"locationsWithBuilding"`
-	LocationsWithoutBuilding int     `json:"locationsWithoutBuilding"`
-	LocationsWithFloor       int     `json:"locationsWithFloor"`
-	LocationsWithoutFloor    int     `json:"locationsWithoutFloor"`
-	LocationsWithCoordinates int     `json:"locationsWithCoordinates"`
-	CoordinatesPercentage    float64 `json:"coordinatesPercentage"`
-	BuildingPercentage       float64 `json:"buildingPercentage"`
-	FloorPercentage          float64 `json:"floorPercentage"`
-	TotalBuildings           int     `json:"totalBuildings"`
-	TotalFloors              int     `json:"totalFloors"`
-	AverageLocationsPerDay   float64 `json:"averageLocationsPerDay"`
-	LatestCreationDate       string  `json:"latestCreationDate"`
-	EarliestCreationDate     string  `json:"earliestCreationDate"`
+	TotalLocations           int       `json:"totalLocations"`
+	LocationsWithBuilding    int       `json:"locationsWithBuilding"`
+	LocationsWithoutBuilding int       `json:"locationsWithoutBuilding"`
+	LocationsWithFloor       int       `json:"locationsWithFloor"`
+	LocationsWithoutFloor    int       `json:"locationsWithoutFloor"`
+	LocationsWithCoordinates int       `json:"locationsWithCoordinates"`
+	CoordinatesPercentage    float64   `json:"coordinatesPercentage"`
+	BuildingPercentage       float64   `json:"buildingPercentage"`
+	FloorPercentage          float64   `json:"floorPercentage"`
+	TotalBuildings           int       `json:"totalBuildings"`
+	TotalFloors              int       `json:"totalFloors"`
+	AverageLocationsPerDay   float64   `json:"averageLocationsPerDay"`
+	LatestCreationDate       time.Time `json:"latestCreationDate"`
+	EarliestCreationDate     time.Time `json:"earliestCreationDate"`
 }
 
 // Response statistics structs (used in service/handler layer)
@@ -170,23 +170,23 @@ type GeographicStatisticsResponse struct {
 }
 
 type LocationCreationTrendResponse struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type LocationSummaryStatisticsResponse struct {
-	TotalLocations           int     `json:"totalLocations"`
-	LocationsWithBuilding    int     `json:"locationsWithBuilding"`
-	LocationsWithoutBuilding int     `json:"locationsWithoutBuilding"`
-	LocationsWithFloor       int     `json:"locationsWithFloor"`
-	LocationsWithoutFloor    int     `json:"locationsWithoutFloor"`
-	LocationsWithCoordinates int     `json:"locationsWithCoordinates"`
-	CoordinatesPercentage    float64 `json:"coordinatesPercentage"`
-	BuildingPercentage       float64 `json:"buildingPercentage"`
-	FloorPercentage          float64 `json:"floorPercentage"`
-	TotalBuildings           int     `json:"totalBuildings"`
-	TotalFloors              int     `json:"totalFloors"`
-	AverageLocationsPerDay   float64 `json:"averageLocationsPerDay"`
-	LatestCreationDate       string  `json:"latestCreationDate"`
-	EarliestCreationDate     string  `json:"earliestCreationDate"`
+	TotalLocations           int       `json:"totalLocations"`
+	LocationsWithBuilding    int       `json:"locationsWithBuilding"`
+	LocationsWithoutBuilding int       `json:"locationsWithoutBuilding"`
+	LocationsWithFloor       int       `json:"locationsWithFloor"`
+	LocationsWithoutFloor    int       `json:"locationsWithoutFloor"`
+	LocationsWithCoordinates int       `json:"locationsWithCoordinates"`
+	CoordinatesPercentage    float64   `json:"coordinatesPercentage"`
+	BuildingPercentage       float64   `json:"buildingPercentage"`
+	FloorPercentage          float64   `json:"floorPercentage"`
+	TotalBuildings           int       `json:"totalBuildings"`
+	TotalFloors              int       `json:"totalFloors"`
+	AverageLocationsPerDay   float64   `json:"averageLocationsPerDay"`
+	LatestCreationDate       time.Time `json:"latestCreationDate"`
+	EarliestCreationDate     time.Time `json:"earliestCreationDate"`
 }

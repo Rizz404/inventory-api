@@ -105,8 +105,8 @@ type ScanGeographicStatistics struct {
 }
 
 type ScanTrend struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type ScannerStatistics struct {
@@ -115,13 +115,13 @@ type ScannerStatistics struct {
 }
 
 type ScanLogSummaryStatistics struct {
-	TotalScans            int     `json:"totalScans"`
-	SuccessRate           float64 `json:"successRate"`
-	ScansWithCoordinates  int     `json:"scansWithCoordinates"`
-	CoordinatesPercentage float64 `json:"coordinatesPercentage"`
-	AverageScansPerDay    float64 `json:"averageScansPerDay"`
-	LatestScanDate        string  `json:"latestScanDate"`
-	EarliestScanDate      string  `json:"earliestScanDate"`
+	TotalScans            int       `json:"totalScans"`
+	SuccessRate           float64   `json:"successRate"`
+	ScansWithCoordinates  int       `json:"scansWithCoordinates"`
+	CoordinatesPercentage float64   `json:"coordinatesPercentage"`
+	AverageScansPerDay    float64   `json:"averageScansPerDay"`
+	LatestScanDate        time.Time `json:"latestScanDate"`
+	EarliestScanDate      time.Time `json:"earliestScanDate"`
 }
 
 // Response statistics structs (used in service/handler layer)
@@ -155,8 +155,8 @@ type ScanGeographicStatisticsResponse struct {
 }
 
 type ScanTrendResponse struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type ScannerStatisticsResponse struct {
@@ -165,11 +165,11 @@ type ScannerStatisticsResponse struct {
 }
 
 type ScanLogSummaryStatisticsResponse struct {
-	TotalScans            int     `json:"totalScans"`
-	SuccessRate           float64 `json:"successRate"`
-	ScansWithCoordinates  int     `json:"scansWithCoordinates"`
-	CoordinatesPercentage float64 `json:"coordinatesPercentage"`
-	AverageScansPerDay    float64 `json:"averageScansPerDay"`
-	LatestScanDate        string  `json:"latestScanDate"`
-	EarliestScanDate      string  `json:"earliestScanDate"`
+	TotalScans            int       `json:"totalScans"`
+	SuccessRate           float64   `json:"successRate"`
+	ScansWithCoordinates  int       `json:"scansWithCoordinates"`
+	CoordinatesPercentage float64   `json:"coordinatesPercentage"`
+	AverageScansPerDay    float64   `json:"averageScansPerDay"`
+	LatestScanDate        time.Time `json:"latestScanDate"`
+	EarliestScanDate      time.Time `json:"earliestScanDate"`
 }

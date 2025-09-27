@@ -118,18 +118,18 @@ type NotificationStatusStatistics struct {
 }
 
 type NotificationCreationTrend struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type NotificationSummaryStatistics struct {
-	TotalNotifications         int     `json:"totalNotifications"`
-	ReadPercentage             float64 `json:"readPercentage"`
-	UnreadPercentage           float64 `json:"unreadPercentage"`
-	MostCommonType             string  `json:"mostCommonType"`
-	AverageNotificationsPerDay float64 `json:"averageNotificationsPerDay"`
-	LatestCreationDate         string  `json:"latestCreationDate"`
-	EarliestCreationDate       string  `json:"earliestCreationDate"`
+	TotalNotifications         int       `json:"totalNotifications"`
+	ReadPercentage             float64   `json:"readPercentage"`
+	UnreadPercentage           float64   `json:"unreadPercentage"`
+	MostCommonType             string    `json:"mostCommonType"`
+	AverageNotificationsPerDay float64   `json:"averageNotificationsPerDay"`
+	LatestCreationDate         time.Time `json:"latestCreationDate"`
+	EarliestCreationDate       time.Time `json:"earliestCreationDate"`
 }
 
 // Response statistics structs (used in service/handler layer)
@@ -159,16 +159,16 @@ type NotificationStatusStatisticsResponse struct {
 }
 
 type NotificationCreationTrendResponse struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type NotificationSummaryStatisticsResponse struct {
-	TotalNotifications         int     `json:"totalNotifications"`
-	ReadPercentage             float64 `json:"readPercentage"`
-	UnreadPercentage           float64 `json:"unreadPercentage"`
-	MostCommonType             string  `json:"mostCommonType"`
-	AverageNotificationsPerDay float64 `json:"averageNotificationsPerDay"`
-	LatestCreationDate         string  `json:"latestCreationDate"`
-	EarliestCreationDate       string  `json:"earliestCreationDate"`
+	TotalNotifications         int       `json:"totalNotifications"`
+	ReadPercentage             float64   `json:"readPercentage"`
+	UnreadPercentage           float64   `json:"unreadPercentage"`
+	MostCommonType             string    `json:"mostCommonType"`
+	AverageNotificationsPerDay float64   `json:"averageNotificationsPerDay"`
+	LatestCreationDate         time.Time `json:"latestCreationDate"`
+	EarliestCreationDate       time.Time `json:"earliestCreationDate"`
 }

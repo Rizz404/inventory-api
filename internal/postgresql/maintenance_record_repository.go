@@ -444,8 +444,10 @@ func (r *MaintenanceRecordRepository) GetMaintenanceRecordStatistics(ctx context
 		return stats, domain.ErrInternal(err)
 	}
 	for _, ct := range completionTrends {
+		// Parse the date string to time.Time
+		date, _ := time.Parse("2006-01-02", ct.Date)
 		stats.CompletionTrend = append(stats.CompletionTrend, domain.MaintenanceRecordCompletionTrend{
-			Date:  ct.Date,
+			Date:  date,
 			Count: int(ct.Count),
 		})
 	}

@@ -356,8 +356,10 @@ func (r *UserRepository) GetUserStatistics(ctx context.Context) (domain.UserStat
 
 	stats.RegistrationTrends = make([]domain.RegistrationTrend, len(registrationTrends))
 	for i, rt := range registrationTrends {
+		// Parse the date string to time.Time
+		date, _ := time.Parse("2006-01-02", rt.Date)
 		stats.RegistrationTrends[i] = domain.RegistrationTrend{
-			Date:  rt.Date,
+			Date:  date,
 			Count: int(rt.Count),
 		}
 	}
@@ -382,8 +384,8 @@ func (r *UserRepository) GetUserStatistics(ctx context.Context) (domain.UserStat
 		return stats, domain.ErrInternal(err)
 	}
 
-	stats.Summary.EarliestRegistrationDate = earliestDate.Format("2006-01-02")
-	stats.Summary.LatestRegistrationDate = latestDate.Format("2006-01-02")
+	stats.Summary.EarliestRegistrationDate = earliestDate
+	stats.Summary.LatestRegistrationDate = latestDate
 
 	// Calculate average users per day
 	if !earliestDate.IsZero() && !latestDate.IsZero() {

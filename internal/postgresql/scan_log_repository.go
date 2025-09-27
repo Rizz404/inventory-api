@@ -308,8 +308,10 @@ func (r *ScanLogRepository) GetScanLogStatistics(ctx context.Context) (domain.Sc
 
 	stats.ScanTrends = make([]domain.ScanTrend, len(scanTrends))
 	for i, st := range scanTrends {
+		// Parse the date string to time.Time
+		date, _ := time.Parse("2006-01-02", st.Date)
 		stats.ScanTrends[i] = domain.ScanTrend{
-			Date:  st.Date,
+			Date:  date,
 			Count: int(st.Count),
 		}
 	}
@@ -380,8 +382,8 @@ func (r *ScanLogRepository) GetScanLogStatistics(ctx context.Context) (domain.Sc
 	}
 
 	if !earliestDate.IsZero() && !latestDate.IsZero() {
-		stats.Summary.EarliestScanDate = earliestDate.Format("2006-01-02")
-		stats.Summary.LatestScanDate = latestDate.Format("2006-01-02")
+		stats.Summary.EarliestScanDate = earliestDate
+		stats.Summary.LatestScanDate = latestDate
 
 		// Calculate average scans per day
 		daysDiff := latestDate.Sub(earliestDate).Hours() / 24

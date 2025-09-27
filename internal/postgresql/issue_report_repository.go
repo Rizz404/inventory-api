@@ -467,8 +467,10 @@ func (r *IssueReportRepository) GetIssueReportStatistics(ctx context.Context) (d
 
 	stats.CreationTrends = make([]domain.IssueReportCreationTrend, len(creationTrends))
 	for i, ct := range creationTrends {
+		// Parse the date string to time.Time
+		date, _ := time.Parse("2006-01-02", ct.Date)
 		stats.CreationTrends[i] = domain.IssueReportCreationTrend{
-			Date:  ct.Date,
+			Date:  date,
 			Count: int(ct.Count),
 		}
 	}
@@ -541,8 +543,8 @@ func (r *IssueReportRepository) GetIssueReportStatistics(ctx context.Context) (d
 		return domain.IssueReportStatistics{}, domain.ErrInternal(err)
 	}
 
-	stats.Summary.EarliestCreationDate = earliestDate.Format("2006-01-02")
-	stats.Summary.LatestCreationDate = latestDate.Format("2006-01-02")
+	stats.Summary.EarliestCreationDate = earliestDate
+	stats.Summary.LatestCreationDate = latestDate
 
 	// Calculate average reports per day
 	if !earliestDate.IsZero() && !latestDate.IsZero() {

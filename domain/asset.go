@@ -188,35 +188,35 @@ type AssetWarrantyStatistics struct {
 }
 
 type AssetCreationTrend struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type AssetSummaryStatistics struct {
-	TotalAssets                 int      `json:"totalAssets"`
-	ActiveAssetsPercentage      float64  `json:"activeAssetsPercentage"`
-	MaintenanceAssetsPercentage float64  `json:"maintenanceAssetsPercentage"`
-	DisposedAssetsPercentage    float64  `json:"disposedAssetsPercentage"`
-	LostAssetsPercentage        float64  `json:"lostAssetsPercentage"`
-	GoodConditionPercentage     float64  `json:"goodConditionPercentage"`
-	FairConditionPercentage     float64  `json:"fairConditionPercentage"`
-	PoorConditionPercentage     float64  `json:"poorConditionPercentage"`
-	DamagedConditionPercentage  float64  `json:"damagedConditionPercentage"`
-	AssignedAssetsPercentage    float64  `json:"assignedAssetsPercentage"`
-	UnassignedAssetsPercentage  float64  `json:"unassignedAssetsPercentage"`
-	AssetsWithPurchasePrice     int      `json:"assetsWithPurchasePrice"`
-	PurchasePricePercentage     float64  `json:"purchasePricePercentage"`
-	AssetsWithDataMatrix        int      `json:"assetsWithDataMatrix"`
-	DataMatrixPercentage        float64  `json:"dataMatrixPercentage"`
-	AssetsWithWarranty          int      `json:"assetsWithWarranty"`
-	WarrantyPercentage          float64  `json:"warrantyPercentage"`
-	TotalCategories             int      `json:"totalCategories"`
-	TotalLocations              int      `json:"totalLocations"`
-	AverageAssetsPerDay         float64  `json:"averageAssetsPerDay"`
-	LatestCreationDate          string   `json:"latestCreationDate"`
-	EarliestCreationDate        string   `json:"earliestCreationDate"`
-	MostExpensiveAssetValue     *float64 `json:"mostExpensiveAssetValue"`
-	LeastExpensiveAssetValue    *float64 `json:"leastExpensiveAssetValue"`
+	TotalAssets                 int       `json:"totalAssets"`
+	ActiveAssetsPercentage      float64   `json:"activeAssetsPercentage"`
+	MaintenanceAssetsPercentage float64   `json:"maintenanceAssetsPercentage"`
+	DisposedAssetsPercentage    float64   `json:"disposedAssetsPercentage"`
+	LostAssetsPercentage        float64   `json:"lostAssetsPercentage"`
+	GoodConditionPercentage     float64   `json:"goodConditionPercentage"`
+	FairConditionPercentage     float64   `json:"fairConditionPercentage"`
+	PoorConditionPercentage     float64   `json:"poorConditionPercentage"`
+	DamagedConditionPercentage  float64   `json:"damagedConditionPercentage"`
+	AssignedAssetsPercentage    float64   `json:"assignedAssetsPercentage"`
+	UnassignedAssetsPercentage  float64   `json:"unassignedAssetsPercentage"`
+	AssetsWithPurchasePrice     int       `json:"assetsWithPurchasePrice"`
+	PurchasePricePercentage     float64   `json:"purchasePricePercentage"`
+	AssetsWithDataMatrix        int       `json:"assetsWithDataMatrix"`
+	DataMatrixPercentage        float64   `json:"dataMatrixPercentage"`
+	AssetsWithWarranty          int       `json:"assetsWithWarranty"`
+	WarrantyPercentage          float64   `json:"warrantyPercentage"`
+	TotalCategories             int       `json:"totalCategories"`
+	TotalLocations              int       `json:"totalLocations"`
+	AverageAssetsPerDay         float64   `json:"averageAssetsPerDay"`
+	LatestCreationDate          time.Time `json:"latestCreationDate"`
+	EarliestCreationDate        time.Time `json:"earliestCreationDate"`
+	MostExpensiveAssetValue     *float64  `json:"mostExpensiveAssetValue"`
+	LeastExpensiveAssetValue    *float64  `json:"leastExpensiveAssetValue"`
 }
 
 // Response statistics structs (used in service/handler layer)
@@ -272,33 +272,33 @@ type AssetWarrantyStatisticsResponse struct {
 }
 
 type AssetCreationTrendResponse struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type AssetSummaryStatisticsResponse struct {
-	TotalAssets                 int      `json:"totalAssets"`
-	ActiveAssetsPercentage      float64  `json:"activeAssetsPercentage"`
-	MaintenanceAssetsPercentage float64  `json:"maintenanceAssetsPercentage"`
-	DisposedAssetsPercentage    float64  `json:"disposedAssetsPercentage"`
-	LostAssetsPercentage        float64  `json:"lostAssetsPercentage"`
-	GoodConditionPercentage     float64  `json:"goodConditionPercentage"`
-	FairConditionPercentage     float64  `json:"fairConditionPercentage"`
-	PoorConditionPercentage     float64  `json:"poorConditionPercentage"`
-	DamagedConditionPercentage  float64  `json:"damagedConditionPercentage"`
-	AssignedAssetsPercentage    float64  `json:"assignedAssetsPercentage"`
-	UnassignedAssetsPercentage  float64  `json:"unassignedAssetsPercentage"`
-	AssetsWithPurchasePrice     int      `json:"assetsWithPurchasePrice"`
-	PurchasePricePercentage     float64  `json:"purchasePricePercentage"`
-	AssetsWithDataMatrix        int      `json:"assetsWithDataMatrix"`
-	DataMatrixPercentage        float64  `json:"dataMatrixPercentage"`
-	AssetsWithWarranty          int      `json:"assetsWithWarranty"`
-	WarrantyPercentage          float64  `json:"warrantyPercentage"`
-	TotalCategories             int      `json:"totalCategories"`
-	TotalLocations              int      `json:"totalLocations"`
-	AverageAssetsPerDay         float64  `json:"averageAssetsPerDay"`
-	LatestCreationDate          string   `json:"latestCreationDate"`
-	EarliestCreationDate        string   `json:"earliestCreationDate"`
-	MostExpensiveAssetValue     *float64 `json:"mostExpensiveAssetValue"`
-	LeastExpensiveAssetValue    *float64 `json:"leastExpensiveAssetValue"`
+	TotalAssets                 int       `json:"totalAssets"`
+	ActiveAssetsPercentage      float64   `json:"activeAssetsPercentage"`
+	MaintenanceAssetsPercentage float64   `json:"maintenanceAssetsPercentage"`
+	DisposedAssetsPercentage    float64   `json:"disposedAssetsPercentage"`
+	LostAssetsPercentage        float64   `json:"lostAssetsPercentage"`
+	GoodConditionPercentage     float64   `json:"goodConditionPercentage"`
+	FairConditionPercentage     float64   `json:"fairConditionPercentage"`
+	PoorConditionPercentage     float64   `json:"poorConditionPercentage"`
+	DamagedConditionPercentage  float64   `json:"damagedConditionPercentage"`
+	AssignedAssetsPercentage    float64   `json:"assignedAssetsPercentage"`
+	UnassignedAssetsPercentage  float64   `json:"unassignedAssetsPercentage"`
+	AssetsWithPurchasePrice     int       `json:"assetsWithPurchasePrice"`
+	PurchasePricePercentage     float64   `json:"purchasePricePercentage"`
+	AssetsWithDataMatrix        int       `json:"assetsWithDataMatrix"`
+	DataMatrixPercentage        float64   `json:"dataMatrixPercentage"`
+	AssetsWithWarranty          int       `json:"assetsWithWarranty"`
+	WarrantyPercentage          float64   `json:"warrantyPercentage"`
+	TotalCategories             int       `json:"totalCategories"`
+	TotalLocations              int       `json:"totalLocations"`
+	AverageAssetsPerDay         float64   `json:"averageAssetsPerDay"`
+	LatestCreationDate          time.Time `json:"latestCreationDate"`
+	EarliestCreationDate        time.Time `json:"earliestCreationDate"`
+	MostExpensiveAssetValue     *float64  `json:"mostExpensiveAssetValue"`
+	LeastExpensiveAssetValue    *float64  `json:"leastExpensiveAssetValue"`
 }

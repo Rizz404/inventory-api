@@ -163,21 +163,21 @@ type IssueReportTypeStatistics struct {
 }
 
 type IssueReportCreationTrend struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type IssueReportSummaryStatistics struct {
-	TotalReports            int     `json:"totalReports"`
-	OpenPercentage          float64 `json:"openPercentage"`
-	ResolvedPercentage      float64 `json:"resolvedPercentage"`
-	AverageResolutionTime   float64 `json:"averageResolutionTimeInDays"`
-	MostCommonPriority      string  `json:"mostCommonPriority"`
-	MostCommonType          string  `json:"mostCommonType"`
-	CriticalUnresolvedCount int     `json:"criticalUnresolvedCount"`
-	AverageReportsPerDay    float64 `json:"averageReportsPerDay"`
-	LatestCreationDate      string  `json:"latestCreationDate"`
-	EarliestCreationDate    string  `json:"earliestCreationDate"`
+	TotalReports            int       `json:"totalReports"`
+	OpenPercentage          float64   `json:"openPercentage"`
+	ResolvedPercentage      float64   `json:"resolvedPercentage"`
+	AverageResolutionTime   float64   `json:"averageResolutionTimeInDays"`
+	MostCommonPriority      string    `json:"mostCommonPriority"`
+	MostCommonType          string    `json:"mostCommonType"`
+	CriticalUnresolvedCount int       `json:"criticalUnresolvedCount"`
+	AverageReportsPerDay    float64   `json:"averageReportsPerDay"`
+	LatestCreationDate      time.Time `json:"latestCreationDate"`
+	EarliestCreationDate    time.Time `json:"earliestCreationDate"`
 }
 
 // Response statistics structs (used in service/handler layer)
@@ -213,19 +213,19 @@ type IssueReportTypeStatisticsResponse struct {
 }
 
 type IssueReportCreationTrendResponse struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type IssueReportSummaryStatisticsResponse struct {
-	TotalReports            int     `json:"totalReports"`
-	OpenPercentage          float64 `json:"openPercentage"`
-	ResolvedPercentage      float64 `json:"resolvedPercentage"`
-	AverageResolutionTime   float64 `json:"averageResolutionTimeInDays"`
-	MostCommonPriority      string  `json:"mostCommonPriority"`
-	MostCommonType          string  `json:"mostCommonType"`
-	CriticalUnresolvedCount int     `json:"criticalUnresolvedCount"`
-	AverageReportsPerDay    float64 `json:"averageReportsPerDay"`
-	LatestCreationDate      string  `json:"latestCreationDate"`
-	EarliestCreationDate    string  `json:"earliestCreationDate"`
+	TotalReports            int       `json:"totalReports"`
+	OpenPercentage          float64   `json:"openPercentage"`
+	ResolvedPercentage      float64   `json:"resolvedPercentage"`
+	AverageResolutionTime   float64   `json:"averageResolutionTimeInDays"`
+	MostCommonPriority      string    `json:"mostCommonPriority"`
+	MostCommonType          string    `json:"mostCommonType"`
+	CriticalUnresolvedCount int       `json:"criticalUnresolvedCount"`
+	AverageReportsPerDay    float64   `json:"averageReportsPerDay"`
+	LatestCreationDate      time.Time `json:"latestCreationDate"`
+	EarliestCreationDate    time.Time `json:"earliestCreationDate"`
 }

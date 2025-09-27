@@ -96,20 +96,20 @@ type CategoryHierarchyStatistics struct {
 }
 
 type CategoryCreationTrend struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type CategorySummaryStatistics struct {
-	TotalCategories                int     `json:"totalCategories"`
-	TopLevelPercentage             float64 `json:"topLevelPercentage"`
-	SubCategoriesPercentage        float64 `json:"subCategoriesPercentage"`
-	CategoriesWithChildrenCount    int     `json:"categoriesWithChildrenCount"`
-	CategoriesWithoutChildrenCount int     `json:"categoriesWithoutChildrenCount"`
-	MaxDepthLevel                  int     `json:"maxDepthLevel"`
-	AverageCategoriesPerDay        float64 `json:"averageCategoriesPerDay"`
-	LatestCreationDate             string  `json:"latestCreationDate"`
-	EarliestCreationDate           string  `json:"earliestCreationDate"`
+	TotalCategories                int       `json:"totalCategories"`
+	TopLevelPercentage             float64   `json:"topLevelPercentage"`
+	SubCategoriesPercentage        float64   `json:"subCategoriesPercentage"`
+	CategoriesWithChildrenCount    int       `json:"categoriesWithChildrenCount"`
+	CategoriesWithoutChildrenCount int       `json:"categoriesWithoutChildrenCount"`
+	MaxDepthLevel                  int       `json:"maxDepthLevel"`
+	AverageCategoriesPerDay        float64   `json:"averageCategoriesPerDay"`
+	LatestCreationDate             time.Time `json:"latestCreationDate"`
+	EarliestCreationDate           time.Time `json:"earliestCreationDate"`
 }
 
 // Response statistics structs (used in service/handler layer)
@@ -131,18 +131,18 @@ type CategoryHierarchyStatisticsResponse struct {
 }
 
 type CategoryCreationTrendResponse struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type CategorySummaryStatisticsResponse struct {
-	TotalCategories                int     `json:"totalCategories"`
-	TopLevelPercentage             float64 `json:"topLevelPercentage"`
-	SubCategoriesPercentage        float64 `json:"subCategoriesPercentage"`
-	CategoriesWithChildrenCount    int     `json:"categoriesWithChildrenCount"`
-	CategoriesWithoutChildrenCount int     `json:"categoriesWithoutChildrenCount"`
-	MaxDepthLevel                  int     `json:"maxDepthLevel"`
-	AverageCategoriesPerDay        float64 `json:"averageCategoriesPerDay"`
-	LatestCreationDate             string  `json:"latestCreationDate"`
-	EarliestCreationDate           string  `json:"earliestCreationDate"`
+	TotalCategories                int       `json:"totalCategories"`
+	TopLevelPercentage             float64   `json:"topLevelPercentage"`
+	SubCategoriesPercentage        float64   `json:"subCategoriesPercentage"`
+	CategoriesWithChildrenCount    int       `json:"categoriesWithChildrenCount"`
+	CategoriesWithoutChildrenCount int       `json:"categoriesWithoutChildrenCount"`
+	MaxDepthLevel                  int       `json:"maxDepthLevel"`
+	AverageCategoriesPerDay        float64   `json:"averageCategoriesPerDay"`
+	LatestCreationDate             time.Time `json:"latestCreationDate"`
+	EarliestCreationDate           time.Time `json:"earliestCreationDate"`
 }

@@ -130,20 +130,20 @@ type UserRoleStatistics struct {
 }
 
 type RegistrationTrend struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type UserSummaryStatistics struct {
-	TotalUsers               int     `json:"totalUsers"`
-	ActiveUsersPercentage    float64 `json:"activeUsersPercentage"`
-	InactiveUsersPercentage  float64 `json:"inactiveUsersPercentage"`
-	AdminPercentage          float64 `json:"adminPercentage"`
-	StaffPercentage          float64 `json:"staffPercentage"`
-	EmployeePercentage       float64 `json:"employeePercentage"`
-	AverageUsersPerDay       float64 `json:"averageUsersPerDay"`
-	LatestRegistrationDate   string  `json:"latestRegistrationDate"`
-	EarliestRegistrationDate string  `json:"earliestRegistrationDate"`
+	TotalUsers               int       `json:"totalUsers"`
+	ActiveUsersPercentage    float64   `json:"activeUsersPercentage"`
+	InactiveUsersPercentage  float64   `json:"inactiveUsersPercentage"`
+	AdminPercentage          float64   `json:"adminPercentage"`
+	StaffPercentage          float64   `json:"staffPercentage"`
+	EmployeePercentage       float64   `json:"employeePercentage"`
+	AverageUsersPerDay       float64   `json:"averageUsersPerDay"`
+	LatestRegistrationDate   time.Time `json:"latestRegistrationDate"`
+	EarliestRegistrationDate time.Time `json:"earliestRegistrationDate"`
 }
 
 // Response statistics structs (used in service/handler layer)
@@ -171,18 +171,18 @@ type UserRoleStatisticsResponse struct {
 }
 
 type RegistrationTrendResponse struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type UserSummaryStatisticsResponse struct {
-	TotalUsers               int     `json:"totalUsers"`
-	ActiveUsersPercentage    float64 `json:"activeUsersPercentage"`
-	InactiveUsersPercentage  float64 `json:"inactiveUsersPercentage"`
-	AdminPercentage          float64 `json:"adminPercentage"`
-	StaffPercentage          float64 `json:"staffPercentage"`
-	EmployeePercentage       float64 `json:"employeePercentage"`
-	AverageUsersPerDay       float64 `json:"averageUsersPerDay"`
-	LatestRegistrationDate   string  `json:"latestRegistrationDate"`
-	EarliestRegistrationDate string  `json:"earliestRegistrationDate"`
+	TotalUsers               int       `json:"totalUsers"`
+	ActiveUsersPercentage    float64   `json:"activeUsersPercentage"`
+	InactiveUsersPercentage  float64   `json:"inactiveUsersPercentage"`
+	AdminPercentage          float64   `json:"adminPercentage"`
+	StaffPercentage          float64   `json:"staffPercentage"`
+	EmployeePercentage       float64   `json:"employeePercentage"`
+	AverageUsersPerDay       float64   `json:"averageUsersPerDay"`
+	LatestRegistrationDate   time.Time `json:"latestRegistrationDate"`
+	EarliestRegistrationDate time.Time `json:"earliestRegistrationDate"`
 }

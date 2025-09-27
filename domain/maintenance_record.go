@@ -138,8 +138,8 @@ type MaintenanceRecordCostStatistics struct {
 }
 
 type MaintenanceRecordCompletionTrend struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type MaintenanceRecordMonthlyTrend struct {
@@ -215,8 +215,8 @@ type MaintenanceRecordCostStatisticsResponse struct {
 }
 
 type MaintenanceRecordCompletionTrendResponse struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type MaintenanceRecordMonthlyTrendResponse struct {

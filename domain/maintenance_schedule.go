@@ -171,21 +171,21 @@ type MaintenanceFrequencyTrend struct {
 }
 
 type MaintenanceScheduleSummaryStatistics struct {
-	TotalSchedules                    int     `json:"totalSchedules"`
-	ScheduledMaintenancePercentage    float64 `json:"scheduledMaintenancePercentage"`
-	CompletedMaintenancePercentage    float64 `json:"completedMaintenancePercentage"`
-	CancelledMaintenancePercentage    float64 `json:"cancelledMaintenancePercentage"`
-	PreventiveMaintenancePercentage   float64 `json:"preventiveMaintenancePercentage"`
-	CorrectiveMaintenancePercentage   float64 `json:"correctiveMaintenancePercentage"`
-	AverageScheduleFrequency          float64 `json:"averageScheduleFrequency"`
-	UpcomingMaintenanceCount          int     `json:"upcomingMaintenanceCount"`
-	OverdueMaintenanceCount           int     `json:"overdueMaintenanceCount"`
-	AssetsWithScheduledMaintenance    int     `json:"assetsWithScheduledMaintenance"`
-	AssetsWithoutScheduledMaintenance int     `json:"assetsWithoutScheduledMaintenance"`
-	AverageSchedulesPerDay            float64 `json:"averageSchedulesPerDay"`
-	LatestScheduleDate                string  `json:"latestScheduleDate"`
-	EarliestScheduleDate              string  `json:"earliestScheduleDate"`
-	TotalUniqueCreators               int     `json:"totalUniqueCreators"`
+	TotalSchedules                    int       `json:"totalSchedules"`
+	ScheduledMaintenancePercentage    float64   `json:"scheduledMaintenancePercentage"`
+	CompletedMaintenancePercentage    float64   `json:"completedMaintenancePercentage"`
+	CancelledMaintenancePercentage    float64   `json:"cancelledMaintenancePercentage"`
+	PreventiveMaintenancePercentage   float64   `json:"preventiveMaintenancePercentage"`
+	CorrectiveMaintenancePercentage   float64   `json:"correctiveMaintenancePercentage"`
+	AverageScheduleFrequency          float64   `json:"averageScheduleFrequency"`
+	UpcomingMaintenanceCount          int       `json:"upcomingMaintenanceCount"`
+	OverdueMaintenanceCount           int       `json:"overdueMaintenanceCount"`
+	AssetsWithScheduledMaintenance    int       `json:"assetsWithScheduledMaintenance"`
+	AssetsWithoutScheduledMaintenance int       `json:"assetsWithoutScheduledMaintenance"`
+	AverageSchedulesPerDay            float64   `json:"averageSchedulesPerDay"`
+	LatestScheduleDate                time.Time `json:"latestScheduleDate"`
+	EarliestScheduleDate              time.Time `json:"earliestScheduleDate"`
+	TotalUniqueCreators               int       `json:"totalUniqueCreators"`
 }
 
 // Response statistics structs (used in service/handler layer)
@@ -261,19 +261,19 @@ type MaintenanceFrequencyTrendResponse struct {
 }
 
 type MaintenanceScheduleSummaryStatisticsResponse struct {
-	TotalSchedules                    int     `json:"totalSchedules"`
-	ScheduledMaintenancePercentage    float64 `json:"scheduledMaintenancePercentage"`
-	CompletedMaintenancePercentage    float64 `json:"completedMaintenancePercentage"`
-	CancelledMaintenancePercentage    float64 `json:"cancelledMaintenancePercentage"`
-	PreventiveMaintenancePercentage   float64 `json:"preventiveMaintenancePercentage"`
-	CorrectiveMaintenancePercentage   float64 `json:"correctiveMaintenancePercentage"`
-	AverageScheduleFrequency          float64 `json:"averageScheduleFrequency"`
-	UpcomingMaintenanceCount          int     `json:"upcomingMaintenanceCount"`
-	OverdueMaintenanceCount           int     `json:"overdueMaintenanceCount"`
-	AssetsWithScheduledMaintenance    int     `json:"assetsWithScheduledMaintenance"`
-	AssetsWithoutScheduledMaintenance int     `json:"assetsWithoutScheduledMaintenance"`
-	AverageSchedulesPerDay            float64 `json:"averageSchedulesPerDay"`
-	LatestScheduleDate                string  `json:"latestScheduleDate"`
-	EarliestScheduleDate              string  `json:"earliestScheduleDate"`
-	TotalUniqueCreators               int     `json:"totalUniqueCreators"`
+	TotalSchedules                    int       `json:"totalSchedules"`
+	ScheduledMaintenancePercentage    float64   `json:"scheduledMaintenancePercentage"`
+	CompletedMaintenancePercentage    float64   `json:"completedMaintenancePercentage"`
+	CancelledMaintenancePercentage    float64   `json:"cancelledMaintenancePercentage"`
+	PreventiveMaintenancePercentage   float64   `json:"preventiveMaintenancePercentage"`
+	CorrectiveMaintenancePercentage   float64   `json:"correctiveMaintenancePercentage"`
+	AverageScheduleFrequency          float64   `json:"averageScheduleFrequency"`
+	UpcomingMaintenanceCount          int       `json:"upcomingMaintenanceCount"`
+	OverdueMaintenanceCount           int       `json:"overdueMaintenanceCount"`
+	AssetsWithScheduledMaintenance    int       `json:"assetsWithScheduledMaintenance"`
+	AssetsWithoutScheduledMaintenance int       `json:"assetsWithoutScheduledMaintenance"`
+	AverageSchedulesPerDay            float64   `json:"averageSchedulesPerDay"`
+	LatestScheduleDate                time.Time `json:"latestScheduleDate"`
+	EarliestScheduleDate              time.Time `json:"earliestScheduleDate"`
+	TotalUniqueCreators               int       `json:"totalUniqueCreators"`
 }

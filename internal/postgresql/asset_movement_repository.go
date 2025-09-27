@@ -571,7 +571,7 @@ func (r *AssetMovementRepository) GetAssetMovementStatistics(ctx context.Context
 			FromUser:     rm.FromUser,
 			ToUser:       rm.ToUser,
 			MovedBy:      rm.MovedBy,
-			MovementDate: rm.MovementDate.Format("2006-01-02 15:04:05"),
+			MovementDate: rm.MovementDate,
 			MovementType: movementType,
 		}
 	}
@@ -595,8 +595,10 @@ func (r *AssetMovementRepository) GetAssetMovementStatistics(ctx context.Context
 
 	stats.MovementTrends = make([]domain.AssetMovementTrend, len(movementTrends))
 	for i, mt := range movementTrends {
+		// Parse the date string to time.Time
+		date, _ := time.Parse("2006-01-02", mt.Date)
 		stats.MovementTrends[i] = domain.AssetMovementTrend{
-			Date:  mt.Date,
+			Date:  date,
 			Count: int(mt.Count),
 		}
 	}
@@ -652,10 +654,10 @@ func (r *AssetMovementRepository) GetAssetMovementStatistics(ctx context.Context
 	r.db.WithContext(ctx).Table("asset_movements").Select("MAX(movement_date)").Row().Scan(&latestDate)
 
 	if earliestDate != nil {
-		stats.Summary.EarliestMovementDate = earliestDate.Format("2006-01-02")
+		stats.Summary.EarliestMovementDate = *earliestDate
 	}
 	if latestDate != nil {
-		stats.Summary.LatestMovementDate = latestDate.Format("2006-01-02")
+		stats.Summary.LatestMovementDate = *latestDate
 	}
 
 	// Calculate average movements per day and per asset

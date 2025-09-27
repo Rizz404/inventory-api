@@ -410,8 +410,10 @@ func (r *AssetRepository) GetAssetStatistics(ctx context.Context) (domain.AssetS
 
 	stats.CreationTrends = make([]domain.AssetCreationTrend, len(creationTrends))
 	for i, ct := range creationTrends {
+		// Parse the date string to time.Time
+		date, _ := time.Parse("2006-01-02", ct.Date)
 		stats.CreationTrends[i] = domain.AssetCreationTrend{
-			Date:  ct.Date,
+			Date:  date,
 			Count: int(ct.Count),
 		}
 	}
@@ -449,8 +451,8 @@ func (r *AssetRepository) GetAssetStatistics(ctx context.Context) (domain.AssetS
 		return stats, domain.ErrInternal(err)
 	}
 
-	stats.Summary.EarliestCreationDate = earliestDate.Format("2006-01-02")
-	stats.Summary.LatestCreationDate = latestDate.Format("2006-01-02")
+	stats.Summary.EarliestCreationDate = earliestDate
+	stats.Summary.LatestCreationDate = latestDate
 
 	// Calculate average assets per day
 	if !earliestDate.IsZero() && !latestDate.IsZero() {

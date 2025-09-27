@@ -518,10 +518,10 @@ func (r *MaintenanceScheduleRepository) GetMaintenanceScheduleStatistics(ctx con
 	// Average schedules per day
 	var earliest, latest time.Time
 	if err := r.db.WithContext(ctx).Model(&model.MaintenanceSchedule{}).Select("MIN(created_at)").Scan(&earliest).Error; err == nil {
-		stats.Summary.EarliestScheduleDate = earliest.Format("2006-01-02")
+		stats.Summary.EarliestScheduleDate = earliest
 	}
 	if err := r.db.WithContext(ctx).Model(&model.MaintenanceSchedule{}).Select("MAX(created_at)").Scan(&latest).Error; err == nil {
-		stats.Summary.LatestScheduleDate = latest.Format("2006-01-02")
+		stats.Summary.LatestScheduleDate = latest
 	}
 	if !earliest.IsZero() && !latest.IsZero() {
 		days := latest.Sub(earliest).Hours() / 24

@@ -149,38 +149,38 @@ type AssetMovementTypeStatistics struct {
 }
 
 type AssetMovementRecentStats struct {
-	ID           string  `json:"id"`
-	AssetTag     string  `json:"assetTag"`
-	AssetName    string  `json:"assetName"`
-	FromLocation *string `json:"fromLocation"`
-	ToLocation   *string `json:"toLocation"`
-	FromUser     *string `json:"fromUser"`
-	ToUser       *string `json:"toUser"`
-	MovedBy      string  `json:"movedBy"`
-	MovementDate string  `json:"movementDate"`
-	MovementType string  `json:"movementType"`
+	ID           string    `json:"id"`
+	AssetTag     string    `json:"assetTag"`
+	AssetName    string    `json:"assetName"`
+	FromLocation *string   `json:"fromLocation"`
+	ToLocation   *string   `json:"toLocation"`
+	FromUser     *string   `json:"fromUser"`
+	ToUser       *string   `json:"toUser"`
+	MovedBy      string    `json:"movedBy"`
+	MovementDate time.Time `json:"movementDate"`
+	MovementType string    `json:"movementType"`
 }
 
 type AssetMovementTrend struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type AssetMovementSummaryStatistics struct {
-	TotalMovements            int     `json:"totalMovements"`
-	MovementsToday            int     `json:"movementsToday"`
-	MovementsThisWeek         int     `json:"movementsThisWeek"`
-	MovementsThisMonth        int     `json:"movementsThisMonth"`
-	MostActiveAsset           string  `json:"mostActiveAsset"`
-	MostActiveLocation        string  `json:"mostActiveLocation"`
-	MostActiveUser            string  `json:"mostActiveUser"`
-	AverageMovementsPerDay    float64 `json:"averageMovementsPerDay"`
-	AverageMovementsPerAsset  float64 `json:"averageMovementsPerAsset"`
-	LatestMovementDate        string  `json:"latestMovementDate"`
-	EarliestMovementDate      string  `json:"earliestMovementDate"`
-	UniqueAssetsWithMovements int     `json:"uniqueAssetsWithMovements"`
-	UniqueLocationsInvolved   int     `json:"uniqueLocationsInvolved"`
-	UniqueUsersInvolved       int     `json:"uniqueUsersInvolved"`
+	TotalMovements            int       `json:"totalMovements"`
+	MovementsToday            int       `json:"movementsToday"`
+	MovementsThisWeek         int       `json:"movementsThisWeek"`
+	MovementsThisMonth        int       `json:"movementsThisMonth"`
+	MostActiveAsset           string    `json:"mostActiveAsset"`
+	MostActiveLocation        string    `json:"mostActiveLocation"`
+	MostActiveUser            string    `json:"mostActiveUser"`
+	AverageMovementsPerDay    float64   `json:"averageMovementsPerDay"`
+	AverageMovementsPerAsset  float64   `json:"averageMovementsPerAsset"`
+	LatestMovementDate        time.Time `json:"latestMovementDate"`
+	EarliestMovementDate      time.Time `json:"earliestMovementDate"`
+	UniqueAssetsWithMovements int       `json:"uniqueAssetsWithMovements"`
+	UniqueLocationsInvolved   int       `json:"uniqueLocationsInvolved"`
+	UniqueUsersInvolved       int       `json:"uniqueUsersInvolved"`
 }
 
 // Response statistics structs (used in service/handler layer)
@@ -230,36 +230,36 @@ type AssetMovementTypeStatisticsResponse struct {
 }
 
 type AssetMovementRecentStatsResponse struct {
-	ID           string  `json:"id"`
-	AssetTag     string  `json:"assetTag"`
-	AssetName    string  `json:"assetName"`
-	FromLocation *string `json:"fromLocation"`
-	ToLocation   *string `json:"toLocation"`
-	FromUser     *string `json:"fromUser"`
-	ToUser       *string `json:"toUser"`
-	MovedBy      string  `json:"movedBy"`
-	MovementDate string  `json:"movementDate"`
-	MovementType string  `json:"movementType"`
+	ID           string    `json:"id"`
+	AssetTag     string    `json:"assetTag"`
+	AssetName    string    `json:"assetName"`
+	FromLocation *string   `json:"fromLocation"`
+	ToLocation   *string   `json:"toLocation"`
+	FromUser     *string   `json:"fromUser"`
+	ToUser       *string   `json:"toUser"`
+	MovedBy      string    `json:"movedBy"`
+	MovementDate time.Time `json:"movementDate"`
+	MovementType string    `json:"movementType"`
 }
 
 type AssetMovementTrendResponse struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
+	Date  time.Time `json:"date"`
+	Count int       `json:"count"`
 }
 
 type AssetMovementSummaryStatisticsResponse struct {
-	TotalMovements            int     `json:"totalMovements"`
-	MovementsToday            int     `json:"movementsToday"`
-	MovementsThisWeek         int     `json:"movementsThisWeek"`
-	MovementsThisMonth        int     `json:"movementsThisMonth"`
-	MostActiveAsset           string  `json:"mostActiveAsset"`
-	MostActiveLocation        string  `json:"mostActiveLocation"`
-	MostActiveUser            string  `json:"mostActiveUser"`
-	AverageMovementsPerDay    float64 `json:"averageMovementsPerDay"`
-	AverageMovementsPerAsset  float64 `json:"averageMovementsPerAsset"`
-	LatestMovementDate        string  `json:"latestMovementDate"`
-	EarliestMovementDate      string  `json:"earliestMovementDate"`
-	UniqueAssetsWithMovements int     `json:"uniqueAssetsWithMovements"`
-	UniqueLocationsInvolved   int     `json:"uniqueLocationsInvolved"`
-	UniqueUsersInvolved       int     `json:"uniqueUsersInvolved"`
+	TotalMovements            int       `json:"totalMovements"`
+	MovementsToday            int       `json:"movementsToday"`
+	MovementsThisWeek         int       `json:"movementsThisWeek"`
+	MovementsThisMonth        int       `json:"movementsThisMonth"`
+	MostActiveAsset           string    `json:"mostActiveAsset"`
+	MostActiveLocation        string    `json:"mostActiveLocation"`
+	MostActiveUser            string    `json:"mostActiveUser"`
+	AverageMovementsPerDay    float64   `json:"averageMovementsPerDay"`
+	AverageMovementsPerAsset  float64   `json:"averageMovementsPerAsset"`
+	LatestMovementDate        time.Time `json:"latestMovementDate"`
+	EarliestMovementDate      time.Time `json:"earliestMovementDate"`
+	UniqueAssetsWithMovements int       `json:"uniqueAssetsWithMovements"`
+	UniqueLocationsInvolved   int       `json:"uniqueLocationsInvolved"`
+	UniqueUsersInvolved       int       `json:"uniqueUsersInvolved"`
 }
