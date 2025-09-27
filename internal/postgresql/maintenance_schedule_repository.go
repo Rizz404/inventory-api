@@ -110,7 +110,19 @@ func (r *MaintenanceScheduleRepository) CreateSchedule(ctx context.Context, payl
 	if err := tx.Commit().Error; err != nil {
 		return domain.MaintenanceSchedule{}, domain.ErrInternal(err)
 	}
-	return r.GetScheduleById(ctx, m.ID.String())
+
+	// Return created maintenance schedule with translations (no need to query again)
+	// GORM has already filled the model with created data including ID and timestamps
+	domainSchedule := mapper.ToDomainMaintenanceSchedule(&m)
+	// Add translations manually since they were created separately
+	for _, translation := range payload.Translations {
+		domainSchedule.Translations = append(domainSchedule.Translations, domain.MaintenanceScheduleTranslation{
+			LangCode:    translation.LangCode,
+			Title:       translation.Title,
+			Description: translation.Description,
+		})
+	}
+	return domainSchedule, nil
 }
 
 func (r *MaintenanceScheduleRepository) UpdateSchedule(ctx context.Context, scheduleId string, payload *domain.MaintenanceSchedule) (domain.MaintenanceSchedule, error) {
@@ -196,7 +208,10 @@ func (r *MaintenanceScheduleRepository) DeleteSchedule(ctx context.Context, sche
 		tx.Rollback()
 		return domain.ErrInternal(err)
 	}
-	return tx.Commit().Error
+	if err := tx.Commit().Error; err != nil {
+		return domain.ErrInternal(err)
+	}
+	return nil
 }
 
 // ===== QUERIES =====

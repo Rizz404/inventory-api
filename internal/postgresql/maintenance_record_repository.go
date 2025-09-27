@@ -108,7 +108,19 @@ func (r *MaintenanceRecordRepository) CreateRecord(ctx context.Context, payload 
 	if err := tx.Commit().Error; err != nil {
 		return domain.MaintenanceRecord{}, domain.ErrInternal(err)
 	}
-	return r.GetRecordById(ctx, m.ID.String())
+
+	// Return created maintenance record with translations (no need to query again)
+	// GORM has already filled the model with created data including ID and timestamps
+	domainRecord := mapper.ToDomainMaintenanceRecord(&m)
+	// Add translations manually since they were created separately
+	for _, translation := range payload.Translations {
+		domainRecord.Translations = append(domainRecord.Translations, domain.MaintenanceRecordTranslation{
+			LangCode: translation.LangCode,
+			Title:    translation.Title,
+			Notes:    translation.Notes,
+		})
+	}
+	return domainRecord, nil
 }
 
 func (r *MaintenanceRecordRepository) UpdateRecord(ctx context.Context, recordId string, payload *domain.MaintenanceRecord) (domain.MaintenanceRecord, error) {
@@ -200,7 +212,10 @@ func (r *MaintenanceRecordRepository) DeleteRecord(ctx context.Context, recordId
 		tx.Rollback()
 		return domain.ErrInternal(err)
 	}
-	return tx.Commit().Error
+	if err := tx.Commit().Error; err != nil {
+		return domain.ErrInternal(err)
+	}
+	return nil
 }
 
 // ===== QUERIES =====

@@ -108,8 +108,18 @@ func (r *NotificationRepository) CreateNotification(ctx context.Context, payload
 		return domain.Notification{}, domain.ErrInternal(err)
 	}
 
-	// Fetch created notification with translations
-	return r.GetNotificationById(ctx, modelNotification.ID.String())
+	// Return created notification with translations (no need to query again)
+	// GORM has already filled the model with created data including ID and timestamps
+	domainNotification := mapper.ToDomainNotification(&modelNotification)
+	// Add translations manually since they were created separately
+	for _, translation := range payload.Translations {
+		domainNotification.Translations = append(domainNotification.Translations, domain.NotificationTranslation{
+			LangCode: translation.LangCode,
+			Title:    translation.Title,
+			Message:  translation.Message,
+		})
+	}
+	return domainNotification, nil
 }
 
 func (r *NotificationRepository) UpdateNotification(ctx context.Context, notificationId string, payload *domain.UpdateNotificationPayload) (domain.Notification, error) {
@@ -265,7 +275,7 @@ func (r *NotificationRepository) GetNotificationById(ctx context.Context, notifi
 		First(&notification, "id = ?", notificationId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.Notification{}, domain.ErrNotFound("notification not found")
+			return domain.Notification{}, domain.ErrNotFound("notification")
 		}
 		return domain.Notification{}, domain.ErrInternal(err)
 	}

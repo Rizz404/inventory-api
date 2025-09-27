@@ -132,8 +132,18 @@ func (r *IssueReportRepository) CreateIssueReport(ctx context.Context, payload *
 		return domain.IssueReport{}, domain.ErrInternal(err)
 	}
 
-	// Fetch created issue report with translations and relations
-	return r.GetIssueReportById(ctx, modelIssueReport.ID.String())
+	// Return created issue report with translations (no need to query again)
+	// GORM has already filled the model with created data including ID and timestamps
+	domainIssueReport := mapper.ToDomainIssueReport(&modelIssueReport)
+	// Add translations manually since they were created separately
+	for _, translation := range payload.Translations {
+		domainIssueReport.Translations = append(domainIssueReport.Translations, domain.IssueReportTranslation{
+			LangCode:    translation.LangCode,
+			Title:       translation.Title,
+			Description: translation.Description,
+		})
+	}
+	return domainIssueReport, nil
 }
 
 func (r *IssueReportRepository) UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload) (domain.IssueReport, error) {

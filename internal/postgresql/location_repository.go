@@ -90,19 +90,17 @@ func (r *LocationRepository) CreateLocation(ctx context.Context, payload *domain
 		return domain.Location{}, domain.ErrInternal(err)
 	}
 
-	// Fetch created location with translations
-	var createdLocation model.Location
-	err := r.db.WithContext(ctx).
-		Table("locations l").
-		Preload("Translations").
-		First(&createdLocation, "l.id = ?", modelLocation.ID.String()).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.Location{}, domain.ErrNotFound("location")
-		}
-		return domain.Location{}, domain.ErrInternal(err)
+	// Return created location with translations (no need to query again)
+	// GORM has already filled the model with created data including ID and timestamps
+	domainLocation := mapper.ToDomainLocation(&modelLocation)
+	// Add translations manually since they were created separately
+	for _, translation := range payload.Translations {
+		domainLocation.Translations = append(domainLocation.Translations, domain.LocationTranslation{
+			LangCode:     translation.LangCode,
+			LocationName: translation.LocationName,
+		})
 	}
-	return mapper.ToDomainLocation(&createdLocation), nil
+	return domainLocation, nil
 }
 
 func (r *LocationRepository) UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload) (domain.Location, error) {

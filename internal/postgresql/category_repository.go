@@ -102,19 +102,19 @@ func (r *CategoryRepository) CreateCategory(ctx context.Context, payload *domain
 		return domain.Category{}, domain.ErrInternal(err)
 	}
 
-	// Fetch created category with translations
-	var createdCategory model.Category
-	err := r.db.WithContext(ctx).
-		Table("categories c").
-		Preload("Translations").
-		First(&createdCategory, "id = ?", modelCategory.ID.String()).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.Category{}, domain.ErrNotFound("category")
-		}
-		return domain.Category{}, domain.ErrInternal(err)
+	// Return created category with translations (no need to query again)
+	// GORM has already filled the model with created data including ID and timestamps
+	domainCategory := mapper.ToDomainCategory(&modelCategory)
+	// Add translations manually since they were created separately
+	for i, translation := range payload.Translations {
+		domainCategory.Translations = append(domainCategory.Translations, domain.CategoryTranslation{
+			LangCode:     translation.LangCode,
+			CategoryName: translation.CategoryName,
+			Description:  translation.Description,
+		})
+		_ = i // avoid unused variable
 	}
-	return mapper.ToDomainCategory(&createdCategory), nil
+	return domainCategory, nil
 }
 
 func (r *CategoryRepository) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.Category, error) {

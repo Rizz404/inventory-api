@@ -134,14 +134,23 @@ func (r *AssetMovementRepository) CreateAssetMovement(ctx context.Context, paylo
 		return domain.AssetMovement{}, err
 	}
 
-	// Fetch created asset movement with translations
-	return r.GetAssetMovementById(ctx, modelMovement.ID.String())
+	// Return created asset movement with translations (no need to query again)
+	// GORM has already filled the model with created data including ID and timestamps
+	domainMovement := mapper.ToDomainAssetMovement(&modelMovement)
+	// Add translations manually since they were created separately
+	for _, translation := range payload.Translations {
+		domainMovement.Translations = append(domainMovement.Translations, domain.AssetMovementTranslation{
+			LangCode: translation.LangCode,
+			Notes:    translation.Notes,
+		})
+	}
+	return domainMovement, nil
 }
 
 func (r *AssetMovementRepository) UpdateAssetMovement(ctx context.Context, movementId string, payload *domain.UpdateAssetMovementPayload) (domain.AssetMovement, error) {
 	tx := r.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
-		return domain.AssetMovement{}, tx.Error
+		return domain.AssetMovement{}, domain.ErrInternal(tx.Error)
 	}
 
 	defer func() {
@@ -155,7 +164,7 @@ func (r *AssetMovementRepository) UpdateAssetMovement(ctx context.Context, movem
 	if len(updates) > 0 {
 		if err := tx.Table("asset_movements").Where("id = ?", movementId).Updates(updates).Error; err != nil {
 			tx.Rollback()
-			return domain.AssetMovement{}, err
+			return domain.AssetMovement{}, domain.ErrInternal(err)
 		}
 	}
 
@@ -164,7 +173,7 @@ func (r *AssetMovementRepository) UpdateAssetMovement(ctx context.Context, movem
 		// Delete existing translations
 		if err := tx.Where("movement_id = ?", movementId).Delete(&model.AssetMovementTranslation{}).Error; err != nil {
 			tx.Rollback()
-			return domain.AssetMovement{}, err
+			return domain.AssetMovement{}, domain.ErrInternal(err)
 		}
 
 		// Create new translations
@@ -176,13 +185,13 @@ func (r *AssetMovementRepository) UpdateAssetMovement(ctx context.Context, movem
 			modelTranslation := mapper.ToModelAssetMovementTranslationForCreate(movementId, &translation)
 			if err := tx.Create(&modelTranslation).Error; err != nil {
 				tx.Rollback()
-				return domain.AssetMovement{}, err
+				return domain.AssetMovement{}, domain.ErrInternal(err)
 			}
 		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return domain.AssetMovement{}, err
+		return domain.AssetMovement{}, domain.ErrInternal(err)
 	}
 
 	// Fetch updated asset movement with translations
@@ -204,21 +213,24 @@ func (r *AssetMovementRepository) DeleteAssetMovement(ctx context.Context, movem
 	// Delete translations first (foreign key constraint)
 	if err := tx.Where("movement_id = ?", movementId).Delete(&model.AssetMovementTranslation{}).Error; err != nil {
 		tx.Rollback()
-		return err
+		return domain.ErrInternal(err)
 	}
 
 	// Delete asset movement
 	result := tx.Where("id = ?", movementId).Delete(&model.AssetMovement{})
 	if result.Error != nil {
 		tx.Rollback()
-		return result.Error
+		return domain.ErrInternal(result.Error)
 	}
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return gorm.ErrRecordNotFound
+		return domain.ErrNotFound("asset movement")
 	}
 
-	return tx.Commit().Error
+	if err := tx.Commit().Error; err != nil {
+		return domain.ErrInternal(err)
+	}
+	return nil
 }
 
 // *===========================QUERY===========================*
@@ -246,7 +258,7 @@ func (r *AssetMovementRepository) GetAssetMovementsPaginated(ctx context.Context
 	db = query.Apply(db, params, r.applyAssetMovementFilters, r.applyAssetMovementSorts)
 
 	if err := db.Find(&movements).Error; err != nil {
-		return nil, err
+		return nil, domain.ErrInternal(err)
 	}
 
 	// Convert to domain asset movements
@@ -277,7 +289,7 @@ func (r *AssetMovementRepository) GetAssetMovementsCursor(ctx context.Context, p
 	db = query.Apply(db, params, r.applyAssetMovementFilters, r.applyAssetMovementSorts)
 
 	if err := db.Find(&movements).Error; err != nil {
-		return nil, err
+		return nil, domain.ErrInternal(err)
 	}
 
 	// Convert to domain asset movements
@@ -299,9 +311,9 @@ func (r *AssetMovementRepository) GetAssetMovementById(ctx context.Context, move
 		First(&movement, "am.id = ?", movementId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.AssetMovement{}, gorm.ErrRecordNotFound
+			return domain.AssetMovement{}, domain.ErrNotFound("asset movement")
 		}
-		return domain.AssetMovement{}, err
+		return domain.AssetMovement{}, domain.ErrInternal(err)
 	}
 
 	return mapper.ToDomainAssetMovement(&movement), nil

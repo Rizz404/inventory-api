@@ -145,7 +145,7 @@ func (r *AssetRepository) GetAssetsPaginated(ctx context.Context, params query.P
 			searchPattern, searchPattern, searchPattern, searchPattern, searchPattern)
 	}
 
-	// * Set pagination ke nil agar query.Apply tidak memproses cursor
+	// Use offset-based pagination (disable cursor-based pagination)
 	params.Pagination.Cursor = ""
 	db = query.Apply(db, params, r.applyAssetFilters, r.applyAssetSorts)
 
@@ -173,7 +173,7 @@ func (r *AssetRepository) GetAssetsCursor(ctx context.Context, params query.Para
 			searchPattern, searchPattern, searchPattern, searchPattern, searchPattern)
 	}
 
-	// * Set offset ke 0 agar query.Apply tidak memproses offset
+	// Use cursor-based pagination (disable offset-based pagination)
 	params.Pagination.Offset = 0
 	db = query.Apply(db, params, r.applyAssetFilters, r.applyAssetSorts)
 

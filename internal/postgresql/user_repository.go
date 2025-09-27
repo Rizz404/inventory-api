@@ -166,7 +166,7 @@ func (r *UserRepository) GetUsersPaginated(ctx context.Context, params query.Par
 		db = db.Where("u.name ILIKE ? OR u.full_name ILIKE ?", searchPattern, searchPattern)
 	}
 
-	// * Set pagination ke nil agar query.Apply tidak memproses cursor
+	// Use offset-based pagination (disable cursor-based pagination)
 	params.Pagination.Cursor = ""
 	db = query.Apply(db, params, r.applyUserFilters, r.applyUserSorts)
 
@@ -188,7 +188,7 @@ func (r *UserRepository) GetUsersCursor(ctx context.Context, params query.Params
 		db = db.Where("u.name ILIKE ? OR u.full_name ILIKE ?", searchPattern, searchPattern)
 	}
 
-	// * Set offset ke 0 agar query.Apply tidak memproses offset
+	// Use cursor-based pagination (disable offset-based pagination)
 	params.Pagination.Offset = 0
 	db = query.Apply(db, params, r.applyUserFilters, r.applyUserSorts)
 

@@ -103,8 +103,9 @@ func (r *ScanLogRepository) CreateScanLog(ctx context.Context, payload *domain.S
 		return domain.ScanLog{}, domain.ErrInternal(err)
 	}
 
-	// Fetch created scan log
-	return r.GetScanLogById(ctx, modelScanLog.ID.String())
+	// Return created scan log (no need to query again)
+	// GORM has already filled the model with created data including ID and timestamps
+	return mapper.ToDomainScanLog(&modelScanLog), nil
 }
 
 func (r *ScanLogRepository) DeleteScanLog(ctx context.Context, scanLogId string) error {
