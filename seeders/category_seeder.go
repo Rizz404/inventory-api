@@ -61,10 +61,12 @@ func (cs *CategorySeeder) createParentCategories(ctx context.Context, count int)
 			names: map[string]string{
 				"en-US": "Electronics",
 				"id-ID": "Elektronik",
+				"ja-JP": "電子機器",
 			},
 			descriptions: map[string]string{
 				"en-US": "Electronic devices and components",
 				"id-ID": "Perangkat dan komponen elektronik",
+				"ja-JP": "電子機器とコンポーネント",
 			},
 		},
 		{
@@ -72,10 +74,12 @@ func (cs *CategorySeeder) createParentCategories(ctx context.Context, count int)
 			names: map[string]string{
 				"en-US": "Furniture",
 				"id-ID": "Perabotan",
+				"ja-JP": "家具",
 			},
 			descriptions: map[string]string{
 				"en-US": "Office and workplace furniture",
 				"id-ID": "Perabotan kantor dan tempat kerja",
+				"ja-JP": "オフィスと職場の家具",
 			},
 		},
 		{
@@ -83,10 +87,12 @@ func (cs *CategorySeeder) createParentCategories(ctx context.Context, count int)
 			names: map[string]string{
 				"en-US": "Vehicles",
 				"id-ID": "Kendaraan",
+				"ja-JP": "車両",
 			},
 			descriptions: map[string]string{
 				"en-US": "Transportation vehicles and equipment",
 				"id-ID": "Kendaraan transportasi dan peralatan",
+				"ja-JP": "輸送車両と設備",
 			},
 		},
 		{
@@ -94,10 +100,12 @@ func (cs *CategorySeeder) createParentCategories(ctx context.Context, count int)
 			names: map[string]string{
 				"en-US": "Office Supplies",
 				"id-ID": "Perlengkapan Kantor",
+				"ja-JP": "事務用品",
 			},
 			descriptions: map[string]string{
 				"en-US": "Office supplies and stationery",
 				"id-ID": "Perlengkapan kantor dan alat tulis",
+				"ja-JP": "事務用品と文房具",
 			},
 		},
 		{
@@ -105,10 +113,12 @@ func (cs *CategorySeeder) createParentCategories(ctx context.Context, count int)
 			names: map[string]string{
 				"en-US": "Tools & Equipment",
 				"id-ID": "Alat & Peralatan",
+				"ja-JP": "工具・設備",
 			},
 			descriptions: map[string]string{
 				"en-US": "Tools and maintenance equipment",
 				"id-ID": "Alat dan peralatan pemeliharaan",
+				"ja-JP": "工具とメンテナンス機器",
 			},
 		},
 		{
@@ -116,10 +126,12 @@ func (cs *CategorySeeder) createParentCategories(ctx context.Context, count int)
 			names: map[string]string{
 				"en-US": "Safety Equipment",
 				"id-ID": "Peralatan Keselamatan",
+				"ja-JP": "安全機器",
 			},
 			descriptions: map[string]string{
 				"en-US": "Safety and security equipment",
 				"id-ID": "Peralatan keselamatan dan keamanan",
+				"ja-JP": "安全・保安機器",
 			},
 		},
 	}
@@ -165,8 +177,9 @@ func (cs *CategorySeeder) createParentCategories(ctx context.Context, count int)
 		categoryName := gofakeit.ProductCategory()
 		categoryCode := strings.ToUpper(strings.ReplaceAll(categoryName, " ", "_"))
 
-		// Ensure unique code
-		categoryCode = fmt.Sprintf("%s_%d", categoryCode, i)
+		// Ensure unique code with timestamp
+		timestamp := time.Now().UnixNano() % 100000
+		categoryCode = fmt.Sprintf("%s_%d_%d", categoryCode, i, timestamp)
 
 		translations := []domain.CreateCategoryTranslationPayload{
 			{
@@ -178,6 +191,11 @@ func (cs *CategorySeeder) createParentCategories(ctx context.Context, count int)
 				LangCode:     "id-ID",
 				CategoryName: fmt.Sprintf("Kategori %s", categoryName),
 				Description:  stringPtr(fmt.Sprintf("Kategori %s untuk manajemen inventori", categoryName)),
+			},
+			{
+				LangCode:     "ja-JP",
+				CategoryName: fmt.Sprintf("%sカテゴリ", categoryName),
+				Description:  stringPtr(fmt.Sprintf("%sの在庫管理カテゴリ", categoryName)),
 			},
 		}
 
@@ -212,18 +230,18 @@ func (cs *CategorySeeder) createChildCategories(ctx context.Context, parentIDs [
 		descriptions map[string]string
 	}{
 		"ELECTRONICS": {
-			{code: "COMPUTERS", names: map[string]string{"en-US": "Computers", "id-ID": "Komputer"}, descriptions: map[string]string{"en-US": "Desktop and laptop computers", "id-ID": "Komputer desktop dan laptop"}},
-			{code: "PHONES", names: map[string]string{"en-US": "Phones", "id-ID": "Telepon"}, descriptions: map[string]string{"en-US": "Mobile phones and landlines", "id-ID": "Telepon seluler dan telepon rumah"}},
-			{code: "PRINTERS", names: map[string]string{"en-US": "Printers", "id-ID": "Printer"}, descriptions: map[string]string{"en-US": "Printing devices and scanners", "id-ID": "Perangkat cetak dan scanner"}},
+			{code: "COMPUTERS", names: map[string]string{"en-US": "Computers", "id-ID": "Komputer", "ja-JP": "コンピューター"}, descriptions: map[string]string{"en-US": "Desktop and laptop computers", "id-ID": "Komputer desktop dan laptop", "ja-JP": "デスクトップとノートパソコン"}},
+			{code: "PHONES", names: map[string]string{"en-US": "Phones", "id-ID": "Telepon", "ja-JP": "電話"}, descriptions: map[string]string{"en-US": "Mobile phones and landlines", "id-ID": "Telepon seluler dan telepon rumah", "ja-JP": "携帯電話と固定電話"}},
+			{code: "PRINTERS", names: map[string]string{"en-US": "Printers", "id-ID": "Printer", "ja-JP": "プリンター"}, descriptions: map[string]string{"en-US": "Printing devices and scanners", "id-ID": "Perangkat cetak dan scanner", "ja-JP": "印刷機器とスキャナー"}},
 		},
 		"FURNITURE": {
-			{code: "CHAIRS", names: map[string]string{"en-US": "Chairs", "id-ID": "Kursi"}, descriptions: map[string]string{"en-US": "Office chairs and seating", "id-ID": "Kursi kantor dan tempat duduk"}},
-			{code: "DESKS", names: map[string]string{"en-US": "Desks", "id-ID": "Meja"}, descriptions: map[string]string{"en-US": "Office desks and tables", "id-ID": "Meja kantor dan meja kerja"}},
-			{code: "STORAGE", names: map[string]string{"en-US": "Storage", "id-ID": "Penyimpanan"}, descriptions: map[string]string{"en-US": "Cabinets and storage furniture", "id-ID": "Lemari dan perabotan penyimpanan"}},
+			{code: "CHAIRS", names: map[string]string{"en-US": "Chairs", "id-ID": "Kursi", "ja-JP": "椅子"}, descriptions: map[string]string{"en-US": "Office chairs and seating", "id-ID": "Kursi kantor dan tempat duduk", "ja-JP": "オフィスチェアと座席"}},
+			{code: "DESKS", names: map[string]string{"en-US": "Desks", "id-ID": "Meja", "ja-JP": "机"}, descriptions: map[string]string{"en-US": "Office desks and tables", "id-ID": "Meja kantor dan meja kerja", "ja-JP": "オフィスデスクとテーブル"}},
+			{code: "STORAGE", names: map[string]string{"en-US": "Storage", "id-ID": "Penyimpanan", "ja-JP": "収納"}, descriptions: map[string]string{"en-US": "Cabinets and storage furniture", "id-ID": "Lemari dan perabotan penyimpanan", "ja-JP": "キャビネットと収納家具"}},
 		},
 		"VEHICLES": {
-			{code: "CARS", names: map[string]string{"en-US": "Cars", "id-ID": "Mobil"}, descriptions: map[string]string{"en-US": "Company cars and vehicles", "id-ID": "Mobil dan kendaraan perusahaan"}},
-			{code: "MOTORCYCLES", names: map[string]string{"en-US": "Motorcycles", "id-ID": "Motor"}, descriptions: map[string]string{"en-US": "Motorcycles and scooters", "id-ID": "Sepeda motor dan skuter"}},
+			{code: "CARS", names: map[string]string{"en-US": "Cars", "id-ID": "Mobil", "ja-JP": "自動車"}, descriptions: map[string]string{"en-US": "Company cars and vehicles", "id-ID": "Mobil dan kendaraan perusahaan", "ja-JP": "会社の車両"}},
+			{code: "MOTORCYCLES", names: map[string]string{"en-US": "Motorcycles", "id-ID": "Motor", "ja-JP": "オートバイ"}, descriptions: map[string]string{"en-US": "Motorcycles and scooters", "id-ID": "Sepeda motor dan skuter", "ja-JP": "オートバイとスクーター"}},
 		},
 	}
 
@@ -324,7 +342,9 @@ func (cs *CategorySeeder) createChildrenForParent(ctx context.Context, parentID,
 func (cs *CategorySeeder) createRandomChild(ctx context.Context, parentID, parentCode string, index int) int {
 	productName := gofakeit.ProductName()
 	childCode := strings.ToUpper(strings.ReplaceAll(productName, " ", "_"))
-	childCode = fmt.Sprintf("%s_%s_%d", parentCode, childCode, index)
+	// Add timestamp for uniqueness
+	timestamp := time.Now().UnixNano() % 10000
+	childCode = fmt.Sprintf("%s_%s_%d_%d", parentCode, childCode, index, timestamp)
 
 	translations := []domain.CreateCategoryTranslationPayload{
 		{
@@ -336,6 +356,11 @@ func (cs *CategorySeeder) createRandomChild(ctx context.Context, parentID, paren
 			LangCode:     "id-ID",
 			CategoryName: fmt.Sprintf("Subkategori %s", productName),
 			Description:  stringPtr(fmt.Sprintf("Subkategori %s", productName)),
+		},
+		{
+			LangCode:     "ja-JP",
+			CategoryName: fmt.Sprintf("%sサブカテゴリ", productName),
+			Description:  stringPtr(fmt.Sprintf("%sのサブカテゴリ", productName)),
 		},
 	}
 

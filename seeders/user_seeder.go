@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/services/auth"
 	"github.com/Rizz404/inventory-api/services/user"
 	"github.com/brianvoe/gofakeit/v6"
+	"github.com/google/uuid"
 )
 
 // UserSeeder handles user data seeding
@@ -74,14 +76,16 @@ func (us *UserSeeder) createAdminUser(ctx context.Context) error {
 
 // createRandomUsers creates random users with different roles
 func (us *UserSeeder) createRandomUsers(ctx context.Context, count int) error {
-	languages := []string{"en-US", "id-ID"}
+	languages := []string{"en-US", "id-ID", "ja-JP"}
 
 	successCount := 0
 	for i := 0; i < count; i++ {
 		// Generate fake user data
 		firstName := gofakeit.FirstName()
 		lastName := gofakeit.LastName()
-		username := generateUsername(firstName, lastName, i)
+		// Create unique username with timestamp suffix
+		timestamp := time.Now().UnixNano()
+		username := generateUniqueUsername(firstName, lastName, i, timestamp)
 		email := fmt.Sprintf("%s@%s", username, gofakeit.DomainName())
 
 		// Select random role (more employees and staff than admins)
@@ -101,7 +105,7 @@ func (us *UserSeeder) createRandomUsers(ctx context.Context, count int) error {
 			Password:      "password123",
 			FullName:      fmt.Sprintf("%s %s", firstName, lastName),
 			Role:          role,
-			EmployeeID:    stringPtr(generateEmployeeID(role, i)),
+			EmployeeID:    stringPtr(generateUniqueEmployeeID(role)),
 			PreferredLang: stringPtr(languages[rand.Intn(len(languages))]),
 			IsActive:      rand.Intn(100) < 90, // 90% active
 			AvatarURL:     stringPtr(generateAvatarURL(firstName, lastName)),
@@ -126,20 +130,19 @@ func (us *UserSeeder) createRandomUsers(ctx context.Context, count int) error {
 	return nil
 }
 
-// generateUsername creates a unique username
-func generateUsername(firstName, lastName string, index int) string {
+// generateUniqueUsername creates a unique username with timestamp
+func generateUniqueUsername(firstName, lastName string, index int, timestamp int64) string {
 	base := fmt.Sprintf("%s.%s",
 		normalizeString(firstName),
 		normalizeString(lastName))
 
-	if index > 0 {
-		return fmt.Sprintf("%s%d", base, index)
-	}
-	return base
+	// Add index and a portion of timestamp for uniqueness
+	suffix := timestamp % 100000 // Last 5 digits
+	return fmt.Sprintf("%s%d", base, index+int(suffix))
 }
 
-// generateEmployeeID creates an employee ID based on role
-func generateEmployeeID(role domain.UserRole, index int) string {
+// generateUniqueEmployeeID creates a unique employee ID based on role using UUID
+func generateUniqueEmployeeID(role domain.UserRole) string {
 	var prefix string
 	switch role {
 	case domain.RoleAdmin:
@@ -151,7 +154,9 @@ func generateEmployeeID(role domain.UserRole, index int) string {
 	default:
 		prefix = "USR"
 	}
-	return fmt.Sprintf("%s%03d", prefix, index+100)
+	// Generate unique ID using UUID (take first 8 chars and convert to uppercase)
+	uuidStr := strings.ReplaceAll(uuid.New().String(), "-", "")
+	return fmt.Sprintf("%s%s", prefix, strings.ToUpper(uuidStr[:8]))
 }
 
 // generateAvatarURL creates a placeholder avatar URL

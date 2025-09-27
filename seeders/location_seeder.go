@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
@@ -80,6 +79,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Headquarters Lobby"},
 				{LangCode: "id-ID", LocationName: "Lobi Kantor Pusat"},
+				{LangCode: "ja-JP", LocationName: "本社ロビー"},
 			},
 		},
 		{
@@ -91,6 +91,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "IT Server Room"},
 				{LangCode: "id-ID", LocationName: "Ruang Server IT"},
+				{LangCode: "ja-JP", LocationName: "ITサーバールーム"},
 			},
 		},
 		{
@@ -102,6 +103,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Meeting Room A"},
 				{LangCode: "id-ID", LocationName: "Ruang Rapat A"},
+				{LangCode: "ja-JP", LocationName: "会議室A"},
 			},
 		},
 		{
@@ -113,6 +115,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Meeting Room B"},
 				{LangCode: "id-ID", LocationName: "Ruang Rapat B"},
+				{LangCode: "ja-JP", LocationName: "会議室B"},
 			},
 		},
 		{
@@ -124,6 +127,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Warehouse A - Main Storage"},
 				{LangCode: "id-ID", LocationName: "Gudang A - Penyimpanan Utama"},
+				{LangCode: "ja-JP", LocationName: "倉庫A - メインストレージ"},
 			},
 		},
 		{
@@ -135,6 +139,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Warehouse B - Electronics"},
 				{LangCode: "id-ID", LocationName: "Gudang B - Elektronik"},
+				{LangCode: "ja-JP", LocationName: "倉庫B - 電子機器"},
 			},
 		},
 		{
@@ -146,6 +151,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Office Floor 1 - General"},
 				{LangCode: "id-ID", LocationName: "Lantai Kantor 1 - Umum"},
+				{LangCode: "ja-JP", LocationName: "オフィスフロア1 - 一般"},
 			},
 		},
 		{
@@ -157,6 +163,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Office Floor 2 - Management"},
 				{LangCode: "id-ID", LocationName: "Lantai Kantor 2 - Manajemen"},
+				{LangCode: "ja-JP", LocationName: "オフィスフロア2 - 管理"},
 			},
 		},
 		{
@@ -168,6 +175,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Parking Area A"},
 				{LangCode: "id-ID", LocationName: "Area Parkir A"},
+				{LangCode: "ja-JP", LocationName: "駐車場A"},
 			},
 		},
 		{
@@ -179,6 +187,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Employee Cafeteria"},
 				{LangCode: "id-ID", LocationName: "Kafeteria Karyawan"},
+				{LangCode: "ja-JP", LocationName: "社員食堂"},
 			},
 		},
 	}
@@ -186,20 +195,28 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 
 // generateRandomLocation creates a random location
 func (ls *LocationSeeder) generateRandomLocation(index int) *domain.CreateLocationPayload {
-	// Generate realistic office/building locations
-	locationTypes := []string{"Office", "Meeting Room", "Storage", "Laboratory", "Workshop", "Reception", "Break Room"}
-	buildings := []string{"Building A", "Building B", "Tower 1", "Tower 2", "Main Office", "Annex Building"}
-	floors := []string{"Ground Floor", "1st Floor", "2nd Floor", "3rd Floor", "4th Floor", "5th Floor", "Basement"}
+	// Generate realistic office/building locations with shorter codes
+	locationTypes := []string{"OFF", "MTG", "STG", "LAB", "WSH", "RCP", "BRK"}
+	locationNames := []string{"Office", "Meeting", "Storage", "Laboratory", "Workshop", "Reception", "Break Room"}
+	buildings := []string{"A", "B", "T1", "T2", "MO", "AN"}
+	buildingNames := []string{"Building A", "Building B", "Tower 1", "Tower 2", "Main Office", "Annex Building"}
+	floors := []string{"GF", "1F", "2F", "3F", "4F", "5F", "B1"}
+	floorNames := []string{"Ground Floor", "1st Floor", "2nd Floor", "3rd Floor", "4th Floor", "5th Floor", "Basement"}
 
-	locationType := locationTypes[rand.Intn(len(locationTypes))]
-	building := buildings[rand.Intn(len(buildings))]
-	floor := floors[rand.Intn(len(floors))]
+	typeIndex := rand.Intn(len(locationTypes))
+	buildingIndex := rand.Intn(len(buildings))
+	floorIndex := rand.Intn(len(floors))
 
-	// Generate location code
-	locationCode := fmt.Sprintf("%s_%s_%d",
-		strings.ToUpper(strings.ReplaceAll(locationType, " ", "")),
-		strings.ToUpper(strings.ReplaceAll(building, " ", "")),
-		index)
+	locationType := locationTypes[typeIndex]
+	locationName := locationNames[typeIndex]
+	building := buildings[buildingIndex]
+	buildingName := buildingNames[buildingIndex]
+	floor := floors[floorIndex]
+	floorName := floorNames[floorIndex]
+
+	// Generate short location code (max 20 chars)
+	// Format: TYPE_BUILDING_FLOOR_INDEX (e.g., OFF_A_1F_001)
+	locationCode := fmt.Sprintf("%s_%s_%s_%03d", locationType, building, floor, index%1000)
 
 	// Generate coordinates around Jakarta area
 	baseLat := -6.2088
@@ -208,13 +225,14 @@ func (ls *LocationSeeder) generateRandomLocation(index int) *domain.CreateLocati
 	lng := baseLng + (rand.Float64()-0.5)*0.1 // ±0.05 degrees
 
 	// Generate location names
-	locationNameEN := fmt.Sprintf("%s - %s", building, locationType)
-	locationNameID := translateLocationToID(building, locationType)
+	locationNameEN := fmt.Sprintf("%s - %s", buildingName, locationName)
+	locationNameID := translateLocationToID(buildingName, locationName)
+	locationNameJP := translateLocationToJP(buildingName, locationName)
 
 	return &domain.CreateLocationPayload{
 		LocationCode: locationCode,
-		Building:     &building,
-		Floor:        &floor,
+		Building:     &buildingName,
+		Floor:        &floorName,
 		Latitude:     &lat,
 		Longitude:    &lng,
 		Translations: []domain.CreateLocationTranslationPayload{
@@ -225,6 +243,10 @@ func (ls *LocationSeeder) generateRandomLocation(index int) *domain.CreateLocati
 			{
 				LangCode:     "id-ID",
 				LocationName: locationNameID,
+			},
+			{
+				LangCode:     "ja-JP",
+				LocationName: locationNameJP,
 			},
 		},
 	}
@@ -243,13 +265,13 @@ func translateLocationToID(building, locationType string) string {
 	}
 
 	typeTranslations := map[string]string{
-		"Office":       "Kantor",
-		"Meeting Room": "Ruang Rapat",
-		"Storage":      "Penyimpanan",
-		"Laboratory":   "Laboratorium",
-		"Workshop":     "Workshop",
-		"Reception":    "Resepsi",
-		"Break Room":   "Ruang Istirahat",
+		"Office":     "Kantor",
+		"Meeting":    "Ruang Rapat",
+		"Storage":    "Penyimpanan",
+		"Laboratory": "Laboratorium",
+		"Workshop":   "Workshop",
+		"Reception":  "Resepsi",
+		"Break Room": "Ruang Istirahat",
 	}
 
 	buildingID := buildingTranslations[building]
@@ -263,6 +285,41 @@ func translateLocationToID(building, locationType string) string {
 	}
 
 	return fmt.Sprintf("%s - %s", buildingID, typeID)
+}
+
+// translateLocationToJP provides simple Japanese translations
+func translateLocationToJP(building, locationType string) string {
+	// Simple translation mapping
+	buildingTranslations := map[string]string{
+		"Building A":     "ビルディングA",
+		"Building B":     "ビルディングB",
+		"Tower 1":        "タワー1",
+		"Tower 2":        "タワー2",
+		"Main Office":    "本社",
+		"Annex Building": "別館",
+	}
+
+	typeTranslations := map[string]string{
+		"Office":     "オフィス",
+		"Meeting":    "会議室",
+		"Storage":    "倉庫",
+		"Laboratory": "研究室",
+		"Workshop":   "作業場",
+		"Reception":  "受付",
+		"Break Room": "休憩室",
+	}
+
+	buildingJP := buildingTranslations[building]
+	if buildingJP == "" {
+		buildingJP = building
+	}
+
+	typeJP := typeTranslations[locationType]
+	if typeJP == "" {
+		typeJP = locationType
+	}
+
+	return fmt.Sprintf("%s - %s", buildingJP, typeJP)
 }
 
 // float64Ptr returns a pointer to float64

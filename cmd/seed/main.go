@@ -11,9 +11,14 @@ import (
 	"github.com/Rizz404/inventory-api/internal/client/cloudinary"
 	"github.com/Rizz404/inventory-api/internal/postgresql"
 	"github.com/Rizz404/inventory-api/seeders"
+	"github.com/Rizz404/inventory-api/services/asset"
+	"github.com/Rizz404/inventory-api/services/asset_movement"
 	"github.com/Rizz404/inventory-api/services/auth"
 	"github.com/Rizz404/inventory-api/services/category"
+	"github.com/Rizz404/inventory-api/services/issue_report"
 	"github.com/Rizz404/inventory-api/services/location"
+	"github.com/Rizz404/inventory-api/services/maintenance_record"
+	"github.com/Rizz404/inventory-api/services/maintenance_schedule"
 	"github.com/Rizz404/inventory-api/services/user"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -21,15 +26,14 @@ import (
 )
 
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	if err := godotenv.Load(); err != nil {
+		log.Println("⚠️ .env file not found, using system environment variables")
 	}
 }
 
 func main() {
 	var (
-		seedType = flag.String("type", "all", "Type of seed to run: users, categories, locations, or all")
+		seedType = flag.String("type", "all", "Type of seed to run: users, categories, locations, assets, movements, issues, schedules, records, or all")
 		count    = flag.Int("count", 20, "Number of records to create (default: 20)")
 		help     = flag.Bool("help", false, "Show help message")
 	)
@@ -41,7 +45,7 @@ func main() {
 	}
 
 	// Validate seed type
-	validTypes := []string{"users", "categories", "locations", "all"}
+	validTypes := []string{"users", "categories", "locations", "assets", "movements", "issues", "schedules", "records", "all"}
 	if !contains(validTypes, *seedType) {
 		fmt.Printf("Invalid seed type: %s\n", *seedType)
 		fmt.Printf("Valid types: %s\n", strings.Join(validTypes, ", "))
@@ -64,7 +68,17 @@ func main() {
 	services := initServices(db)
 
 	// Initialize seeder manager
-	seederManager := seeders.NewSeederManager(services.Auth, services.User, services.Category, services.Location)
+	seederManager := seeders.NewSeederManager(
+		services.Auth,
+		services.User,
+		services.Category,
+		services.Location,
+		services.Asset,
+		services.AssetMovement,
+		services.IssueReport,
+		services.MaintenanceSchedule,
+		services.MaintenanceRecord,
+	)
 
 	ctx := context.Background()
 
@@ -90,6 +104,27 @@ func main() {
 			log.Fatalf("Failed to seed locations: %v", err)
 		}
 		fmt.Println("✅ Locations seeded successfully!")
+
+	case "assets":
+		fmt.Println("⚠️ Assets seeding requires existing users, categories, and locations.")
+		fmt.Println("Please make sure you have run 'users', 'categories', and 'locations' seeders first.")
+		fmt.Println("Example: go run cmd/seed/main.go -type=users && go run cmd/seed/main.go -type=categories && go run cmd/seed/main.go -type=locations && go run cmd/seed/main.go -type=assets")
+
+	case "movements":
+		fmt.Println("⚠️ Asset movements seeding requires existing assets, users, and locations.")
+		fmt.Println("Please make sure you have run other seeders first.")
+
+	case "issues":
+		fmt.Println("⚠️ Issue reports seeding requires existing assets and users.")
+		fmt.Println("Please make sure you have run other seeders first.")
+
+	case "schedules":
+		fmt.Println("⚠️ Maintenance schedules seeding requires existing assets and users.")
+		fmt.Println("Please make sure you have run other seeders first.")
+
+	case "records":
+		fmt.Println("⚠️ Maintenance records seeding requires existing assets, users, and optionally schedules.")
+		fmt.Println("Please make sure you have run other seeders first.")
 
 	case "all":
 		fmt.Printf("Seeding all data (count: %d)...\n", *count)
@@ -133,10 +168,15 @@ func initDatabase() (*gorm.DB, error) {
 }
 
 type Services struct {
-	Auth     auth.Service
-	User     user.UserService
-	Category category.CategoryService
-	Location location.LocationService
+	Auth                auth.Service
+	User                user.UserService
+	Category            category.CategoryService
+	Location            location.LocationService
+	Asset               asset.AssetService
+	AssetMovement       asset_movement.AssetMovementService
+	IssueReport         issue_report.IssueReportService
+	MaintenanceSchedule maintenance_schedule.MaintenanceScheduleService
+	MaintenanceRecord   maintenance_record.MaintenanceRecordService
 }
 
 func initServices(db *gorm.DB) *Services {
@@ -155,18 +195,33 @@ func initServices(db *gorm.DB) *Services {
 	userRepository := postgresql.NewUserRepository(db)
 	categoryRepository := postgresql.NewCategoryRepository(db)
 	locationRepository := postgresql.NewLocationRepository(db)
+	assetRepository := postgresql.NewAssetRepository(db)
+	assetMovementRepository := postgresql.NewAssetMovementRepository(db)
+	issueReportRepository := postgresql.NewIssueReportRepository(db)
+	maintenanceScheduleRepository := postgresql.NewMaintenanceScheduleRepository(db)
+	maintenanceRecordRepository := postgresql.NewMaintenanceRecordRepository(db)
 
 	// Initialize services
 	authService := auth.NewService(userRepository)
 	userService := user.NewService(userRepository, cloudinaryClient)
 	categoryService := category.NewService(categoryRepository)
 	locationService := location.NewService(locationRepository)
+	assetService := asset.NewService(assetRepository, cloudinaryClient)
+	assetMovementService := asset_movement.NewService(assetMovementRepository, assetService, locationService, userService)
+	issueReportService := issue_report.NewService(issueReportRepository)
+	maintenanceScheduleService := maintenance_schedule.NewService(maintenanceScheduleRepository, assetService, userService)
+	maintenanceRecordService := maintenance_record.NewService(maintenanceRecordRepository, assetService, userService)
 
 	return &Services{
-		Auth:     *authService,
-		User:     userService,
-		Category: categoryService,
-		Location: locationService,
+		Auth:                *authService,
+		User:                userService,
+		Category:            categoryService,
+		Location:            locationService,
+		Asset:               assetService,
+		AssetMovement:       assetMovementService,
+		IssueReport:         issueReportService,
+		MaintenanceSchedule: maintenanceScheduleService,
+		MaintenanceRecord:   maintenanceRecordService,
 	}
 }
 
@@ -207,14 +262,24 @@ func showHelp() {
 	fmt.Println()
 	fmt.Println("Options:")
 	fmt.Println("  -type string")
-	fmt.Println("        Type of seed to run: users, categories, locations, or all (default: all)")
+	fmt.Println("        Type of seed to run:")
+	fmt.Println("        - users: Seed user accounts")
+	fmt.Println("        - categories: Seed asset categories")
+	fmt.Println("        - locations: Seed location data")
+	fmt.Println("        - assets: Seed assets (requires users, categories, locations)")
+	fmt.Println("        - movements: Seed asset movements (requires assets, users, locations)")
+	fmt.Println("        - issues: Seed issue reports (requires assets, users)")
+	fmt.Println("        - schedules: Seed maintenance schedules (requires assets, users)")
+	fmt.Println("        - records: Seed maintenance records (requires assets, users, schedules)")
+	fmt.Println("        - all: Seed basic data (users, categories, locations only)")
+	fmt.Println("        (default: all)")
 	fmt.Println("  -count int")
 	fmt.Println("        Number of records to create (default: 20)")
 	fmt.Println("  -help")
 	fmt.Println("        Show this help message")
 	fmt.Println()
 	fmt.Println("Examples:")
-	fmt.Println("  # Seed all data with default count (20)")
+	fmt.Println("  # Seed basic data (users, categories, locations)")
 	fmt.Println("  go run cmd/seed/main.go")
 	fmt.Println()
 	fmt.Println("  # Seed 50 users only")
@@ -226,10 +291,24 @@ func showHelp() {
 	fmt.Println("  # Seed 40 locations")
 	fmt.Println("  go run cmd/seed/main.go -type=locations -count=40")
 	fmt.Println()
-	fmt.Println("  # Seed all with 100 records each")
-	fmt.Println("  go run cmd/seed/main.go -type=all -count=100")
+	fmt.Println("  # Complete seeding workflow:")
+	fmt.Println("  go run cmd/seed/main.go -type=users -count=20")
+	fmt.Println("  go run cmd/seed/main.go -type=categories -count=15")
+	fmt.Println("  go run cmd/seed/main.go -type=locations -count=10")
+	fmt.Println("  # Now you can seed dependent data:")
+	fmt.Println("  go run cmd/seed/main.go -type=assets -count=50")
+	fmt.Println("  go run cmd/seed/main.go -type=movements -count=25")
+	fmt.Println("  go run cmd/seed/main.go -type=schedules -count=20")
+	fmt.Println("  go run cmd/seed/main.go -type=records -count=30")
+	fmt.Println("  go run cmd/seed/main.go -type=issues -count=15")
 	fmt.Println()
 	fmt.Println("Environment Variables Required:")
 	fmt.Println("  DSN - PostgreSQL database connection string")
 	fmt.Println("  CLOUDINARY_URL - Cloudinary URL (optional, for avatar uploads)")
+	fmt.Println()
+	fmt.Println("Note: Some seed types require existing data. Make sure to seed in the correct order:")
+	fmt.Println("1. users, categories, locations (can be seeded independently)")
+	fmt.Println("2. assets (requires users, categories, locations)")
+	fmt.Println("3. movements, schedules, issues (requires assets and users)")
+	fmt.Println("4. records (requires assets, users, and optionally schedules)")
 }
