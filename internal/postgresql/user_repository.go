@@ -342,8 +342,8 @@ func (r *UserRepository) GetUserStatistics(ctx context.Context) (domain.UserStat
 
 	// Get registration trends (last 30 days)
 	var registrationTrends []struct {
-		Date  string `json:"date"`
-		Count int64  `json:"count"`
+		Date  time.Time `json:"date"`
+		Count int64     `json:"count"`
 	}
 	if err := r.db.WithContext(ctx).Model(&model.User{}).
 		Select("DATE(created_at) as date, COUNT(*) as count").
@@ -356,10 +356,8 @@ func (r *UserRepository) GetUserStatistics(ctx context.Context) (domain.UserStat
 
 	stats.RegistrationTrends = make([]domain.RegistrationTrend, len(registrationTrends))
 	for i, rt := range registrationTrends {
-		// Parse the date string to time.Time
-		date, _ := time.Parse("2006-01-02", rt.Date)
 		stats.RegistrationTrends[i] = domain.RegistrationTrend{
-			Date:  date,
+			Date:  rt.Date,
 			Count: int(rt.Count),
 		}
 	}

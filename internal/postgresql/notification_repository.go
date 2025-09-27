@@ -352,8 +352,8 @@ func (r *NotificationRepository) GetNotificationStatistics(ctx context.Context) 
 
 	// Get creation trends (last 30 days)
 	var creationTrends []struct {
-		Date  string `json:"date"`
-		Count int64  `json:"count"`
+		Date  time.Time `json:"date"`
+		Count int64     `json:"count"`
 	}
 	if err := r.db.WithContext(ctx).Model(&model.Notification{}).
 		Select("DATE(created_at) as date, COUNT(*) as count").
@@ -366,10 +366,8 @@ func (r *NotificationRepository) GetNotificationStatistics(ctx context.Context) 
 
 	stats.CreationTrends = make([]domain.NotificationCreationTrend, len(creationTrends))
 	for i, ct := range creationTrends {
-		// Parse the date string to time.Time
-		date, _ := time.Parse("2006-01-02", ct.Date)
 		stats.CreationTrends[i] = domain.NotificationCreationTrend{
-			Date:  date,
+			Date:  ct.Date,
 			Count: int(ct.Count),
 		}
 	}

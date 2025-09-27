@@ -294,8 +294,8 @@ func (r *ScanLogRepository) GetScanLogStatistics(ctx context.Context) (domain.Sc
 
 	// Get scan trends (last 30 days)
 	var scanTrends []struct {
-		Date  string `json:"date"`
-		Count int64  `json:"count"`
+		Date  time.Time `json:"date"`
+		Count int64     `json:"count"`
 	}
 	if err := r.db.WithContext(ctx).Model(&model.ScanLog{}).
 		Select("DATE(scan_timestamp) as date, COUNT(*) as count").
@@ -308,10 +308,8 @@ func (r *ScanLogRepository) GetScanLogStatistics(ctx context.Context) (domain.Sc
 
 	stats.ScanTrends = make([]domain.ScanTrend, len(scanTrends))
 	for i, st := range scanTrends {
-		// Parse the date string to time.Time
-		date, _ := time.Parse("2006-01-02", st.Date)
 		stats.ScanTrends[i] = domain.ScanTrend{
-			Date:  date,
+			Date:  st.Date,
 			Count: int(st.Count),
 		}
 	}

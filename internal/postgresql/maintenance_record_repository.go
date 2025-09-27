@@ -432,7 +432,7 @@ func (r *MaintenanceRecordRepository) GetMaintenanceRecordStatistics(ctx context
 
 	// Completion trend (last 30 days)
 	var completionTrends []struct {
-		Date  string
+		Date  time.Time
 		Count int64
 	}
 	if err := r.db.WithContext(ctx).Model(&model.MaintenanceRecord{}).
@@ -444,10 +444,8 @@ func (r *MaintenanceRecordRepository) GetMaintenanceRecordStatistics(ctx context
 		return stats, domain.ErrInternal(err)
 	}
 	for _, ct := range completionTrends {
-		// Parse the date string to time.Time
-		date, _ := time.Parse("2006-01-02", ct.Date)
 		stats.CompletionTrend = append(stats.CompletionTrend, domain.MaintenanceRecordCompletionTrend{
-			Date:  date,
+			Date:  ct.Date,
 			Count: int(ct.Count),
 		})
 	}

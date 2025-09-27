@@ -578,8 +578,8 @@ func (r *AssetMovementRepository) GetAssetMovementStatistics(ctx context.Context
 
 	// Get movement trends (last 30 days)
 	var movementTrends []struct {
-		Date  string `json:"date"`
-		Count int64  `json:"count"`
+		Date  time.Time `json:"date"`
+		Count int64     `json:"count"`
 	}
 	if err := r.db.WithContext(ctx).Raw(`
 		SELECT
@@ -595,10 +595,8 @@ func (r *AssetMovementRepository) GetAssetMovementStatistics(ctx context.Context
 
 	stats.MovementTrends = make([]domain.AssetMovementTrend, len(movementTrends))
 	for i, mt := range movementTrends {
-		// Parse the date string to time.Time
-		date, _ := time.Parse("2006-01-02", mt.Date)
 		stats.MovementTrends[i] = domain.AssetMovementTrend{
-			Date:  date,
+			Date:  mt.Date,
 			Count: int(mt.Count),
 		}
 	}
