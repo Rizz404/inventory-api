@@ -142,7 +142,7 @@ func (h *MaintenanceRecordHandler) GetMaintenanceRecordsPaginated(c *fiber.Ctx) 
 	if err != nil {
 		return web.HandleError(c, err)
 	}
-	return web.SuccessWithPageInfo(c, fiber.StatusOK, utils.SuccessMaintenanceRecordRetrievedKey, records, int(total), limit, (offset/limit)+1)
+	return web.SuccessWithOffsetInfo(c, fiber.StatusOK, utils.SuccessMaintenanceRecordRetrievedKey, records, int(total), limit, (offset/limit)+1)
 }
 
 func (h *MaintenanceRecordHandler) GetMaintenanceRecordsCursor(c *fiber.Ctx) error {

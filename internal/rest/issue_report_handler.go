@@ -268,7 +268,7 @@ func (h *IssueReportHandler) GetIssueReportsPaginated(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.SuccessWithPageInfo(c, fiber.StatusOK, utils.SuccessIssueReportRetrievedKey, issueReports, int(total), limit, (offset/limit)+1)
+	return web.SuccessWithOffsetInfo(c, fiber.StatusOK, utils.SuccessIssueReportRetrievedKey, issueReports, int(total), limit, (offset/limit)+1)
 }
 
 func (h *IssueReportHandler) GetIssueReportsCursor(c *fiber.Ctx) error {

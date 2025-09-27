@@ -1,35 +1,4 @@
-// Package rest provides REST API handlers for the inventory management system.
-//
-//	@title			Inventory Management API
-//	@version		1.0
-//	@description	A comprehensive inventory management API with JWT authentication, multi-language support, and CRUD operations for assets, users, and locations.
-//	@termsOfService	http://swagger.io/terms/
-//
-//	@contact.name	API Support
-//	@contact.url	http://www.swagger.io/support
-//	@contact.email	support@swagger.io
-//
-//	@license.name	MIT
-//	@license.url	https://opensource.org/licenses/MIT
-//
-//	@host		localhost:8080
-//	@BasePath	/api/v1
-//
-//	@securityDefinitions.apikey	BearerAuth
-//	@in							header
-//	@name						Authorization
-//	@description				Type "Bearer" followed by a space and JWT token.
-//
-//	@tag.name			Authentication
-//	@tag.description	Authentication related endpoints
-//	@tag.name			Users
-//	@tag.description	User management endpoints
-//	@tag.name			Categories
-//	@tag.description	Category management endpoints
-//	@tag.name			Locations
-//	@tag.description	Location management endpoints
-//	@tag.name			Assets
-//	@tag.description	Asset management endpoints
+// Package rest provides REST API handlers for authentication endpoints.
 package rest
 
 import (
@@ -78,10 +47,10 @@ func NewAuthHandler(app fiber.Router, s AuthService) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			registerPayload	body		domain.RegisterPayload	true	"User registration data"
-//	@Success		201				{object}	web.JSONResponse{data=domain.User}	"User registered successfully"
-//	@Failure		400				{object}	web.JSONResponse{error=[]web.ValidationError}	"Validation failed"
-//	@Failure		409				{object}	web.JSONResponse	"User already exists"
-//	@Failure		500				{object}	web.JSONResponse	"Internal server error"
+//	@Success		201				{object}	web.SuccessResponse{data=domain.UserResponse}	"User registered successfully"
+//	@Failure		400				{object}	web.ErrorResponse{error=web.ValidationErrors}	"Validation failed"
+//	@Failure		409				{object}	web.ErrorResponse	"User already exists"
+//	@Failure		500				{object}	web.ErrorResponse	"Internal server error"
 //	@Router			/auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 
@@ -106,10 +75,10 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			loginPayload	body		domain.LoginPayload	true	"User login credentials"
-//	@Success		200				{object}	web.JSONResponse{data=domain.LoginResponse}	"Login successful"
-//	@Failure		400				{object}	web.JSONResponse{error=[]web.ValidationError}	"Validation failed"
-//	@Failure		401				{object}	web.JSONResponse	"Invalid credentials"
-//	@Failure		500				{object}	web.JSONResponse	"Internal server error"
+//	@Success		200				{object}	web.SuccessResponse{data=domain.LoginResponse}	"Login successful"
+//	@Failure		400				{object}	web.ErrorResponse{error=web.ValidationErrors}	"Validation failed"
+//	@Failure		401				{object}	web.ErrorResponse	"Invalid credentials"
+//	@Failure		500				{object}	web.ErrorResponse	"Internal server error"
 //	@Router			/auth/login [post]
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var payload domain.LoginPayload

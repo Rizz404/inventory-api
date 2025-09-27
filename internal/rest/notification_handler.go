@@ -246,7 +246,7 @@ func (h *NotificationHandler) GetNotificationsPaginated(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.SuccessWithPageInfo(c, fiber.StatusOK, utils.SuccessNotificationRetrievedKey, notifications, int(total), limit, (offset/limit)+1)
+	return web.SuccessWithOffsetInfo(c, fiber.StatusOK, utils.SuccessNotificationRetrievedKey, notifications, int(total), limit, (offset/limit)+1)
 }
 
 func (h *NotificationHandler) GetNotificationsCursor(c *fiber.Ctx) error {

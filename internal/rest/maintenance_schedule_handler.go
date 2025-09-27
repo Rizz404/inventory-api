@@ -148,7 +148,7 @@ func (h *MaintenanceScheduleHandler) GetMaintenanceSchedulesPaginated(c *fiber.C
 	if err != nil {
 		return web.HandleError(c, err)
 	}
-	return web.SuccessWithPageInfo(c, fiber.StatusOK, utils.SuccessMaintenanceScheduleRetrievedKey, schedules, int(total), limit, (offset/limit)+1)
+	return web.SuccessWithOffsetInfo(c, fiber.StatusOK, utils.SuccessMaintenanceScheduleRetrievedKey, schedules, int(total), limit, (offset/limit)+1)
 }
 
 func (h *MaintenanceScheduleHandler) GetMaintenanceSchedulesCursor(c *fiber.Ctx) error {

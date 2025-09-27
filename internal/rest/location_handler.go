@@ -146,7 +146,7 @@ func (h *LocationHandler) GetLocationsPaginated(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.SuccessWithPageInfo(c, fiber.StatusOK, utils.SuccessLocationRetrievedKey, locations, int(total), limit, (offset/limit)+1)
+	return web.SuccessWithOffsetInfo(c, fiber.StatusOK, utils.SuccessLocationRetrievedKey, locations, int(total), limit, (offset/limit)+1)
 }
 
 func (h *LocationHandler) GetLocationsCursor(c *fiber.Ctx) error {

@@ -238,7 +238,7 @@ func (h *UserHandler) GetUsersPaginated(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.SuccessWithPageInfo(c, fiber.StatusOK, utils.SuccessUserRetrievedKey, users, int(total), limit, (offset/limit)+1)
+	return web.SuccessWithOffsetInfo(c, fiber.StatusOK, utils.SuccessUserRetrievedKey, users, int(total), limit, (offset/limit)+1)
 }
 
 func (h *UserHandler) GetUsersCursor(c *fiber.Ctx) error {

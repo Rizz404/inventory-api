@@ -1,3 +1,35 @@
+// Package main provides the main entry point for the Inventory Management API.
+//
+//	@title			Inventory Management API
+//	@version		1.0
+//	@description	A comprehensive inventory management API with JWT authentication, multi-language support, and CRUD operations for assets, users, and locations.
+//	@termsOfService	http://swagger.io/terms/
+//
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
+//
+//	@license.name	MIT
+//	@license.url	https://opensource.org/licenses/MIT
+//
+//	@host		localhost:5000
+//	@BasePath	/api/v1
+//
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Type "Bearer" followed by a space and JWT token.
+//
+//	@tag.name			Authentication
+//	@tag.description	Authentication related endpoints
+//	@tag.name			Users
+//	@tag.description	User management endpoints
+//	@tag.name			Categories
+//	@tag.description	Category management endpoints
+//	@tag.name			Locations
+//	@tag.description	Location management endpoints
+//	@tag.name			Assets
+//	@tag.description	Asset management endpoints
 package main
 
 import (
@@ -206,7 +238,7 @@ func main() {
 	app.Get("/metrics", monitor.New())
 
 	// Swagger documentation route
-	app.Get("/docs/*", swagger.HandlerDefault)
+	app.Get("/docs/*", swagger.New(swagger.Config{}))
 
 	api := app.Group("/api")
 	v1 := api.Group("/v1")

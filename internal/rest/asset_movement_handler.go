@@ -195,7 +195,7 @@ func (h *AssetMovementHandler) GetAssetMovementsPaginated(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.SuccessWithPageInfo(c, fiber.StatusOK, utils.SuccessAssetMovementRetrievedKey, movements, int(total), limit, (offset/limit)+1)
+	return web.SuccessWithOffsetInfo(c, fiber.StatusOK, utils.SuccessAssetMovementRetrievedKey, movements, int(total), limit, (offset/limit)+1)
 }
 
 func (h *AssetMovementHandler) GetAssetMovementsCursor(c *fiber.Ctx) error {

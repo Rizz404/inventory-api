@@ -157,7 +157,7 @@ func (h *CategoryHandler) GetCategoriesPaginated(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	return web.SuccessWithPageInfo(c, fiber.StatusOK, utils.SuccessCategoryRetrievedKey, categories, int(total), limit, (offset/limit)+1)
+	return web.SuccessWithOffsetInfo(c, fiber.StatusOK, utils.SuccessCategoryRetrievedKey, categories, int(total), limit, (offset/limit)+1)
 }
 
 func (h *CategoryHandler) GetCategoriesCursor(c *fiber.Ctx) error {

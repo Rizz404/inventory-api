@@ -33,74 +33,74 @@ type User struct {
 
 // ! jangan omitempty biar client nya tau
 type UserResponse struct {
-	ID            string    `json:"id"`
-	Name          string    `json:"name"`
-	Email         string    `json:"email"`
-	FullName      string    `json:"fullName"`
-	Role          UserRole  `json:"role"`
-	EmployeeID    *string   `json:"employeeId"` // ! gak usah diapa-apain dulu, soalnya belum ada
-	PreferredLang string    `json:"preferredLang"`
-	IsActive      bool      `json:"isActive"`
-	AvatarURL     *string   `json:"avatarUrl"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	ID            string    `json:"id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Name          string    `json:"name" example:"john_doe"`
+	Email         string    `json:"email" example:"john.doe@example.com"`
+	FullName      string    `json:"fullName" example:"John Doe"`
+	Role          UserRole  `json:"role" example:"Admin"`
+	EmployeeID    *string   `json:"employeeId" example:"EMP001"`
+	PreferredLang string    `json:"preferredLang" example:"en"`
+	IsActive      bool      `json:"isActive" example:"true"`
+	AvatarURL     *string   `json:"avatarUrl" example:"https://example.com/avatar.jpg"`
+	CreatedAt     time.Time `json:"createdAt" example:"2023-01-01T00:00:00Z"`
+	UpdatedAt     time.Time `json:"updatedAt" example:"2023-01-01T00:00:00Z"`
 }
 
 type UserListResponse struct {
-	ID            string    `json:"id"`
-	Name          string    `json:"name"`
-	Email         string    `json:"email"`
-	FullName      string    `json:"fullName"`
-	Role          UserRole  `json:"role"`
-	EmployeeID    *string   `json:"employeeId"`
-	PreferredLang string    `json:"preferredLang"`
-	IsActive      bool      `json:"isActive"`
-	AvatarURL     *string   `json:"avatarUrl"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	ID            string    `json:"id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Name          string    `json:"name" example:"john_doe"`
+	Email         string    `json:"email" example:"john.doe@example.com"`
+	FullName      string    `json:"fullName" example:"John Doe"`
+	Role          UserRole  `json:"role" example:"Admin"`
+	EmployeeID    *string   `json:"employeeId" example:"EMP001"`
+	PreferredLang string    `json:"preferredLang" example:"en"`
+	IsActive      bool      `json:"isActive" example:"true"`
+	AvatarURL     *string   `json:"avatarUrl" example:"https://example.com/avatar.jpg"`
+	CreatedAt     time.Time `json:"createdAt" example:"2023-01-01T00:00:00Z"`
+	UpdatedAt     time.Time `json:"updatedAt" example:"2023-01-01T00:00:00Z"`
 }
 
 type LoginResponse struct {
 	User         UserResponse `json:"user"`
-	AccessToken  string       `json:"accessToken"`
-	RefreshToken string       `json:"refreshToken"`
+	AccessToken  string       `json:"accessToken" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
+	RefreshToken string       `json:"refreshToken" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
 }
 
 // --- Payloads ---
 
 type LoginPayload struct {
-	Email    string `json:"email" form:"email" validate:"required,email"`
-	Password string `json:"password" form:"password" validate:"required,min=5"`
+	Email    string `json:"email" example:"john.doe@example.com" form:"email" validate:"required,email"`
+	Password string `json:"password" example:"password123" form:"password" validate:"required,min=5"`
 }
 
 type RegisterPayload struct {
-	Name     string `json:"name" form:"name" validate:"required,min=3,max=50"`
-	Email    string `json:"email" form:"email" validate:"required,email"`
-	Password string `json:"password" form:"password" validate:"required,min=5"`
+	Name     string `json:"name" example:"john_doe" form:"name" validate:"required,min=3,max=50"`
+	Email    string `json:"email" example:"john.doe@example.com" form:"email" validate:"required,email"`
+	Password string `json:"password" example:"password123" form:"password" validate:"required,min=5"`
 }
 
 type CreateUserPayload struct {
-	Name          string   `json:"name" form:"name" validate:"required,min=3,max=50"`
-	Email         string   `json:"email" form:"email" validate:"required,email,max=255"`
-	Password      string   `json:"password" form:"password" validate:"required,min=8,max=100"`
-	FullName      string   `json:"fullName" form:"fullName" validate:"required,min=3,max=100"`
-	Role          UserRole `json:"role" form:"role" validate:"required,oneof=Admin Staff Employee"`
-	EmployeeID    *string  `json:"employeeId,omitempty" form:"employeeId" validate:"omitempty,max=20"` // ! gak usah diapa-apain dulu, soalnya belum ada
-	PreferredLang *string  `json:"preferredLang,omitempty" form:"preferredLang" validate:"omitempty,max=5"`
-	IsActive      bool     `json:"isActive" form:"isActive" validate:"required"`
-	AvatarURL     *string  `json:"avatarUrl,omitempty" form:"avatarUrl" validate:"omitempty,url"`
+	Name          string   `json:"name" example:"john_doe" form:"name" validate:"required,min=3,max=50"`
+	Email         string   `json:"email" example:"john.doe@example.com" form:"email" validate:"required,email,max=255"`
+	Password      string   `json:"password" example:"password123" form:"password" validate:"required,min=8,max=100"`
+	FullName      string   `json:"fullName" example:"John Doe" form:"fullName" validate:"required,min=3,max=100"`
+	Role          UserRole `json:"role" example:"Admin" form:"role" validate:"required,oneof=Admin Staff Employee"`
+	EmployeeID    *string  `json:"employeeId,omitempty" example:"EMP001" form:"employeeId" validate:"omitempty,max=20"` // ! gak usah diapa-apain dulu, soalnya belum ada
+	PreferredLang *string  `json:"preferredLang,omitempty" example:"en" form:"preferredLang" validate:"omitempty,max=5"`
+	IsActive      bool     `json:"isActive" example:"true" form:"isActive" validate:"required"`
+	AvatarURL     *string  `json:"avatarUrl,omitempty" example:"https://example.com/avatar.jpg" form:"avatarUrl" validate:"omitempty,url"`
 }
 
 type UpdateUserPayload struct {
-	Name          *string   `json:"name,omitempty" form:"name" validate:"omitempty,min=3,max=50"`
-	Email         *string   `json:"email,omitempty" form:"email" validate:"omitempty,email,max=255"`
-	Password      *string   `json:"password,omitempty" form:"password" validate:"omitempty,min=8,max=100"`
-	FullName      *string   `json:"fullName,omitempty" form:"fullName" validate:"omitempty,min=3,max=100"`
-	Role          *UserRole `json:"role,omitempty" form:"role" validate:"omitempty,oneof=Admin Staff Employee"`
-	EmployeeID    *string   `json:"employeeId,omitempty" form:"employeeId" validate:"omitempty,max=20"` // ! gak usah diapa-apain dulu, soalnya belum ada
-	PreferredLang *string   `json:"preferredLang,omitempty" form:"preferredLang" validate:"omitempty,max=5"`
-	IsActive      *bool     `json:"isActive,omitempty" form:"isActive" validate:"omitempty"`
-	AvatarURL     *string   `json:"avatarUrl,omitempty" form:"avatarUrl" validate:"omitempty,url"`
+	Name          *string   `json:"name,omitempty" example:"john_doe" form:"name" validate:"omitempty,min=3,max=50"`
+	Email         *string   `json:"email,omitempty" example:"john.doe@example.com" form:"email" validate:"omitempty,email,max=255"`
+	Password      *string   `json:"password,omitempty" example:"password123" form:"password" validate:"omitempty,min=8,max=100"`
+	FullName      *string   `json:"fullName,omitempty" example:"John Doe" form:"fullName" validate:"omitempty,min=3,max=100"`
+	Role          *UserRole `json:"role,omitempty" example:"Admin" form:"role" validate:"omitempty,oneof=Admin Staff Employee"`
+	EmployeeID    *string   `json:"employeeId,omitempty" example:"EMP001" form:"employeeId" validate:"omitempty,max=20"` // ! gak usah diapa-apain dulu, soalnya belum ada
+	PreferredLang *string   `json:"preferredLang,omitempty" example:"en" form:"preferredLang" validate:"omitempty,max=5"`
+	IsActive      *bool     `json:"isActive,omitempty" example:"true" form:"isActive" validate:"omitempty"`
+	AvatarURL     *string   `json:"avatarUrl,omitempty" example:"https://example.com/avatar.jpg" form:"avatarUrl" validate:"omitempty,url"`
 }
 
 // --- Statistics ---

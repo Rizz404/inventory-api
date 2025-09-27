@@ -1,9 +1,12 @@
+basePath: /api/v1
 definitions:
   domain.LoginPayload:
     properties:
       email:
+        example: john.doe@example.com
         type: string
       password:
+        example: password123
         minLength: 5
         type: string
     required:
@@ -13,8 +16,10 @@ definitions:
   domain.LoginResponse:
     properties:
       accessToken:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         type: string
       refreshToken:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         type: string
       user:
         $ref: '#/definitions/domain.UserResponse'
@@ -22,12 +27,15 @@ definitions:
   domain.RegisterPayload:
     properties:
       email:
+        example: john.doe@example.com
         type: string
       name:
+        example: john_doe
         maxLength: 50
         minLength: 3
         type: string
       password:
+        example: password123
         minLength: 5
         type: string
     required:
@@ -35,58 +43,41 @@ definitions:
     - name
     - password
     type: object
-  domain.User:
-    properties:
-      avatarUrl:
-        type: string
-      createdAt:
-        type: string
-      email:
-        type: string
-      employeeId:
-        description: '! gak usah diapa-apain dulu, soalnya belum ada'
-        type: string
-      fullName:
-        type: string
-      id:
-        type: string
-      isActive:
-        type: boolean
-      name:
-        type: string
-      passwordHash:
-        type: string
-      preferredLang:
-        type: string
-      role:
-        $ref: '#/definitions/domain.UserRole'
-      updatedAt:
-        type: string
-    type: object
   domain.UserResponse:
     properties:
       avatarUrl:
+        example: https://example.com/avatar.jpg
         type: string
       createdAt:
+        example: "2023-01-01T00:00:00Z"
         type: string
       email:
+        example: john.doe@example.com
         type: string
       employeeId:
-        description: '! gak usah diapa-apain dulu, soalnya belum ada'
+        example: EMP001
         type: string
       fullName:
+        example: John Doe
         type: string
       id:
+        example: 550e8400-e29b-41d4-a716-446655440000
         type: string
       isActive:
+        example: true
         type: boolean
       name:
+        example: john_doe
         type: string
       preferredLang:
+        example: en
         type: string
       role:
-        $ref: '#/definitions/domain.UserRole'
+        allOf:
+        - $ref: '#/definitions/domain.UserRole'
+        example: Admin
       updatedAt:
+        example: "2023-01-01T00:00:00Z"
         type: string
     type: object
   domain.UserRole:
@@ -99,48 +90,23 @@ definitions:
     - RoleAdmin
     - RoleStaff
     - RoleEmployee
-  github_com_Rizz404_inventory-api_internal_web.CursorInfo:
+  web.ErrorResponse:
     properties:
-      has_next_page:
-        type: boolean
-      next_cursor:
-        type: string
-      per_page:
-        type: integer
-      total:
-        type: integer
-    type: object
-  github_com_Rizz404_inventory-api_internal_web.JSONResponse:
-    properties:
-      cursor:
-        $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.CursorInfo'
-      data: {}
       error: {}
       message:
         type: string
-      pagination:
-        allOf:
-        - $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.PageInfo'
-        description: '* Tergantung datanya jadi bisa gak ada'
       status:
         type: string
     type: object
-  github_com_Rizz404_inventory-api_internal_web.PageInfo:
+  web.SuccessResponse:
     properties:
-      current_page:
-        type: integer
-      has_next_page:
-        type: boolean
-      has_prev_page:
-        type: boolean
-      per_page:
-        type: integer
-      total:
-        type: integer
-      total_pages:
-        type: integer
+      data: {}
+      message:
+        type: string
+      status:
+        type: string
     type: object
-  github_com_Rizz404_inventory-api_internal_web.ValidationError:
+  web.ValidationError:
     properties:
       field:
         type: string
@@ -151,8 +117,20 @@ definitions:
       value:
         type: string
     type: object
+host: localhost:5000
 info:
-  contact: {}
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: A comprehensive inventory management API with JWT authentication, multi-language
+    support, and CRUD operations for assets, users, and locations.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Inventory Management API
+  version: "1.0"
 paths:
   /auth/login:
     post:
@@ -173,7 +151,7 @@ paths:
           description: Login successful
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+            - $ref: '#/definitions/web.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.LoginResponse'
@@ -182,21 +160,21 @@ paths:
           description: Validation failed
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+            - $ref: '#/definitions/web.ErrorResponse'
             - properties:
                 error:
                   items:
-                    $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.ValidationError'
+                    $ref: '#/definitions/web.ValidationError'
                   type: array
               type: object
         "401":
           description: Invalid credentials
           schema:
-            $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+            $ref: '#/definitions/web.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+            $ref: '#/definitions/web.ErrorResponse'
       summary: User login
       tags:
       - Authentication
@@ -219,31 +197,37 @@ paths:
           description: User registered successfully
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+            - $ref: '#/definitions/web.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.User'
+                  $ref: '#/definitions/domain.UserResponse'
               type: object
         "400":
           description: Validation failed
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+            - $ref: '#/definitions/web.ErrorResponse'
             - properties:
                 error:
                   items:
-                    $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.ValidationError'
+                    $ref: '#/definitions/web.ValidationError'
                   type: array
               type: object
         "409":
           description: User already exists
           schema:
-            $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+            $ref: '#/definitions/web.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse'
+            $ref: '#/definitions/web.ErrorResponse'
       summary: Register a new user
       tags:
       - Authentication
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

@@ -9,7 +9,16 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -45,7 +54,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                                    "$ref": "#/definitions/web.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -63,7 +72,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                                    "$ref": "#/definitions/web.ErrorResponse"
                                 },
                                 {
                                     "type": "object",
@@ -71,7 +80,7 @@ const docTemplate = `{
                                         "error": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.ValidationError"
+                                                "$ref": "#/definitions/web.ValidationError"
                                             }
                                         }
                                     }
@@ -82,13 +91,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Invalid credentials",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                            "$ref": "#/definitions/web.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                            "$ref": "#/definitions/web.ErrorResponse"
                         }
                     }
                 }
@@ -124,13 +133,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                                    "$ref": "#/definitions/web.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.User"
+                                            "$ref": "#/definitions/domain.UserResponse"
                                         }
                                     }
                                 }
@@ -142,7 +151,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                                    "$ref": "#/definitions/web.ErrorResponse"
                                 },
                                 {
                                     "type": "object",
@@ -150,7 +159,7 @@ const docTemplate = `{
                                         "error": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.ValidationError"
+                                                "$ref": "#/definitions/web.ValidationError"
                                             }
                                         }
                                     }
@@ -161,13 +170,13 @@ const docTemplate = `{
                     "409": {
                         "description": "User already exists",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                            "$ref": "#/definitions/web.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.JSONResponse"
+                            "$ref": "#/definitions/web.ErrorResponse"
                         }
                     }
                 }
@@ -183,11 +192,13 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "john.doe@example.com"
                 },
                 "password": {
                     "type": "string",
-                    "minLength": 5
+                    "minLength": 5,
+                    "example": "password123"
                 }
             }
         },
@@ -195,10 +206,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "accessToken": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                 },
                 "refreshToken": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                 },
                 "user": {
                     "$ref": "#/definitions/domain.UserResponse"
@@ -214,58 +227,19 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "john.doe@example.com"
                 },
                 "name": {
                     "type": "string",
                     "maxLength": 50,
-                    "minLength": 3
+                    "minLength": 3,
+                    "example": "john_doe"
                 },
                 "password": {
                     "type": "string",
-                    "minLength": 5
-                }
-            }
-        },
-        "domain.User": {
-            "type": "object",
-            "properties": {
-                "avatarUrl": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "employeeId": {
-                    "description": "! gak usah diapa-apain dulu, soalnya belum ada",
-                    "type": "string"
-                },
-                "fullName": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "isActive": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "passwordHash": {
-                    "type": "string"
-                },
-                "preferredLang": {
-                    "type": "string"
-                },
-                "role": {
-                    "$ref": "#/definitions/domain.UserRole"
-                },
-                "updatedAt": {
-                    "type": "string"
+                    "minLength": 5,
+                    "example": "password123"
                 }
             }
         },
@@ -273,38 +247,52 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatarUrl": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
                 },
                 "createdAt": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "john.doe@example.com"
                 },
                 "employeeId": {
-                    "description": "! gak usah diapa-apain dulu, soalnya belum ada",
-                    "type": "string"
+                    "type": "string",
+                    "example": "EMP001"
                 },
                 "fullName": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "John Doe"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 },
                 "isActive": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "example": true
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "john_doe"
                 },
                 "preferredLang": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "en"
                 },
                 "role": {
-                    "$ref": "#/definitions/domain.UserRole"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.UserRole"
+                        }
+                    ],
+                    "example": "Admin"
                 },
                 "updatedAt": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
                 }
             }
         },
@@ -321,71 +309,31 @@ const docTemplate = `{
                 "RoleEmployee"
             ]
         },
-        "github_com_Rizz404_inventory-api_internal_web.CursorInfo": {
+        "web.ErrorResponse": {
             "type": "object",
             "properties": {
-                "has_next_page": {
-                    "type": "boolean"
-                },
-                "next_cursor": {
-                    "type": "string"
-                },
-                "per_page": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_Rizz404_inventory-api_internal_web.JSONResponse": {
-            "type": "object",
-            "properties": {
-                "cursor": {
-                    "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.CursorInfo"
-                },
-                "data": {},
                 "error": {},
                 "message": {
                     "type": "string"
-                },
-                "pagination": {
-                    "description": "* Tergantung datanya jadi bisa gak ada",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/github_com_Rizz404_inventory-api_internal_web.PageInfo"
-                        }
-                    ]
                 },
                 "status": {
                     "type": "string"
                 }
             }
         },
-        "github_com_Rizz404_inventory-api_internal_web.PageInfo": {
+        "web.SuccessResponse": {
             "type": "object",
             "properties": {
-                "current_page": {
-                    "type": "integer"
+                "data": {},
+                "message": {
+                    "type": "string"
                 },
-                "has_next_page": {
-                    "type": "boolean"
-                },
-                "has_prev_page": {
-                    "type": "boolean"
-                },
-                "per_page": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "total_pages": {
-                    "type": "integer"
+                "status": {
+                    "type": "string"
                 }
             }
         },
-        "github_com_Rizz404_inventory-api_internal_web.ValidationError": {
+        "web.ValidationError": {
             "type": "object",
             "properties": {
                 "field": {
@@ -402,17 +350,25 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:5000",
+	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Inventory Management API",
+	Description:      "A comprehensive inventory management API with JWT authentication, multi-language support, and CRUD operations for assets, users, and locations.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
