@@ -12,18 +12,18 @@ import (
 
 type OffsetInfo struct {
 	Total       int  `json:"total"`
-	PerPage     int  `json:"per_page"`
-	CurrentPage int  `json:"current_page"`
-	TotalPages  int  `json:"total_pages"`
-	HasPrevPage bool `json:"has_prev_page"`
-	HasNextPage bool `json:"has_next_page"`
+	PerPage     int  `json:"perPage"`
+	CurrentPage int  `json:"currentPage"`
+	TotalPages  int  `json:"totalPages"`
+	HasPrevPage bool `json:"hasPrevPage"`
+	HasNextPage bool `json:"hasNextPage"`
 }
 
 // * Buat yang cursor base pagination
 type CursorInfo struct {
-	NextCursor  string `json:"next_cursor"`
-	HasNextPage bool   `json:"has_next_page"`
-	PerPage     int    `json:"per_page"`
+	NextCursor  string `json:"nextCursor"`
+	HasNextPage bool   `json:"hasNextPage"`
+	PerPage     int    `json:"perPage"`
 	Total       int    `json:"total,omitempty"`
 }
 
