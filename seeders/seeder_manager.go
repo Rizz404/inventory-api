@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/services/asset"
 	"github.com/Rizz404/inventory-api/services/asset_movement"
 	"github.com/Rizz404/inventory-api/services/auth"
@@ -310,8 +309,8 @@ func (sm *SeederManager) getAssetIDs(ctx context.Context) ([]string, error) {
 }
 
 func (sm *SeederManager) getMaintenanceScheduleIDs(ctx context.Context) ([]string, error) {
-	params := query.Params{
-		Pagination: &query.PaginationOptions{
+	params := domain.MaintenanceScheduleParams{
+		Pagination: &domain.MaintenanceSchedulePaginationOptions{
 			Limit:  1000,
 			Offset: 0,
 		},
