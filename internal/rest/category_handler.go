@@ -4,8 +4,6 @@ import (
 	"strconv"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/rest/middleware"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/internal/web"
@@ -53,8 +51,8 @@ func NewCategoryHandler(app fiber.Router, s category.CategoryService) {
 	)
 }
 
-func (h *CategoryHandler) parseCategoryFiltersAndSort(c *fiber.Ctx) (query.Params, error) {
-	params := query.Params{}
+func (h *CategoryHandler) parseCategoryFiltersAndSort(c *fiber.Ctx) (domain.CategoryParams, error) {
+	params := domain.CategoryParams{}
 
 	// * Parse search query
 	search := c.Query("search")
@@ -65,14 +63,14 @@ func (h *CategoryHandler) parseCategoryFiltersAndSort(c *fiber.Ctx) (query.Param
 	// * Parse sorting options
 	sortBy := c.Query("sort_by")
 	if sortBy != "" {
-		params.Sort = &query.SortOptions{
+		params.Sort = &domain.CategorySortOptions{
 			Field: sortBy,
 			Order: c.Query("sort_order", "desc"),
 		}
 	}
 
 	// * Parse filtering options
-	filters := &postgresql.CategoryFilterOptions{}
+	filters := &domain.CategoryFilterOptions{}
 
 	if parentID := c.Query("parent_id"); parentID != "" {
 		filters.ParentID = &parentID
@@ -147,7 +145,7 @@ func (h *CategoryHandler) GetCategoriesPaginated(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.CategoryPaginationOptions{Limit: limit, Offset: offset}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)
@@ -168,7 +166,7 @@ func (h *CategoryHandler) GetCategoriesCursor(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &query.PaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.CategoryPaginationOptions{Limit: limit, Cursor: cursor}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)

@@ -75,6 +75,31 @@ type UpdateCategoryTranslationPayload struct {
 	Description  *string `json:"description,omitempty"`
 }
 
+// --- Query Parameters ---
+
+type CategoryFilterOptions struct {
+	ParentID  *string `json:"parentId,omitempty"`
+	HasParent *bool   `json:"hasParent,omitempty"`
+}
+
+type CategorySortOptions struct {
+	Field string `json:"field"`
+	Order string `json:"order"`
+}
+
+type CategoryPaginationOptions struct {
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
+	Cursor string `json:"cursor"`
+}
+
+type CategoryParams struct {
+	SearchQuery *string                    `json:"searchQuery,omitempty"`
+	Filters     *CategoryFilterOptions     `json:"filters,omitempty"`
+	Sort        *CategorySortOptions       `json:"sort,omitempty"`
+	Pagination  *CategoryPaginationOptions `json:"pagination,omitempty"`
+}
+
 // --- Statistics ---
 
 // Internal statistics structs (used in repository layer)

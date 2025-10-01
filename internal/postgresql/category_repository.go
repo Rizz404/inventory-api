@@ -9,7 +9,6 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
@@ -19,28 +18,22 @@ type CategoryRepository struct {
 	db *gorm.DB
 }
 
-type CategoryFilterOptions struct {
-	ParentID  *string `json:"parentId,omitempty"`
-	HasParent *bool   `json:"hasParent,omitempty"`
-}
-
 func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
 	return &CategoryRepository{
 		db: db,
 	}
 }
 
-func (r *CategoryRepository) applyCategoryFilters(db *gorm.DB, filters any) *gorm.DB {
-	f, ok := filters.(*CategoryFilterOptions)
-	if !ok || f == nil {
+func (r *CategoryRepository) applyCategoryFilters(db *gorm.DB, filters *domain.CategoryFilterOptions) *gorm.DB {
+	if filters == nil {
 		return db
 	}
 
-	if f.ParentID != nil {
-		db = db.Where("c.parent_id = ?", f.ParentID)
+	if filters.ParentID != nil {
+		db = db.Where("c.parent_id = ?", filters.ParentID)
 	}
-	if f.HasParent != nil {
-		if *f.HasParent {
+	if filters.HasParent != nil {
+		if *filters.HasParent {
 			db = db.Where("c.parent_id IS NOT NULL")
 		} else {
 			db = db.Where("c.parent_id IS NULL")
@@ -49,7 +42,7 @@ func (r *CategoryRepository) applyCategoryFilters(db *gorm.DB, filters any) *gor
 	return db
 }
 
-func (r *CategoryRepository) applyCategorySorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
+func (r *CategoryRepository) applyCategorySorts(db *gorm.DB, sort *domain.CategorySortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("c.created_at DESC")
 	}
@@ -222,7 +215,7 @@ func (r *CategoryRepository) DeleteCategory(ctx context.Context, categoryId stri
 }
 
 // *===========================QUERY===========================*
-func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error) {
+func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.Category, error) {
 	var categories []model.Category
 	db := r.db.WithContext(ctx).
 		Table("categories c").
@@ -235,9 +228,21 @@ func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params 
 			Distinct("c.id")
 	}
 
-	// Set pagination cursor to empty for offset-based pagination
-	params.Pagination.Cursor = ""
-	db = query.Apply(db, params, r.applyCategoryFilters, r.applyCategorySorts)
+	// Apply filters
+	db = r.applyCategoryFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyCategorySorts(db, params.Sort)
+
+	// Apply pagination
+	if params.Pagination != nil {
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+		if params.Pagination.Offset > 0 {
+			db = db.Offset(params.Pagination.Offset)
+		}
+	}
 
 	if err := db.Find(&categories).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -247,7 +252,7 @@ func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params 
 	return mapper.ToDomainCategories(categories), nil
 }
 
-func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error) {
+func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.Category, error) {
 	var categories []model.Category
 	db := r.db.WithContext(ctx).
 		Table("categories c").
@@ -260,9 +265,21 @@ func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params que
 			Distinct("c.id")
 	}
 
-	// Set offset to 0 for cursor-based pagination
-	params.Pagination.Offset = 0
-	db = query.Apply(db, params, r.applyCategoryFilters, r.applyCategorySorts)
+	// Apply filters
+	db = r.applyCategoryFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyCategorySorts(db, params.Sort)
+
+	// Apply cursor-based pagination
+	if params.Pagination != nil {
+		if params.Pagination.Cursor != "" {
+			db = db.Where("c.id > ?", params.Pagination.Cursor)
+		}
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+	}
 
 	if err := db.Find(&categories).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -333,7 +350,7 @@ func (r *CategoryRepository) CheckCategoryCodeExistExcluding(ctx context.Context
 	return count > 0, nil
 }
 
-func (r *CategoryRepository) CountCategories(ctx context.Context, params query.Params) (int64, error) {
+func (r *CategoryRepository) CountCategories(ctx context.Context, params domain.CategoryParams) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Table("categories c")
 
@@ -344,7 +361,8 @@ func (r *CategoryRepository) CountCategories(ctx context.Context, params query.P
 			Distinct("c.id")
 	}
 
-	db = query.Apply(db, query.Params{Filters: params.Filters}, r.applyCategoryFilters, nil)
+	// Apply filters
+	db = r.applyCategoryFilters(db, params.Filters)
 
 	if err := db.Count(&count).Error; err != nil {
 		return 0, domain.ErrInternal(err)

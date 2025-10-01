@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
@@ -17,14 +16,14 @@ type Repository interface {
 	DeleteCategory(ctx context.Context, categoryId string) error
 
 	// * QUERY
-	GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error)
-	GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Category, error)
+	GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.Category, error)
+	GetCategoriesCursor(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.Category, error)
 	GetCategoryById(ctx context.Context, categoryId string) (domain.Category, error)
 	GetCategoryByCode(ctx context.Context, categoryCode string) (domain.Category, error)
 	CheckCategoryExist(ctx context.Context, categoryId string) (bool, error)
 	CheckCategoryCodeExist(ctx context.Context, categoryCode string) (bool, error)
 	CheckCategoryCodeExistExcluding(ctx context.Context, categoryCode string, excludeCategoryId string) (bool, error)
-	CountCategories(ctx context.Context, params query.Params) (int64, error)
+	CountCategories(ctx context.Context, params domain.CategoryParams) (int64, error)
 	GetCategoryStatistics(ctx context.Context) (domain.CategoryStatistics, error)
 }
 
@@ -36,13 +35,13 @@ type CategoryService interface {
 	DeleteCategory(ctx context.Context, categoryId string) error
 
 	// * QUERY
-	GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListResponse, int64, error)
-	GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListResponse, error)
+	GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryListResponse, int64, error)
+	GetCategoriesCursor(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryListResponse, error)
 	GetCategoryById(ctx context.Context, categoryId string, langCode string) (domain.CategoryResponse, error)
 	GetCategoryByCode(ctx context.Context, categoryCode string, langCode string) (domain.CategoryResponse, error)
 	CheckCategoryExists(ctx context.Context, categoryId string) (bool, error)
 	CheckCategoryCodeExists(ctx context.Context, categoryCode string) (bool, error)
-	CountCategories(ctx context.Context, params query.Params) (int64, error)
+	CountCategories(ctx context.Context, params domain.CategoryParams) (int64, error)
 	GetCategoryStatistics(ctx context.Context) (domain.CategoryStatisticsResponse, error)
 }
 
@@ -145,7 +144,7 @@ func (s *Service) DeleteCategory(ctx context.Context, categoryId string) error {
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetCategoriesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListResponse, int64, error) {
+func (s *Service) GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryListResponse, int64, error) {
 	categories, err := s.Repo.GetCategoriesPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -163,7 +162,7 @@ func (s *Service) GetCategoriesPaginated(ctx context.Context, params query.Param
 	return responses, count, nil
 }
 
-func (s *Service) GetCategoriesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.CategoryListResponse, error) {
+func (s *Service) GetCategoriesCursor(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryListResponse, error) {
 	categories, err := s.Repo.GetCategoriesCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
@@ -211,7 +210,7 @@ func (s *Service) CheckCategoryCodeExists(ctx context.Context, categoryCode stri
 	return exists, nil
 }
 
-func (s *Service) CountCategories(ctx context.Context, params query.Params) (int64, error) {
+func (s *Service) CountCategories(ctx context.Context, params domain.CategoryParams) (int64, error) {
 	count, err := s.Repo.CountCategories(ctx, params)
 	if err != nil {
 		return 0, err
