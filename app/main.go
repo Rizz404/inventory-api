@@ -37,8 +37,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Rizz404/inventory-api/config"
 	_ "github.com/Rizz404/inventory-api/docs"
-	"github.com/Rizz404/inventory-api/internal/client/cloudinary"
 	"github.com/Rizz404/inventory-api/internal/postgresql"
 	"github.com/Rizz404/inventory-api/internal/rest"
 	"github.com/Rizz404/inventory-api/services/asset"
@@ -63,8 +63,6 @@ import (
 	recovermw "github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/swagger"
 	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 func init() {
@@ -75,117 +73,22 @@ func init() {
 
 func main() {
 	// *===================================ENV===================================*
-	DSN := os.Getenv("DSN")
-	if DSN == "" {
-		log.Fatalf("DSN environment variable not set")
-	}
-
 	addr := os.Getenv("ADDR")
 	if addr == "" {
 		addr = ":5000"
 		log.Printf("ADDR environment variable not set, using default :5000")
 	}
 
-	// * FCM Configuration
-	// enableFCM := os.Getenv("ENABLE_FCM") == "true"
-
 	// *===================================DATABASE===================================*
-	db, err := gorm.Open(postgres.New(postgres.Config{
-		DSN: DSN,
-	}), &gorm.Config{
-		SkipDefaultTransaction: true,
-	})
-	if err != nil {
-		log.Fatalf("failed to open connection to the database: %v", err)
-	}
-
+	db := config.InitializeDatabase()
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatalf("failed to get generic database object: %v", err)
 	}
 	defer sqlDB.Close()
 
-	if err = sqlDB.Ping(); err != nil {
-		log.Fatalf("failed to ping database: %v", err)
-	}
-
-	log.Printf("successfully connected to database")
-
-	// *===================================CLOUDINARY CLIENT===================================*
-	var cloudinaryClient *cloudinary.Client
-	cloudinaryURL := os.Getenv("CLOUDINARY_URL")
-	if cloudinaryURL != "" {
-		var err error
-		cloudinaryClient, err = cloudinary.NewClientFromURL(cloudinaryURL)
-		if err != nil {
-			log.Printf("Warning: Failed to initialize Cloudinary client: %v. File upload will be disabled.", err)
-		} else {
-			log.Printf("Cloudinary client initialized successfully")
-		}
-	} else {
-		// Try individual environment variables
-		cloudName := os.Getenv("CLOUDINARY_CLOUD_NAME")
-		apiKey := os.Getenv("CLOUDINARY_API_KEY")
-		apiSecret := os.Getenv("CLOUDINARY_API_SECRET")
-
-		if cloudName != "" && apiKey != "" && apiSecret != "" {
-			var err error
-			cloudinaryClient, err = cloudinary.NewClient(cloudName, apiKey, apiSecret)
-			if err != nil {
-				log.Printf("Warning: Failed to initialize Cloudinary client: %v. File upload will be disabled.", err)
-			} else {
-				log.Printf("Cloudinary client initialized successfully")
-			}
-		} else {
-			log.Printf("Cloudinary credentials not provided. File upload will be disabled.")
-		}
-	}
-
-	// *===================================FCM CLIENT===================================*
-	// var fcmClient *fcm.Client
-	// if enableFCM {
-	// 	credentialsMap := map[string]string{
-	// 		"type":                        os.Getenv("FIREBASE_TYPE"),
-	// 		"project_id":                  os.Getenv("FIREBASE_PROJECT_ID"),
-	// 		"private_key_id":              os.Getenv("FIREBASE_PRIVATE_KEY_ID"),
-	// 		"private_key":                 os.Getenv("FIREBASE_PRIVATE_KEY"),
-	// 		"client_email":                os.Getenv("FIREBASE_CLIENT_EMAIL"),
-	// 		"client_id":                   os.Getenv("FIREBASE_CLIENT_ID"),
-	// 		"auth_uri":                    os.Getenv("FIREBASE_AUTH_URI"),
-	// 		"token_uri":                   os.Getenv("FIREBASE_TOKEN_URI"),
-	// 		"auth_provider_x509_cert_url": os.Getenv("FIREBASE_AUTH_PROVIDER_X509_CERT_URL"),
-	// 		"client_x509_cert_url":        os.Getenv("FIREBASE_CLIENT_X509_CERT_URL"),
-	// 		"universe_domain":             os.Getenv("FIREBASE_UNIVERSE_DOMAIN"),
-	// 	}
-
-	// 	credentialsJSON, err := json.Marshal(credentialsMap)
-	// 	if err != nil {
-	// 		log.Printf("Warning: Failed to marshal Firebase credentials: %v. Firebase services will be disabled.", err)
-	// 	} else {
-	// 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	// 		defer cancel()
-
-	// 		opt := option.WithCredentialsJSON(credentialsJSON)
-
-	// 		app, err := firebase.NewApp(ctx, nil, opt)
-	// 		if err != nil {
-	// 			log.Printf("Warning: Failed to initialize Firebase app: %v. Firebase services will be disabled.", err)
-	// 		} else {
-	// 			// * Inisialisasi FCM Client
-	// 			client, err := app.Messaging(ctx)
-	// 			if err != nil {
-	// 				log.Printf("Warning: Failed to get FCM messaging client: %v. FCM will be disabled.", err)
-	// 			} else {
-	// 				fcmClient = fcm.NewClientFromMessaging(client)
-	// 				log.Printf("FCM client initialized successfully")
-	// 			}
-
-	// 			// Todo: Nanti inisialisasi service dari firebase lain disini
-	// 		}
-	// 	}
-	// } else {
-	// 	log.Printf("Firebase services disabled via ENABLE_FCM environment variable")
-	// }
+	// *===================================EXTERNAL CLIENTS===================================*
+	clients := config.InitializeClients()
 
 	// *===================================REPOSITORY===================================*
 	userRepository := postgresql.NewUserRepository(db)
@@ -201,10 +104,10 @@ func main() {
 
 	// *===================================SERVICE===================================*
 	authService := auth.NewService(userRepository)
-	userService := user.NewService(userRepository, cloudinaryClient)
+	userService := user.NewService(userRepository, clients.Cloudinary)
 	categoryService := category.NewService(categoryRepository)
 	locationService := location.NewService(locationRepository)
-	assetService := asset.NewService(assetRepository, cloudinaryClient)
+	assetService := asset.NewService(assetRepository, clients.Cloudinary)
 	scanLogService := scanLog.NewService(scanLogRepository)
 	notificationService := notification.NewService(notificationRepository)
 	issueReportService := issueReport.NewService(issueReportRepository)
