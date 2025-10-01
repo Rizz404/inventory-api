@@ -53,18 +53,25 @@ type AssetService interface {
 	GetAssetStatistics(ctx context.Context) (domain.AssetStatisticsResponse, error)
 }
 
+// * NotificationService interface for creating notifications
+type NotificationService interface {
+	CreateNotification(ctx context.Context, payload *domain.CreateNotificationPayload) (domain.NotificationResponse, error)
+}
+
 type Service struct {
-	Repo             Repository
-	CloudinaryClient *cloudinary.Client
+	Repo                Repository
+	CloudinaryClient    *cloudinary.Client
+	NotificationService NotificationService
 }
 
 // * Ensure Service implements AssetService interface
 var _ AssetService = (*Service)(nil)
 
-func NewService(r Repository, cloudinaryClient *cloudinary.Client) AssetService {
+func NewService(r Repository, cloudinaryClient *cloudinary.Client, notificationService NotificationService) AssetService {
 	return &Service{
-		Repo:             r,
-		CloudinaryClient: cloudinaryClient,
+		Repo:                r,
+		CloudinaryClient:    cloudinaryClient,
+		NotificationService: notificationService,
 	}
 }
 
@@ -158,6 +165,11 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 	if err != nil {
 		// * Repository already handles error translation, so return directly
 		return domain.AssetResponse{}, err
+	}
+
+	// * Send notification if asset is assigned to a user
+	if payload.AssignedTo != nil && *payload.AssignedTo != "" {
+		go s.sendAssetAssignmentNotification(ctx, &createdAsset, *payload.AssignedTo, true)
 	}
 
 	// * Update data matrix image public ID with actual asset ID if file was uploaded
@@ -260,6 +272,9 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 		return domain.AssetResponse{}, err
 	}
 
+	// * Send notifications for changes
+	go s.sendUpdateNotifications(ctx, &existingAsset, &updatedAsset, payload)
+
 	return mapper.AssetToResponse(&updatedAsset), nil
 }
 
@@ -352,4 +367,178 @@ func (s *Service) GetAssetStatistics(ctx context.Context) (domain.AssetStatistic
 		return domain.AssetStatisticsResponse{}, err
 	}
 	return mapper.AssetStatisticsToResponse(&stats), nil
+}
+
+// *===========================HELPER METHODS===========================*
+
+// sendUpdateNotifications sends all relevant notifications when asset is updated
+func (s *Service) sendUpdateNotifications(ctx context.Context, oldAsset, newAsset *domain.Asset, payload *domain.UpdateAssetPayload) {
+	// Skip if notification service is not available
+	if s.NotificationService == nil {
+		return
+	}
+
+	// 1. Check for assignment changes
+	if payload.AssignedTo != nil {
+		if *payload.AssignedTo != "" && (oldAsset.AssignedTo == nil || *oldAsset.AssignedTo != *payload.AssignedTo) {
+			// Asset was assigned to a new user
+			s.sendAssetAssignmentNotification(ctx, newAsset, *payload.AssignedTo, false)
+		} else if *payload.AssignedTo == "" && oldAsset.AssignedTo != nil && *oldAsset.AssignedTo != "" {
+			// Asset was unassigned
+			s.sendAssetUnassignmentNotification(ctx, newAsset, *oldAsset.AssignedTo)
+		}
+	}
+
+	// 2. Check for status changes
+	if payload.Status != nil && *payload.Status != oldAsset.Status {
+		s.sendAssetStatusChangeNotification(ctx, newAsset, oldAsset.Status, *payload.Status)
+	}
+
+	// 3. Check for condition changes
+	if payload.Condition != nil && *payload.Condition != oldAsset.Condition {
+		s.sendAssetConditionChangeNotification(ctx, newAsset, oldAsset.Condition, *payload.Condition)
+	}
+
+	// 4. Check for location changes (if needed, you might want to track this)
+	// This would require fetching location names, so skipping for now
+}
+
+// sendAssetAssignmentNotification sends notification when asset is assigned to a user
+func (s *Service) sendAssetAssignmentNotification(ctx context.Context, asset *domain.Asset, userId string, isNewAsset bool) {
+	// Skip if notification service is not available
+	if s.NotificationService == nil {
+		return
+	}
+
+	assetIdStr := asset.ID
+
+	// Get notification message keys and params using helper function
+	titleKey, messageKey, params := utils.AssetAssignmentNotification(asset.AssetName, asset.AssetTag, isNewAsset)
+
+	// Get translations for all supported languages
+	utilTranslations := utils.GetNotificationTranslations(titleKey, messageKey, params)
+
+	// Convert to domain translations
+	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
+	for i, t := range utilTranslations {
+		translations[i] = domain.CreateNotificationTranslationPayload{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Message:  t.Message,
+		}
+	}
+
+	notificationPayload := &domain.CreateNotificationPayload{
+		UserID:         userId,
+		RelatedAssetID: &assetIdStr,
+		Type:           domain.NotificationTypeStatusChange,
+		Translations:   translations,
+	}
+
+	// Send notification (errors are logged internally, won't block asset creation/update)
+	_, _ = s.NotificationService.CreateNotification(ctx, notificationPayload)
+}
+
+// sendAssetUnassignmentNotification sends notification when asset is unassigned from a user
+func (s *Service) sendAssetUnassignmentNotification(ctx context.Context, asset *domain.Asset, userId string) {
+	if s.NotificationService == nil {
+		return
+	}
+
+	assetIdStr := asset.ID
+	titleKey, messageKey, params := utils.AssetUnassignmentNotification(asset.AssetName, asset.AssetTag)
+	utilTranslations := utils.GetNotificationTranslations(titleKey, messageKey, params)
+
+	// Convert to domain translations
+	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
+	for i, t := range utilTranslations {
+		translations[i] = domain.CreateNotificationTranslationPayload{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Message:  t.Message,
+		}
+	}
+
+	notificationPayload := &domain.CreateNotificationPayload{
+		UserID:         userId,
+		RelatedAssetID: &assetIdStr,
+		Type:           domain.NotificationTypeStatusChange,
+		Translations:   translations,
+	}
+
+	_, _ = s.NotificationService.CreateNotification(ctx, notificationPayload)
+}
+
+// sendAssetStatusChangeNotification sends notification when asset status changes
+func (s *Service) sendAssetStatusChangeNotification(ctx context.Context, asset *domain.Asset, oldStatus, newStatus domain.AssetStatus) {
+	if s.NotificationService == nil {
+		return
+	}
+
+	// Notify assigned user if exists
+	if asset.AssignedTo == nil || *asset.AssignedTo == "" {
+		return
+	}
+
+	assetIdStr := asset.ID
+	titleKey, messageKey, params := utils.AssetStatusChangeNotification(asset.AssetName, string(oldStatus), string(newStatus))
+
+	// Add assetTag to params if not already there
+	params["assetTag"] = asset.AssetTag
+
+	utilTranslations := utils.GetNotificationTranslations(titleKey, messageKey, params)
+
+	// Convert to domain translations
+	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
+	for i, t := range utilTranslations {
+		translations[i] = domain.CreateNotificationTranslationPayload{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Message:  t.Message,
+		}
+	}
+
+	notificationPayload := &domain.CreateNotificationPayload{
+		UserID:         *asset.AssignedTo,
+		RelatedAssetID: &assetIdStr,
+		Type:           domain.NotificationTypeStatusChange,
+		Translations:   translations,
+	}
+
+	_, _ = s.NotificationService.CreateNotification(ctx, notificationPayload)
+}
+
+// sendAssetConditionChangeNotification sends notification when asset condition changes
+func (s *Service) sendAssetConditionChangeNotification(ctx context.Context, asset *domain.Asset, oldCondition, newCondition domain.AssetCondition) {
+	if s.NotificationService == nil {
+		return
+	}
+
+	// Notify assigned user if exists
+	if asset.AssignedTo == nil || *asset.AssignedTo == "" {
+		return
+	}
+
+	assetIdStr := asset.ID
+	titleKey, messageKey, params := utils.AssetConditionChangeNotification(asset.AssetName, asset.AssetTag, string(oldCondition), string(newCondition))
+	utilTranslations := utils.GetNotificationTranslations(titleKey, messageKey, params)
+
+	// Convert to domain translations
+	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
+	for i, t := range utilTranslations {
+		translations[i] = domain.CreateNotificationTranslationPayload{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Message:  t.Message,
+		}
+	}
+
+	notificationPayload := &domain.CreateNotificationPayload{
+		UserID:         *asset.AssignedTo,
+		RelatedAssetID: &assetIdStr,
+		Type:           domain.NotificationTypeStatusChange,
+		Translations:   translations,
+	}
+
+	_, _ = s.NotificationService.CreateNotification(ctx, notificationPayload)
 }

@@ -20,6 +20,7 @@ type User struct {
 	PreferredLang string          `gorm:"type:varchar(5);default:'id-ID'"`
 	IsActive      bool            `gorm:"default:true"`
 	AvatarURL     *string         `gorm:"type:varchar(255)"`
+	FCMToken      *string         `gorm:"type:text"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }

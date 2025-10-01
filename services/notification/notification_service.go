@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/client/fcm"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 )
 
@@ -25,6 +26,11 @@ type Repository interface {
 	GetNotificationStatistics(ctx context.Context) (domain.NotificationStatistics, error)
 }
 
+// * UserRepository interface for getting user details including FCM token
+type UserRepository interface {
+	GetUserById(ctx context.Context, userId string) (domain.User, error)
+}
+
 // * NotificationService interface defines the contract for notification business operations
 type NotificationService interface {
 	// * MUTATION
@@ -44,15 +50,19 @@ type NotificationService interface {
 }
 
 type Service struct {
-	Repo Repository
+	Repo      Repository
+	UserRepo  UserRepository
+	FCMClient *fcm.Client
 }
 
 // * Ensure Service implements NotificationService interface
 var _ NotificationService = (*Service)(nil)
 
-func NewService(r Repository) NotificationService {
+func NewService(r Repository, userRepo UserRepository, fcmClient *fcm.Client) NotificationService {
 	return &Service{
-		Repo: r,
+		Repo:      r,
+		UserRepo:  userRepo,
+		FCMClient: fcmClient,
 	}
 }
 
@@ -80,6 +90,9 @@ func (s *Service) CreateNotification(ctx context.Context, payload *domain.Create
 	if err != nil {
 		return domain.NotificationResponse{}, err
 	}
+
+	// * Send FCM notification asynchronously (non-blocking)
+	go s.sendFCMNotification(ctx, &createdNotification)
 
 	// * Convert to NotificationResponse using mapper
 	return mapper.NotificationToResponse(&createdNotification, mapper.DefaultLangCode), nil
@@ -196,4 +209,69 @@ func (s *Service) GetNotificationStatistics(ctx context.Context) (domain.Notific
 
 	// Convert to NotificationStatisticsResponse using mapper
 	return mapper.NotificationStatisticsToResponse(&stats), nil
+}
+
+// *===========================HELPER METHODS===========================*
+
+// sendFCMNotification sends push notification via FCM to the user
+func (s *Service) sendFCMNotification(ctx context.Context, notification *domain.Notification) {
+	// * Skip if FCM client is not initialized
+	if s.FCMClient == nil {
+		return
+	}
+
+	// * Get user to retrieve FCM token and preferred language
+	user, err := s.UserRepo.GetUserById(ctx, notification.UserID)
+	if err != nil {
+		// Log error but don't fail the notification creation
+		// log.Printf("Failed to get user for FCM notification: %v", err)
+		return
+	}
+
+	// * Skip if user doesn't have FCM token
+	if user.FCMToken == nil || *user.FCMToken == "" {
+		return
+	}
+
+	// * Get the appropriate translation based on user's preferred language
+	var title, message string
+	for _, translation := range notification.Translations {
+		if translation.LangCode == user.PreferredLang {
+			title = translation.Title
+			message = translation.Message
+			break
+		}
+	}
+
+	// * Fallback to first translation if preferred language not found
+	if title == "" && len(notification.Translations) > 0 {
+		title = notification.Translations[0].Title
+		message = notification.Translations[0].Message
+	}
+
+	// * Prepare FCM notification data
+	fcmNotification := &fcm.PushNotification{
+		Token: *user.FCMToken,
+		Title: title,
+		Body:  message,
+		Data: map[string]string{
+			"notification_id": notification.ID,
+			"user_id":         notification.UserID,
+			"type":            string(notification.Type),
+			"is_read":         "false",
+			"click_action":    "FLUTTER_NOTIFICATION_CLICK",
+		},
+	}
+
+	// * Add related asset ID if available
+	if notification.RelatedAssetID != nil {
+		fcmNotification.Data["related_asset_id"] = *notification.RelatedAssetID
+	}
+
+	// * Send FCM notification
+	_, err = s.FCMClient.SendToToken(ctx, fcmNotification)
+	if err != nil {
+		// Log error but don't fail the notification creation
+		// log.Printf("Failed to send FCM notification: %v", err)
+	}
 }

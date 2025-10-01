@@ -206,7 +206,7 @@ func initServices(db *gorm.DB) *Services {
 	userService := user.NewService(userRepository, cloudinaryClient)
 	categoryService := category.NewService(categoryRepository)
 	locationService := location.NewService(locationRepository)
-	assetService := asset.NewService(assetRepository, cloudinaryClient)
+	assetService := asset.NewService(assetRepository, cloudinaryClient, nil) // nil for notification service in seeder
 	assetMovementService := asset_movement.NewService(assetMovementRepository, assetService, locationService, userService)
 	issueReportService := issue_report.NewService(issueReportRepository)
 	maintenanceScheduleService := maintenance_schedule.NewService(maintenanceScheduleRepository, assetService, userService)

@@ -27,6 +27,7 @@ type User struct {
 	PreferredLang string    `json:"preferredLang"`
 	IsActive      bool      `json:"isActive"`
 	AvatarURL     *string   `json:"avatarUrl,omitempty"`
+	FCMToken      *string   `json:"fcmToken,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
@@ -101,6 +102,11 @@ type UpdateUserPayload struct {
 	PreferredLang *string   `json:"preferredLang,omitempty" example:"en" form:"preferredLang" validate:"omitempty,max=5"`
 	IsActive      *bool     `json:"isActive,omitempty" example:"true" form:"isActive" validate:"omitempty"`
 	AvatarURL     *string   `json:"avatarUrl,omitempty" example:"https://example.com/avatar.jpg" form:"avatarUrl" validate:"omitempty,url"`
+	FCMToken      *string   `json:"fcmToken,omitempty" form:"fcmToken" validate:"omitempty"`
+}
+
+type UpdateFCMTokenPayload struct {
+	FCMToken string `json:"fcmToken" form:"fcmToken" validate:"required"`
 }
 
 // --- Query Parameters ---
