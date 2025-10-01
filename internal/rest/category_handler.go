@@ -61,22 +61,22 @@ func (h *CategoryHandler) parseCategoryFiltersAndSort(c *fiber.Ctx) (domain.Cate
 	}
 
 	// * Parse sorting options
-	sortBy := c.Query("sort_by")
+	sortBy := c.Query("sortBy")
 	if sortBy != "" {
 		params.Sort = &domain.CategorySortOptions{
 			Field: sortBy,
-			Order: c.Query("sort_order", "desc"),
+			Order: c.Query("sortOrder", "desc"),
 		}
 	}
 
 	// * Parse filtering options
 	filters := &domain.CategoryFilterOptions{}
 
-	if parentID := c.Query("parent_id"); parentID != "" {
+	if parentID := c.Query("parentId"); parentID != "" {
 		filters.ParentID = &parentID
 	}
 
-	if hasParentStr := c.Query("has_parent"); hasParentStr != "" {
+	if hasParentStr := c.Query("hasParent"); hasParentStr != "" {
 		hasParent, err := strconv.ParseBool(hasParentStr)
 		if err == nil {
 			filters.HasParent = &hasParent

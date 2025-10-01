@@ -51,16 +51,16 @@ func (h *MaintenanceScheduleHandler) parseFiltersAndSort(c *fiber.Ctx) (domain.M
 	}
 
 	// Sort
-	if sortBy := c.Query("sort_by"); sortBy != "" {
-		params.Sort = &domain.MaintenanceScheduleSortOptions{Field: sortBy, Order: c.Query("sort_order", "desc")}
+	if sortBy := c.Query("sortBy"); sortBy != "" {
+		params.Sort = &domain.MaintenanceScheduleSortOptions{Field: sortBy, Order: c.Query("sortOrder", "desc")}
 	}
 
 	// Filters
 	filters := &domain.MaintenanceScheduleFilterOptions{}
-	if assetID := c.Query("asset_id"); assetID != "" {
+	if assetID := c.Query("assetId"); assetID != "" {
 		filters.AssetID = &assetID
 	}
-	if mtype := c.Query("maintenance_type"); mtype != "" {
+	if mtype := c.Query("maintenanceType"); mtype != "" {
 		t := domain.MaintenanceScheduleType(mtype)
 		filters.MaintenanceType = &t
 	}
@@ -68,15 +68,15 @@ func (h *MaintenanceScheduleHandler) parseFiltersAndSort(c *fiber.Ctx) (domain.M
 		st := domain.ScheduleStatus(status)
 		filters.Status = &st
 	}
-	if createdBy := c.Query("created_by"); createdBy != "" {
+	if createdBy := c.Query("createdBy"); createdBy != "" {
 		filters.CreatedBy = &createdBy
 	}
-	if fromDate := c.Query("from_date"); fromDate != "" {
+	if fromDate := c.Query("fromDate"); fromDate != "" {
 		// keep as string YYYY-MM-DD to match repo expectations
 		fd := fromDate
 		filters.FromDate = &fd
 	}
-	if toDate := c.Query("to_date"); toDate != "" {
+	if toDate := c.Query("toDate"); toDate != "" {
 		td := toDate
 		filters.ToDate = &td
 	}

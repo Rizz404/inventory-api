@@ -83,22 +83,22 @@ func (h *NotificationHandler) parseNotificationFiltersAndSort(c *fiber.Ctx) (dom
 	}
 
 	// * Parse sorting options
-	sortBy := c.Query("sort_by")
+	sortBy := c.Query("sortBy")
 	if sortBy != "" {
 		params.Sort = &domain.NotificationSortOptions{
 			Field: sortBy,
-			Order: c.Query("sort_order", "desc"),
+			Order: c.Query("sortOrder", "desc"),
 		}
 	}
 
 	// * Parse filtering options
 	filters := &domain.NotificationFilterOptions{}
 
-	if userID := c.Query("user_id"); userID != "" {
+	if userID := c.Query("userId"); userID != "" {
 		filters.UserID = &userID
 	}
 
-	if relatedAssetID := c.Query("related_asset_id"); relatedAssetID != "" {
+	if relatedAssetID := c.Query("relatedAssetId"); relatedAssetID != "" {
 		filters.RelatedAssetID = &relatedAssetID
 	}
 
@@ -108,7 +108,7 @@ func (h *NotificationHandler) parseNotificationFiltersAndSort(c *fiber.Ctx) (dom
 		}
 	}
 
-	if isReadStr := c.Query("is_read"); isReadStr != "" {
+	if isReadStr := c.Query("isRead"); isReadStr != "" {
 		isRead, err := strconv.ParseBool(isReadStr)
 		if err == nil {
 			filters.IsRead = &isRead
@@ -223,8 +223,8 @@ func (h *NotificationHandler) GetNotificationsPaginated(c *fiber.Ctx) error {
 		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
 	}
 
-	// If user is authenticated, automatically filter by their notifications unless explicitly filtering by user_id
-	if userID := c.Locals("userID"); userID != nil && c.Query("user_id") == "" {
+	// If user is authenticated, automatically filter by their notifications unless explicitly filtering by userId
+	if userID := c.Locals("userID"); userID != nil && c.Query("userId") == "" {
 		if userIDStr, ok := userID.(string); ok {
 			if params.Filters != nil {
 				params.Filters.UserID = &userIDStr
@@ -253,8 +253,8 @@ func (h *NotificationHandler) GetNotificationsCursor(c *fiber.Ctx) error {
 		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
 	}
 
-	// If user is authenticated, automatically filter by their notifications unless explicitly filtering by user_id
-	if userID := c.Locals("userID"); userID != nil && c.Query("user_id") == "" {
+	// If user is authenticated, automatically filter by their notifications unless explicitly filtering by userId
+	if userID := c.Locals("userID"); userID != nil && c.Query("userId") == "" {
 		if userIDStr, ok := userID.(string); ok {
 			if params.Filters != nil {
 				params.Filters.UserID = &userIDStr
@@ -320,8 +320,8 @@ func (h *NotificationHandler) CountNotifications(c *fiber.Ctx) error {
 		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
 	}
 
-	// If user is authenticated, automatically filter by their notifications unless explicitly filtering by user_id
-	if userID := c.Locals("userID"); userID != nil && c.Query("user_id") == "" {
+	// If user is authenticated, automatically filter by their notifications unless explicitly filtering by userId
+	if userID := c.Locals("userID"); userID != nil && c.Query("userId") == "" {
 		if userIDStr, ok := userID.(string); ok {
 			if params.Filters != nil {
 				params.Filters.UserID = &userIDStr

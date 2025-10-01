@@ -61,11 +61,11 @@ func (h *LocationHandler) parseLocationFiltersAndSort(c *fiber.Ctx) (domain.Loca
 	}
 
 	// * Parse sorting options
-	sortBy := c.Query("sort_by")
+	sortBy := c.Query("sortBy")
 	if sortBy != "" {
 		params.Sort = &domain.LocationSortOptions{
 			Field: sortBy,
-			Order: c.Query("sort_order", "desc"),
+			Order: c.Query("sortOrder", "desc"),
 		}
 	}
 

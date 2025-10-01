@@ -59,11 +59,11 @@ func (h *UserHandler) parseUserFiltersAndSort(c *fiber.Ctx) (domain.UserParams, 
 	}
 
 	// * Parse sorting options
-	sortBy := c.Query("sort_by")
+	sortBy := c.Query("sortBy")
 	if sortBy != "" {
 		params.Sort = &domain.UserSortOptions{
 			Field: sortBy,
-			Order: c.Query("sort_order", "desc"),
+			Order: c.Query("sortOrder", "desc"),
 		}
 	}
 
@@ -77,14 +77,14 @@ func (h *UserHandler) parseUserFiltersAndSort(c *fiber.Ctx) (domain.UserParams, 
 
 	filters := &domain.UserFilterOptions{Role: role}
 
-	if isActiveStr := c.Query("is_active"); isActiveStr != "" {
+	if isActiveStr := c.Query("isActive"); isActiveStr != "" {
 		isActive, err := strconv.ParseBool(isActiveStr)
 		if err == nil {
 			filters.IsActive = &isActive
 		}
 	}
 
-	if employeeID := c.Query("employee_id"); employeeID != "" {
+	if employeeID := c.Query("employeeId"); employeeID != "" {
 		filters.EmployeeID = &employeeID
 	}
 

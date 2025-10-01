@@ -56,11 +56,11 @@ func (h *ScanLogHandler) parseScanLogFiltersAndSort(c *fiber.Ctx) (domain.ScanLo
 	}
 
 	// * Parse sorting options
-	sortBy := c.Query("sort_by")
+	sortBy := c.Query("sortBy")
 	if sortBy != "" {
 		params.Sort = &domain.ScanLogSortOptions{
 			Field: sortBy,
-			Order: c.Query("sort_order", "desc"),
+			Order: c.Query("sortOrder", "desc"),
 		}
 	}
 
@@ -68,42 +68,42 @@ func (h *ScanLogHandler) parseScanLogFiltersAndSort(c *fiber.Ctx) (domain.ScanLo
 	filters := &domain.ScanLogFilterOptions{}
 
 	// * Parse scan method filter
-	if scanMethod := c.Query("scan_method"); scanMethod != "" {
+	if scanMethod := c.Query("scanMethod"); scanMethod != "" {
 		method := domain.ScanMethodType(scanMethod)
 		filters.ScanMethod = &method
 	}
 
 	// * Parse scan result filter
-	if scanResult := c.Query("scan_result"); scanResult != "" {
+	if scanResult := c.Query("scanResult"); scanResult != "" {
 		result := domain.ScanResultType(scanResult)
 		filters.ScanResult = &result
 	}
 
 	// * Parse scanned by filter
-	if scannedBy := c.Query("scanned_by"); scannedBy != "" {
+	if scannedBy := c.Query("scannedBy"); scannedBy != "" {
 		filters.ScannedBy = &scannedBy
 	}
 
 	// * Parse asset ID filter
-	if assetId := c.Query("asset_id"); assetId != "" {
+	if assetId := c.Query("assetId"); assetId != "" {
 		filters.AssetID = &assetId
 	}
 
 	// * Parse date range filters
-	if dateFrom := c.Query("date_from"); dateFrom != "" {
+	if dateFrom := c.Query("dateFrom"); dateFrom != "" {
 		if parsedDate, err := time.Parse("2006-01-02", dateFrom); err == nil {
 			filters.DateFrom = &parsedDate
 		}
 	}
 
-	if dateTo := c.Query("date_to"); dateTo != "" {
+	if dateTo := c.Query("dateTo"); dateTo != "" {
 		if parsedDate, err := time.Parse("2006-01-02", dateTo); err == nil {
 			filters.DateTo = &parsedDate
 		}
 	}
 
 	// * Parse coordinates filter
-	if hasCoordinates := c.Query("has_coordinates"); hasCoordinates != "" {
+	if hasCoordinates := c.Query("hasCoordinates"); hasCoordinates != "" {
 		if hasCoords, err := strconv.ParseBool(hasCoordinates); err == nil {
 			filters.HasCoordinates = &hasCoords
 		}

@@ -63,11 +63,11 @@ func (h *AssetHandler) parseAssetFiltersAndSort(c *fiber.Ctx) (domain.AssetParam
 	}
 
 	// * Parse sorting options
-	sortBy := c.Query("sort_by")
+	sortBy := c.Query("sortBy")
 	if sortBy != "" {
 		params.Sort = &domain.AssetSortOptions{
 			Field: sortBy,
-			Order: c.Query("sort_order", "desc"),
+			Order: c.Query("sortOrder", "desc"),
 		}
 	}
 
@@ -91,15 +91,15 @@ func (h *AssetHandler) parseAssetFiltersAndSort(c *fiber.Ctx) (domain.AssetParam
 		Condition: condition,
 	}
 
-	if categoryID := c.Query("category_id"); categoryID != "" {
+	if categoryID := c.Query("categoryId"); categoryID != "" {
 		filters.CategoryID = &categoryID
 	}
 
-	if locationID := c.Query("location_id"); locationID != "" {
+	if locationID := c.Query("locationId"); locationID != "" {
 		filters.LocationID = &locationID
 	}
 
-	if assignedTo := c.Query("assigned_to"); assignedTo != "" {
+	if assignedTo := c.Query("assignedTo"); assignedTo != "" {
 		filters.AssignedTo = &assignedTo
 	}
 

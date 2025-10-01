@@ -51,30 +51,30 @@ func (h *MaintenanceRecordHandler) parseFiltersAndSort(c *fiber.Ctx) (domain.Mai
 	}
 
 	// Sort
-	if sortBy := c.Query("sort_by"); sortBy != "" {
-		params.Sort = &domain.MaintenanceRecordSortOptions{Field: sortBy, Order: c.Query("sort_order", "desc")}
+	if sortBy := c.Query("sortBy"); sortBy != "" {
+		params.Sort = &domain.MaintenanceRecordSortOptions{Field: sortBy, Order: c.Query("sortOrder", "desc")}
 	}
 
 	// Filters
 	filters := &domain.MaintenanceRecordFilterOptions{}
-	if assetID := c.Query("asset_id"); assetID != "" {
+	if assetID := c.Query("assetId"); assetID != "" {
 		filters.AssetID = &assetID
 	}
-	if scheduleID := c.Query("schedule_id"); scheduleID != "" {
+	if scheduleID := c.Query("scheduleId"); scheduleID != "" {
 		filters.ScheduleID = &scheduleID
 	}
-	if performedByUser := c.Query("performed_by_user"); performedByUser != "" {
+	if performedByUser := c.Query("performedByUser"); performedByUser != "" {
 		filters.PerformedByUser = &performedByUser
 	}
-	if vendorName := c.Query("vendor_name"); vendorName != "" {
+	if vendorName := c.Query("vendorName"); vendorName != "" {
 		filters.VendorName = &vendorName
 	}
-	if fromDate := c.Query("from_date"); fromDate != "" {
+	if fromDate := c.Query("fromDate"); fromDate != "" {
 		// keep as string YYYY-MM-DD to match repo expectations
 		fd := fromDate
 		filters.FromDate = &fd
 	}
-	if toDate := c.Query("to_date"); toDate != "" {
+	if toDate := c.Query("toDate"); toDate != "" {
 		td := toDate
 		filters.ToDate = &td
 	}

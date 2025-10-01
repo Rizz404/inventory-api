@@ -61,11 +61,11 @@ func (h *AssetMovementHandler) parseAssetMovementFiltersAndSort(c *fiber.Ctx) (d
 	}
 
 	// * Parse sorting options
-	sortBy := c.Query("sort_by")
+	sortBy := c.Query("sortBy")
 	if sortBy != "" {
 		params.Sort = &domain.AssetMovementSortOptions{
 			Field: sortBy,
-			Order: c.Query("sort_order", "desc"),
+			Order: c.Query("sortOrder", "desc"),
 		}
 	}
 
@@ -73,43 +73,43 @@ func (h *AssetMovementHandler) parseAssetMovementFiltersAndSort(c *fiber.Ctx) (d
 	filters := &domain.AssetMovementFilterOptions{}
 
 	// Parse asset ID filter
-	if assetID := c.Query("asset_id"); assetID != "" {
+	if assetID := c.Query("assetId"); assetID != "" {
 		filters.AssetID = &assetID
 	}
 
 	// Parse from location ID filter
-	if fromLocationID := c.Query("from_location_id"); fromLocationID != "" {
+	if fromLocationID := c.Query("fromLocationId"); fromLocationID != "" {
 		filters.FromLocationID = &fromLocationID
 	}
 
 	// Parse to location ID filter
-	if toLocationID := c.Query("to_location_id"); toLocationID != "" {
+	if toLocationID := c.Query("toLocationId"); toLocationID != "" {
 		filters.ToLocationID = &toLocationID
 	}
 
 	// Parse from user ID filter
-	if fromUserID := c.Query("from_user_id"); fromUserID != "" {
+	if fromUserID := c.Query("fromUserId"); fromUserID != "" {
 		filters.FromUserID = &fromUserID
 	}
 
 	// Parse to user ID filter
-	if toUserID := c.Query("to_user_id"); toUserID != "" {
+	if toUserID := c.Query("toUserId"); toUserID != "" {
 		filters.ToUserID = &toUserID
 	}
 
 	// Parse moved by filter
-	if movedBy := c.Query("moved_by"); movedBy != "" {
+	if movedBy := c.Query("movedBy"); movedBy != "" {
 		filters.MovedBy = &movedBy
 	}
 
 	// * Parse date range filters
-	if dateFrom := c.Query("date_from"); dateFrom != "" {
+	if dateFrom := c.Query("dateFrom"); dateFrom != "" {
 		if parsedDate, err := time.Parse("2006-01-02", dateFrom); err == nil {
 			filters.DateFrom = &parsedDate
 		}
 	}
 
-	if dateTo := c.Query("date_to"); dateTo != "" {
+	if dateTo := c.Query("dateTo"); dateTo != "" {
 		if parsedDate, err := time.Parse("2006-01-02", dateTo); err == nil {
 			filters.DateTo = &parsedDate
 		}

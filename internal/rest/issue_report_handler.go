@@ -78,30 +78,30 @@ func (h *IssueReportHandler) parseIssueReportFiltersAndSort(c *fiber.Ctx) (domai
 	}
 
 	// * Parse sorting options
-	sortBy := c.Query("sort_by")
+	sortBy := c.Query("sortBy")
 	if sortBy != "" {
 		params.Sort = &domain.IssueReportSortOptions{
 			Field: sortBy,
-			Order: c.Query("sort_order", "desc"),
+			Order: c.Query("sortOrder", "desc"),
 		}
 	}
 
 	// * Parse filtering options
 	filters := &domain.IssueReportFilterOptions{}
 
-	if assetID := c.Query("asset_id"); assetID != "" {
+	if assetID := c.Query("assetId"); assetID != "" {
 		filters.AssetID = &assetID
 	}
 
-	if reportedBy := c.Query("reported_by"); reportedBy != "" {
+	if reportedBy := c.Query("reportedBy"); reportedBy != "" {
 		filters.ReportedBy = &reportedBy
 	}
 
-	if resolvedBy := c.Query("resolved_by"); resolvedBy != "" {
+	if resolvedBy := c.Query("resolvedBy"); resolvedBy != "" {
 		filters.ResolvedBy = &resolvedBy
 	}
 
-	if issueType := c.Query("issue_type"); issueType != "" {
+	if issueType := c.Query("issueType"); issueType != "" {
 		filters.IssueType = &issueType
 	}
 
@@ -117,20 +117,20 @@ func (h *IssueReportHandler) parseIssueReportFiltersAndSort(c *fiber.Ctx) (domai
 		}
 	}
 
-	if isResolvedStr := c.Query("is_resolved"); isResolvedStr != "" {
+	if isResolvedStr := c.Query("isResolved"); isResolvedStr != "" {
 		isResolved, err := strconv.ParseBool(isResolvedStr)
 		if err == nil {
 			filters.IsResolved = &isResolved
 		}
 	}
 
-	if dateFromStr := c.Query("date_from"); dateFromStr != "" {
+	if dateFromStr := c.Query("dateFrom"); dateFromStr != "" {
 		if dateFrom, err := time.Parse("2006-01-02", dateFromStr); err == nil {
 			filters.DateFrom = &dateFrom
 		}
 	}
 
-	if dateToStr := c.Query("date_to"); dateToStr != "" {
+	if dateToStr := c.Query("dateTo"); dateToStr != "" {
 		if dateTo, err := time.Parse("2006-01-02", dateToStr); err == nil {
 			filters.DateTo = &dateTo
 		}
