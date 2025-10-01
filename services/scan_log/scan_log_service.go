@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 )
 
@@ -16,13 +15,13 @@ type Repository interface {
 	DeleteScanLog(ctx context.Context, scanLogId string) error
 
 	// * QUERY
-	GetScanLogsPaginated(ctx context.Context, params query.Params) ([]domain.ScanLog, error)
-	GetScanLogsCursor(ctx context.Context, params query.Params) ([]domain.ScanLog, error)
+	GetScanLogsPaginated(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLog, error)
+	GetScanLogsCursor(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLog, error)
 	GetScanLogById(ctx context.Context, scanLogId string) (domain.ScanLog, error)
-	GetScanLogsByAssetId(ctx context.Context, assetId string, params query.Params) ([]domain.ScanLog, error)
-	GetScanLogsByUserId(ctx context.Context, userId string, params query.Params) ([]domain.ScanLog, error)
+	GetScanLogsByAssetId(ctx context.Context, assetId string, params domain.ScanLogParams) ([]domain.ScanLog, error)
+	GetScanLogsByUserId(ctx context.Context, userId string, params domain.ScanLogParams) ([]domain.ScanLog, error)
 	CheckScanLogExist(ctx context.Context, scanLogId string) (bool, error)
-	CountScanLogs(ctx context.Context, params query.Params) (int64, error)
+	CountScanLogs(ctx context.Context, params domain.ScanLogParams) (int64, error)
 	GetScanLogStatistics(ctx context.Context) (domain.ScanLogStatistics, error)
 }
 
@@ -33,13 +32,13 @@ type ScanLogService interface {
 	DeleteScanLog(ctx context.Context, scanLogId string) error
 
 	// * QUERY
-	GetScanLogsPaginated(ctx context.Context, params query.Params) ([]domain.ScanLogResponse, int64, error)
-	GetScanLogsCursor(ctx context.Context, params query.Params) ([]domain.ScanLogResponse, error)
+	GetScanLogsPaginated(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLogResponse, int64, error)
+	GetScanLogsCursor(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLogResponse, error)
 	GetScanLogById(ctx context.Context, scanLogId string) (domain.ScanLogResponse, error)
-	GetScanLogsByAssetId(ctx context.Context, assetId string, params query.Params) ([]domain.ScanLogResponse, error)
-	GetScanLogsByUserId(ctx context.Context, userId string, params query.Params) ([]domain.ScanLogResponse, error)
+	GetScanLogsByAssetId(ctx context.Context, assetId string, params domain.ScanLogParams) ([]domain.ScanLogResponse, error)
+	GetScanLogsByUserId(ctx context.Context, userId string, params domain.ScanLogParams) ([]domain.ScanLogResponse, error)
 	CheckScanLogExists(ctx context.Context, scanLogId string) (bool, error)
-	CountScanLogs(ctx context.Context, params query.Params) (int64, error)
+	CountScanLogs(ctx context.Context, params domain.ScanLogParams) (int64, error)
 	GetScanLogStatistics(ctx context.Context) (domain.ScanLogStatisticsResponse, error)
 }
 
@@ -97,7 +96,7 @@ func (s *Service) DeleteScanLog(ctx context.Context, scanLogId string) error {
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetScanLogsPaginated(ctx context.Context, params query.Params) ([]domain.ScanLogResponse, int64, error) {
+func (s *Service) GetScanLogsPaginated(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLogResponse, int64, error) {
 	scanLogs, err := s.Repo.GetScanLogsPaginated(ctx, params)
 	if err != nil {
 		return nil, 0, err
@@ -115,7 +114,7 @@ func (s *Service) GetScanLogsPaginated(ctx context.Context, params query.Params)
 	return scanLogResponses, count, nil
 }
 
-func (s *Service) GetScanLogsCursor(ctx context.Context, params query.Params) ([]domain.ScanLogResponse, error) {
+func (s *Service) GetScanLogsCursor(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLogResponse, error) {
 	scanLogs, err := s.Repo.GetScanLogsCursor(ctx, params)
 	if err != nil {
 		return nil, err
@@ -137,7 +136,7 @@ func (s *Service) GetScanLogById(ctx context.Context, scanLogId string) (domain.
 	return mapper.ScanLogToResponse(&scanLog), nil
 }
 
-func (s *Service) GetScanLogsByAssetId(ctx context.Context, assetId string, params query.Params) ([]domain.ScanLogResponse, error) {
+func (s *Service) GetScanLogsByAssetId(ctx context.Context, assetId string, params domain.ScanLogParams) ([]domain.ScanLogResponse, error) {
 	scanLogs, err := s.Repo.GetScanLogsByAssetId(ctx, assetId, params)
 	if err != nil {
 		return nil, err
@@ -149,7 +148,7 @@ func (s *Service) GetScanLogsByAssetId(ctx context.Context, assetId string, para
 	return scanLogResponses, nil
 }
 
-func (s *Service) GetScanLogsByUserId(ctx context.Context, userId string, params query.Params) ([]domain.ScanLogResponse, error) {
+func (s *Service) GetScanLogsByUserId(ctx context.Context, userId string, params domain.ScanLogParams) ([]domain.ScanLogResponse, error) {
 	scanLogs, err := s.Repo.GetScanLogsByUserId(ctx, userId, params)
 	if err != nil {
 		return nil, err
@@ -169,7 +168,7 @@ func (s *Service) CheckScanLogExists(ctx context.Context, scanLogId string) (boo
 	return exists, nil
 }
 
-func (s *Service) CountScanLogs(ctx context.Context, params query.Params) (int64, error) {
+func (s *Service) CountScanLogs(ctx context.Context, params domain.ScanLogParams) (int64, error) {
 	count, err := s.Repo.CountScanLogs(ctx, params)
 	if err != nil {
 		return 0, err

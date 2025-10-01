@@ -9,7 +9,6 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"gorm.io/gorm"
 )
@@ -18,65 +17,52 @@ type IssueReportRepository struct {
 	db *gorm.DB
 }
 
-type IssueReportFilterOptions struct {
-	AssetID    *string               `json:"assetId,omitempty"`
-	ReportedBy *string               `json:"reportedBy,omitempty"`
-	ResolvedBy *string               `json:"resolvedBy,omitempty"`
-	IssueType  *string               `json:"issueType,omitempty"`
-	Priority   *domain.IssuePriority `json:"priority,omitempty"`
-	Status     *domain.IssueStatus   `json:"status,omitempty"`
-	IsResolved *bool                 `json:"isResolved,omitempty"`
-	DateFrom   *time.Time            `json:"dateFrom,omitempty"`
-	DateTo     *time.Time            `json:"dateTo,omitempty"`
-}
-
 func NewIssueReportRepository(db *gorm.DB) *IssueReportRepository {
 	return &IssueReportRepository{
 		db: db,
 	}
 }
 
-func (r *IssueReportRepository) applyIssueReportFilters(db *gorm.DB, filters any) *gorm.DB {
-	f, ok := filters.(*IssueReportFilterOptions)
-	if !ok || f == nil {
+func (r *IssueReportRepository) applyIssueReportFilters(db *gorm.DB, filters *domain.IssueReportFilterOptions) *gorm.DB {
+	if filters == nil {
 		return db
 	}
 
-	if f.AssetID != nil {
-		db = db.Where("ir.asset_id = ?", f.AssetID)
+	if filters.AssetID != nil {
+		db = db.Where("ir.asset_id = ?", filters.AssetID)
 	}
-	if f.ReportedBy != nil {
-		db = db.Where("ir.reported_by = ?", f.ReportedBy)
+	if filters.ReportedBy != nil {
+		db = db.Where("ir.reported_by = ?", filters.ReportedBy)
 	}
-	if f.ResolvedBy != nil {
-		db = db.Where("ir.resolved_by = ?", f.ResolvedBy)
+	if filters.ResolvedBy != nil {
+		db = db.Where("ir.resolved_by = ?", filters.ResolvedBy)
 	}
-	if f.IssueType != nil {
-		db = db.Where("ir.issue_type = ?", f.IssueType)
+	if filters.IssueType != nil {
+		db = db.Where("ir.issue_type = ?", filters.IssueType)
 	}
-	if f.Priority != nil {
-		db = db.Where("ir.priority = ?", f.Priority)
+	if filters.Priority != nil {
+		db = db.Where("ir.priority = ?", filters.Priority)
 	}
-	if f.Status != nil {
-		db = db.Where("ir.status = ?", f.Status)
+	if filters.Status != nil {
+		db = db.Where("ir.status = ?", filters.Status)
 	}
-	if f.IsResolved != nil {
-		if *f.IsResolved {
+	if filters.IsResolved != nil {
+		if *filters.IsResolved {
 			db = db.Where("ir.status IN ('Resolved', 'Closed')")
 		} else {
 			db = db.Where("ir.status IN ('Open', 'In Progress')")
 		}
 	}
-	if f.DateFrom != nil {
-		db = db.Where("ir.reported_date >= ?", f.DateFrom)
+	if filters.DateFrom != nil {
+		db = db.Where("ir.reported_date >= ?", filters.DateFrom)
 	}
-	if f.DateTo != nil {
-		db = db.Where("ir.reported_date <= ?", f.DateTo)
+	if filters.DateTo != nil {
+		db = db.Where("ir.reported_date <= ?", filters.DateTo)
 	}
 	return db
 }
 
-func (r *IssueReportRepository) applyIssueReportSorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
+func (r *IssueReportRepository) applyIssueReportSorts(db *gorm.DB, sort *domain.IssueReportSortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("ir.reported_date DESC")
 	}
@@ -280,7 +266,7 @@ func (r *IssueReportRepository) DeleteIssueReport(ctx context.Context, issueRepo
 }
 
 // *===========================QUERY===========================*
-func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReport, error) {
+func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReport, error) {
 	var issueReports []model.IssueReport
 	db := r.db.WithContext(ctx).
 		Table("issue_reports ir").
@@ -296,9 +282,17 @@ func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, pa
 			Distinct("ir.id")
 	}
 
-	// Set pagination cursor to empty for offset-based pagination
-	params.Pagination.Cursor = ""
-	db = query.Apply(db, params, r.applyIssueReportFilters, r.applyIssueReportSorts)
+	// Apply filters, sorts, and pagination manually
+	db = r.applyIssueReportFilters(db, params.Filters)
+	db = r.applyIssueReportSorts(db, params.Sort)
+	if params.Pagination != nil {
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+		if params.Pagination.Offset > 0 {
+			db = db.Offset(params.Pagination.Offset)
+		}
+	}
 
 	if err := db.Find(&issueReports).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -308,7 +302,7 @@ func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, pa
 	return mapper.ToDomainIssueReports(issueReports), nil
 }
 
-func (r *IssueReportRepository) GetIssueReportsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReport, error) {
+func (r *IssueReportRepository) GetIssueReportsCursor(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReport, error) {
 	var issueReports []model.IssueReport
 	db := r.db.WithContext(ctx).
 		Table("issue_reports ir").
@@ -324,9 +318,17 @@ func (r *IssueReportRepository) GetIssueReportsCursor(ctx context.Context, param
 			Distinct("ir.id")
 	}
 
-	// Set offset to 0 for cursor-based pagination
-	params.Pagination.Offset = 0
-	db = query.Apply(db, params, r.applyIssueReportFilters, r.applyIssueReportSorts)
+	// Apply filters, sorts, and cursor pagination manually
+	db = r.applyIssueReportFilters(db, params.Filters)
+	db = r.applyIssueReportSorts(db, params.Sort)
+	if params.Pagination != nil {
+		if params.Pagination.Cursor != "" {
+			db = db.Where("ir.id > ?", params.Pagination.Cursor)
+		}
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+	}
 
 	if err := db.Find(&issueReports).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -365,7 +367,7 @@ func (r *IssueReportRepository) CheckIssueReportExist(ctx context.Context, issue
 	return count > 0, nil
 }
 
-func (r *IssueReportRepository) CountIssueReports(ctx context.Context, params query.Params) (int64, error) {
+func (r *IssueReportRepository) CountIssueReports(ctx context.Context, params domain.IssueReportParams) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Table("issue_reports ir")
 
@@ -376,7 +378,7 @@ func (r *IssueReportRepository) CountIssueReports(ctx context.Context, params qu
 			Distinct("ir.id")
 	}
 
-	db = query.Apply(db, query.Params{Filters: params.Filters}, r.applyIssueReportFilters, nil)
+	db = r.applyIssueReportFilters(db, params.Filters)
 
 	if err := db.Count(&count).Error; err != nil {
 		return 0, domain.ErrInternal(err)

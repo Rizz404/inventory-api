@@ -4,8 +4,6 @@ import (
 	"strconv"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/rest/middleware"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/internal/web"
@@ -44,8 +42,8 @@ func NewMaintenanceRecordHandler(app fiber.Router, s maintenance_record.Maintena
 	)
 }
 
-func (h *MaintenanceRecordHandler) parseFiltersAndSort(c *fiber.Ctx) (query.Params, error) {
-	params := query.Params{}
+func (h *MaintenanceRecordHandler) parseFiltersAndSort(c *fiber.Ctx) (domain.MaintenanceRecordParams, error) {
+	params := domain.MaintenanceRecordParams{}
 
 	// Search
 	if s := c.Query("search"); s != "" {
@@ -54,11 +52,11 @@ func (h *MaintenanceRecordHandler) parseFiltersAndSort(c *fiber.Ctx) (query.Para
 
 	// Sort
 	if sortBy := c.Query("sort_by"); sortBy != "" {
-		params.Sort = &query.SortOptions{Field: sortBy, Order: c.Query("sort_order", "desc")}
+		params.Sort = &domain.MaintenanceRecordSortOptions{Field: sortBy, Order: c.Query("sort_order", "desc")}
 	}
 
 	// Filters
-	filters := &postgresql.MaintenanceRecordFilterOptions{}
+	filters := &domain.MaintenanceRecordFilterOptions{}
 	if assetID := c.Query("asset_id"); assetID != "" {
 		filters.AssetID = &assetID
 	}
@@ -135,7 +133,7 @@ func (h *MaintenanceRecordHandler) GetMaintenanceRecordsPaginated(c *fiber.Ctx) 
 	}
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.MaintenanceRecordPaginationOptions{Limit: limit, Offset: offset}
 
 	langCode := web.GetLanguageFromContext(c)
 	records, total, err := h.Service.GetMaintenanceRecordsPaginated(c.Context(), params, langCode)
@@ -152,7 +150,7 @@ func (h *MaintenanceRecordHandler) GetMaintenanceRecordsCursor(c *fiber.Ctx) err
 	}
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &query.PaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.MaintenanceRecordPaginationOptions{Limit: limit, Cursor: cursor}
 
 	langCode := web.GetLanguageFromContext(c)
 	records, err := h.Service.GetMaintenanceRecordsCursor(c.Context(), params, langCode)

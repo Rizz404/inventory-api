@@ -9,7 +9,6 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
@@ -25,42 +24,32 @@ func NewMaintenanceRecordRepository(db *gorm.DB) *MaintenanceRecordRepository {
 
 // ===== Filters and Sorts =====
 
-type MaintenanceRecordFilterOptions struct {
-	AssetID         *string `json:"assetId,omitempty"`
-	ScheduleID      *string `json:"scheduleId,omitempty"`
-	PerformedByUser *string `json:"performedByUser,omitempty"`
-	VendorName      *string `json:"vendorName,omitempty"`
-	FromDate        *string `json:"fromDate,omitempty"` // YYYY-MM-DD
-	ToDate          *string `json:"toDate,omitempty"`   // YYYY-MM-DD
-}
-
-func (r *MaintenanceRecordRepository) applyRecordFilters(db *gorm.DB, filters any) *gorm.DB {
-	f, ok := filters.(*MaintenanceRecordFilterOptions)
-	if !ok || f == nil {
+func (r *MaintenanceRecordRepository) applyRecordFilters(db *gorm.DB, filters *domain.MaintenanceRecordFilterOptions) *gorm.DB {
+	if filters == nil {
 		return db
 	}
-	if f.AssetID != nil && *f.AssetID != "" {
-		db = db.Where("mr.asset_id = ?", f.AssetID)
+	if filters.AssetID != nil && *filters.AssetID != "" {
+		db = db.Where("mr.asset_id = ?", filters.AssetID)
 	}
-	if f.ScheduleID != nil && *f.ScheduleID != "" {
-		db = db.Where("mr.schedule_id = ?", f.ScheduleID)
+	if filters.ScheduleID != nil && *filters.ScheduleID != "" {
+		db = db.Where("mr.schedule_id = ?", filters.ScheduleID)
 	}
-	if f.PerformedByUser != nil && *f.PerformedByUser != "" {
-		db = db.Where("mr.performed_by_user = ?", f.PerformedByUser)
+	if filters.PerformedByUser != nil && *filters.PerformedByUser != "" {
+		db = db.Where("mr.performed_by_user = ?", filters.PerformedByUser)
 	}
-	if f.VendorName != nil && *f.VendorName != "" {
-		db = db.Where("mr.performed_by_vendor ILIKE ?", "%"+*f.VendorName+"%")
+	if filters.VendorName != nil && *filters.VendorName != "" {
+		db = db.Where("mr.performed_by_vendor ILIKE ?", "%"+*filters.VendorName+"%")
 	}
-	if f.FromDate != nil && *f.FromDate != "" {
-		db = db.Where("mr.maintenance_date >= ?", *f.FromDate)
+	if filters.FromDate != nil && *filters.FromDate != "" {
+		db = db.Where("mr.maintenance_date >= ?", *filters.FromDate)
 	}
-	if f.ToDate != nil && *f.ToDate != "" {
-		db = db.Where("mr.maintenance_date <= ?", *f.ToDate)
+	if filters.ToDate != nil && *filters.ToDate != "" {
+		db = db.Where("mr.maintenance_date <= ?", *filters.ToDate)
 	}
 	return db
 }
 
-func (r *MaintenanceRecordRepository) applyRecordSorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
+func (r *MaintenanceRecordRepository) applyRecordSorts(db *gorm.DB, sort *domain.MaintenanceRecordSortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("mr.created_at DESC")
 	}
@@ -220,7 +209,7 @@ func (r *MaintenanceRecordRepository) DeleteRecord(ctx context.Context, recordId
 
 // ===== QUERIES =====
 
-func (r *MaintenanceRecordRepository) GetRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecord, error) {
+func (r *MaintenanceRecordRepository) GetRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecord, error) {
 	var records []model.MaintenanceRecord
 	db := r.db.WithContext(ctx).
 		Table("maintenance_records mr").
@@ -235,7 +224,17 @@ func (r *MaintenanceRecordRepository) GetRecordsPaginated(ctx context.Context, p
 			Distinct("mr.id")
 	}
 
-	db = query.Apply(db, params, r.applyRecordFilters, r.applyRecordSorts)
+	// Apply filters, sorts, and pagination manually
+	db = r.applyRecordFilters(db, params.Filters)
+	db = r.applyRecordSorts(db, params.Sort)
+	if params.Pagination != nil {
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+		if params.Pagination.Offset > 0 {
+			db = db.Offset(params.Pagination.Offset)
+		}
+	}
 
 	if err := db.Find(&records).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -243,7 +242,7 @@ func (r *MaintenanceRecordRepository) GetRecordsPaginated(ctx context.Context, p
 	return mapper.ToDomainMaintenanceRecords(records), nil
 }
 
-func (r *MaintenanceRecordRepository) GetRecordsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecord, error) {
+func (r *MaintenanceRecordRepository) GetRecordsCursor(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecord, error) {
 	var records []model.MaintenanceRecord
 	db := r.db.WithContext(ctx).
 		Table("maintenance_records mr").
@@ -258,8 +257,17 @@ func (r *MaintenanceRecordRepository) GetRecordsCursor(ctx context.Context, para
 			Distinct("mr.id")
 	}
 
-	params.Pagination.Offset = 0
-	db = query.Apply(db, params, r.applyRecordFilters, r.applyRecordSorts)
+	// Apply filters, sorts, and cursor pagination manually
+	db = r.applyRecordFilters(db, params.Filters)
+	db = r.applyRecordSorts(db, params.Sort)
+	if params.Pagination != nil {
+		if params.Pagination.Cursor != "" {
+			db = db.Where("mr.id > ?", params.Pagination.Cursor)
+		}
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+	}
 
 	if err := db.Find(&records).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -292,7 +300,7 @@ func (r *MaintenanceRecordRepository) CheckRecordExist(ctx context.Context, reco
 	return count > 0, nil
 }
 
-func (r *MaintenanceRecordRepository) CountRecords(ctx context.Context, params query.Params) (int64, error) {
+func (r *MaintenanceRecordRepository) CountRecords(ctx context.Context, params domain.MaintenanceRecordParams) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Table("maintenance_records mr")
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
@@ -301,7 +309,7 @@ func (r *MaintenanceRecordRepository) CountRecords(ctx context.Context, params q
 			Where("mrt.title ILIKE ?", sq).
 			Distinct("mr.id")
 	}
-	db = query.Apply(db, query.Params{Filters: params.Filters}, r.applyRecordFilters, nil)
+	db = r.applyRecordFilters(db, params.Filters)
 	if err := db.Count(&count).Error; err != nil {
 		return 0, domain.ErrInternal(err)
 	}

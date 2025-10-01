@@ -9,7 +9,6 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"gorm.io/gorm"
 )
@@ -18,41 +17,33 @@ type NotificationRepository struct {
 	db *gorm.DB
 }
 
-type NotificationFilterOptions struct {
-	UserID         *string                  `json:"userId,omitempty"`
-	RelatedAssetID *string                  `json:"relatedAssetId,omitempty"`
-	Type           *domain.NotificationType `json:"type,omitempty"`
-	IsRead         *bool                    `json:"isRead,omitempty"`
-}
-
 func NewNotificationRepository(db *gorm.DB) *NotificationRepository {
 	return &NotificationRepository{
 		db: db,
 	}
 }
 
-func (r *NotificationRepository) applyNotificationFilters(db *gorm.DB, filters any) *gorm.DB {
-	f, ok := filters.(*NotificationFilterOptions)
-	if !ok || f == nil {
+func (r *NotificationRepository) applyNotificationFilters(db *gorm.DB, filters *domain.NotificationFilterOptions) *gorm.DB {
+	if filters == nil {
 		return db
 	}
 
-	if f.UserID != nil {
-		db = db.Where("n.user_id = ?", f.UserID)
+	if filters.UserID != nil {
+		db = db.Where("n.user_id = ?", filters.UserID)
 	}
-	if f.RelatedAssetID != nil {
-		db = db.Where("n.related_asset_id = ?", f.RelatedAssetID)
+	if filters.RelatedAssetID != nil {
+		db = db.Where("n.related_asset_id = ?", filters.RelatedAssetID)
 	}
-	if f.Type != nil {
-		db = db.Where("n.type = ?", f.Type)
+	if filters.Type != nil {
+		db = db.Where("n.type = ?", filters.Type)
 	}
-	if f.IsRead != nil {
-		db = db.Where("n.is_read = ?", f.IsRead)
+	if filters.IsRead != nil {
+		db = db.Where("n.is_read = ?", filters.IsRead)
 	}
 	return db
 }
 
-func (r *NotificationRepository) applyNotificationSorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
+func (r *NotificationRepository) applyNotificationSorts(db *gorm.DB, sort *domain.NotificationSortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("n.created_at DESC")
 	}
@@ -216,7 +207,7 @@ func (r *NotificationRepository) DeleteNotification(ctx context.Context, notific
 }
 
 // *===========================QUERY===========================*
-func (r *NotificationRepository) GetNotificationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Notification, error) {
+func (r *NotificationRepository) GetNotificationsPaginated(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.Notification, error) {
 	var notifications []model.Notification
 	db := r.db.WithContext(ctx).
 		Table("notifications n").
@@ -229,9 +220,21 @@ func (r *NotificationRepository) GetNotificationsPaginated(ctx context.Context, 
 			Distinct("n.id")
 	}
 
-	// Set pagination cursor to empty for offset-based pagination
-	params.Pagination.Cursor = ""
-	db = query.Apply(db, params, r.applyNotificationFilters, r.applyNotificationSorts)
+	// Apply filters
+	db = r.applyNotificationFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyNotificationSorts(db, params.Sort)
+
+	// Apply pagination
+	if params.Pagination != nil {
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+		if params.Pagination.Offset > 0 {
+			db = db.Offset(params.Pagination.Offset)
+		}
+	}
 
 	if err := db.Find(&notifications).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -241,7 +244,7 @@ func (r *NotificationRepository) GetNotificationsPaginated(ctx context.Context, 
 	return mapper.ToDomainNotifications(notifications), nil
 }
 
-func (r *NotificationRepository) GetNotificationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Notification, error) {
+func (r *NotificationRepository) GetNotificationsCursor(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.Notification, error) {
 	var notifications []model.Notification
 	db := r.db.WithContext(ctx).
 		Table("notifications n").
@@ -254,9 +257,21 @@ func (r *NotificationRepository) GetNotificationsCursor(ctx context.Context, par
 			Distinct("n.id")
 	}
 
-	// Set offset to 0 for cursor-based pagination
-	params.Pagination.Offset = 0
-	db = query.Apply(db, params, r.applyNotificationFilters, r.applyNotificationSorts)
+	// Apply filters
+	db = r.applyNotificationFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyNotificationSorts(db, params.Sort)
+
+	// Apply cursor-based pagination
+	if params.Pagination != nil {
+		if params.Pagination.Cursor != "" {
+			db = db.Where("c.id > ?", params.Pagination.Cursor)
+		}
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+	}
 
 	if err := db.Find(&notifications).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -292,7 +307,7 @@ func (r *NotificationRepository) CheckNotificationExist(ctx context.Context, not
 	return count > 0, nil
 }
 
-func (r *NotificationRepository) CountNotifications(ctx context.Context, params query.Params) (int64, error) {
+func (r *NotificationRepository) CountNotifications(ctx context.Context, params domain.NotificationParams) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Table("notifications n")
 
@@ -303,7 +318,8 @@ func (r *NotificationRepository) CountNotifications(ctx context.Context, params 
 			Distinct("n.id")
 	}
 
-	db = query.Apply(db, query.Params{Filters: params.Filters}, r.applyNotificationFilters, nil)
+	// Apply filters
+	db = r.applyNotificationFilters(db, params.Filters)
 
 	if err := db.Count(&count).Error; err != nil {
 		return 0, domain.ErrInternal(err)

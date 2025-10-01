@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/rest/middleware"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/internal/web"
@@ -51,8 +49,8 @@ func NewUserHandler(app fiber.Router, s user.UserService) {
 	users.Delete("/:id", handler.DeleteUser)
 }
 
-func (h *UserHandler) parseUserFiltersAndSort(c *fiber.Ctx) (query.Params, error) {
-	params := query.Params{}
+func (h *UserHandler) parseUserFiltersAndSort(c *fiber.Ctx) (domain.UserParams, error) {
+	params := domain.UserParams{}
 
 	// * Parse search query
 	search := c.Query("search")
@@ -63,7 +61,7 @@ func (h *UserHandler) parseUserFiltersAndSort(c *fiber.Ctx) (query.Params, error
 	// * Parse sorting options
 	sortBy := c.Query("sort_by")
 	if sortBy != "" {
-		params.Sort = &query.SortOptions{
+		params.Sort = &domain.UserSortOptions{
 			Field: sortBy,
 			Order: c.Query("sort_order", "desc"),
 		}
@@ -77,7 +75,7 @@ func (h *UserHandler) parseUserFiltersAndSort(c *fiber.Ctx) (query.Params, error
 		role = &r
 	}
 
-	filters := &postgresql.UserFilterOptions{Role: role}
+	filters := &domain.UserFilterOptions{Role: role}
 
 	if isActiveStr := c.Query("is_active"); isActiveStr != "" {
 		isActive, err := strconv.ParseBool(isActiveStr)
@@ -231,7 +229,7 @@ func (h *UserHandler) GetUsersPaginated(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.UserPaginationOptions{Limit: limit, Offset: offset}
 
 	users, total, err := h.Service.GetUsersPaginated(c.Context(), params)
 	if err != nil {
@@ -249,7 +247,7 @@ func (h *UserHandler) GetUsersCursor(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &query.PaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.UserPaginationOptions{Limit: limit, Cursor: cursor}
 
 	users, err := h.Service.GetUsersCursor(c.Context(), params)
 	if err != nil {

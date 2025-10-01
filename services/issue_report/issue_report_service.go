@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
@@ -20,11 +19,11 @@ type Repository interface {
 	DeleteIssueReport(ctx context.Context, issueReportId string) error
 
 	// * QUERY
-	GetIssueReportsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReport, error)
-	GetIssueReportsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReport, error)
+	GetIssueReportsPaginated(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReport, error)
+	GetIssueReportsCursor(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReport, error)
 	GetIssueReportById(ctx context.Context, issueReportId string) (domain.IssueReport, error)
 	CheckIssueReportExist(ctx context.Context, issueReportId string) (bool, error)
-	CountIssueReports(ctx context.Context, params query.Params) (int64, error)
+	CountIssueReports(ctx context.Context, params domain.IssueReportParams) (int64, error)
 	GetIssueReportStatistics(ctx context.Context) (domain.IssueReportStatistics, error)
 }
 
@@ -38,11 +37,11 @@ type IssueReportService interface {
 	DeleteIssueReport(ctx context.Context, issueReportId string) error
 
 	// * QUERY
-	GetIssueReportsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListResponse, int64, error)
-	GetIssueReportsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListResponse, error)
+	GetIssueReportsPaginated(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReportListResponse, int64, error)
+	GetIssueReportsCursor(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReportListResponse, error)
 	GetIssueReportById(ctx context.Context, issueReportId string, langCode string) (domain.IssueReportResponse, error)
 	CheckIssueReportExists(ctx context.Context, issueReportId string) (bool, error)
-	CountIssueReports(ctx context.Context, params query.Params) (int64, error)
+	CountIssueReports(ctx context.Context, params domain.IssueReportParams) (int64, error)
 	GetIssueReportStatistics(ctx context.Context) (domain.IssueReportStatisticsResponse, error)
 }
 
@@ -166,7 +165,7 @@ func (s *Service) DeleteIssueReport(ctx context.Context, issueReportId string) e
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetIssueReportsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListResponse, int64, error) {
+func (s *Service) GetIssueReportsPaginated(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReportListResponse, int64, error) {
 	listItems, err := s.Repo.GetIssueReportsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -184,7 +183,7 @@ func (s *Service) GetIssueReportsPaginated(ctx context.Context, params query.Par
 	return responses, count, nil
 }
 
-func (s *Service) GetIssueReportsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.IssueReportListResponse, error) {
+func (s *Service) GetIssueReportsCursor(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReportListResponse, error) {
 	listItems, err := s.Repo.GetIssueReportsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
@@ -214,7 +213,7 @@ func (s *Service) CheckIssueReportExists(ctx context.Context, issueReportId stri
 	return exists, nil
 }
 
-func (s *Service) CountIssueReports(ctx context.Context, params query.Params) (int64, error) {
+func (s *Service) CountIssueReports(ctx context.Context, params domain.IssueReportParams) (int64, error) {
 	count, err := s.Repo.CountIssueReports(ctx, params)
 	if err != nil {
 		return 0, err

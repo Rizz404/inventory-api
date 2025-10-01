@@ -1,6 +1,8 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 // --- Enums ---
 
@@ -70,6 +72,36 @@ type CreateScanLogPayload struct {
 	ScanLocationLat *float64       `json:"scanLocationLat,omitempty" validate:"omitempty,latitude"`
 	ScanLocationLng *float64       `json:"scanLocationLng,omitempty" validate:"omitempty,longitude"`
 	ScanResult      ScanResultType `json:"scanResult"`
+}
+
+// --- Query Parameters ---
+
+type ScanLogFilterOptions struct {
+	ScanMethod     *ScanMethodType `json:"scanMethod,omitempty"`
+	ScanResult     *ScanResultType `json:"scanResult,omitempty"`
+	ScannedBy      *string         `json:"scannedBy,omitempty"`
+	AssetID        *string         `json:"assetId,omitempty"`
+	DateFrom       *time.Time      `json:"dateFrom,omitempty"`
+	DateTo         *time.Time      `json:"dateTo,omitempty"`
+	HasCoordinates *bool           `json:"hasCoordinates,omitempty"`
+}
+
+type ScanLogSortOptions struct {
+	Field string `json:"field"`
+	Order string `json:"order"`
+}
+
+type ScanLogPaginationOptions struct {
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
+	Cursor string `json:"cursor"`
+}
+
+type ScanLogParams struct {
+	SearchQuery *string                   `json:"searchQuery,omitempty"`
+	Filters     *ScanLogFilterOptions     `json:"filters,omitempty"`
+	Sort        *ScanLogSortOptions       `json:"sort,omitempty"`
+	Pagination  *ScanLogPaginationOptions `json:"pagination,omitempty"`
 }
 
 // --- Statistics ---

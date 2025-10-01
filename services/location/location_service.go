@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
@@ -17,14 +16,14 @@ type Repository interface {
 	DeleteLocation(ctx context.Context, locationId string) error
 
 	// * QUERY
-	GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error)
-	GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error)
+	GetLocationsPaginated(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.Location, error)
+	GetLocationsCursor(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.Location, error)
 	GetLocationById(ctx context.Context, locationId string) (domain.Location, error)
 	GetLocationByCode(ctx context.Context, locationCode string) (domain.Location, error)
 	CheckLocationExist(ctx context.Context, locationId string) (bool, error)
 	CheckLocationCodeExist(ctx context.Context, locationCode string) (bool, error)
 	CheckLocationCodeExistExcluding(ctx context.Context, locationCode string, excludeLocationId string) (bool, error)
-	CountLocations(ctx context.Context, params query.Params) (int64, error)
+	CountLocations(ctx context.Context, params domain.LocationParams) (int64, error)
 	GetLocationStatistics(ctx context.Context) (domain.LocationStatistics, error)
 }
 
@@ -36,13 +35,13 @@ type LocationService interface {
 	DeleteLocation(ctx context.Context, locationId string) error
 
 	// * QUERY
-	GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListResponse, int64, error)
-	GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListResponse, error)
+	GetLocationsPaginated(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationListResponse, int64, error)
+	GetLocationsCursor(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationListResponse, error)
 	GetLocationById(ctx context.Context, locationId string, langCode string) (domain.LocationResponse, error)
 	GetLocationByCode(ctx context.Context, locationCode string, langCode string) (domain.LocationResponse, error)
 	CheckLocationExists(ctx context.Context, locationId string) (bool, error)
 	CheckLocationCodeExists(ctx context.Context, locationCode string) (bool, error)
-	CountLocations(ctx context.Context, params query.Params) (int64, error)
+	CountLocations(ctx context.Context, params domain.LocationParams) (int64, error)
 	GetLocationStatistics(ctx context.Context) (domain.LocationStatisticsResponse, error)
 }
 
@@ -129,7 +128,7 @@ func (s *Service) DeleteLocation(ctx context.Context, locationId string) error {
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListResponse, int64, error) {
+func (s *Service) GetLocationsPaginated(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationListResponse, int64, error) {
 	locations, err := s.Repo.GetLocationsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -147,7 +146,7 @@ func (s *Service) GetLocationsPaginated(ctx context.Context, params query.Params
 	return responses, count, nil
 }
 
-func (s *Service) GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.LocationListResponse, error) {
+func (s *Service) GetLocationsCursor(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationListResponse, error) {
 	locations, err := s.Repo.GetLocationsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
@@ -195,7 +194,7 @@ func (s *Service) CheckLocationCodeExists(ctx context.Context, locationCode stri
 	return exists, nil
 }
 
-func (s *Service) CountLocations(ctx context.Context, params query.Params) (int64, error) {
+func (s *Service) CountLocations(ctx context.Context, params domain.LocationParams) (int64, error) {
 	count, err := s.Repo.CountLocations(ctx, params)
 	if err != nil {
 		return 0, err

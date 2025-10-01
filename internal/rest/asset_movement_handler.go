@@ -5,8 +5,6 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/rest/middleware"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/internal/web"
@@ -53,8 +51,8 @@ func NewAssetMovementHandler(app fiber.Router, s asset_movement.AssetMovementSer
 	)
 }
 
-func (h *AssetMovementHandler) parseAssetMovementFiltersAndSort(c *fiber.Ctx) (query.Params, error) {
-	params := query.Params{}
+func (h *AssetMovementHandler) parseAssetMovementFiltersAndSort(c *fiber.Ctx) (domain.AssetMovementParams, error) {
+	params := domain.AssetMovementParams{}
 
 	// * Parse search query
 	search := c.Query("search")
@@ -65,14 +63,14 @@ func (h *AssetMovementHandler) parseAssetMovementFiltersAndSort(c *fiber.Ctx) (q
 	// * Parse sorting options
 	sortBy := c.Query("sort_by")
 	if sortBy != "" {
-		params.Sort = &query.SortOptions{
+		params.Sort = &domain.AssetMovementSortOptions{
 			Field: sortBy,
 			Order: c.Query("sort_order", "desc"),
 		}
 	}
 
 	// * Parse filtering options
-	filters := &postgresql.AssetMovementFilterOptions{}
+	filters := &domain.AssetMovementFilterOptions{}
 
 	// Parse asset ID filter
 	if assetID := c.Query("asset_id"); assetID != "" {
@@ -185,7 +183,7 @@ func (h *AssetMovementHandler) GetAssetMovementsPaginated(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.AssetMovementPaginationOptions{Limit: limit, Offset: offset}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)
@@ -206,7 +204,7 @@ func (h *AssetMovementHandler) GetAssetMovementsCursor(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &query.PaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.AssetMovementPaginationOptions{Limit: limit, Cursor: cursor}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)
@@ -255,7 +253,7 @@ func (h *AssetMovementHandler) GetAssetMovementsByAssetId(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.AssetMovementPaginationOptions{Limit: limit, Offset: offset}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)

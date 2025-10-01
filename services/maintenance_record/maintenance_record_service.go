@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
@@ -18,10 +17,10 @@ type Repository interface {
 	DeleteRecord(ctx context.Context, recordId string) error
 
 	// Record queries
-	GetRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecord, error)
-	GetRecordsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecord, error)
+	GetRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecord, error)
+	GetRecordsCursor(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecord, error)
 	GetRecordById(ctx context.Context, recordId string) (domain.MaintenanceRecord, error)
-	CountRecords(ctx context.Context, params query.Params) (int64, error)
+	CountRecords(ctx context.Context, params domain.MaintenanceRecordParams) (int64, error)
 	CheckRecordExist(ctx context.Context, recordId string) (bool, error)
 
 	// Statistics
@@ -45,11 +44,11 @@ type MaintenanceRecordService interface {
 	CreateMaintenanceRecord(ctx context.Context, payload *domain.CreateMaintenanceRecordPayload, performedBy string) (domain.MaintenanceRecordResponse, error)
 	UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.CreateMaintenanceRecordPayload) (domain.MaintenanceRecordResponse, error)
 	DeleteMaintenanceRecord(ctx context.Context, recordId string) error
-	GetMaintenanceRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordListResponse, int64, error)
-	GetMaintenanceRecordsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordListResponse, error)
+	GetMaintenanceRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, int64, error)
+	GetMaintenanceRecordsCursor(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, error)
 	GetMaintenanceRecordById(ctx context.Context, recordId string, langCode string) (domain.MaintenanceRecordResponse, error)
 	CheckMaintenanceRecordExists(ctx context.Context, recordId string) (bool, error)
-	CountMaintenanceRecords(ctx context.Context, params query.Params) (int64, error)
+	CountMaintenanceRecords(ctx context.Context, params domain.MaintenanceRecordParams) (int64, error)
 	GetMaintenanceRecordStatistics(ctx context.Context) (domain.MaintenanceRecordStatisticsResponse, error)
 }
 
@@ -185,7 +184,7 @@ func (s *Service) DeleteMaintenanceRecord(ctx context.Context, recordId string) 
 	return s.Repo.DeleteRecord(ctx, recordId)
 }
 
-func (s *Service) GetMaintenanceRecordsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordListResponse, int64, error) {
+func (s *Service) GetMaintenanceRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, int64, error) {
 	records, err := s.Repo.GetRecordsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -200,7 +199,7 @@ func (s *Service) GetMaintenanceRecordsPaginated(ctx context.Context, params que
 	return recordResponses, count, nil
 }
 
-func (s *Service) GetMaintenanceRecordsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceRecordListResponse, error) {
+func (s *Service) GetMaintenanceRecordsCursor(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, error) {
 	records, err := s.Repo.GetRecordsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
@@ -223,7 +222,7 @@ func (s *Service) CheckMaintenanceRecordExists(ctx context.Context, recordId str
 	return s.Repo.CheckRecordExist(ctx, recordId)
 }
 
-func (s *Service) CountMaintenanceRecords(ctx context.Context, params query.Params) (int64, error) {
+func (s *Service) CountMaintenanceRecords(ctx context.Context, params domain.MaintenanceRecordParams) (int64, error) {
 	return s.Repo.CountRecords(ctx, params)
 }
 

@@ -9,7 +9,6 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"gorm.io/gorm"
 )
@@ -18,54 +17,43 @@ type ScanLogRepository struct {
 	db *gorm.DB
 }
 
-type ScanLogFilterOptions struct {
-	ScanMethod     *domain.ScanMethodType `json:"scanMethod,omitempty"`
-	ScanResult     *domain.ScanResultType `json:"scanResult,omitempty"`
-	ScannedBy      *string                `json:"scannedBy,omitempty"`
-	AssetID        *string                `json:"assetId,omitempty"`
-	DateFrom       *time.Time             `json:"dateFrom,omitempty"`
-	DateTo         *time.Time             `json:"dateTo,omitempty"`
-	HasCoordinates *bool                  `json:"hasCoordinates,omitempty"`
-}
-
 func NewScanLogRepository(db *gorm.DB) *ScanLogRepository {
 	return &ScanLogRepository{
 		db: db,
 	}
 }
 
-func (r *ScanLogRepository) applyScanLogFilters(db *gorm.DB, filters any) *gorm.DB {
-	f, ok := filters.(*ScanLogFilterOptions)
-	if !ok || f == nil {
+func (r *ScanLogRepository) applyScanLogFilters(db *gorm.DB, filters *domain.ScanLogFilterOptions) *gorm.DB {
+	if filters == nil {
 		return db
 	}
 
-	if f.ScanMethod != nil {
-		db = db.Where("sl.scan_method = ?", *f.ScanMethod)
+	if filters.ScanMethod != nil {
+		db = db.Where("sl.scan_method = ?", *filters.ScanMethod)
 	}
 
-	if f.ScanResult != nil {
-		db = db.Where("sl.scan_result = ?", *f.ScanResult)
+	if filters.ScanResult != nil {
+		db = db.Where("sl.scan_result = ?", *filters.ScanResult)
 	}
 
-	if f.ScannedBy != nil {
-		db = db.Where("sl.scanned_by = ?", *f.ScannedBy)
+	if filters.ScannedBy != nil {
+		db = db.Where("sl.scanned_by = ?", *filters.ScannedBy)
 	}
 
-	if f.AssetID != nil {
-		db = db.Where("sl.asset_id = ?", *f.AssetID)
+	if filters.AssetID != nil {
+		db = db.Where("sl.asset_id = ?", *filters.AssetID)
 	}
 
-	if f.DateFrom != nil {
-		db = db.Where("sl.scan_timestamp >= ?", *f.DateFrom)
+	if filters.DateFrom != nil {
+		db = db.Where("sl.scan_timestamp >= ?", *filters.DateFrom)
 	}
 
-	if f.DateTo != nil {
-		db = db.Where("sl.scan_timestamp <= ?", *f.DateTo)
+	if filters.DateTo != nil {
+		db = db.Where("sl.scan_timestamp <= ?", *filters.DateTo)
 	}
 
-	if f.HasCoordinates != nil {
-		if *f.HasCoordinates {
+	if filters.HasCoordinates != nil {
+		if *filters.HasCoordinates {
 			db = db.Where("sl.scan_location_lat IS NOT NULL AND sl.scan_location_lng IS NOT NULL")
 		} else {
 			db = db.Where("sl.scan_location_lat IS NULL OR sl.scan_location_lng IS NULL")
@@ -75,7 +63,7 @@ func (r *ScanLogRepository) applyScanLogFilters(db *gorm.DB, filters any) *gorm.
 	return db
 }
 
-func (r *ScanLogRepository) applyScanLogSorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
+func (r *ScanLogRepository) applyScanLogSorts(db *gorm.DB, sort *domain.ScanLogSortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("sl.scan_timestamp DESC")
 	}
@@ -116,7 +104,7 @@ func (r *ScanLogRepository) DeleteScanLog(ctx context.Context, scanLogId string)
 }
 
 // *===========================QUERY===========================*
-func (r *ScanLogRepository) GetScanLogsPaginated(ctx context.Context, params query.Params) ([]domain.ScanLog, error) {
+func (r *ScanLogRepository) GetScanLogsPaginated(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLog, error) {
 	var scanLogs []model.ScanLog
 	db := r.db.WithContext(ctx).
 		Table("scan_logs sl").
@@ -128,9 +116,21 @@ func (r *ScanLogRepository) GetScanLogsPaginated(ctx context.Context, params que
 		db = db.Where("sl.scanned_value ILIKE ?", searchPattern)
 	}
 
-	// Set pagination cursor to empty for offset-based pagination
-	params.Pagination.Cursor = ""
-	db = query.Apply(db, params, r.applyScanLogFilters, r.applyScanLogSorts)
+	// Apply filters
+	db = r.applyScanLogFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyScanLogSorts(db, params.Sort)
+
+	// Apply pagination
+	if params.Pagination != nil {
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+		if params.Pagination.Offset > 0 {
+			db = db.Offset(params.Pagination.Offset)
+		}
+	}
 
 	if err := db.Find(&scanLogs).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -140,7 +140,7 @@ func (r *ScanLogRepository) GetScanLogsPaginated(ctx context.Context, params que
 	return mapper.ToDomainScanLogs(scanLogs), nil
 }
 
-func (r *ScanLogRepository) GetScanLogsCursor(ctx context.Context, params query.Params) ([]domain.ScanLog, error) {
+func (r *ScanLogRepository) GetScanLogsCursor(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLog, error) {
 	var scanLogs []model.ScanLog
 	db := r.db.WithContext(ctx).
 		Table("scan_logs sl").
@@ -152,9 +152,21 @@ func (r *ScanLogRepository) GetScanLogsCursor(ctx context.Context, params query.
 		db = db.Where("sl.scanned_value ILIKE ?", searchPattern)
 	}
 
-	// Set offset to 0 for cursor-based pagination
-	params.Pagination.Offset = 0
-	db = query.Apply(db, params, r.applyScanLogFilters, r.applyScanLogSorts)
+	// Apply filters
+	db = r.applyScanLogFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyScanLogSorts(db, params.Sort)
+
+	// Apply cursor-based pagination
+	if params.Pagination != nil {
+		if params.Pagination.Cursor != "" {
+			db = db.Where("c.id > ?", params.Pagination.Cursor)
+		}
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+	}
 
 	if err := db.Find(&scanLogs).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -181,7 +193,7 @@ func (r *ScanLogRepository) GetScanLogById(ctx context.Context, scanLogId string
 	return mapper.ToDomainScanLog(&scanLog), nil
 }
 
-func (r *ScanLogRepository) GetScanLogsByAssetId(ctx context.Context, assetId string, params query.Params) ([]domain.ScanLog, error) {
+func (r *ScanLogRepository) GetScanLogsByAssetId(ctx context.Context, assetId string, params domain.ScanLogParams) ([]domain.ScanLog, error) {
 	var scanLogs []model.ScanLog
 	db := r.db.WithContext(ctx).
 		Table("scan_logs sl").
@@ -189,7 +201,21 @@ func (r *ScanLogRepository) GetScanLogsByAssetId(ctx context.Context, assetId st
 		Preload("Asset").
 		Preload("ScannedByUser")
 
-	db = query.Apply(db, params, r.applyScanLogFilters, r.applyScanLogSorts)
+		// Apply filters
+	db = r.applyScanLogFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyScanLogSorts(db, params.Sort)
+
+	// Apply cursor-based pagination
+	if params.Pagination != nil {
+		if params.Pagination.Cursor != "" {
+			db = db.Where("c.id > ?", params.Pagination.Cursor)
+		}
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+	}
 
 	if err := db.Find(&scanLogs).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -198,7 +224,7 @@ func (r *ScanLogRepository) GetScanLogsByAssetId(ctx context.Context, assetId st
 	return mapper.ToDomainScanLogs(scanLogs), nil
 }
 
-func (r *ScanLogRepository) GetScanLogsByUserId(ctx context.Context, userId string, params query.Params) ([]domain.ScanLog, error) {
+func (r *ScanLogRepository) GetScanLogsByUserId(ctx context.Context, userId string, params domain.ScanLogParams) ([]domain.ScanLog, error) {
 	var scanLogs []model.ScanLog
 	db := r.db.WithContext(ctx).
 		Table("scan_logs sl").
@@ -206,7 +232,21 @@ func (r *ScanLogRepository) GetScanLogsByUserId(ctx context.Context, userId stri
 		Preload("Asset").
 		Preload("ScannedByUser")
 
-	db = query.Apply(db, params, r.applyScanLogFilters, r.applyScanLogSorts)
+	// Apply filters
+	db = r.applyScanLogFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyScanLogSorts(db, params.Sort)
+
+	// Apply cursor-based pagination
+	if params.Pagination != nil {
+		if params.Pagination.Cursor != "" {
+			db = db.Where("c.id > ?", params.Pagination.Cursor)
+		}
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+	}
 
 	if err := db.Find(&scanLogs).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -224,7 +264,7 @@ func (r *ScanLogRepository) CheckScanLogExist(ctx context.Context, scanLogId str
 	return count > 0, nil
 }
 
-func (r *ScanLogRepository) CountScanLogs(ctx context.Context, params query.Params) (int64, error) {
+func (r *ScanLogRepository) CountScanLogs(ctx context.Context, params domain.ScanLogParams) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Table("scan_logs sl")
 
@@ -233,7 +273,8 @@ func (r *ScanLogRepository) CountScanLogs(ctx context.Context, params query.Para
 		db = db.Where("sl.scanned_value ILIKE ?", searchPattern)
 	}
 
-	db = query.Apply(db, query.Params{Filters: params.Filters}, r.applyScanLogFilters, nil)
+	// Apply filters
+	db = r.applyScanLogFilters(db, params.Filters)
 
 	if err := db.Count(&count).Error; err != nil {
 		return 0, domain.ErrInternal(err)

@@ -9,7 +9,6 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"gorm.io/gorm"
 )
@@ -34,37 +33,36 @@ func NewAssetRepository(db *gorm.DB) *AssetRepository {
 	}
 }
 
-func (r *AssetRepository) applyAssetFilters(db *gorm.DB, filters any) *gorm.DB {
-	f, ok := filters.(*AssetFilterOptions)
-	if !ok || f == nil {
+func (r *AssetRepository) applyAssetFilters(db *gorm.DB, filters *domain.AssetFilterOptions) *gorm.DB {
+	if filters == nil {
 		return db
 	}
 
-	if f.Status != nil {
-		db = db.Where("a.status = ?", f.Status)
+	if filters.Status != nil {
+		db = db.Where("a.status = ?", filters.Status)
 	}
-	if f.Condition != nil {
-		db = db.Where("a.condition_status = ?", f.Condition)
+	if filters.Condition != nil {
+		db = db.Where("a.condition_status = ?", filters.Condition)
 	}
-	if f.CategoryID != nil {
-		db = db.Where("a.category_id = ?", f.CategoryID)
+	if filters.CategoryID != nil {
+		db = db.Where("a.category_id = ?", filters.CategoryID)
 	}
-	if f.LocationID != nil {
-		db = db.Where("a.location_id = ?", f.LocationID)
+	if filters.LocationID != nil {
+		db = db.Where("a.location_id = ?", filters.LocationID)
 	}
-	if f.AssignedTo != nil {
-		db = db.Where("a.assigned_to = ?", f.AssignedTo)
+	if filters.AssignedTo != nil {
+		db = db.Where("a.assigned_to = ?", filters.AssignedTo)
 	}
-	if f.Brand != nil {
-		db = db.Where("a.brand ILIKE ?", "%"+*f.Brand+"%")
+	if filters.Brand != nil {
+		db = db.Where("a.brand ILIKE ?", "%"+*filters.Brand+"%")
 	}
-	if f.Model != nil {
-		db = db.Where("a.model ILIKE ?", "%"+*f.Model+"%")
+	if filters.Model != nil {
+		db = db.Where("a.model ILIKE ?", "%"+*filters.Model+"%")
 	}
 	return db
 }
 
-func (r *AssetRepository) applyAssetSorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
+func (r *AssetRepository) applyAssetSorts(db *gorm.DB, sort *domain.AssetSortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("a.created_at DESC")
 	}
@@ -73,7 +71,7 @@ func (r *AssetRepository) applyAssetSorts(db *gorm.DB, sort *query.SortOptions) 
 	case "asset_tag", "asset_name", "brand", "model", "serial_number", "purchase_date", "purchase_price", "vendor_name", "warranty_end", "status", "condition_status", "created_at", "updated_at":
 		orderClause = "a." + sort.Field
 	default:
-		return db.Order("a.created_at DESC")
+		orderClause = "a.created_at"
 	}
 
 	order := "DESC"
@@ -129,7 +127,7 @@ func (r *AssetRepository) DeleteAsset(ctx context.Context, assetId string) error
 }
 
 // *===========================QUERY===========================*
-func (r *AssetRepository) GetAssetsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Asset, error) {
+func (r *AssetRepository) GetAssetsPaginated(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.Asset, error) {
 	var assets []model.Asset
 	db := r.db.WithContext(ctx).
 		Table("assets a").
@@ -145,9 +143,21 @@ func (r *AssetRepository) GetAssetsPaginated(ctx context.Context, params query.P
 			searchPattern, searchPattern, searchPattern, searchPattern, searchPattern)
 	}
 
-	// Use offset-based pagination (disable cursor-based pagination)
-	params.Pagination.Cursor = ""
-	db = query.Apply(db, params, r.applyAssetFilters, r.applyAssetSorts)
+	// Apply filters
+	db = r.applyAssetFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyAssetSorts(db, params.Sort)
+
+	// Apply pagination
+	if params.Pagination != nil {
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+		if params.Pagination.Offset > 0 {
+			db = db.Offset(params.Pagination.Offset)
+		}
+	}
 
 	if err := db.Find(&assets).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -157,7 +167,7 @@ func (r *AssetRepository) GetAssetsPaginated(ctx context.Context, params query.P
 	return mapper.ToDomainAssets(assets), nil
 }
 
-func (r *AssetRepository) GetAssetsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Asset, error) {
+func (r *AssetRepository) GetAssetsCursor(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.Asset, error) {
 	var assets []model.Asset
 	db := r.db.WithContext(ctx).
 		Table("assets a").
@@ -173,9 +183,22 @@ func (r *AssetRepository) GetAssetsCursor(ctx context.Context, params query.Para
 			searchPattern, searchPattern, searchPattern, searchPattern, searchPattern)
 	}
 
-	// Use cursor-based pagination (disable offset-based pagination)
-	params.Pagination.Offset = 0
-	db = query.Apply(db, params, r.applyAssetFilters, r.applyAssetSorts)
+	// Apply filters
+	db = r.applyAssetFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyAssetSorts(db, params.Sort)
+
+	// Apply cursor-based pagination
+	if params.Pagination != nil {
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+		if params.Pagination.Cursor != "" {
+			// Assuming sorting DESC by ID for cursor
+			db = db.Where("a.id < ?", params.Pagination.Cursor)
+		}
+	}
 
 	if err := db.Find(&assets).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -270,7 +293,7 @@ func (r *AssetRepository) CheckSerialNumberExistsExcluding(ctx context.Context, 
 	return count > 0, nil
 }
 
-func (r *AssetRepository) CountAssets(ctx context.Context, params query.Params) (int64, error) {
+func (r *AssetRepository) CountAssets(ctx context.Context, params domain.AssetParams) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Table("assets a")
 
@@ -280,7 +303,8 @@ func (r *AssetRepository) CountAssets(ctx context.Context, params query.Params) 
 			searchPattern, searchPattern, searchPattern, searchPattern, searchPattern)
 	}
 
-	db = query.Apply(db, query.Params{Filters: params.Filters}, r.applyAssetFilters, nil)
+	// Apply filters
+	db = r.applyAssetFilters(db, params.Filters)
 
 	if err := db.Count(&count).Error; err != nil {
 		return 0, domain.ErrInternal(err)

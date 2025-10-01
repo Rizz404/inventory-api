@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
@@ -18,12 +17,12 @@ type Repository interface {
 	DeleteAssetMovement(ctx context.Context, movementId string) error
 
 	// * QUERY
-	GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovement, error)
-	GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovement, error)
+	GetAssetMovementsPaginated(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovement, error)
+	GetAssetMovementsCursor(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovement, error)
 	GetAssetMovementById(ctx context.Context, movementId string) (domain.AssetMovement, error)
-	GetAssetMovementsByAssetId(ctx context.Context, assetId string, params query.Params) ([]domain.AssetMovement, error)
+	GetAssetMovementsByAssetId(ctx context.Context, assetId string, params domain.AssetMovementParams) ([]domain.AssetMovement, error)
 	CheckAssetMovementExist(ctx context.Context, movementId string) (bool, error)
-	CountAssetMovements(ctx context.Context, params query.Params) (int64, error)
+	CountAssetMovements(ctx context.Context, params domain.AssetMovementParams) (int64, error)
 	GetAssetMovementStatistics(ctx context.Context) (domain.AssetMovementStatistics, error)
 }
 
@@ -51,12 +50,12 @@ type AssetMovementService interface {
 	DeleteAssetMovement(ctx context.Context, movementId string) error
 
 	// * QUERY
-	GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListResponse, int64, error)
-	GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListResponse, error)
+	GetAssetMovementsPaginated(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, int64, error)
+	GetAssetMovementsCursor(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, error)
 	GetAssetMovementById(ctx context.Context, movementId string, langCode string) (domain.AssetMovementResponse, error)
-	GetAssetMovementsByAssetId(ctx context.Context, assetId string, params query.Params, langCode string) ([]domain.AssetMovementListResponse, error)
+	GetAssetMovementsByAssetId(ctx context.Context, assetId string, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, error)
 	CheckAssetMovementExists(ctx context.Context, movementId string) (bool, error)
-	CountAssetMovements(ctx context.Context, params query.Params) (int64, error)
+	CountAssetMovements(ctx context.Context, params domain.AssetMovementParams) (int64, error)
 	GetAssetMovementStatistics(ctx context.Context) (domain.AssetMovementStatisticsResponse, error)
 }
 
@@ -215,7 +214,7 @@ func (s *Service) DeleteAssetMovement(ctx context.Context, movementId string) er
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetAssetMovementsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListResponse, int64, error) {
+func (s *Service) GetAssetMovementsPaginated(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, int64, error) {
 	listItems, err := s.Repo.GetAssetMovementsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -233,7 +232,7 @@ func (s *Service) GetAssetMovementsPaginated(ctx context.Context, params query.P
 	return responses, count, nil
 }
 
-func (s *Service) GetAssetMovementsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetMovementListResponse, error) {
+func (s *Service) GetAssetMovementsCursor(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, error) {
 	listItems, err := s.Repo.GetAssetMovementsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
@@ -255,7 +254,7 @@ func (s *Service) GetAssetMovementById(ctx context.Context, movementId string, l
 	return mapper.AssetMovementToResponse(&movement, langCode), nil
 }
 
-func (s *Service) GetAssetMovementsByAssetId(ctx context.Context, assetId string, params query.Params, langCode string) ([]domain.AssetMovementListResponse, error) {
+func (s *Service) GetAssetMovementsByAssetId(ctx context.Context, assetId string, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, error) {
 	// * Check if asset exists
 	if assetExists, err := s.AssetService.CheckAssetExists(ctx, assetId); err != nil {
 		return nil, err
@@ -282,7 +281,7 @@ func (s *Service) CheckAssetMovementExists(ctx context.Context, movementId strin
 	return exists, nil
 }
 
-func (s *Service) CountAssetMovements(ctx context.Context, params query.Params) (int64, error) {
+func (s *Service) CountAssetMovements(ctx context.Context, params domain.AssetMovementParams) (int64, error) {
 	count, err := s.Repo.CountAssetMovements(ctx, params)
 	if err != nil {
 		return 0, err

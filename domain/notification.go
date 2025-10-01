@@ -89,6 +89,33 @@ type UpdateNotificationPayload struct {
 	Translations []CreateNotificationTranslationPayload `json:"translations,omitempty"`
 }
 
+// --- Query Parameters ---
+
+type NotificationFilterOptions struct {
+	UserID         *string           `json:"userId,omitempty"`
+	RelatedAssetID *string           `json:"relatedAssetId,omitempty"`
+	Type           *NotificationType `json:"type,omitempty"`
+	IsRead         *bool             `json:"isRead,omitempty"`
+}
+
+type NotificationSortOptions struct {
+	Field string `json:"field"`
+	Order string `json:"order"`
+}
+
+type NotificationPaginationOptions struct {
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
+	Cursor string `json:"cursor"`
+}
+
+type NotificationParams struct {
+	SearchQuery *string                        `json:"searchQuery,omitempty"`
+	Filters     *NotificationFilterOptions     `json:"filters,omitempty"`
+	Sort        *NotificationSortOptions       `json:"sort,omitempty"`
+	Pagination  *NotificationPaginationOptions `json:"pagination,omitempty"`
+}
+
 // --- Statistics ---
 
 // Internal statistics structs (used in repository layer)

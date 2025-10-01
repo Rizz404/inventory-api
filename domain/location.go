@@ -83,6 +83,29 @@ type UpdateLocationTranslationPayload struct {
 	LocationName *string `json:"locationName,omitempty" validate:"omitempty,max=100"`
 }
 
+// --- Query Parameters ---
+
+type LocationFilterOptions struct {
+}
+
+type LocationSortOptions struct {
+	Field string `json:"field"`
+	Order string `json:"order"`
+}
+
+type LocationPaginationOptions struct {
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
+	Cursor string `json:"cursor"`
+}
+
+type LocationParams struct {
+	SearchQuery *string                    `json:"searchQuery,omitempty"`
+	Filters     *LocationFilterOptions     `json:"filters,omitempty"`
+	Sort        *LocationSortOptions       `json:"sort,omitempty"`
+	Pagination  *LocationPaginationOptions `json:"pagination,omitempty"`
+}
+
 // --- Statistics ---
 
 // Internal statistics structs (used in repository layer)

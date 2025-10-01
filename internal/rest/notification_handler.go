@@ -4,8 +4,6 @@ import (
 	"strconv"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/rest/middleware"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/internal/web"
@@ -75,8 +73,8 @@ func NewNotificationHandler(app fiber.Router, s notification.NotificationService
 	)
 }
 
-func (h *NotificationHandler) parseNotificationFiltersAndSort(c *fiber.Ctx) (query.Params, error) {
-	params := query.Params{}
+func (h *NotificationHandler) parseNotificationFiltersAndSort(c *fiber.Ctx) (domain.NotificationParams, error) {
+	params := domain.NotificationParams{}
 
 	// * Parse search query
 	search := c.Query("search")
@@ -87,14 +85,14 @@ func (h *NotificationHandler) parseNotificationFiltersAndSort(c *fiber.Ctx) (que
 	// * Parse sorting options
 	sortBy := c.Query("sort_by")
 	if sortBy != "" {
-		params.Sort = &query.SortOptions{
+		params.Sort = &domain.NotificationSortOptions{
 			Field: sortBy,
 			Order: c.Query("sort_order", "desc"),
 		}
 	}
 
 	// * Parse filtering options
-	filters := &postgresql.NotificationFilterOptions{}
+	filters := &domain.NotificationFilterOptions{}
 
 	if userID := c.Query("user_id"); userID != "" {
 		filters.UserID = &userID
@@ -228,15 +226,15 @@ func (h *NotificationHandler) GetNotificationsPaginated(c *fiber.Ctx) error {
 	// If user is authenticated, automatically filter by their notifications unless explicitly filtering by user_id
 	if userID := c.Locals("userID"); userID != nil && c.Query("user_id") == "" {
 		if userIDStr, ok := userID.(string); ok {
-			if filters, ok := params.Filters.(*postgresql.NotificationFilterOptions); ok {
-				filters.UserID = &userIDStr
+			if params.Filters != nil {
+				params.Filters.UserID = &userIDStr
 			}
 		}
 	}
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.NotificationPaginationOptions{Limit: limit, Offset: offset}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)
@@ -258,15 +256,15 @@ func (h *NotificationHandler) GetNotificationsCursor(c *fiber.Ctx) error {
 	// If user is authenticated, automatically filter by their notifications unless explicitly filtering by user_id
 	if userID := c.Locals("userID"); userID != nil && c.Query("user_id") == "" {
 		if userIDStr, ok := userID.(string); ok {
-			if filters, ok := params.Filters.(*postgresql.NotificationFilterOptions); ok {
-				filters.UserID = &userIDStr
+			if params.Filters != nil {
+				params.Filters.UserID = &userIDStr
 			}
 		}
 	}
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &query.PaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.NotificationPaginationOptions{Limit: limit, Cursor: cursor}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)
@@ -325,8 +323,8 @@ func (h *NotificationHandler) CountNotifications(c *fiber.Ctx) error {
 	// If user is authenticated, automatically filter by their notifications unless explicitly filtering by user_id
 	if userID := c.Locals("userID"); userID != nil && c.Query("user_id") == "" {
 		if userIDStr, ok := userID.(string); ok {
-			if filters, ok := params.Filters.(*postgresql.NotificationFilterOptions); ok {
-				filters.UserID = &userIDStr
+			if params.Filters != nil {
+				params.Filters.UserID = &userIDStr
 			}
 		}
 	}

@@ -9,7 +9,6 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
@@ -25,42 +24,32 @@ func NewMaintenanceScheduleRepository(db *gorm.DB) *MaintenanceScheduleRepositor
 
 // ===== Filters and Sorts =====
 
-type MaintenanceScheduleFilterOptions struct {
-	AssetID         *string                         `json:"assetId,omitempty"`
-	MaintenanceType *domain.MaintenanceScheduleType `json:"maintenanceType,omitempty"`
-	Status          *domain.ScheduleStatus          `json:"status,omitempty"`
-	CreatedBy       *string                         `json:"createdBy,omitempty"`
-	FromDate        *string                         `json:"fromDate,omitempty"` // YYYY-MM-DD
-	ToDate          *string                         `json:"toDate,omitempty"`   // YYYY-MM-DD
-}
-
-func (r *MaintenanceScheduleRepository) applyScheduleFilters(db *gorm.DB, filters any) *gorm.DB {
-	f, ok := filters.(*MaintenanceScheduleFilterOptions)
-	if !ok || f == nil {
+func (r *MaintenanceScheduleRepository) applyScheduleFilters(db *gorm.DB, filters *domain.MaintenanceScheduleFilterOptions) *gorm.DB {
+	if filters == nil {
 		return db
 	}
-	if f.AssetID != nil && *f.AssetID != "" {
-		db = db.Where("ms.asset_id = ?", f.AssetID)
+	if filters.AssetID != nil && *filters.AssetID != "" {
+		db = db.Where("ms.asset_id = ?", filters.AssetID)
 	}
-	if f.MaintenanceType != nil && *f.MaintenanceType != "" {
-		db = db.Where("ms.maintenance_type = ?", f.MaintenanceType)
+	if filters.MaintenanceType != nil && *filters.MaintenanceType != "" {
+		db = db.Where("ms.maintenance_type = ?", filters.MaintenanceType)
 	}
-	if f.Status != nil && *f.Status != "" {
-		db = db.Where("ms.status = ?", f.Status)
+	if filters.Status != nil && *filters.Status != "" {
+		db = db.Where("ms.status = ?", filters.Status)
 	}
-	if f.CreatedBy != nil && *f.CreatedBy != "" {
-		db = db.Where("ms.created_by = ?", f.CreatedBy)
+	if filters.CreatedBy != nil && *filters.CreatedBy != "" {
+		db = db.Where("ms.created_by = ?", filters.CreatedBy)
 	}
-	if f.FromDate != nil && *f.FromDate != "" {
-		db = db.Where("ms.scheduled_date >= ?", *f.FromDate)
+	if filters.FromDate != nil && *filters.FromDate != "" {
+		db = db.Where("ms.scheduled_date >= ?", *filters.FromDate)
 	}
-	if f.ToDate != nil && *f.ToDate != "" {
-		db = db.Where("ms.scheduled_date <= ?", *f.ToDate)
+	if filters.ToDate != nil && *filters.ToDate != "" {
+		db = db.Where("ms.scheduled_date <= ?", *filters.ToDate)
 	}
 	return db
 }
 
-func (r *MaintenanceScheduleRepository) applyScheduleSorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
+func (r *MaintenanceScheduleRepository) applyScheduleSorts(db *gorm.DB, sort *domain.MaintenanceScheduleSortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("ms.created_at DESC")
 	}
@@ -216,7 +205,7 @@ func (r *MaintenanceScheduleRepository) DeleteSchedule(ctx context.Context, sche
 
 // ===== QUERIES =====
 
-func (r *MaintenanceScheduleRepository) GetSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceSchedule, error) {
+func (r *MaintenanceScheduleRepository) GetSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceSchedule, error) {
 	var schedules []model.MaintenanceSchedule
 	db := r.db.WithContext(ctx).
 		Table("maintenance_schedules ms").
@@ -231,8 +220,17 @@ func (r *MaintenanceScheduleRepository) GetSchedulesPaginated(ctx context.Contex
 			Distinct("ms.id")
 	}
 
-	params.Pagination.Cursor = ""
-	db = query.Apply(db, params, r.applyScheduleFilters, r.applyScheduleSorts)
+	// Apply filters, sorts, and pagination manually
+	db = r.applyScheduleFilters(db, params.Filters)
+	db = r.applyScheduleSorts(db, params.Sort)
+	if params.Pagination != nil {
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+		if params.Pagination.Offset > 0 {
+			db = db.Offset(params.Pagination.Offset)
+		}
+	}
 
 	if err := db.Find(&schedules).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -240,7 +238,7 @@ func (r *MaintenanceScheduleRepository) GetSchedulesPaginated(ctx context.Contex
 	return mapper.ToDomainMaintenanceSchedules(schedules), nil
 }
 
-func (r *MaintenanceScheduleRepository) GetSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceSchedule, error) {
+func (r *MaintenanceScheduleRepository) GetSchedulesCursor(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceSchedule, error) {
 	var schedules []model.MaintenanceSchedule
 	db := r.db.WithContext(ctx).
 		Table("maintenance_schedules ms").
@@ -255,8 +253,17 @@ func (r *MaintenanceScheduleRepository) GetSchedulesCursor(ctx context.Context, 
 			Distinct("ms.id")
 	}
 
-	params.Pagination.Offset = 0
-	db = query.Apply(db, params, r.applyScheduleFilters, r.applyScheduleSorts)
+	// Apply filters, sorts, and cursor pagination manually
+	db = r.applyScheduleFilters(db, params.Filters)
+	db = r.applyScheduleSorts(db, params.Sort)
+	if params.Pagination != nil {
+		if params.Pagination.Cursor != "" {
+			db = db.Where("ms.id > ?", params.Pagination.Cursor)
+		}
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+	}
 
 	if err := db.Find(&schedules).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -289,7 +296,7 @@ func (r *MaintenanceScheduleRepository) CheckScheduleExist(ctx context.Context, 
 	return count > 0, nil
 }
 
-func (r *MaintenanceScheduleRepository) CountSchedules(ctx context.Context, params query.Params) (int64, error) {
+func (r *MaintenanceScheduleRepository) CountSchedules(ctx context.Context, params domain.MaintenanceScheduleParams) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Table("maintenance_schedules ms")
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
@@ -298,7 +305,7 @@ func (r *MaintenanceScheduleRepository) CountSchedules(ctx context.Context, para
 			Where("mst.title ILIKE ?", sq).
 			Distinct("ms.id")
 	}
-	db = query.Apply(db, query.Params{Filters: params.Filters}, r.applyScheduleFilters, nil)
+	db = r.applyScheduleFilters(db, params.Filters)
 	if err := db.Count(&count).Error; err != nil {
 		return 0, domain.ErrInternal(err)
 	}

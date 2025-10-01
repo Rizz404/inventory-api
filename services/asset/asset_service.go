@@ -8,7 +8,6 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/client/cloudinary"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/oklog/ulid/v2"
@@ -22,8 +21,8 @@ type Repository interface {
 	DeleteAsset(ctx context.Context, assetId string) error
 
 	// * QUERY
-	GetAssetsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Asset, error)
-	GetAssetsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Asset, error)
+	GetAssetsPaginated(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.Asset, error)
+	GetAssetsCursor(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.Asset, error)
 	GetAssetById(ctx context.Context, assetId string) (domain.Asset, error)
 	GetAssetByAssetTag(ctx context.Context, assetTag string) (domain.Asset, error)
 	CheckAssetExists(ctx context.Context, assetId string) (bool, error)
@@ -31,7 +30,7 @@ type Repository interface {
 	CheckSerialNumberExists(ctx context.Context, serialNumber string) (bool, error)
 	CheckAssetTagExistsExcluding(ctx context.Context, assetTag string, excludeAssetId string) (bool, error)
 	CheckSerialNumberExistsExcluding(ctx context.Context, serialNumber string, excludeAssetId string) (bool, error)
-	CountAssets(ctx context.Context, params query.Params) (int64, error)
+	CountAssets(ctx context.Context, params domain.AssetParams) (int64, error)
 	GetAssetStatistics(ctx context.Context) (domain.AssetStatistics, error)
 }
 
@@ -43,14 +42,14 @@ type AssetService interface {
 	DeleteAsset(ctx context.Context, assetId string) error
 
 	// * QUERY
-	GetAssetsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetResponse, int64, error)
-	GetAssetsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetResponse, error)
+	GetAssetsPaginated(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.AssetResponse, int64, error)
+	GetAssetsCursor(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.AssetResponse, error)
 	GetAssetById(ctx context.Context, assetId string, langCode string) (domain.AssetResponse, error)
 	GetAssetByAssetTag(ctx context.Context, assetTag string, langCode string) (domain.AssetResponse, error)
 	CheckAssetExists(ctx context.Context, assetId string) (bool, error)
 	CheckAssetTagExists(ctx context.Context, assetTag string) (bool, error)
 	CheckSerialNumberExists(ctx context.Context, serialNumber string) (bool, error)
-	CountAssets(ctx context.Context, params query.Params) (int64, error)
+	CountAssets(ctx context.Context, params domain.AssetParams) (int64, error)
 	GetAssetStatistics(ctx context.Context) (domain.AssetStatisticsResponse, error)
 }
 
@@ -273,7 +272,7 @@ func (s *Service) DeleteAsset(ctx context.Context, assetId string) error {
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetAssetsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.AssetResponse, int64, error) {
+func (s *Service) GetAssetsPaginated(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.AssetResponse, int64, error) {
 	assets, err := s.Repo.GetAssetsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -288,7 +287,7 @@ func (s *Service) GetAssetsPaginated(ctx context.Context, params query.Params, l
 	return mapper.AssetsToResponses(assets), count, nil
 }
 
-func (s *Service) GetAssetsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.AssetResponse, error) {
+func (s *Service) GetAssetsCursor(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.AssetResponse, error) {
 	assets, err := s.Repo.GetAssetsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
@@ -339,7 +338,7 @@ func (s *Service) CheckSerialNumberExists(ctx context.Context, serialNumber stri
 	return exists, nil
 }
 
-func (s *Service) CountAssets(ctx context.Context, params query.Params) (int64, error) {
+func (s *Service) CountAssets(ctx context.Context, params domain.AssetParams) (int64, error) {
 	count, err := s.Repo.CountAssets(ctx, params)
 	if err != nil {
 		return 0, err

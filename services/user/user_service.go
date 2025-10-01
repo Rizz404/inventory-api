@@ -7,7 +7,6 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/client/cloudinary"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/oklog/ulid/v2"
@@ -22,8 +21,8 @@ type Repository interface {
 	DeleteUser(ctx context.Context, userId string) error
 
 	// * QUERY
-	GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.User, error)
-	GetUsersCursor(ctx context.Context, params query.Params) ([]domain.User, error)
+	GetUsersPaginated(ctx context.Context, params domain.UserParams) ([]domain.User, error)
+	GetUsersCursor(ctx context.Context, params domain.UserParams) ([]domain.User, error)
 	GetUserById(ctx context.Context, userId string) (domain.User, error)
 	GetUserByName(ctx context.Context, name string) (domain.User, error)
 	GetUserByEmail(ctx context.Context, email string) (domain.User, error)
@@ -32,7 +31,7 @@ type Repository interface {
 	CheckEmailExists(ctx context.Context, email string) (bool, error)
 	CheckNameExistsExcluding(ctx context.Context, name string, excludeUserId string) (bool, error)
 	CheckEmailExistsExcluding(ctx context.Context, email string, excludeUserId string) (bool, error)
-	CountUsers(ctx context.Context, params query.Params) (int64, error)
+	CountUsers(ctx context.Context, params domain.UserParams) (int64, error)
 	GetUserStatistics(ctx context.Context) (domain.UserStatistics, error)
 }
 
@@ -44,15 +43,15 @@ type UserService interface {
 	DeleteUser(ctx context.Context, userId string) error
 
 	// * QUERY
-	GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.UserResponse, int64, error)
-	GetUsersCursor(ctx context.Context, params query.Params) ([]domain.UserResponse, error)
+	GetUsersPaginated(ctx context.Context, params domain.UserParams) ([]domain.UserResponse, int64, error)
+	GetUsersCursor(ctx context.Context, params domain.UserParams) ([]domain.UserResponse, error)
 	GetUserById(ctx context.Context, userId string) (domain.UserResponse, error)
 	GetUserByName(ctx context.Context, name string) (domain.UserResponse, error)
 	GetUserByEmail(ctx context.Context, email string) (domain.UserResponse, error)
 	CheckUserExists(ctx context.Context, userId string) (bool, error)
 	CheckNameExists(ctx context.Context, name string) (bool, error)
 	CheckEmailExists(ctx context.Context, email string) (bool, error)
-	CountUsers(ctx context.Context, params query.Params) (int64, error)
+	CountUsers(ctx context.Context, params domain.UserParams) (int64, error)
 	GetUserStatistics(ctx context.Context) (domain.UserStatisticsResponse, error)
 }
 
@@ -246,7 +245,7 @@ func (s *Service) DeleteUser(ctx context.Context, userId string) error {
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.UserResponse, int64, error) {
+func (s *Service) GetUsersPaginated(ctx context.Context, params domain.UserParams) ([]domain.UserResponse, int64, error) {
 	users, err := s.Repo.GetUsersPaginated(ctx, params)
 	if err != nil {
 		return nil, 0, err
@@ -264,7 +263,7 @@ func (s *Service) GetUsersPaginated(ctx context.Context, params query.Params) ([
 	return userResponses, count, nil
 }
 
-func (s *Service) GetUsersCursor(ctx context.Context, params query.Params) ([]domain.UserResponse, error) {
+func (s *Service) GetUsersCursor(ctx context.Context, params domain.UserParams) ([]domain.UserResponse, error) {
 	users, err := s.Repo.GetUsersCursor(ctx, params)
 	if err != nil {
 		return nil, err
@@ -330,7 +329,7 @@ func (s *Service) CheckEmailExists(ctx context.Context, email string) (bool, err
 	return exists, nil
 }
 
-func (s *Service) CountUsers(ctx context.Context, params query.Params) (int64, error) {
+func (s *Service) CountUsers(ctx context.Context, params domain.UserParams) (int64, error) {
 	count, err := s.Repo.CountUsers(ctx, params)
 	if err != nil {
 		return 0, err

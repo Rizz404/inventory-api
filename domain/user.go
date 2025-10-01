@@ -103,6 +103,32 @@ type UpdateUserPayload struct {
 	AvatarURL     *string   `json:"avatarUrl,omitempty" example:"https://example.com/avatar.jpg" form:"avatarUrl" validate:"omitempty,url"`
 }
 
+// --- Query Parameters ---
+
+type UserFilterOptions struct {
+	Role       *UserRole `json:"role,omitempty"`
+	IsActive   *bool     `json:"is_active,omitempty"`
+	EmployeeID *string   `json:"employee_id,omitempty"`
+}
+
+type UserSortOptions struct {
+	Field string `json:"field"`
+	Order string `json:"order"`
+}
+
+type UserPaginationOptions struct {
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
+	Cursor string `json:"cursor"`
+}
+
+type UserParams struct {
+	SearchQuery *string                `json:"searchQuery,omitempty"`
+	Filters     *UserFilterOptions     `json:"filters,omitempty"`
+	Sort        *UserSortOptions       `json:"sort,omitempty"`
+	Pagination  *UserPaginationOptions `json:"pagination,omitempty"`
+}
+
 // --- Statistics ---
 
 // Internal statistics structs (used in repository layer)

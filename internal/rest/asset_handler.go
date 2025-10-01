@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/rest/middleware"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/internal/web"
@@ -55,8 +53,8 @@ func NewAssetHandler(app fiber.Router, s asset.AssetService) {
 	)
 }
 
-func (h *AssetHandler) parseAssetFiltersAndSort(c *fiber.Ctx) (query.Params, error) {
-	params := query.Params{}
+func (h *AssetHandler) parseAssetFiltersAndSort(c *fiber.Ctx) (domain.AssetParams, error) {
+	params := domain.AssetParams{}
 
 	// * Parse search query
 	search := c.Query("search")
@@ -67,7 +65,7 @@ func (h *AssetHandler) parseAssetFiltersAndSort(c *fiber.Ctx) (query.Params, err
 	// * Parse sorting options
 	sortBy := c.Query("sort_by")
 	if sortBy != "" {
-		params.Sort = &query.SortOptions{
+		params.Sort = &domain.AssetSortOptions{
 			Field: sortBy,
 			Order: c.Query("sort_order", "desc"),
 		}
@@ -88,7 +86,7 @@ func (h *AssetHandler) parseAssetFiltersAndSort(c *fiber.Ctx) (query.Params, err
 		condition = &cond
 	}
 
-	filters := &postgresql.AssetFilterOptions{
+	filters := &domain.AssetFilterOptions{
 		Status:    status,
 		Condition: condition,
 	}
@@ -215,7 +213,7 @@ func (h *AssetHandler) GetAssetsPaginated(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.AssetPaginationOptions{Limit: limit, Offset: offset}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)
@@ -236,7 +234,7 @@ func (h *AssetHandler) GetAssetsCursor(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &query.PaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.AssetPaginationOptions{Limit: limit, Cursor: cursor}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)

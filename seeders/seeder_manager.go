@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/services/asset"
 	"github.com/Rizz404/inventory-api/services/asset_movement"
@@ -229,8 +230,8 @@ func (sm *SeederManager) SeedAll(ctx context.Context, count int) error {
 // Helper methods to get IDs of seeded data using simple database queries
 func (sm *SeederManager) getUserIDs(ctx context.Context) ([]string, error) {
 	// Create query params to get all users (large limit)
-	params := query.Params{
-		Pagination: &query.PaginationOptions{
+	params := domain.UserParams{
+		Pagination: &domain.UserPaginationOptions{
 			Limit:  1000, // Large enough to get all seeded users
 			Offset: 0,
 		},
@@ -249,8 +250,8 @@ func (sm *SeederManager) getUserIDs(ctx context.Context) ([]string, error) {
 }
 
 func (sm *SeederManager) getCategoryIDs(ctx context.Context) ([]string, error) {
-	params := query.Params{
-		Pagination: &query.PaginationOptions{
+	params := domain.CategoryParams{
+		Pagination: &domain.CategoryPaginationOptions{
 			Limit:  1000,
 			Offset: 0,
 		},
@@ -269,8 +270,8 @@ func (sm *SeederManager) getCategoryIDs(ctx context.Context) ([]string, error) {
 }
 
 func (sm *SeederManager) getLocationIDs(ctx context.Context) ([]string, error) {
-	params := query.Params{
-		Pagination: &query.PaginationOptions{
+	params := domain.LocationParams{
+		Pagination: &domain.LocationPaginationOptions{
 			Limit:  1000,
 			Offset: 0,
 		},
@@ -289,8 +290,8 @@ func (sm *SeederManager) getLocationIDs(ctx context.Context) ([]string, error) {
 }
 
 func (sm *SeederManager) getAssetIDs(ctx context.Context) ([]string, error) {
-	params := query.Params{
-		Pagination: &query.PaginationOptions{
+	params := domain.AssetParams{
+		Pagination: &domain.AssetPaginationOptions{
 			Limit:  1000,
 			Offset: 0,
 		},

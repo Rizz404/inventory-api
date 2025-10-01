@@ -9,7 +9,6 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"gorm.io/gorm"
@@ -19,37 +18,30 @@ type UserRepository struct {
 	db *gorm.DB
 }
 
-type UserFilterOptions struct {
-	Role       *domain.UserRole `json:"role,omitempty"`
-	IsActive   *bool            `json:"is_active,omitempty"`
-	EmployeeID *string          `json:"employee_id,omitempty"`
-}
-
 func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{
 		db: db,
 	}
 }
 
-func (r *UserRepository) applyUserFilters(db *gorm.DB, filters any) *gorm.DB {
-	f, ok := filters.(*UserFilterOptions)
-	if !ok || f == nil {
+func (r *UserRepository) applyUserFilters(db *gorm.DB, filters *domain.UserFilterOptions) *gorm.DB {
+	if filters == nil {
 		return db
 	}
 
-	if f.Role != nil {
-		db = db.Where("u.role = ?", f.Role)
+	if filters.Role != nil {
+		db = db.Where("u.role = ?", filters.Role)
 	}
-	if f.IsActive != nil {
-		db = db.Where("u.is_active = ?", *f.IsActive)
+	if filters.IsActive != nil {
+		db = db.Where("u.is_active = ?", *filters.IsActive)
 	}
-	if f.EmployeeID != nil {
-		db = db.Where("u.employee_id = ?", *f.EmployeeID)
+	if filters.EmployeeID != nil {
+		db = db.Where("u.employee_id = ?", *filters.EmployeeID)
 	}
 	return db
 }
 
-func (r *UserRepository) applyUserSorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
+func (r *UserRepository) applyUserSorts(db *gorm.DB, sort *domain.UserSortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("u.created_at DESC")
 	}
@@ -156,7 +148,7 @@ func (r *UserRepository) DeleteUser(ctx context.Context, userId string) error {
 }
 
 // *===========================QUERY===========================*
-func (r *UserRepository) GetUsersPaginated(ctx context.Context, params query.Params) ([]domain.User, error) {
+func (r *UserRepository) GetUsersPaginated(ctx context.Context, params domain.UserParams) ([]domain.User, error) {
 	var users []model.User
 	db := r.db.WithContext(ctx).
 		Table("users u")
@@ -166,9 +158,21 @@ func (r *UserRepository) GetUsersPaginated(ctx context.Context, params query.Par
 		db = db.Where("u.name ILIKE ? OR u.full_name ILIKE ?", searchPattern, searchPattern)
 	}
 
-	// Use offset-based pagination (disable cursor-based pagination)
-	params.Pagination.Cursor = ""
-	db = query.Apply(db, params, r.applyUserFilters, r.applyUserSorts)
+	// Apply filters
+	db = r.applyUserFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyUserSorts(db, params.Sort)
+
+	// Apply pagination
+	if params.Pagination != nil {
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+		if params.Pagination.Offset > 0 {
+			db = db.Offset(params.Pagination.Offset)
+		}
+	}
 
 	if err := db.Find(&users).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -178,7 +182,7 @@ func (r *UserRepository) GetUsersPaginated(ctx context.Context, params query.Par
 	return mapper.ToDomainUsers(users), nil
 }
 
-func (r *UserRepository) GetUsersCursor(ctx context.Context, params query.Params) ([]domain.User, error) {
+func (r *UserRepository) GetUsersCursor(ctx context.Context, params domain.UserParams) ([]domain.User, error) {
 	var users []model.User
 	db := r.db.WithContext(ctx).
 		Table("users u")
@@ -188,14 +192,22 @@ func (r *UserRepository) GetUsersCursor(ctx context.Context, params query.Params
 		db = db.Where("u.name ILIKE ? OR u.full_name ILIKE ?", searchPattern, searchPattern)
 	}
 
-	// Use cursor-based pagination (disable offset-based pagination)
-	params.Pagination.Offset = 0
-	db = query.Apply(db, params, r.applyUserFilters, r.applyUserSorts)
+	// Apply filters
+	db = r.applyUserFilters(db, params.Filters)
 
-	if err := db.Find(&users).Error; err != nil {
-		return nil, domain.ErrInternal(err)
+	// Apply sorting
+	db = r.applyUserSorts(db, params.Sort)
+
+	// Apply cursor-based pagination
+	if params.Pagination != nil {
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+		if params.Pagination.Cursor != "" {
+			// Assuming sorting DESC by ID for cursor
+			db = db.Where("l.id < ?", params.Pagination.Cursor)
+		}
 	}
-
 	// Convert to domain users
 	return mapper.ToDomainUsers(users), nil
 }
@@ -287,7 +299,7 @@ func (r *UserRepository) CheckEmailExistsExcluding(ctx context.Context, email st
 	return count > 0, nil
 }
 
-func (r *UserRepository) CountUsers(ctx context.Context, params query.Params) (int64, error) {
+func (r *UserRepository) CountUsers(ctx context.Context, params domain.UserParams) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Table("users u")
 
@@ -296,7 +308,8 @@ func (r *UserRepository) CountUsers(ctx context.Context, params query.Params) (i
 		db = db.Where("u.name ILIKE ? OR u.full_name ILIKE ?", searchPattern, searchPattern)
 	}
 
-	db = query.Apply(db, query.Params{Filters: params.Filters}, r.applyUserFilters, nil)
+	// Apply filters
+	db = r.applyUserFilters(db, params.Filters)
 
 	if err := db.Count(&count).Error; err != nil {
 		return 0, domain.ErrInternal(err)

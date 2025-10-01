@@ -100,6 +100,37 @@ type UpdateAssetMovementTranslationPayload struct {
 	Notes    *string `json:"notes,omitempty" validate:"omitempty"`
 }
 
+// --- Query Parameters ---
+
+type AssetMovementFilterOptions struct {
+	AssetID        *string    `json:"assetId,omitempty"`
+	FromLocationID *string    `json:"fromLocationId,omitempty"`
+	ToLocationID   *string    `json:"toLocationId,omitempty"`
+	FromUserID     *string    `json:"fromUserId,omitempty"`
+	ToUserID       *string    `json:"toUserId,omitempty"`
+	MovedBy        *string    `json:"movedBy,omitempty"`
+	DateFrom       *time.Time `json:"dateFrom,omitempty"`
+	DateTo         *time.Time `json:"dateTo,omitempty"`
+}
+
+type AssetMovementSortOptions struct {
+	Field string `json:"field,omitempty"`
+	Order string `json:"order,omitempty"`
+}
+
+type AssetMovementPaginationOptions struct {
+	Limit  int    `json:"limit,omitempty"`
+	Offset int    `json:"offset,omitempty"`
+	Cursor string `json:"cursor,omitempty"`
+}
+
+type AssetMovementParams struct {
+	SearchQuery *string                         `json:"searchQuery,omitempty"`
+	Filters     *AssetMovementFilterOptions     `json:"filters,omitempty"`
+	Sort        *AssetMovementSortOptions       `json:"sort,omitempty"`
+	Pagination  *AssetMovementPaginationOptions `json:"pagination,omitempty"`
+}
+
 // --- Statistics ---
 
 // Internal statistics structs (used in repository layer)

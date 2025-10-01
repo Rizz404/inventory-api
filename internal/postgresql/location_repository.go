@@ -9,7 +9,6 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
@@ -28,16 +27,15 @@ func NewLocationRepository(db *gorm.DB) *LocationRepository {
 	}
 }
 
-func (r *LocationRepository) applyLocationFilters(db *gorm.DB, filters any) *gorm.DB {
-	f, ok := filters.(*LocationFilterOptions)
-	if !ok || f == nil {
+func (r *LocationRepository) applyLocationFilters(db *gorm.DB, filters *domain.LocationFilterOptions) *gorm.DB {
+	if filters == nil {
 		return db
 	}
 
 	return db
 }
 
-func (r *LocationRepository) applyLocationSorts(db *gorm.DB, sort *query.SortOptions) *gorm.DB {
+func (r *LocationRepository) applyLocationSorts(db *gorm.DB, sort *domain.LocationSortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("l.created_at DESC")
 	}
@@ -48,7 +46,7 @@ func (r *LocationRepository) applyLocationSorts(db *gorm.DB, sort *query.SortOpt
 	case "name", "location_name":
 		orderClause = "lt.location_name"
 	default:
-		return db.Order("l.created_at DESC")
+		orderClause = "l.created_at"
 	}
 
 	order := "DESC"
@@ -207,7 +205,7 @@ func (r *LocationRepository) DeleteLocation(ctx context.Context, locationId stri
 }
 
 // *===========================QUERY===========================*
-func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error) {
+func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.Location, error) {
 	var locations []model.Location
 	db := r.db.WithContext(ctx).
 		Table("locations l").
@@ -220,9 +218,21 @@ func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params q
 			Distinct("l.id")
 	}
 
-	// Set pagination cursor to empty for offset-based pagination
-	params.Pagination.Cursor = ""
-	db = query.Apply(db, params, r.applyLocationFilters, r.applyLocationSorts)
+	// Apply filters
+	db = r.applyLocationFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyLocationSorts(db, params.Sort)
+
+	// Apply pagination
+	if params.Pagination != nil {
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+		if params.Pagination.Offset > 0 {
+			db = db.Offset(params.Pagination.Offset)
+		}
+	}
 
 	if err := db.Find(&locations).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -232,7 +242,7 @@ func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params q
 	return mapper.ToDomainLocations(locations), nil
 }
 
-func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Location, error) {
+func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.Location, error) {
 	var locations []model.Location
 	db := r.db.WithContext(ctx).
 		Table("locations l").
@@ -245,9 +255,22 @@ func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params quer
 			Distinct("l.id")
 	}
 
-	// Set offset to 0 for cursor-based pagination
-	params.Pagination.Offset = 0
-	db = query.Apply(db, params, r.applyLocationFilters, r.applyLocationSorts)
+	// Apply filters
+	db = r.applyLocationFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyLocationSorts(db, params.Sort)
+
+	// Apply cursor-based pagination
+	if params.Pagination != nil {
+		if params.Pagination.Limit > 0 {
+			db = db.Limit(params.Pagination.Limit)
+		}
+		if params.Pagination.Cursor != "" {
+			// Assuming sorting DESC by ID for cursor
+			db = db.Where("l.id < ?", params.Pagination.Cursor)
+		}
+	}
 
 	if err := db.Find(&locations).Error; err != nil {
 		return nil, domain.ErrInternal(err)
@@ -318,7 +341,7 @@ func (r *LocationRepository) CheckLocationCodeExistExcluding(ctx context.Context
 	return count > 0, nil
 }
 
-func (r *LocationRepository) CountLocations(ctx context.Context, params query.Params) (int64, error) {
+func (r *LocationRepository) CountLocations(ctx context.Context, params domain.LocationParams) (int64, error) {
 	var count int64
 	db := r.db.WithContext(ctx).Table("locations l")
 
@@ -329,7 +352,8 @@ func (r *LocationRepository) CountLocations(ctx context.Context, params query.Pa
 			Distinct("l.id")
 	}
 
-	db = query.Apply(db, query.Params{Filters: params.Filters}, r.applyLocationFilters, nil)
+	// Apply filters
+	db = r.applyLocationFilters(db, params.Filters)
 
 	if err := db.Count(&count).Error; err != nil {
 		return 0, domain.ErrInternal(err)

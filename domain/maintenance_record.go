@@ -84,6 +84,35 @@ type CreateMaintenanceRecordTranslationPayload struct {
 	Notes    *string `json:"notes,omitempty"`
 }
 
+// --- Query Parameters ---
+
+type MaintenanceRecordFilterOptions struct {
+	AssetID         *string `json:"assetId,omitempty"`
+	ScheduleID      *string `json:"scheduleId,omitempty"`
+	PerformedByUser *string `json:"performedByUser,omitempty"`
+	VendorName      *string `json:"vendorName,omitempty"`
+	FromDate        *string `json:"fromDate,omitempty"` // YYYY-MM-DD
+	ToDate          *string `json:"toDate,omitempty"`   // YYYY-MM-DD
+}
+
+type MaintenanceRecordSortOptions struct {
+	Field string `json:"field,omitempty"`
+	Order string `json:"order,omitempty"`
+}
+
+type MaintenanceRecordPaginationOptions struct {
+	Limit  int    `json:"limit,omitempty"`
+	Offset int    `json:"offset,omitempty"`
+	Cursor string `json:"cursor,omitempty"`
+}
+
+type MaintenanceRecordParams struct {
+	SearchQuery *string                             `json:"searchQuery,omitempty"`
+	Filters     *MaintenanceRecordFilterOptions     `json:"filters,omitempty"`
+	Sort        *MaintenanceRecordSortOptions       `json:"sort,omitempty"`
+	Pagination  *MaintenanceRecordPaginationOptions `json:"pagination,omitempty"`
+}
+
 // --- Statistics ---
 
 // Internal statistics structs (used in repository layer)

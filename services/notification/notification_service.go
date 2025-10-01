@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 )
 
@@ -18,11 +17,11 @@ type Repository interface {
 	MarkAllNotificationsAsRead(ctx context.Context, userId string) error
 
 	// * QUERY
-	GetNotificationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.Notification, error)
-	GetNotificationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.Notification, error)
+	GetNotificationsPaginated(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.Notification, error)
+	GetNotificationsCursor(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.Notification, error)
 	GetNotificationById(ctx context.Context, notificationId string) (domain.Notification, error)
 	CheckNotificationExist(ctx context.Context, notificationId string) (bool, error)
-	CountNotifications(ctx context.Context, params query.Params) (int64, error)
+	CountNotifications(ctx context.Context, params domain.NotificationParams) (int64, error)
 	GetNotificationStatistics(ctx context.Context) (domain.NotificationStatistics, error)
 }
 
@@ -36,11 +35,11 @@ type NotificationService interface {
 	MarkAllNotificationsAsRead(ctx context.Context, userId string) error
 
 	// * QUERY
-	GetNotificationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationListResponse, int64, error)
-	GetNotificationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationListResponse, error)
+	GetNotificationsPaginated(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationListResponse, int64, error)
+	GetNotificationsCursor(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationListResponse, error)
 	GetNotificationById(ctx context.Context, notificationId string, langCode string) (domain.NotificationResponse, error)
 	CheckNotificationExists(ctx context.Context, notificationId string) (bool, error)
-	CountNotifications(ctx context.Context, params query.Params) (int64, error)
+	CountNotifications(ctx context.Context, params domain.NotificationParams) (int64, error)
 	GetNotificationStatistics(ctx context.Context) (domain.NotificationStatisticsResponse, error)
 }
 
@@ -133,7 +132,7 @@ func (s *Service) MarkAllNotificationsAsRead(ctx context.Context, userId string)
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetNotificationsPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationListResponse, int64, error) {
+func (s *Service) GetNotificationsPaginated(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationListResponse, int64, error) {
 	notifications, err := s.Repo.GetNotificationsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -151,7 +150,7 @@ func (s *Service) GetNotificationsPaginated(ctx context.Context, params query.Pa
 	return responses, count, nil
 }
 
-func (s *Service) GetNotificationsCursor(ctx context.Context, params query.Params, langCode string) ([]domain.NotificationListResponse, error) {
+func (s *Service) GetNotificationsCursor(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationListResponse, error) {
 	notifications, err := s.Repo.GetNotificationsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
@@ -181,7 +180,7 @@ func (s *Service) CheckNotificationExists(ctx context.Context, notificationId st
 	return exists, nil
 }
 
-func (s *Service) CountNotifications(ctx context.Context, params query.Params) (int64, error) {
+func (s *Service) CountNotifications(ctx context.Context, params domain.NotificationParams) (int64, error) {
 	count, err := s.Repo.CountNotifications(ctx, params)
 	if err != nil {
 		return 0, err

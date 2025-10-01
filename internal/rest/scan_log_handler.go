@@ -5,8 +5,6 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/rest/middleware"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/internal/web"
@@ -48,8 +46,8 @@ func NewScanLogHandler(app fiber.Router, s scan_log.ScanLogService) {
 	)
 }
 
-func (h *ScanLogHandler) parseScanLogFiltersAndSort(c *fiber.Ctx) (query.Params, error) {
-	params := query.Params{}
+func (h *ScanLogHandler) parseScanLogFiltersAndSort(c *fiber.Ctx) (domain.ScanLogParams, error) {
+	params := domain.ScanLogParams{}
 
 	// * Parse search query
 	search := c.Query("search")
@@ -60,14 +58,14 @@ func (h *ScanLogHandler) parseScanLogFiltersAndSort(c *fiber.Ctx) (query.Params,
 	// * Parse sorting options
 	sortBy := c.Query("sort_by")
 	if sortBy != "" {
-		params.Sort = &query.SortOptions{
+		params.Sort = &domain.ScanLogSortOptions{
 			Field: sortBy,
 			Order: c.Query("sort_order", "desc"),
 		}
 	}
 
 	// * Parse filtering options
-	filters := &postgresql.ScanLogFilterOptions{}
+	filters := &domain.ScanLogFilterOptions{}
 
 	// * Parse scan method filter
 	if scanMethod := c.Query("scan_method"); scanMethod != "" {
@@ -160,7 +158,7 @@ func (h *ScanLogHandler) GetScanLogsPaginated(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.ScanLogPaginationOptions{Limit: limit, Offset: offset}
 
 	scanLogs, total, err := h.Service.GetScanLogsPaginated(c.Context(), params)
 	if err != nil {
@@ -178,7 +176,7 @@ func (h *ScanLogHandler) GetScanLogsCursor(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &query.PaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.ScanLogPaginationOptions{Limit: limit, Cursor: cursor}
 
 	scanLogs, err := h.Service.GetScanLogsCursor(c.Context(), params)
 	if err != nil {
@@ -222,7 +220,7 @@ func (h *ScanLogHandler) GetScanLogsByAssetId(c *fiber.Ctx) error {
 	// * Apply pagination for asset scan logs
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.ScanLogPaginationOptions{Limit: limit, Offset: offset}
 
 	scanLogs, err := h.Service.GetScanLogsByAssetId(c.Context(), assetId, params)
 	if err != nil {
@@ -246,7 +244,7 @@ func (h *ScanLogHandler) GetScanLogsByUserId(c *fiber.Ctx) error {
 	// * Apply pagination for user scan logs
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.ScanLogPaginationOptions{Limit: limit, Offset: offset}
 
 	scanLogs, err := h.Service.GetScanLogsByUserId(c.Context(), userId, params)
 	if err != nil {

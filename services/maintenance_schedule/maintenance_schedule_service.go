@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
@@ -18,10 +17,10 @@ type Repository interface {
 	DeleteSchedule(ctx context.Context, scheduleId string) error
 
 	// Schedule queries
-	GetSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceSchedule, error)
-	GetSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceSchedule, error)
+	GetSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceSchedule, error)
+	GetSchedulesCursor(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceSchedule, error)
 	GetScheduleById(ctx context.Context, scheduleId string) (domain.MaintenanceSchedule, error)
-	CountSchedules(ctx context.Context, params query.Params) (int64, error)
+	CountSchedules(ctx context.Context, params domain.MaintenanceScheduleParams) (int64, error)
 	CheckScheduleExist(ctx context.Context, scheduleId string) (bool, error)
 
 	// Statistics
@@ -45,11 +44,11 @@ type MaintenanceScheduleService interface {
 	CreateMaintenanceSchedule(ctx context.Context, payload *domain.CreateMaintenanceSchedulePayload, createdBy string) (domain.MaintenanceScheduleResponse, error)
 	UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.CreateMaintenanceSchedulePayload) (domain.MaintenanceScheduleResponse, error)
 	DeleteMaintenanceSchedule(ctx context.Context, scheduleId string) error
-	GetMaintenanceSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListResponse, int64, error)
-	GetMaintenanceSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListResponse, error)
+	GetMaintenanceSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, int64, error)
+	GetMaintenanceSchedulesCursor(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, error)
 	GetMaintenanceScheduleById(ctx context.Context, scheduleId string, langCode string) (domain.MaintenanceScheduleResponse, error)
 	CheckMaintenanceScheduleExists(ctx context.Context, scheduleId string) (bool, error)
-	CountMaintenanceSchedules(ctx context.Context, params query.Params) (int64, error)
+	CountMaintenanceSchedules(ctx context.Context, params domain.MaintenanceScheduleParams) (int64, error)
 	GetMaintenanceScheduleStatistics(ctx context.Context) (domain.MaintenanceScheduleStatisticsResponse, error)
 }
 
@@ -166,7 +165,7 @@ func (s *Service) DeleteMaintenanceSchedule(ctx context.Context, scheduleId stri
 	return s.Repo.DeleteSchedule(ctx, scheduleId)
 }
 
-func (s *Service) GetMaintenanceSchedulesPaginated(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListResponse, int64, error) {
+func (s *Service) GetMaintenanceSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, int64, error) {
 	schedules, err := s.Repo.GetSchedulesPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -181,7 +180,7 @@ func (s *Service) GetMaintenanceSchedulesPaginated(ctx context.Context, params q
 	return schedulesResponses, count, nil
 }
 
-func (s *Service) GetMaintenanceSchedulesCursor(ctx context.Context, params query.Params, langCode string) ([]domain.MaintenanceScheduleListResponse, error) {
+func (s *Service) GetMaintenanceSchedulesCursor(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, error) {
 	schedules, err := s.Repo.GetSchedulesCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
@@ -204,7 +203,7 @@ func (s *Service) CheckMaintenanceScheduleExists(ctx context.Context, scheduleId
 	return s.Repo.CheckScheduleExist(ctx, scheduleId)
 }
 
-func (s *Service) CountMaintenanceSchedules(ctx context.Context, params query.Params) (int64, error) {
+func (s *Service) CountMaintenanceSchedules(ctx context.Context, params domain.MaintenanceScheduleParams) (int64, error) {
 	return s.Repo.CountSchedules(ctx, params)
 }
 

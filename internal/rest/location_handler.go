@@ -4,8 +4,6 @@ import (
 	"strconv"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/internal/postgresql"
-	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/query"
 	"github.com/Rizz404/inventory-api/internal/rest/middleware"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/internal/web"
@@ -53,8 +51,8 @@ func NewLocationHandler(app fiber.Router, s location.LocationService) {
 	)
 }
 
-func (h *LocationHandler) parseLocationFiltersAndSort(c *fiber.Ctx) (query.Params, error) {
-	params := query.Params{}
+func (h *LocationHandler) parseLocationFiltersAndSort(c *fiber.Ctx) (domain.LocationParams, error) {
+	params := domain.LocationParams{}
 
 	// * Parse search query
 	search := c.Query("search")
@@ -65,14 +63,14 @@ func (h *LocationHandler) parseLocationFiltersAndSort(c *fiber.Ctx) (query.Param
 	// * Parse sorting options
 	sortBy := c.Query("sort_by")
 	if sortBy != "" {
-		params.Sort = &query.SortOptions{
+		params.Sort = &domain.LocationSortOptions{
 			Field: sortBy,
 			Order: c.Query("sort_order", "desc"),
 		}
 	}
 
 	// * Parse filtering options
-	filters := &postgresql.LocationFilterOptions{}
+	filters := &domain.LocationFilterOptions{}
 
 	params.Filters = filters
 
@@ -136,7 +134,7 @@ func (h *LocationHandler) GetLocationsPaginated(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &query.PaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.LocationPaginationOptions{Limit: limit, Offset: offset}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)
@@ -157,7 +155,7 @@ func (h *LocationHandler) GetLocationsCursor(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &query.PaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.LocationPaginationOptions{Limit: limit, Cursor: cursor}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)

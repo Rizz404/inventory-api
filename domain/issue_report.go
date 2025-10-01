@@ -128,6 +128,38 @@ type UpdateIssueReportTranslationPayload struct {
 	ResolutionNotes *string `json:"resolutionNotes,omitempty"`
 }
 
+// --- Query Parameters ---
+
+type IssueReportFilterOptions struct {
+	AssetID    *string        `json:"assetId,omitempty"`
+	ReportedBy *string        `json:"reportedBy,omitempty"`
+	ResolvedBy *string        `json:"resolvedBy,omitempty"`
+	IssueType  *string        `json:"issueType,omitempty"`
+	Priority   *IssuePriority `json:"priority,omitempty"`
+	Status     *IssueStatus   `json:"status,omitempty"`
+	IsResolved *bool          `json:"isResolved,omitempty"`
+	DateFrom   *time.Time     `json:"dateFrom,omitempty"`
+	DateTo     *time.Time     `json:"dateTo,omitempty"`
+}
+
+type IssueReportSortOptions struct {
+	Field string `json:"field,omitempty"`
+	Order string `json:"order,omitempty"`
+}
+
+type IssueReportPaginationOptions struct {
+	Limit  int    `json:"limit,omitempty"`
+	Offset int    `json:"offset,omitempty"`
+	Cursor string `json:"cursor,omitempty"`
+}
+
+type IssueReportParams struct {
+	SearchQuery *string                       `json:"searchQuery,omitempty"`
+	Filters     *IssueReportFilterOptions     `json:"filters,omitempty"`
+	Sort        *IssueReportSortOptions       `json:"sort,omitempty"`
+	Pagination  *IssueReportPaginationOptions `json:"pagination,omitempty"`
+}
+
 // --- Statistics ---
 
 // Internal statistics structs (used in repository layer)

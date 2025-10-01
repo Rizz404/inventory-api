@@ -133,6 +133,36 @@ type UpdateAssetPayload struct {
 	AssignedTo         *string         `json:"assignedTo,omitempty" validate:"omitempty"`
 }
 
+// --- Query Parameters ---
+
+type AssetFilterOptions struct {
+	Status     *AssetStatus    `json:"status,omitempty"`
+	Condition  *AssetCondition `json:"condition,omitempty"`
+	CategoryID *string         `json:"categoryId,omitempty"`
+	LocationID *string         `json:"locationId,omitempty"`
+	AssignedTo *string         `json:"assignedTo,omitempty"`
+	Brand      *string         `json:"brand,omitempty"`
+	Model      *string         `json:"model,omitempty"`
+}
+
+type AssetSortOptions struct {
+	Field string `json:"field"`
+	Order string `json:"order"`
+}
+
+type AssetPaginationOptions struct {
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
+	Cursor string `json:"cursor"`
+}
+
+type AssetParams struct {
+	SearchQuery *string                 `json:"searchQuery,omitempty"`
+	Filters     *AssetFilterOptions     `json:"filters,omitempty"`
+	Sort        *AssetSortOptions       `json:"sort,omitempty"`
+	Pagination  *AssetPaginationOptions `json:"pagination,omitempty"`
+}
+
 // --- Statistics ---
 
 // Internal statistics structs (used in repository layer)
