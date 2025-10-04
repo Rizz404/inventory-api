@@ -271,6 +271,8 @@ func (r *MaintenanceScheduleRepository) GetScheduleById(ctx context.Context, sch
 	err := r.db.WithContext(ctx).
 		Table("maintenance_schedules ms").
 		Preload("Translations").
+		Preload("Asset").
+		Preload("CreatedByUser").
 		First(&m, "id = ?", scheduleId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

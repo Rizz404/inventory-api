@@ -102,9 +102,7 @@ func (r *ScanLogRepository) DeleteScanLog(ctx context.Context, scanLogId string)
 func (r *ScanLogRepository) GetScanLogsPaginated(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLog, error) {
 	var scanLogs []model.ScanLog
 	db := r.db.WithContext(ctx).
-		Table("scan_logs sl").
-		Preload("Asset").
-		Preload("ScannedByUser")
+		Table("scan_logs sl")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
@@ -138,9 +136,7 @@ func (r *ScanLogRepository) GetScanLogsPaginated(ctx context.Context, params dom
 func (r *ScanLogRepository) GetScanLogsCursor(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLog, error) {
 	var scanLogs []model.ScanLog
 	db := r.db.WithContext(ctx).
-		Table("scan_logs sl").
-		Preload("Asset").
-		Preload("ScannedByUser")
+		Table("scan_logs sl")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
@@ -175,8 +171,6 @@ func (r *ScanLogRepository) GetScanLogById(ctx context.Context, scanLogId string
 	var scanLog model.ScanLog
 
 	err := r.db.WithContext(ctx).
-		Preload("Asset").
-		Preload("ScannedByUser").
 		First(&scanLog, "id = ?", scanLogId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -192,9 +186,7 @@ func (r *ScanLogRepository) GetScanLogsByAssetId(ctx context.Context, assetId st
 	var scanLogs []model.ScanLog
 	db := r.db.WithContext(ctx).
 		Table("scan_logs sl").
-		Where("sl.asset_id = ?", assetId).
-		Preload("Asset").
-		Preload("ScannedByUser")
+		Where("sl.asset_id = ?", assetId)
 
 		// Apply filters
 	db = r.applyScanLogFilters(db, params.Filters)
@@ -223,9 +215,7 @@ func (r *ScanLogRepository) GetScanLogsByUserId(ctx context.Context, userId stri
 	var scanLogs []model.ScanLog
 	db := r.db.WithContext(ctx).
 		Table("scan_logs sl").
-		Where("sl.scanned_by = ?", userId).
-		Preload("Asset").
-		Preload("ScannedByUser")
+		Where("sl.scanned_by = ?", userId)
 
 	// Apply filters
 	db = r.applyScanLogFilters(db, params.Filters)

@@ -275,6 +275,8 @@ func (r *MaintenanceRecordRepository) GetRecordById(ctx context.Context, recordI
 	err := r.db.WithContext(ctx).
 		Table("maintenance_records mr").
 		Preload("Translations").
+		Preload("Asset").
+		Preload("PerformedByUser").
 		First(&m, "id = ?", recordId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
