@@ -22,6 +22,24 @@ const (
 	ConditionDamaged AssetCondition = "Damaged"
 )
 
+type AssetSortField string
+
+const (
+	AssetSortByAssetTag      AssetSortField = "assetTag"
+	AssetSortByAssetName     AssetSortField = "assetName"
+	AssetSortByBrand         AssetSortField = "brand"
+	AssetSortByModel         AssetSortField = "model"
+	AssetSortBySerialNumber  AssetSortField = "serialNumber"
+	AssetSortByPurchaseDate  AssetSortField = "purchaseDate"
+	AssetSortByPurchasePrice AssetSortField = "purchasePrice"
+	AssetSortByVendorName    AssetSortField = "vendorName"
+	AssetSortByWarrantyEnd   AssetSortField = "warrantyEnd"
+	AssetSortByStatus        AssetSortField = "status"
+	AssetSortByCondition     AssetSortField = "condition"
+	AssetSortByCreatedAt     AssetSortField = "createdAt"
+	AssetSortByUpdatedAt     AssetSortField = "updatedAt"
+)
+
 // --- Structs ---
 
 type Asset struct {
@@ -146,21 +164,15 @@ type AssetFilterOptions struct {
 }
 
 type AssetSortOptions struct {
-	Field string `json:"field"`
-	Order string `json:"order"`
-}
-
-type AssetPaginationOptions struct {
-	Limit  int    `json:"limit"`
-	Offset int    `json:"offset"`
-	Cursor string `json:"cursor"`
+	Field AssetSortField `json:"field" example:"createdAt"`
+	Order SortOrder      `json:"order" example:"desc"`
 }
 
 type AssetParams struct {
-	SearchQuery *string                 `json:"searchQuery,omitempty"`
-	Filters     *AssetFilterOptions     `json:"filters,omitempty"`
-	Sort        *AssetSortOptions       `json:"sort,omitempty"`
-	Pagination  *AssetPaginationOptions `json:"pagination,omitempty"`
+	SearchQuery *string             `json:"searchQuery,omitempty"`
+	Filters     *AssetFilterOptions `json:"filters,omitempty"`
+	Sort        *AssetSortOptions   `json:"sort,omitempty"`
+	Pagination  *PaginationOptions  `json:"pagination,omitempty"`
 }
 
 // --- Statistics ---

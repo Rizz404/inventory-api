@@ -22,6 +22,16 @@ const (
 	IssueStatusClosed     IssueStatus = "Closed"
 )
 
+type IssueReportSortField string
+
+const (
+	IssueReportSortByReportedDate IssueReportSortField = "reportedDate"
+	IssueReportSortByPriority     IssueReportSortField = "priority"
+	IssueReportSortByStatus       IssueReportSortField = "status"
+	IssueReportSortByCreatedAt    IssueReportSortField = "createdAt"
+	IssueReportSortByUpdatedAt    IssueReportSortField = "updatedAt"
+)
+
 // --- Structs ---
 
 type IssueReport struct {
@@ -143,21 +153,15 @@ type IssueReportFilterOptions struct {
 }
 
 type IssueReportSortOptions struct {
-	Field string `json:"field,omitempty"`
-	Order string `json:"order,omitempty"`
-}
-
-type IssueReportPaginationOptions struct {
-	Limit  int    `json:"limit,omitempty"`
-	Offset int    `json:"offset,omitempty"`
-	Cursor string `json:"cursor,omitempty"`
+	Field IssueReportSortField `json:"field" example:"createdAt"`
+	Order SortOrder            `json:"order" example:"desc"`
 }
 
 type IssueReportParams struct {
-	SearchQuery *string                       `json:"searchQuery,omitempty"`
-	Filters     *IssueReportFilterOptions     `json:"filters,omitempty"`
-	Sort        *IssueReportSortOptions       `json:"sort,omitempty"`
-	Pagination  *IssueReportPaginationOptions `json:"pagination,omitempty"`
+	SearchQuery *string                   `json:"searchQuery,omitempty"`
+	Filters     *IssueReportFilterOptions `json:"filters,omitempty"`
+	Sort        *IssueReportSortOptions   `json:"sort,omitempty"`
+	Pagination  *PaginationOptions        `json:"pagination,omitempty"`
 }
 
 // --- Statistics ---

@@ -16,8 +16,7 @@ import (
 type Repository interface {
 	// * MUTATION
 	CreateUser(ctx context.Context, payload *domain.User) (domain.User, error)
-	UpdateUser(ctx context.Context, payload *domain.User) (domain.User, error)
-	UpdateUserWithPayload(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.User, error)
+	UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.User, error)
 	DeleteUser(ctx context.Context, userId string) error
 
 	// * QUERY
@@ -152,7 +151,7 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 			updatePayload := &domain.UpdateUserPayload{
 				AvatarURL: &uploadResult.SecureURL,
 			}
-			createdUser, _ = s.Repo.UpdateUserWithPayload(ctx, createdUser.ID, updatePayload)
+			createdUser, _ = s.Repo.UpdateUser(ctx, createdUser.ID, updatePayload)
 		}
 		// Note: We don't return error here to avoid failing user creation if avatar re-upload fails
 	}
@@ -217,8 +216,8 @@ func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain
 		// If payload.AvatarURL has a valid URL, it will be used as-is
 	}
 
-	// Use the UpdateUserWithPayload method
-	updatedUser, err := s.Repo.UpdateUserWithPayload(ctx, userId, payload)
+	// Use the UpdateUser method
+	updatedUser, err := s.Repo.UpdateUser(ctx, userId, payload)
 	if err != nil {
 		return domain.UserResponse{}, err
 	}

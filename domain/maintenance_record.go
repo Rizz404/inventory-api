@@ -2,6 +2,17 @@ package domain
 
 import "time"
 
+// --- Enums ---
+
+type MaintenanceRecordSortField string
+
+const (
+	MaintenanceRecordSortByMaintenanceDate MaintenanceRecordSortField = "maintenanceDate"
+	MaintenanceRecordSortByActualCost      MaintenanceRecordSortField = "actualCost"
+	MaintenanceRecordSortByCreatedAt       MaintenanceRecordSortField = "createdAt"
+	MaintenanceRecordSortByUpdatedAt       MaintenanceRecordSortField = "updatedAt"
+)
+
 type MaintenanceRecord struct {
 	ID                string                         `json:"id"`
 	ScheduleID        *string                        `json:"scheduleId"`
@@ -96,21 +107,15 @@ type MaintenanceRecordFilterOptions struct {
 }
 
 type MaintenanceRecordSortOptions struct {
-	Field string `json:"field,omitempty"`
-	Order string `json:"order,omitempty"`
-}
-
-type MaintenanceRecordPaginationOptions struct {
-	Limit  int    `json:"limit,omitempty"`
-	Offset int    `json:"offset,omitempty"`
-	Cursor string `json:"cursor,omitempty"`
+	Field MaintenanceRecordSortField `json:"field" example:"createdAt"`
+	Order SortOrder                  `json:"order" example:"desc"`
 }
 
 type MaintenanceRecordParams struct {
-	SearchQuery *string                             `json:"searchQuery,omitempty"`
-	Filters     *MaintenanceRecordFilterOptions     `json:"filters,omitempty"`
-	Sort        *MaintenanceRecordSortOptions       `json:"sort,omitempty"`
-	Pagination  *MaintenanceRecordPaginationOptions `json:"pagination,omitempty"`
+	SearchQuery *string                         `json:"searchQuery,omitempty"`
+	Filters     *MaintenanceRecordFilterOptions `json:"filters,omitempty"`
+	Sort        *MaintenanceRecordSortOptions   `json:"sort,omitempty"`
+	Pagination  *PaginationOptions              `json:"pagination,omitempty"`
 }
 
 // --- Statistics ---

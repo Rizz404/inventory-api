@@ -320,3 +320,18 @@ func MaintenanceScheduleStatisticsToResponse(stats *domain.MaintenanceScheduleSt
 
 	return resp
 }
+
+func MapMaintenanceScheduleSortFieldToColumn(field domain.MaintenanceScheduleSortField) string {
+	columnMap := map[domain.MaintenanceScheduleSortField]string{
+		domain.MaintenanceScheduleSortByScheduledDate:   "ms.scheduled_date",
+		domain.MaintenanceScheduleSortByMaintenanceType: "ms.maintenance_type",
+		domain.MaintenanceScheduleSortByStatus:          "ms.status",
+		domain.MaintenanceScheduleSortByCreatedAt:       "ms.created_at",
+		domain.MaintenanceScheduleSortByUpdatedAt:       "ms.updated_at",
+	}
+
+	if column, exists := columnMap[field]; exists {
+		return column
+	}
+	return "ms.scheduled_date"
+}

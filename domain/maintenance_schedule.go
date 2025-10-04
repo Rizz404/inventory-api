@@ -19,6 +19,16 @@ const (
 	StatusCancelled ScheduleStatus = "Cancelled"
 )
 
+type MaintenanceScheduleSortField string
+
+const (
+	MaintenanceScheduleSortByScheduledDate   MaintenanceScheduleSortField = "scheduledDate"
+	MaintenanceScheduleSortByMaintenanceType MaintenanceScheduleSortField = "maintenanceType"
+	MaintenanceScheduleSortByStatus          MaintenanceScheduleSortField = "status"
+	MaintenanceScheduleSortByCreatedAt       MaintenanceScheduleSortField = "createdAt"
+	MaintenanceScheduleSortByUpdatedAt       MaintenanceScheduleSortField = "updatedAt"
+)
+
 // --- Structs ---
 
 type MaintenanceSchedule struct {
@@ -108,21 +118,15 @@ type MaintenanceScheduleFilterOptions struct {
 }
 
 type MaintenanceScheduleSortOptions struct {
-	Field string `json:"field,omitempty"`
-	Order string `json:"order,omitempty"`
-}
-
-type MaintenanceSchedulePaginationOptions struct {
-	Limit  int    `json:"limit,omitempty"`
-	Offset int    `json:"offset,omitempty"`
-	Cursor string `json:"cursor,omitempty"`
+	Field MaintenanceScheduleSortField `json:"field" example:"createdAt"`
+	Order SortOrder                    `json:"order" example:"desc"`
 }
 
 type MaintenanceScheduleParams struct {
-	SearchQuery *string                               `json:"searchQuery,omitempty"`
-	Filters     *MaintenanceScheduleFilterOptions     `json:"filters,omitempty"`
-	Sort        *MaintenanceScheduleSortOptions       `json:"sort,omitempty"`
-	Pagination  *MaintenanceSchedulePaginationOptions `json:"pagination,omitempty"`
+	SearchQuery *string                           `json:"searchQuery,omitempty"`
+	Filters     *MaintenanceScheduleFilterOptions `json:"filters,omitempty"`
+	Sort        *MaintenanceScheduleSortOptions   `json:"sort,omitempty"`
+	Pagination  *PaginationOptions                `json:"pagination,omitempty"`
 }
 
 // --- Statistics ---

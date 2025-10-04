@@ -14,6 +14,19 @@ const (
 	RoleEmployee UserRole = "Employee"
 )
 
+type UserSortField string
+
+const (
+	UserSortByName       UserSortField = "name"
+	UserSortByFullName   UserSortField = "fullName"
+	UserSortByEmail      UserSortField = "email"
+	UserSortByRole       UserSortField = "role"
+	UserSortByEmployeeID UserSortField = "employeeId"
+	UserSortByIsActive   UserSortField = "isActive"
+	UserSortByCreatedAt  UserSortField = "createdAt"
+	UserSortByUpdatedAt  UserSortField = "updatedAt"
+)
+
 // --- Structs ---
 
 type User struct {
@@ -43,6 +56,7 @@ type UserResponse struct {
 	PreferredLang string    `json:"preferredLang" example:"en"`
 	IsActive      bool      `json:"isActive" example:"true"`
 	AvatarURL     *string   `json:"avatarUrl" example:"https://example.com/avatar.jpg"`
+	FCMToken      *string   `json:"fcmToken,omitempty"`
 	CreatedAt     time.Time `json:"createdAt" example:"2023-01-01T00:00:00Z"`
 	UpdatedAt     time.Time `json:"updatedAt" example:"2023-01-01T00:00:00Z"`
 }
@@ -118,21 +132,15 @@ type UserFilterOptions struct {
 }
 
 type UserSortOptions struct {
-	Field string `json:"field"`
-	Order string `json:"order"`
-}
-
-type UserPaginationOptions struct {
-	Limit  int    `json:"limit"`
-	Offset int    `json:"offset"`
-	Cursor string `json:"cursor"`
+	Field UserSortField `json:"field" example:"created_at"`
+	Order SortOrder     `json:"order" example:"desc"`
 }
 
 type UserParams struct {
-	SearchQuery *string                `json:"searchQuery,omitempty"`
-	Filters     *UserFilterOptions     `json:"filters,omitempty"`
-	Sort        *UserSortOptions       `json:"sort,omitempty"`
-	Pagination  *UserPaginationOptions `json:"pagination,omitempty"`
+	SearchQuery *string            `json:"searchQuery,omitempty"`
+	Filters     *UserFilterOptions `json:"filters,omitempty"`
+	Sort        *UserSortOptions   `json:"sort,omitempty"`
+	Pagination  *PaginationOptions `json:"pagination,omitempty"`
 }
 
 // --- Statistics ---

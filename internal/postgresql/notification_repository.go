@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
@@ -48,20 +47,12 @@ func (r *NotificationRepository) applyNotificationSorts(db *gorm.DB, sort *domai
 		return db.Order("n.created_at DESC")
 	}
 
-	var orderClause string
-	switch strings.ToLower(sort.Field) {
-	case "type", "is_read", "created_at":
-		orderClause = fmt.Sprintf("n.%s", sort.Field)
-	case "title":
-		orderClause = "nt.title"
-	case "message":
-		orderClause = "nt.message"
-	default:
-		return db.Order("n.created_at DESC")
-	}
+	// Map camelCase sort field to snake_case database column
+	columnName := mapper.MapNotificationSortFieldToColumn(sort.Field)
+	orderClause := columnName
 
 	order := "DESC"
-	if strings.ToLower(sort.Order) == "asc" {
+	if sort.Order == domain.SortOrderAsc {
 		order = "ASC"
 	}
 	return db.Order(fmt.Sprintf("%s %s", orderClause, order))
@@ -213,7 +204,9 @@ func (r *NotificationRepository) GetNotificationsPaginated(ctx context.Context, 
 		Table("notifications n").
 		Preload("Translations")
 
-	if params.SearchQuery != nil && *params.SearchQuery != "" {
+	needsJoin := params.SearchQuery != nil && *params.SearchQuery != ""
+
+	if needsJoin {
 		searchPattern := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN notification_translations nt ON n.id = nt.notification_id").
 			Where("nt.title ILIKE ? OR nt.message ILIKE ?", searchPattern, searchPattern).
@@ -250,7 +243,9 @@ func (r *NotificationRepository) GetNotificationsCursor(ctx context.Context, par
 		Table("notifications n").
 		Preload("Translations")
 
-	if params.SearchQuery != nil && *params.SearchQuery != "" {
+	needsJoin := params.SearchQuery != nil && *params.SearchQuery != ""
+
+	if needsJoin {
 		searchPattern := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN notification_translations nt ON n.id = nt.notification_id").
 			Where("nt.title ILIKE ? OR nt.message ILIKE ?", searchPattern, searchPattern).
@@ -266,7 +261,7 @@ func (r *NotificationRepository) GetNotificationsCursor(ctx context.Context, par
 	// Apply cursor-based pagination
 	if params.Pagination != nil {
 		if params.Pagination.Cursor != "" {
-			db = db.Where("c.id > ?", params.Pagination.Cursor)
+			db = db.Where("n.id > ?", params.Pagination.Cursor)
 		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)
@@ -311,7 +306,9 @@ func (r *NotificationRepository) CountNotifications(ctx context.Context, params 
 	var count int64
 	db := r.db.WithContext(ctx).Table("notifications n")
 
-	if params.SearchQuery != nil && *params.SearchQuery != "" {
+	needsJoin := params.SearchQuery != nil && *params.SearchQuery != ""
+
+	if needsJoin {
 		searchPattern := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN notification_translations nt ON n.id = nt.notification_id").
 			Where("nt.title ILIKE ? OR nt.message ILIKE ?", searchPattern, searchPattern).

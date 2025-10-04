@@ -432,3 +432,16 @@ func AssetMovementSummaryStatisticsToResponse(summary domain.AssetMovementSummar
 		UniqueUsersInvolved:       summary.UniqueUsersInvolved,
 	}
 }
+
+func MapAssetMovementSortFieldToColumn(field domain.AssetMovementSortField) string {
+	columnMap := map[domain.AssetMovementSortField]string{
+		domain.AssetMovementSortByMovementDate: "am.movement_date",
+		domain.AssetMovementSortByCreatedAt:    "am.created_at",
+		domain.AssetMovementSortByUpdatedAt:    "am.updated_at",
+	}
+
+	if column, exists := columnMap[field]; exists {
+		return column
+	}
+	return "am.movement_date"
+}

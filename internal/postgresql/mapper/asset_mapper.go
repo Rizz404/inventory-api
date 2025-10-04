@@ -360,3 +360,26 @@ func ToModelAssetUpdateMap(payload *domain.UpdateAssetPayload) map[string]any {
 
 	return updates
 }
+
+func MapAssetSortFieldToColumn(field domain.AssetSortField) string {
+	columnMap := map[domain.AssetSortField]string{
+		domain.AssetSortByAssetTag:      "asset_tag",
+		domain.AssetSortByAssetName:     "asset_name",
+		domain.AssetSortByBrand:         "brand",
+		domain.AssetSortByModel:         "model",
+		domain.AssetSortBySerialNumber:  "serial_number",
+		domain.AssetSortByPurchaseDate:  "purchase_date",
+		domain.AssetSortByPurchasePrice: "purchase_price",
+		domain.AssetSortByVendorName:    "vendor_name",
+		domain.AssetSortByWarrantyEnd:   "warranty_end",
+		domain.AssetSortByStatus:        "status",
+		domain.AssetSortByCondition:     "condition_status",
+		domain.AssetSortByCreatedAt:     "created_at",
+		domain.AssetSortByUpdatedAt:     "updated_at",
+	}
+
+	if column, exists := columnMap[field]; exists {
+		return column
+	}
+	return "created_at"
+}

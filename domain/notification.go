@@ -14,6 +14,16 @@ const (
 	NotificationTypeIssueReport  NotificationType = "ISSUE_REPORT"
 )
 
+type NotificationSortField string
+
+const (
+	NotificationSortByType      NotificationSortField = "type"
+	NotificationSortByTitle     NotificationSortField = "title"
+	NotificationSortByMessage   NotificationSortField = "message"
+	NotificationSortByIsRead    NotificationSortField = "isRead"
+	NotificationSortByCreatedAt NotificationSortField = "createdAt"
+)
+
 // --- Structs ---
 
 type Notification struct {
@@ -99,21 +109,15 @@ type NotificationFilterOptions struct {
 }
 
 type NotificationSortOptions struct {
-	Field string `json:"field"`
-	Order string `json:"order"`
-}
-
-type NotificationPaginationOptions struct {
-	Limit  int    `json:"limit"`
-	Offset int    `json:"offset"`
-	Cursor string `json:"cursor"`
+	Field NotificationSortField `json:"field" example:"createdAt"`
+	Order SortOrder             `json:"order" example:"desc"`
 }
 
 type NotificationParams struct {
-	SearchQuery *string                        `json:"searchQuery,omitempty"`
-	Filters     *NotificationFilterOptions     `json:"filters,omitempty"`
-	Sort        *NotificationSortOptions       `json:"sort,omitempty"`
-	Pagination  *NotificationPaginationOptions `json:"pagination,omitempty"`
+	SearchQuery *string                    `json:"searchQuery,omitempty"`
+	Filters     *NotificationFilterOptions `json:"filters,omitempty"`
+	Sort        *NotificationSortOptions   `json:"sort,omitempty"`
+	Pagination  *PaginationOptions         `json:"pagination,omitempty"`
 }
 
 // --- Statistics ---

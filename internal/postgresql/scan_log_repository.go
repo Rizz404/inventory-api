@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
@@ -68,16 +67,12 @@ func (r *ScanLogRepository) applyScanLogSorts(db *gorm.DB, sort *domain.ScanLogS
 		return db.Order("sl.scan_timestamp DESC")
 	}
 
-	var orderClause string
-	switch strings.ToLower(sort.Field) {
-	case "scan_timestamp", "scanned_value", "scan_method", "scan_result":
-		orderClause = "sl." + sort.Field
-	default:
-		return db.Order("sl.scan_timestamp DESC")
-	}
+	// Map camelCase sort field to snake_case database column
+	columnName := mapper.MapScanLogSortFieldToColumn(sort.Field)
+	orderClause := columnName
 
 	order := "DESC"
-	if strings.ToLower(sort.Order) == "asc" {
+	if sort.Order == domain.SortOrderAsc {
 		order = "ASC"
 	}
 	return db.Order(fmt.Sprintf("%s %s", orderClause, order))
@@ -161,7 +156,7 @@ func (r *ScanLogRepository) GetScanLogsCursor(ctx context.Context, params domain
 	// Apply cursor-based pagination
 	if params.Pagination != nil {
 		if params.Pagination.Cursor != "" {
-			db = db.Where("c.id > ?", params.Pagination.Cursor)
+			db = db.Where("sl.id > ?", params.Pagination.Cursor)
 		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)
@@ -210,7 +205,7 @@ func (r *ScanLogRepository) GetScanLogsByAssetId(ctx context.Context, assetId st
 	// Apply cursor-based pagination
 	if params.Pagination != nil {
 		if params.Pagination.Cursor != "" {
-			db = db.Where("c.id > ?", params.Pagination.Cursor)
+			db = db.Where("sl.id > ?", params.Pagination.Cursor)
 		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)
@@ -241,7 +236,7 @@ func (r *ScanLogRepository) GetScanLogsByUserId(ctx context.Context, userId stri
 	// Apply cursor-based pagination
 	if params.Pagination != nil {
 		if params.Pagination.Cursor != "" {
-			db = db.Where("c.id > ?", params.Pagination.Cursor)
+			db = db.Where("sl.id > ?", params.Pagination.Cursor)
 		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)

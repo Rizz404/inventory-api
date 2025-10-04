@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
@@ -67,20 +66,12 @@ func (r *IssueReportRepository) applyIssueReportSorts(db *gorm.DB, sort *domain.
 		return db.Order("ir.reported_date DESC")
 	}
 
-	var orderClause string
-	switch strings.ToLower(sort.Field) {
-	case "reported_date", "resolved_date", "issue_type", "priority", "status":
-		orderClause = fmt.Sprintf("ir.%s", sort.Field)
-	case "title":
-		orderClause = "irt.title"
-	case "description":
-		orderClause = "irt.description"
-	default:
-		return db.Order("ir.reported_date DESC")
-	}
+	// Map camelCase sort field to snake_case database column
+	columnName := mapper.MapIssueReportSortFieldToColumn(sort.Field)
+	orderClause := columnName
 
 	order := "DESC"
-	if strings.ToLower(sort.Order) == "asc" {
+	if sort.Order == domain.SortOrderAsc {
 		order = "ASC"
 	}
 	return db.Order(fmt.Sprintf("%s %s", orderClause, order))

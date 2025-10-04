@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
@@ -45,16 +44,13 @@ func (r *UserRepository) applyUserSorts(db *gorm.DB, sort *domain.UserSortOption
 	if sort == nil || sort.Field == "" {
 		return db.Order("u.created_at DESC")
 	}
-	var orderClause string
-	switch strings.ToLower(sort.Field) {
-	case "name", "full_name", "email", "role", "employee_id", "is_active", "created_at", "updated_at":
-		orderClause = "u." + sort.Field
-	default:
-		return db.Order("u.created_at DESC")
-	}
+
+	// Map camelCase sort field to snake_case database column
+	columnName := mapper.MapUserSortFieldToColumn(sort.Field)
+	orderClause := "u." + columnName
 
 	order := "DESC"
-	if strings.ToLower(sort.Order) == "asc" {
+	if sort.Order == domain.SortOrderAsc {
 		order = "ASC"
 	}
 	return db.Order(fmt.Sprintf("%s %s", orderClause, order))
@@ -73,40 +69,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, payload *domain.User) (
 	return mapper.ToDomainUser(&modelUser), nil
 }
 
-func (r *UserRepository) UpdateUser(ctx context.Context, payload *domain.User) (domain.User, error) {
-	var updatedUser model.User
-	userID := payload.ID
-
-	// Update user in database
-	userUpdates := model.User{
-		Name:          payload.Name,
-		PasswordHash:  payload.PasswordHash,
-		FullName:      payload.FullName,
-		Role:          payload.Role,
-		EmployeeID:    payload.EmployeeID,
-		PreferredLang: payload.PreferredLang,
-		IsActive:      payload.IsActive,
-		AvatarURL:     payload.AvatarURL,
-	}
-
-	err := r.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", userID).Updates(userUpdates).Error
-	if err != nil {
-		return domain.User{}, domain.ErrInternal(err)
-	}
-
-	// Get updated user
-	err = r.db.WithContext(ctx).First(&updatedUser, "id = ?", userID).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.User{}, domain.ErrNotFound("user")
-		}
-		return domain.User{}, domain.ErrInternal(err)
-	}
-
-	return mapper.ToDomainUser(&updatedUser), nil
-}
-
-func (r *UserRepository) UpdateUserWithPayload(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.User, error) {
+func (r *UserRepository) UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.User, error) {
 	var updatedUser model.User
 
 	// Build update map from payload

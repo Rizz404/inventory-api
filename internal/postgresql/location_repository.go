@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
@@ -39,18 +38,13 @@ func (r *LocationRepository) applyLocationSorts(db *gorm.DB, sort *domain.Locati
 	if sort == nil || sort.Field == "" {
 		return db.Order("l.created_at DESC")
 	}
-	var orderClause string
-	switch strings.ToLower(sort.Field) {
-	case "location_code", "building", "floor", "created_at", "updated_at":
-		orderClause = "l." + sort.Field
-	case "name", "location_name":
-		orderClause = "lt.location_name"
-	default:
-		orderClause = "l.created_at"
-	}
+
+	// Map camelCase sort field to snake_case database column
+	columnName := mapper.MapLocationSortFieldToColumn(sort.Field)
+	orderClause := columnName
 
 	order := "DESC"
-	if strings.ToLower(sort.Order) == "asc" {
+	if sort.Order == domain.SortOrderAsc {
 		order = "ASC"
 	}
 	return db.Order(fmt.Sprintf("%s %s", orderClause, order))
@@ -211,11 +205,16 @@ func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params d
 		Table("locations l").
 		Preload("Translations")
 
-	if params.SearchQuery != nil && *params.SearchQuery != "" {
-		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN location_translations lt ON l.id = lt.location_id").
-			Where("l.location_code ILIKE ? OR lt.location_name ILIKE ?", searchPattern, searchPattern).
-			Distinct("l.id")
+	needsJoin := params.SearchQuery != nil && *params.SearchQuery != "" ||
+		(params.Sort != nil && params.Sort.Field == domain.LocationSortByLocationName)
+
+	if needsJoin {
+		db = db.Joins("LEFT JOIN location_translations lt ON l.id = lt.location_id")
+		if params.SearchQuery != nil && *params.SearchQuery != "" {
+			searchPattern := "%" + *params.SearchQuery + "%"
+			db = db.Where("l.location_code ILIKE ? OR lt.location_name ILIKE ?", searchPattern, searchPattern).
+				Distinct("l.id")
+		}
 	}
 
 	// Apply filters
@@ -248,11 +247,16 @@ func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params doma
 		Table("locations l").
 		Preload("Translations")
 
-	if params.SearchQuery != nil && *params.SearchQuery != "" {
-		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN location_translations lt ON l.id = lt.location_id").
-			Where("l.location_code ILIKE ? OR lt.location_name ILIKE ?", searchPattern, searchPattern).
-			Distinct("l.id")
+	needsJoin := params.SearchQuery != nil && *params.SearchQuery != "" ||
+		(params.Sort != nil && params.Sort.Field == domain.LocationSortByLocationName)
+
+	if needsJoin {
+		db = db.Joins("LEFT JOIN location_translations lt ON l.id = lt.location_id")
+		if params.SearchQuery != nil && *params.SearchQuery != "" {
+			searchPattern := "%" + *params.SearchQuery + "%"
+			db = db.Where("l.location_code ILIKE ? OR lt.location_name ILIKE ?", searchPattern, searchPattern).
+				Distinct("l.id")
+		}
 	}
 
 	// Apply filters

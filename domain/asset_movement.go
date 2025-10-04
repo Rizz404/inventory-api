@@ -4,7 +4,15 @@ import (
 	"time"
 )
 
-// --- Structs ---
+// --- Enums ---
+
+type AssetMovementSortField string
+
+const (
+	AssetMovementSortByMovementDate AssetMovementSortField = "movementDate"
+	AssetMovementSortByCreatedAt    AssetMovementSortField = "createdAt"
+	AssetMovementSortByUpdatedAt    AssetMovementSortField = "updatedAt"
+)
 
 type AssetMovement struct {
 	ID             string                     `json:"id"`
@@ -114,21 +122,15 @@ type AssetMovementFilterOptions struct {
 }
 
 type AssetMovementSortOptions struct {
-	Field string `json:"field,omitempty"`
-	Order string `json:"order,omitempty"`
-}
-
-type AssetMovementPaginationOptions struct {
-	Limit  int    `json:"limit,omitempty"`
-	Offset int    `json:"offset,omitempty"`
-	Cursor string `json:"cursor,omitempty"`
+	Field AssetMovementSortField `json:"field" example:"createdAt"`
+	Order SortOrder              `json:"order" example:"desc"`
 }
 
 type AssetMovementParams struct {
-	SearchQuery *string                         `json:"searchQuery,omitempty"`
-	Filters     *AssetMovementFilterOptions     `json:"filters,omitempty"`
-	Sort        *AssetMovementSortOptions       `json:"sort,omitempty"`
-	Pagination  *AssetMovementPaginationOptions `json:"pagination,omitempty"`
+	SearchQuery *string                     `json:"searchQuery,omitempty"`
+	Filters     *AssetMovementFilterOptions `json:"filters,omitempty"`
+	Sort        *AssetMovementSortOptions   `json:"sort,omitempty"`
+	Pagination  *PaginationOptions          `json:"pagination,omitempty"`
 }
 
 // --- Statistics ---

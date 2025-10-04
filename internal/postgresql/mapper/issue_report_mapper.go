@@ -327,3 +327,18 @@ func IssueReportStatisticsToResponse(stats *domain.IssueReportStatistics) domain
 
 	return response
 }
+
+func MapIssueReportSortFieldToColumn(field domain.IssueReportSortField) string {
+	columnMap := map[domain.IssueReportSortField]string{
+		domain.IssueReportSortByReportedDate: "ir.reported_date",
+		domain.IssueReportSortByPriority:     "ir.priority",
+		domain.IssueReportSortByStatus:       "ir.status",
+		domain.IssueReportSortByCreatedAt:    "ir.created_at",
+		domain.IssueReportSortByUpdatedAt:    "ir.updated_at",
+	}
+
+	if column, exists := columnMap[field]; exists {
+		return column
+	}
+	return "ir.reported_date"
+}

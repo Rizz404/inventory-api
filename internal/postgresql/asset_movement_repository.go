@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
@@ -68,23 +67,14 @@ func (r *AssetMovementRepository) applyAssetMovementSorts(db *gorm.DB, sort *dom
 		return db.Order("am.movement_date DESC")
 	}
 
-	var orderClause string
-	switch strings.ToLower(sort.Field) {
-	case "movement_date", "movementdate":
-		orderClause = "am.movement_date"
-	case "created_at", "createdat":
-		orderClause = "am.created_at"
-	case "updated_at", "updatedat":
-		orderClause = "am.updated_at"
-	default:
-		orderClause = "am.movement_date"
-	}
+	// Map camelCase sort field to snake_case database column
+	columnName := mapper.MapAssetMovementSortFieldToColumn(sort.Field)
+	orderClause := columnName
 
 	order := "DESC"
-	if strings.ToLower(sort.Order) == "asc" {
+	if sort.Order == domain.SortOrderAsc {
 		order = "ASC"
 	}
-
 	return db.Order(fmt.Sprintf("%s %s", orderClause, order))
 }
 

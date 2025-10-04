@@ -273,3 +273,19 @@ func NotificationStatisticsToResponse(stats *domain.NotificationStatistics) doma
 
 	return response
 }
+
+// MapNotificationSortFieldToColumn maps the NotificationSortField to the corresponding database column
+func MapNotificationSortFieldToColumn(field domain.NotificationSortField) string {
+	columnMap := map[domain.NotificationSortField]string{
+		domain.NotificationSortByType:      "n.type",
+		domain.NotificationSortByTitle:     "nt.title",
+		domain.NotificationSortByMessage:   "nt.message",
+		domain.NotificationSortByIsRead:    "n.is_read",
+		domain.NotificationSortByCreatedAt: "n.created_at",
+	}
+
+	if column, exists := columnMap[field]; exists {
+		return column
+	}
+	return "n.created_at"
+}

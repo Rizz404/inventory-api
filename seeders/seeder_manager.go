@@ -230,7 +230,7 @@ func (sm *SeederManager) SeedAll(ctx context.Context, count int) error {
 func (sm *SeederManager) getUserIDs(ctx context.Context) ([]string, error) {
 	// Create query params to get all users (large limit)
 	params := domain.UserParams{
-		Pagination: &domain.UserPaginationOptions{
+		Pagination: &domain.PaginationOptions{
 			Limit:  1000, // Large enough to get all seeded users
 			Offset: 0,
 		},
@@ -250,7 +250,7 @@ func (sm *SeederManager) getUserIDs(ctx context.Context) ([]string, error) {
 
 func (sm *SeederManager) getCategoryIDs(ctx context.Context) ([]string, error) {
 	params := domain.CategoryParams{
-		Pagination: &domain.CategoryPaginationOptions{
+		Pagination: &domain.PaginationOptions{
 			Limit:  1000,
 			Offset: 0,
 		},
@@ -270,7 +270,7 @@ func (sm *SeederManager) getCategoryIDs(ctx context.Context) ([]string, error) {
 
 func (sm *SeederManager) getLocationIDs(ctx context.Context) ([]string, error) {
 	params := domain.LocationParams{
-		Pagination: &domain.LocationPaginationOptions{
+		Pagination: &domain.PaginationOptions{
 			Limit:  1000,
 			Offset: 0,
 		},
@@ -290,7 +290,7 @@ func (sm *SeederManager) getLocationIDs(ctx context.Context) ([]string, error) {
 
 func (sm *SeederManager) getAssetIDs(ctx context.Context) ([]string, error) {
 	params := domain.AssetParams{
-		Pagination: &domain.AssetPaginationOptions{
+		Pagination: &domain.PaginationOptions{
 			Limit:  1000,
 			Offset: 0,
 		},
@@ -310,7 +310,7 @@ func (sm *SeederManager) getAssetIDs(ctx context.Context) ([]string, error) {
 
 func (sm *SeederManager) getMaintenanceScheduleIDs(ctx context.Context) ([]string, error) {
 	params := domain.MaintenanceScheduleParams{
-		Pagination: &domain.MaintenanceSchedulePaginationOptions{
+		Pagination: &domain.PaginationOptions{
 			Limit:  1000,
 			Offset: 0,
 		},

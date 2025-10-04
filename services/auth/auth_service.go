@@ -10,7 +10,7 @@ import (
 type Repository interface {
 	// * MUTATION
 	CreateUser(ctx context.Context, payload *domain.User) (domain.User, error)
-	UpdateUser(ctx context.Context, payload *domain.User) (domain.User, error)
+	UpdateUser(ctx context.Context, userId string, payload *domain.User) (domain.User, error)
 
 	// * QUERY
 	GetUserByEmail(ctx context.Context, email string) (domain.User, error)

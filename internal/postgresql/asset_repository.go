@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
@@ -15,16 +14,6 @@ import (
 
 type AssetRepository struct {
 	db *gorm.DB
-}
-
-type AssetFilterOptions struct {
-	Status     *domain.AssetStatus    `json:"status,omitempty"`
-	Condition  *domain.AssetCondition `json:"condition,omitempty"`
-	CategoryID *string                `json:"category_id,omitempty"`
-	LocationID *string                `json:"location_id,omitempty"`
-	AssignedTo *string                `json:"assigned_to,omitempty"`
-	Brand      *string                `json:"brand,omitempty"`
-	Model      *string                `json:"model,omitempty"`
 }
 
 func NewAssetRepository(db *gorm.DB) *AssetRepository {
@@ -66,16 +55,13 @@ func (r *AssetRepository) applyAssetSorts(db *gorm.DB, sort *domain.AssetSortOpt
 	if sort == nil || sort.Field == "" {
 		return db.Order("a.created_at DESC")
 	}
-	var orderClause string
-	switch strings.ToLower(sort.Field) {
-	case "asset_tag", "asset_name", "brand", "model", "serial_number", "purchase_date", "purchase_price", "vendor_name", "warranty_end", "status", "condition_status", "created_at", "updated_at":
-		orderClause = "a." + sort.Field
-	default:
-		orderClause = "a.created_at"
-	}
+
+	// Map camelCase sort field to snake_case database column
+	columnName := mapper.MapAssetSortFieldToColumn(sort.Field)
+	orderClause := columnName
 
 	order := "DESC"
-	if strings.ToLower(sort.Order) == "asc" {
+	if sort.Order == domain.SortOrderAsc {
 		order = "ASC"
 	}
 	return db.Order(fmt.Sprintf("%s %s", orderClause, order))

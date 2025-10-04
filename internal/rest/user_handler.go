@@ -62,9 +62,10 @@ func (h *UserHandler) parseUserFiltersAndSort(c *fiber.Ctx) (domain.UserParams, 
 	// * Parse sorting options
 	sortBy := c.Query("sortBy")
 	if sortBy != "" {
+		sortOrder := c.Query("sortOrder", "desc")
 		params.Sort = &domain.UserSortOptions{
-			Field: sortBy,
-			Order: c.Query("sortOrder", "desc"),
+			Field: domain.UserSortField(sortBy),
+			Order: domain.SortOrder(sortOrder),
 		}
 	}
 
@@ -264,7 +265,7 @@ func (h *UserHandler) GetUsersPaginated(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &domain.UserPaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.PaginationOptions{Limit: limit, Offset: offset}
 
 	users, total, err := h.Service.GetUsersPaginated(c.Context(), params)
 	if err != nil {
@@ -282,7 +283,7 @@ func (h *UserHandler) GetUsersCursor(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &domain.UserPaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.PaginationOptions{Limit: limit, Cursor: cursor}
 
 	users, err := h.Service.GetUsersCursor(c.Context(), params)
 	if err != nil {

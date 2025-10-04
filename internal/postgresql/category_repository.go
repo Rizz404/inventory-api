@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
@@ -46,18 +45,13 @@ func (r *CategoryRepository) applyCategorySorts(db *gorm.DB, sort *domain.Catego
 	if sort == nil || sort.Field == "" {
 		return db.Order("c.created_at DESC")
 	}
-	var orderClause string
-	switch strings.ToLower(sort.Field) {
-	case "category_code", "created_at", "updated_at":
-		orderClause = "c." + sort.Field
-	case "name", "category_name":
-		orderClause = "ct.category_name"
-	default:
-		return db.Order("c.created_at DESC")
-	}
+
+	// Map camelCase sort field to snake_case database column
+	columnName := mapper.MapCategorySortFieldToColumn(sort.Field)
+	orderClause := columnName
 
 	order := "DESC"
-	if strings.ToLower(sort.Order) == "asc" {
+	if sort.Order == domain.SortOrderAsc {
 		order = "ASC"
 	}
 	return db.Order(fmt.Sprintf("%s %s", orderClause, order))
@@ -221,11 +215,16 @@ func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params 
 		Table("categories c").
 		Preload("Translations")
 
-	if params.SearchQuery != nil && *params.SearchQuery != "" {
-		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id").
-			Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
-			Distinct("c.id")
+	needsJoin := params.SearchQuery != nil && *params.SearchQuery != "" ||
+		(params.Sort != nil && params.Sort.Field == domain.CategorySortByCategoryName)
+
+	if needsJoin {
+		db = db.Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id")
+		if params.SearchQuery != nil && *params.SearchQuery != "" {
+			searchPattern := "%" + *params.SearchQuery + "%"
+			db = db.Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
+				Distinct("c.id")
+		}
 	}
 
 	// Apply filters
@@ -258,11 +257,16 @@ func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params dom
 		Table("categories c").
 		Preload("Translations")
 
-	if params.SearchQuery != nil && *params.SearchQuery != "" {
-		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id").
-			Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
-			Distinct("c.id")
+	needsJoin := params.SearchQuery != nil && *params.SearchQuery != "" ||
+		(params.Sort != nil && params.Sort.Field == domain.CategorySortByCategoryName)
+
+	if needsJoin {
+		db = db.Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id")
+		if params.SearchQuery != nil && *params.SearchQuery != "" {
+			searchPattern := "%" + *params.SearchQuery + "%"
+			db = db.Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
+				Distinct("c.id")
+		}
 	}
 
 	// Apply filters

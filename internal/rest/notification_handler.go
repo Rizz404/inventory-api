@@ -85,9 +85,10 @@ func (h *NotificationHandler) parseNotificationFiltersAndSort(c *fiber.Ctx) (dom
 	// * Parse sorting options
 	sortBy := c.Query("sortBy")
 	if sortBy != "" {
+		sortOrder := c.Query("sortOrder", "desc")
 		params.Sort = &domain.NotificationSortOptions{
-			Field: sortBy,
-			Order: c.Query("sortOrder", "desc"),
+			Field: domain.NotificationSortField(sortBy),
+			Order: domain.SortOrder(sortOrder),
 		}
 	}
 
@@ -234,7 +235,7 @@ func (h *NotificationHandler) GetNotificationsPaginated(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &domain.NotificationPaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.PaginationOptions{Limit: limit, Offset: offset}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)
@@ -264,7 +265,7 @@ func (h *NotificationHandler) GetNotificationsCursor(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &domain.NotificationPaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.PaginationOptions{Limit: limit, Cursor: cursor}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)

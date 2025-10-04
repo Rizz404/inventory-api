@@ -199,3 +199,17 @@ func ScanLogStatisticsToResponse(stats *domain.ScanLogStatistics) domain.ScanLog
 
 	return response
 }
+
+func MapScanLogSortFieldToColumn(field domain.ScanLogSortField) string {
+	columnMap := map[domain.ScanLogSortField]string{
+		domain.ScanLogSortByScannedValue:  "scanned_value",
+		domain.ScanLogSortByScanMethod:    "scan_method",
+		domain.ScanLogSortByScanTimestamp: "scan_timestamp",
+		domain.ScanLogSortByScanResult:    "scan_result",
+	}
+
+	if column, exists := columnMap[field]; exists {
+		return column
+	}
+	return "scan_timestamp"
+}

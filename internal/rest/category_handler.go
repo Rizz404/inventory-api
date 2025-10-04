@@ -63,9 +63,10 @@ func (h *CategoryHandler) parseCategoryFiltersAndSort(c *fiber.Ctx) (domain.Cate
 	// * Parse sorting options
 	sortBy := c.Query("sortBy")
 	if sortBy != "" {
+		sortOrder := c.Query("sortOrder", "desc")
 		params.Sort = &domain.CategorySortOptions{
-			Field: sortBy,
-			Order: c.Query("sortOrder", "desc"),
+			Field: domain.CategorySortField(sortBy),
+			Order: domain.SortOrder(sortOrder),
 		}
 	}
 
@@ -145,7 +146,7 @@ func (h *CategoryHandler) GetCategoriesPaginated(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &domain.CategoryPaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.PaginationOptions{Limit: limit, Offset: offset}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)
@@ -166,7 +167,7 @@ func (h *CategoryHandler) GetCategoriesCursor(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &domain.CategoryPaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.PaginationOptions{Limit: limit, Cursor: cursor}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)

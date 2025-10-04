@@ -17,6 +17,7 @@ func ToModelUser(d *domain.User) model.User {
 		PreferredLang: d.PreferredLang,
 		IsActive:      d.IsActive,
 		AvatarURL:     d.AvatarURL,
+		FCMToken:      d.FCMToken,
 	}
 }
 
@@ -31,6 +32,7 @@ func ToModelUserForCreate(d *domain.User) model.User {
 		PreferredLang: d.PreferredLang,
 		IsActive:      d.IsActive,
 		AvatarURL:     d.AvatarURL,
+		FCMToken:      d.FCMToken,
 	}
 }
 
@@ -47,6 +49,7 @@ func ToDomainUser(m *model.User) domain.User {
 		PreferredLang: m.PreferredLang,
 		IsActive:      m.IsActive,
 		AvatarURL:     m.AvatarURL,
+		FCMToken:      m.FCMToken,
 		CreatedAt:     m.CreatedAt,
 		UpdatedAt:     m.UpdatedAt,
 	}
@@ -72,6 +75,7 @@ func UserToResponse(u *domain.User) domain.UserResponse {
 		PreferredLang: u.PreferredLang,
 		IsActive:      u.IsActive,
 		AvatarURL:     u.AvatarURL,
+		FCMToken:      u.FCMToken,
 		CreatedAt:     u.CreatedAt,
 		UpdatedAt:     u.UpdatedAt,
 	}
@@ -180,4 +184,22 @@ func ToModelUserUpdateMap(payload *domain.UpdateUserPayload) map[string]any {
 	}
 
 	return updates
+}
+
+func MapUserSortFieldToColumn(field domain.UserSortField) string {
+	columnMap := map[domain.UserSortField]string{
+		domain.UserSortByName:       "name",
+		domain.UserSortByFullName:   "full_name",
+		domain.UserSortByEmail:      "email",
+		domain.UserSortByRole:       "role",
+		domain.UserSortByEmployeeID: "employee_id",
+		domain.UserSortByIsActive:   "is_active",
+		domain.UserSortByCreatedAt:  "created_at",
+		domain.UserSortByUpdatedAt:  "updated_at",
+	}
+
+	if column, exists := columnMap[field]; exists {
+		return column
+	}
+	return "created_at"
 }

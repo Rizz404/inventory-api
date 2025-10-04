@@ -63,9 +63,10 @@ func (h *LocationHandler) parseLocationFiltersAndSort(c *fiber.Ctx) (domain.Loca
 	// * Parse sorting options
 	sortBy := c.Query("sortBy")
 	if sortBy != "" {
+		sortOrder := c.Query("sortOrder", "desc")
 		params.Sort = &domain.LocationSortOptions{
-			Field: sortBy,
-			Order: c.Query("sortOrder", "desc"),
+			Field: domain.LocationSortField(sortBy),
+			Order: domain.SortOrder(sortOrder),
 		}
 	}
 
@@ -134,7 +135,7 @@ func (h *LocationHandler) GetLocationsPaginated(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &domain.LocationPaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.PaginationOptions{Limit: limit, Offset: offset}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)
@@ -155,7 +156,7 @@ func (h *LocationHandler) GetLocationsCursor(c *fiber.Ctx) error {
 
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &domain.LocationPaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.PaginationOptions{Limit: limit, Cursor: cursor}
 
 	// * Get language from headers
 	langCode := web.GetLanguageFromContext(c)

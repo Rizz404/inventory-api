@@ -268,3 +268,17 @@ func ToModelCategoryTranslationUpdateMap(payload *domain.UpdateCategoryTranslati
 
 	return updates
 }
+
+func MapCategorySortFieldToColumn(field domain.CategorySortField) string {
+	columnMap := map[domain.CategorySortField]string{
+		domain.CategorySortByCategoryCode: "category_code",
+		domain.CategorySortByCategoryName: "ct.category_name",
+		domain.CategorySortByCreatedAt:    "c.created_at",
+		domain.CategorySortByUpdatedAt:    "c.updated_at",
+	}
+
+	if column, exists := columnMap[field]; exists {
+		return column
+	}
+	return "c.created_at"
+}

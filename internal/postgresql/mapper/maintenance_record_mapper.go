@@ -335,3 +335,17 @@ func MaintenanceRecordStatisticsToResponse(stats *domain.MaintenanceRecordStatis
 
 	return resp
 }
+
+func MapMaintenanceRecordSortFieldToColumn(field domain.MaintenanceRecordSortField) string {
+	columnMap := map[domain.MaintenanceRecordSortField]string{
+		domain.MaintenanceRecordSortByMaintenanceDate: "mr.maintenance_date",
+		domain.MaintenanceRecordSortByActualCost:      "mr.actual_cost",
+		domain.MaintenanceRecordSortByCreatedAt:       "mr.created_at",
+		domain.MaintenanceRecordSortByUpdatedAt:       "mr.updated_at",
+	}
+
+	if column, exists := columnMap[field]; exists {
+		return column
+	}
+	return "mr.created_at"
+}

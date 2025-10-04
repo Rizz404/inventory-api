@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
@@ -53,17 +52,13 @@ func (r *MaintenanceRecordRepository) applyRecordSorts(db *gorm.DB, sort *domain
 	if sort == nil || sort.Field == "" {
 		return db.Order("mr.created_at DESC")
 	}
-	var orderClause string
-	switch strings.ToLower(sort.Field) {
-	case "maintenance_date", "created_at", "updated_at":
-		orderClause = "mr." + sort.Field
-	case "title":
-		orderClause = "mrt.title"
-	default:
-		return db.Order("mr.created_at DESC")
-	}
+
+	// Map camelCase sort field to snake_case database column
+	columnName := mapper.MapMaintenanceRecordSortFieldToColumn(sort.Field)
+	orderClause := columnName
+
 	order := "DESC"
-	if strings.ToLower(sort.Order) == "asc" {
+	if sort.Order == domain.SortOrderAsc {
 		order = "ASC"
 	}
 	return db.Order(fmt.Sprintf("%s %s", orderClause, order))

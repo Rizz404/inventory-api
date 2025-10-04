@@ -52,7 +52,11 @@ func (h *MaintenanceScheduleHandler) parseFiltersAndSort(c *fiber.Ctx) (domain.M
 
 	// Sort
 	if sortBy := c.Query("sortBy"); sortBy != "" {
-		params.Sort = &domain.MaintenanceScheduleSortOptions{Field: sortBy, Order: c.Query("sortOrder", "desc")}
+		sortOrder := c.Query("sortOrder", "desc")
+		params.Sort = &domain.MaintenanceScheduleSortOptions{
+			Field: domain.MaintenanceScheduleSortField(sortBy),
+			Order: domain.SortOrder(sortOrder),
+		}
 	}
 
 	// Filters
@@ -139,7 +143,7 @@ func (h *MaintenanceScheduleHandler) GetMaintenanceSchedulesPaginated(c *fiber.C
 	}
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	params.Pagination = &domain.MaintenanceSchedulePaginationOptions{Limit: limit, Offset: offset}
+	params.Pagination = &domain.PaginationOptions{Limit: limit, Offset: offset}
 
 	langCode := web.GetLanguageFromContext(c)
 	schedules, total, err := h.Service.GetMaintenanceSchedulesPaginated(c.Context(), params, langCode)
@@ -156,7 +160,7 @@ func (h *MaintenanceScheduleHandler) GetMaintenanceSchedulesCursor(c *fiber.Ctx)
 	}
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor")
-	params.Pagination = &domain.MaintenanceSchedulePaginationOptions{Limit: limit, Cursor: cursor}
+	params.Pagination = &domain.PaginationOptions{Limit: limit, Cursor: cursor}
 
 	langCode := web.GetLanguageFromContext(c)
 	schedules, err := h.Service.GetMaintenanceSchedulesCursor(c.Context(), params, langCode)

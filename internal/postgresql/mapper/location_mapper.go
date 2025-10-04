@@ -284,3 +284,19 @@ func ToModelLocationTranslationUpdateMap(payload *domain.UpdateLocationTranslati
 
 	return updates
 }
+
+func MapLocationSortFieldToColumn(field domain.LocationSortField) string {
+	columnMap := map[domain.LocationSortField]string{
+		domain.LocationSortByLocationCode: "location_code",
+		domain.LocationSortByLocationName: "lt.location_name",
+		domain.LocationSortByBuilding:     "l.building",
+		domain.LocationSortByFloor:        "l.floor",
+		domain.LocationSortByCreatedAt:    "l.created_at",
+		domain.LocationSortByUpdatedAt:    "l.updated_at",
+	}
+
+	if column, exists := columnMap[field]; exists {
+		return column
+	}
+	return "l.created_at"
+}

@@ -21,6 +21,15 @@ const (
 	ScanResultAssetNotFound ScanResultType = "Asset Not Found"
 )
 
+type ScanLogSortField string
+
+const (
+	ScanLogSortByScannedValue  ScanLogSortField = "scannedValue"
+	ScanLogSortByScanMethod    ScanLogSortField = "scanMethod"
+	ScanLogSortByScanTimestamp ScanLogSortField = "scanTimestamp"
+	ScanLogSortByScanResult    ScanLogSortField = "scanResult"
+)
+
 // --- Structs ---
 
 type ScanLog struct {
@@ -87,21 +96,15 @@ type ScanLogFilterOptions struct {
 }
 
 type ScanLogSortOptions struct {
-	Field string `json:"field"`
-	Order string `json:"order"`
-}
-
-type ScanLogPaginationOptions struct {
-	Limit  int    `json:"limit"`
-	Offset int    `json:"offset"`
-	Cursor string `json:"cursor"`
+	Field ScanLogSortField `json:"field" example:"scanTimestamp"`
+	Order SortOrder        `json:"order" example:"desc"`
 }
 
 type ScanLogParams struct {
-	SearchQuery *string                   `json:"searchQuery,omitempty"`
-	Filters     *ScanLogFilterOptions     `json:"filters,omitempty"`
-	Sort        *ScanLogSortOptions       `json:"sort,omitempty"`
-	Pagination  *ScanLogPaginationOptions `json:"pagination,omitempty"`
+	SearchQuery *string               `json:"searchQuery,omitempty"`
+	Filters     *ScanLogFilterOptions `json:"filters,omitempty"`
+	Sort        *ScanLogSortOptions   `json:"sort,omitempty"`
+	Pagination  *PaginationOptions    `json:"pagination,omitempty"`
 }
 
 // --- Statistics ---

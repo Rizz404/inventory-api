@@ -2,7 +2,18 @@ package domain
 
 import "time"
 
-// --- Structs ---
+// --- Enums ---
+
+type LocationSortField string
+
+const (
+	LocationSortByLocationCode LocationSortField = "locationCode"
+	LocationSortByLocationName LocationSortField = "locationName"
+	LocationSortByBuilding     LocationSortField = "building"
+	LocationSortByFloor        LocationSortField = "floor"
+	LocationSortByCreatedAt    LocationSortField = "createdAt"
+	LocationSortByUpdatedAt    LocationSortField = "updatedAt"
+)
 
 type Location struct {
 	ID           string                `json:"id"`
@@ -89,21 +100,15 @@ type LocationFilterOptions struct {
 }
 
 type LocationSortOptions struct {
-	Field string `json:"field"`
-	Order string `json:"order"`
-}
-
-type LocationPaginationOptions struct {
-	Limit  int    `json:"limit"`
-	Offset int    `json:"offset"`
-	Cursor string `json:"cursor"`
+	Field LocationSortField `json:"field" example:"createdAt"`
+	Order SortOrder         `json:"order" example:"desc"`
 }
 
 type LocationParams struct {
-	SearchQuery *string                    `json:"searchQuery,omitempty"`
-	Filters     *LocationFilterOptions     `json:"filters,omitempty"`
-	Sort        *LocationSortOptions       `json:"sort,omitempty"`
-	Pagination  *LocationPaginationOptions `json:"pagination,omitempty"`
+	SearchQuery *string                `json:"searchQuery,omitempty"`
+	Filters     *LocationFilterOptions `json:"filters,omitempty"`
+	Sort        *LocationSortOptions   `json:"sort,omitempty"`
+	Pagination  *PaginationOptions     `json:"pagination,omitempty"`
 }
 
 // --- Statistics ---

@@ -2,6 +2,17 @@ package domain
 
 import "time"
 
+// --- Enums ---
+
+type CategorySortField string
+
+const (
+	CategorySortByCategoryCode CategorySortField = "categoryCode"
+	CategorySortByCategoryName CategorySortField = "categoryName"
+	CategorySortByCreatedAt    CategorySortField = "createdAt"
+	CategorySortByUpdatedAt    CategorySortField = "updatedAt"
+)
+
 // --- Structs ---
 
 type Category struct {
@@ -83,21 +94,15 @@ type CategoryFilterOptions struct {
 }
 
 type CategorySortOptions struct {
-	Field string `json:"field"`
-	Order string `json:"order"`
-}
-
-type CategoryPaginationOptions struct {
-	Limit  int    `json:"limit"`
-	Offset int    `json:"offset"`
-	Cursor string `json:"cursor"`
+	Field CategorySortField `json:"field" example:"createdAt"`
+	Order SortOrder         `json:"order" example:"desc"`
 }
 
 type CategoryParams struct {
-	SearchQuery *string                    `json:"searchQuery,omitempty"`
-	Filters     *CategoryFilterOptions     `json:"filters,omitempty"`
-	Sort        *CategorySortOptions       `json:"sort,omitempty"`
-	Pagination  *CategoryPaginationOptions `json:"pagination,omitempty"`
+	SearchQuery *string                `json:"searchQuery,omitempty"`
+	Filters     *CategoryFilterOptions `json:"filters,omitempty"`
+	Sort        *CategorySortOptions   `json:"sort,omitempty"`
+	Pagination  *PaginationOptions     `json:"pagination,omitempty"`
 }
 
 // --- Statistics ---
