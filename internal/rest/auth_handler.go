@@ -13,7 +13,8 @@ import (
 type AuthService interface {
 	// * MUTATION
 	Register(ctx context.Context, payload *domain.RegisterPayload) (domain.User, error)
-	Login(ctx context.Context, payload *domain.LoginPayload) (domain.LoginResponse, error)
+	Login(ctx context.Context, payload *domain.LoginPayload) (domain.AuthResponse, error)
+	RefreshToken(ctx context.Context, payload *domain.RefreshTokenPayload) (domain.AuthResponse, error)
 
 	// * QUERY
 }
@@ -34,6 +35,7 @@ func NewAuthHandler(app fiber.Router, s AuthService) {
 	// * Create
 	users.Post("/register", handler.Register)
 	users.Post("/login", handler.Login)
+	users.Post("/refresh", handler.RefreshToken)
 
 }
 
@@ -75,7 +77,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			loginPayload	body		domain.LoginPayload	true	"User login credentials"
-//	@Success		200				{object}	web.SuccessResponse{data=domain.LoginResponse}	"Login successful"
+//	@Success		200				{object}	web.SuccessResponse{data=domain.AuthResponse}	"Login successful"
 //	@Failure		400				{object}	web.ErrorResponse{error=web.ValidationErrors}	"Validation failed"
 //	@Failure		401				{object}	web.ErrorResponse	"Invalid credentials"
 //	@Failure		500				{object}	web.ErrorResponse	"Internal server error"
@@ -92,6 +94,33 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessLoginKey, user)
+}
+
+// RefreshToken godoc
+//
+//	@Summary		Refresh access token
+//	@Description	Get new access and refresh tokens using a valid refresh token
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			refreshTokenPayload	body		domain.RefreshTokenPayload	true	"Refresh token data"
+//	@Success		200					{object}	web.SuccessResponse{data=domain.AuthResponse}	"Token refreshed successfully"
+//	@Failure		400					{object}	web.ErrorResponse{error=web.ValidationErrors}	"Validation failed"
+//	@Failure		401					{object}	web.ErrorResponse	"Invalid or expired refresh token"
+//	@Failure		500					{object}	web.ErrorResponse	"Internal server error"
+//	@Router			/auth/refresh [post]
+func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
+	var payload domain.RefreshTokenPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	authResponse, err := h.Service.RefreshToken(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessTokenRefreshedKey, authResponse)
 }
 
 // *===========================QUERY===========================*

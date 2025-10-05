@@ -221,9 +221,10 @@ const (
 	SuccessMaintenanceRecordStatisticsRetrievedKey   MessageKey = "success.maintenance.record_statistics_retrieved"
 
 	// * Auth-specific success keys
-	SuccessLoginKey   MessageKey = "success.auth.login"
-	SuccessLogoutKey  MessageKey = "success.auth.logout"
-	SuccessRefreshKey MessageKey = "success.auth.refresh"
+	SuccessLoginKey          MessageKey = "success.auth.login"
+	SuccessLogoutKey         MessageKey = "success.auth.logout"
+	SuccessRefreshKey        MessageKey = "success.auth.refresh"
+	SuccessTokenRefreshedKey MessageKey = "success.auth.token_refreshed"
 
 	// * File upload success keys
 	SuccessFileUploadedKey          MessageKey = "success.file.uploaded"
@@ -606,6 +607,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"ja-JP": "ログアウト成功",
 	},
 	SuccessRefreshKey: {
+		"en-US": "Token refreshed successfully",
+		"id-ID": "Token berhasil diperbarui",
+		"ja-JP": "トークンが正常に更新されました",
+	},
+	SuccessTokenRefreshedKey: {
 		"en-US": "Token refreshed successfully",
 		"id-ID": "Token berhasil diperbarui",
 		"ja-JP": "トークンが正常に更新されました",

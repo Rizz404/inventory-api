@@ -117,6 +117,10 @@ func ValidateToken(tokenString string, secretKey []byte) (*JWTClaims, error) {
 	return claims, nil
 }
 
+func ValidateRefreshToken(tokenString string) (*JWTClaims, error) {
+	return ValidateToken(tokenString, refreshTokenSecret)
+}
+
 func min(a, b int) int {
 	if a < b {
 		return a

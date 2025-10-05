@@ -75,11 +75,14 @@ type UserListResponse struct {
 	UpdatedAt     time.Time `json:"updatedAt" example:"2023-01-01T00:00:00Z"`
 }
 
-type LoginResponse struct {
+type AuthResponse struct {
 	User         UserResponse `json:"user"`
 	AccessToken  string       `json:"accessToken" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
 	RefreshToken string       `json:"refreshToken" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
 }
+
+// Alias untuk backward compatibility
+type LoginResponse = AuthResponse
 
 // --- Payloads ---
 
@@ -121,6 +124,10 @@ type UpdateUserPayload struct {
 
 type UpdateFCMTokenPayload struct {
 	FCMToken string `json:"fcmToken" form:"fcmToken" validate:"required"`
+}
+
+type RefreshTokenPayload struct {
+	RefreshToken string `json:"refreshToken" form:"refreshToken" validate:"required"`
 }
 
 // --- Query Parameters ---
