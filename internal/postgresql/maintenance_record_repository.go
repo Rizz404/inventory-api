@@ -216,7 +216,7 @@ func (r *MaintenanceRecordRepository) GetRecordsPaginated(ctx context.Context, p
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON mr.id = mrt.record_id").
 			Where("mrt.title ILIKE ?", sq).
-			Distinct("mr.id")
+			Distinct("mr.id, mr.created_at")
 	}
 
 	// Apply filters, sorts, and pagination manually
@@ -249,7 +249,7 @@ func (r *MaintenanceRecordRepository) GetRecordsCursor(ctx context.Context, para
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON mr.id = mrt.record_id").
 			Where("mrt.title ILIKE ?", sq).
-			Distinct("mr.id")
+			Distinct("mr.id, mr.created_at")
 	}
 
 	// Apply filters, sorts, and cursor pagination manually
@@ -304,7 +304,7 @@ func (r *MaintenanceRecordRepository) CountRecords(ctx context.Context, params d
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON mr.id = mrt.record_id").
 			Where("mrt.title ILIKE ?", sq).
-			Distinct("mr.id")
+			Distinct("mr.id, mr.created_at")
 	}
 	db = r.applyRecordFilters(db, params.Filters)
 	if err := db.Count(&count).Error; err != nil {

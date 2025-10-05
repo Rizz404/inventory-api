@@ -41,19 +41,25 @@ func (r *CategoryRepository) applyCategoryFilters(db *gorm.DB, filters *domain.C
 	return db
 }
 
-func (r *CategoryRepository) applyCategorySorts(db *gorm.DB, sort *domain.CategorySortOptions) *gorm.DB {
+func (r *CategoryRepository) applyCategorySorts(db *gorm.DB, sort *domain.CategorySortOptions, langCode string) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("c.created_at DESC")
 	}
-
-	// Map camelCase sort field to snake_case database column
-	columnName := mapper.MapCategorySortFieldToColumn(sort.Field)
-	orderClause := columnName
 
 	order := "DESC"
 	if sort.Order == domain.SortOrderAsc {
 		order = "ASC"
 	}
+
+	if sort.Field == domain.CategorySortByCategoryName {
+		// Use subquery for sorting by translation
+		subquery := fmt.Sprintf("(SELECT category_name FROM category_translations WHERE category_id = c.id AND lang_code = '%s' LIMIT 1)", langCode)
+		return db.Order(fmt.Sprintf("%s %s", subquery, order))
+	}
+
+	// Map camelCase sort field to snake_case database column
+	columnName := mapper.MapCategorySortFieldToColumn(sort.Field)
+	orderClause := columnName
 	return db.Order(fmt.Sprintf("%s %s", orderClause, order))
 }
 
@@ -219,11 +225,12 @@ func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params 
 		(params.Sort != nil && params.Sort.Field == domain.CategorySortByCategoryName)
 
 	if needsJoin {
-		db = db.Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id")
+		db = db.Select("c.id, c.category_code, c.created_at, c.updated_at").
+			Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id")
 		if params.SearchQuery != nil && *params.SearchQuery != "" {
 			searchPattern := "%" + *params.SearchQuery + "%"
 			db = db.Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
-				Distinct("c.id")
+				Distinct("c.id, c.created_at")
 		}
 	}
 
@@ -231,7 +238,7 @@ func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params 
 	db = r.applyCategoryFilters(db, params.Filters)
 
 	// Apply sorting
-	db = r.applyCategorySorts(db, params.Sort)
+	db = r.applyCategorySorts(db, params.Sort, langCode)
 
 	// Apply pagination
 	if params.Pagination != nil {
@@ -261,11 +268,12 @@ func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params dom
 		(params.Sort != nil && params.Sort.Field == domain.CategorySortByCategoryName)
 
 	if needsJoin {
-		db = db.Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id")
+		db = db.Select("c.id, c.category_code, c.created_at, c.updated_at").
+			Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id")
 		if params.SearchQuery != nil && *params.SearchQuery != "" {
 			searchPattern := "%" + *params.SearchQuery + "%"
 			db = db.Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
-				Distinct("c.id")
+				Distinct("c.id, c.created_at")
 		}
 	}
 
@@ -273,7 +281,7 @@ func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params dom
 	db = r.applyCategoryFilters(db, params.Filters)
 
 	// Apply sorting
-	db = r.applyCategorySorts(db, params.Sort)
+	db = r.applyCategorySorts(db, params.Sort, langCode)
 
 	// Apply cursor-based pagination
 	if params.Pagination != nil {

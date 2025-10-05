@@ -42,19 +42,31 @@ func (r *NotificationRepository) applyNotificationFilters(db *gorm.DB, filters *
 	return db
 }
 
-func (r *NotificationRepository) applyNotificationSorts(db *gorm.DB, sort *domain.NotificationSortOptions) *gorm.DB {
+func (r *NotificationRepository) applyNotificationSorts(db *gorm.DB, sort *domain.NotificationSortOptions, langCode string) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("n.created_at DESC")
 	}
-
-	// Map camelCase sort field to snake_case database column
-	columnName := mapper.MapNotificationSortFieldToColumn(sort.Field)
-	orderClause := columnName
 
 	order := "DESC"
 	if sort.Order == domain.SortOrderAsc {
 		order = "ASC"
 	}
+
+	if sort.Field == domain.NotificationSortByTitle {
+		// Use subquery for sorting by translation
+		subquery := fmt.Sprintf("(SELECT title FROM notification_translations WHERE notification_id = n.id AND lang_code = '%s' LIMIT 1)", langCode)
+		return db.Order(fmt.Sprintf("%s %s", subquery, order))
+	}
+
+	if sort.Field == domain.NotificationSortByMessage {
+		// Use subquery for sorting by translation
+		subquery := fmt.Sprintf("(SELECT message FROM notification_translations WHERE notification_id = n.id AND lang_code = '%s' LIMIT 1)", langCode)
+		return db.Order(fmt.Sprintf("%s %s", subquery, order))
+	}
+
+	// Map camelCase sort field to snake_case database column
+	columnName := mapper.MapNotificationSortFieldToColumn(sort.Field)
+	orderClause := columnName
 	return db.Order(fmt.Sprintf("%s %s", orderClause, order))
 }
 
@@ -208,16 +220,17 @@ func (r *NotificationRepository) GetNotificationsPaginated(ctx context.Context, 
 
 	if needsJoin {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN notification_translations nt ON n.id = nt.notification_id").
+		db = db.Select("n.id, n.type, n.is_read, n.created_at, n.updated_at").
+			Joins("LEFT JOIN notification_translations nt ON n.id = nt.notification_id").
 			Where("nt.title ILIKE ? OR nt.message ILIKE ?", searchPattern, searchPattern).
-			Distinct("n.id")
+			Distinct("n.id, n.created_at")
 	}
 
 	// Apply filters
 	db = r.applyNotificationFilters(db, params.Filters)
 
 	// Apply sorting
-	db = r.applyNotificationSorts(db, params.Sort)
+	db = r.applyNotificationSorts(db, params.Sort, langCode)
 
 	// Apply pagination
 	if params.Pagination != nil {
@@ -247,16 +260,17 @@ func (r *NotificationRepository) GetNotificationsCursor(ctx context.Context, par
 
 	if needsJoin {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN notification_translations nt ON n.id = nt.notification_id").
+		db = db.Select("n.id, n.type, n.is_read, n.created_at, n.updated_at").
+			Joins("LEFT JOIN notification_translations nt ON n.id = nt.notification_id").
 			Where("nt.title ILIKE ? OR nt.message ILIKE ?", searchPattern, searchPattern).
-			Distinct("n.id")
+			Distinct("n.id, n.created_at")
 	}
 
 	// Apply filters
 	db = r.applyNotificationFilters(db, params.Filters)
 
 	// Apply sorting
-	db = r.applyNotificationSorts(db, params.Sort)
+	db = r.applyNotificationSorts(db, params.Sort, langCode)
 
 	// Apply cursor-based pagination
 	if params.Pagination != nil {

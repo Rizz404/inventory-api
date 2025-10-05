@@ -34,19 +34,25 @@ func (r *LocationRepository) applyLocationFilters(db *gorm.DB, filters *domain.L
 	return db
 }
 
-func (r *LocationRepository) applyLocationSorts(db *gorm.DB, sort *domain.LocationSortOptions) *gorm.DB {
+func (r *LocationRepository) applyLocationSorts(db *gorm.DB, sort *domain.LocationSortOptions, langCode string) *gorm.DB {
 	if sort == nil || sort.Field == "" {
 		return db.Order("l.created_at DESC")
 	}
-
-	// Map camelCase sort field to snake_case database column
-	columnName := mapper.MapLocationSortFieldToColumn(sort.Field)
-	orderClause := columnName
 
 	order := "DESC"
 	if sort.Order == domain.SortOrderAsc {
 		order = "ASC"
 	}
+
+	if sort.Field == domain.LocationSortByLocationName {
+		// Use subquery for sorting by translation
+		subquery := fmt.Sprintf("(SELECT location_name FROM location_translations WHERE location_id = l.id AND lang_code = '%s' LIMIT 1)", langCode)
+		return db.Order(fmt.Sprintf("%s %s", subquery, order))
+	}
+
+	// Map camelCase sort field to snake_case database column
+	columnName := mapper.MapLocationSortFieldToColumn(sort.Field)
+	orderClause := columnName
 	return db.Order(fmt.Sprintf("%s %s", orderClause, order))
 }
 
@@ -209,11 +215,12 @@ func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params d
 		(params.Sort != nil && params.Sort.Field == domain.LocationSortByLocationName)
 
 	if needsJoin {
-		db = db.Joins("LEFT JOIN location_translations lt ON l.id = lt.location_id")
+		db = db.Select("l.id, l.location_code, l.building, l.floor, l.latitude, l.longitude, l.created_at, l.updated_at").
+			Joins("LEFT JOIN location_translations lt ON l.id = lt.location_id")
 		if params.SearchQuery != nil && *params.SearchQuery != "" {
 			searchPattern := "%" + *params.SearchQuery + "%"
 			db = db.Where("l.location_code ILIKE ? OR lt.location_name ILIKE ?", searchPattern, searchPattern).
-				Distinct("l.id")
+				Distinct("l.id, l.created_at")
 		}
 	}
 
@@ -221,7 +228,7 @@ func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params d
 	db = r.applyLocationFilters(db, params.Filters)
 
 	// Apply sorting
-	db = r.applyLocationSorts(db, params.Sort)
+	db = r.applyLocationSorts(db, params.Sort, langCode)
 
 	// Apply pagination
 	if params.Pagination != nil {
@@ -251,11 +258,12 @@ func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params doma
 		(params.Sort != nil && params.Sort.Field == domain.LocationSortByLocationName)
 
 	if needsJoin {
-		db = db.Joins("LEFT JOIN location_translations lt ON l.id = lt.location_id")
+		db = db.Select("l.id, l.location_code, l.building, l.floor, l.latitude, l.longitude, l.created_at, l.updated_at").
+			Joins("LEFT JOIN location_translations lt ON l.id = lt.location_id")
 		if params.SearchQuery != nil && *params.SearchQuery != "" {
 			searchPattern := "%" + *params.SearchQuery + "%"
 			db = db.Where("l.location_code ILIKE ? OR lt.location_name ILIKE ?", searchPattern, searchPattern).
-				Distinct("l.id")
+				Distinct("l.id, l.created_at")
 		}
 	}
 
@@ -263,7 +271,7 @@ func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params doma
 	db = r.applyLocationFilters(db, params.Filters)
 
 	// Apply sorting
-	db = r.applyLocationSorts(db, params.Sort)
+	db = r.applyLocationSorts(db, params.Sort, langCode)
 
 	// Apply cursor-based pagination
 	if params.Pagination != nil {

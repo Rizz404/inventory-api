@@ -212,7 +212,7 @@ func (r *MaintenanceScheduleRepository) GetSchedulesPaginated(ctx context.Contex
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON ms.id = mst.schedule_id").
 			Where("mst.title ILIKE ?", sq).
-			Distinct("ms.id")
+			Distinct("ms.id, ms.created_at")
 	}
 
 	// Apply filters, sorts, and pagination manually
@@ -245,7 +245,7 @@ func (r *MaintenanceScheduleRepository) GetSchedulesCursor(ctx context.Context, 
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON ms.id = mst.schedule_id").
 			Where("mst.title ILIKE ?", sq).
-			Distinct("ms.id")
+			Distinct("ms.id, ms.created_at")
 	}
 
 	// Apply filters, sorts, and cursor pagination manually
@@ -300,7 +300,7 @@ func (r *MaintenanceScheduleRepository) CountSchedules(ctx context.Context, para
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON ms.id = mst.schedule_id").
 			Where("mst.title ILIKE ?", sq).
-			Distinct("ms.id")
+			Distinct("ms.id, ms.created_at")
 	}
 	db = r.applyScheduleFilters(db, params.Filters)
 	if err := db.Count(&count).Error; err != nil {

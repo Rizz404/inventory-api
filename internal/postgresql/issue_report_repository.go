@@ -270,7 +270,7 @@ func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, pa
 		searchPattern := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id").
 			Where("ir.issue_type ILIKE ? OR irt.title ILIKE ? OR irt.description ILIKE ?", searchPattern, searchPattern, searchPattern).
-			Distinct("ir.id")
+			Distinct("ir.id, ir.reported_date")
 	}
 
 	// Apply filters, sorts, and pagination manually
@@ -306,7 +306,7 @@ func (r *IssueReportRepository) GetIssueReportsCursor(ctx context.Context, param
 		searchPattern := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id").
 			Where("ir.issue_type ILIKE ? OR irt.title ILIKE ? OR irt.description ILIKE ?", searchPattern, searchPattern, searchPattern).
-			Distinct("ir.id")
+			Distinct("ir.id, ir.reported_date")
 	}
 
 	// Apply filters, sorts, and cursor pagination manually
@@ -366,7 +366,7 @@ func (r *IssueReportRepository) CountIssueReports(ctx context.Context, params do
 		searchPattern := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id").
 			Where("ir.issue_type ILIKE ? OR irt.title ILIKE ? OR irt.description ILIKE ?", searchPattern, searchPattern, searchPattern).
-			Distinct("ir.id")
+			Distinct("ir.id, ir.reported_date")
 	}
 
 	db = r.applyIssueReportFilters(db, params.Filters)
