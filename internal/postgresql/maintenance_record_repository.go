@@ -210,7 +210,7 @@ func (r *MaintenanceRecordRepository) GetRecordsPaginated(ctx context.Context, p
 		Table("maintenance_records mr").
 		Preload("Translations").
 		Preload("Asset").
-		Preload("PerformedByUser")
+		Preload("User")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
@@ -243,7 +243,7 @@ func (r *MaintenanceRecordRepository) GetRecordsCursor(ctx context.Context, para
 		Table("maintenance_records mr").
 		Preload("Translations").
 		Preload("Asset").
-		Preload("PerformedByUser")
+		Preload("User")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
@@ -276,7 +276,7 @@ func (r *MaintenanceRecordRepository) GetRecordById(ctx context.Context, recordI
 		Table("maintenance_records mr").
 		Preload("Translations").
 		Preload("Asset").
-		Preload("PerformedByUser").
+		Preload("User").
 		First(&m, "id = ?", recordId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

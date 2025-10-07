@@ -29,13 +29,12 @@ type CreateJWTPayload struct {
 }
 
 func CreateAccessToken(payload *CreateJWTPayload) (string, error) {
-	// DEBUG: Print secret saat create token
 	fmt.Printf("=== DEBUG CREATE ACCESS TOKEN ===\n")
 	fmt.Printf("JWT_ACCESS_SECRET env: %s\n", os.Getenv("JWT_ACCESS_SECRET"))
 	fmt.Printf("accessTokenSecret bytes: %s\n", string(accessTokenSecret))
 	fmt.Printf("Payload: %+v\n", payload)
 
-	expirationTime := time.Now().Add(1 * time.Hour)
+	expirationTime := time.Now().Add(7 * 24 * time.Hour)
 
 	claims := &JWTClaims{
 		IDUser:   payload.IDUser,
@@ -67,10 +66,10 @@ func CreateAccessToken(payload *CreateJWTPayload) (string, error) {
 }
 
 func CreateRefreshToken(idUser string) (string, error) {
-	expirationTime := time.Now().Add(7 * time.Hour)
+	expirationTime := time.Now().Add(30 * 24 * time.Hour)
 
 	claims := &JWTClaims{
-		IDUser: idUser, // * Hanya butuh ID untuk refresh
+		IDUser: idUser,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -84,7 +83,6 @@ func CreateRefreshToken(idUser string) (string, error) {
 }
 
 func ValidateToken(tokenString string, secretKey []byte) (*JWTClaims, error) {
-	// DEBUG: Print secret saat validate
 	fmt.Printf("=== DEBUG VALIDATE TOKEN ===\n")
 	fmt.Printf("Secret key used: %s\n", string(secretKey))
 	fmt.Printf("Token to validate: %s...\n", tokenString[:min(len(tokenString), 50)])

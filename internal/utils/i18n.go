@@ -238,755 +238,903 @@ var messageTranslations = map[MessageKey]map[string]string{
 	// * Error messages
 	ErrBadRequestKey: {
 		"en-US": "Bad request",
-		"id-ID": "Permintaan tidak valid",
+		// "id-ID": "Permintaan tidak valid",
 		"ja-JP": "不正なリクエスト",
 	},
 	ErrUnauthorizedKey: {
 		"en-US": "Unauthorized access",
-		"id-ID": "Akses tidak diotorisasi",
+		// "id-ID": "Akses tidak diotorisasi",
 		"ja-JP": "認証されていないアクセス",
 	},
 	ErrForbiddenKey: {
 		"en-US": "Access forbidden",
-		"id-ID": "Akses dilarang",
+		// "id-ID": "Akses dilarang",
 		"ja-JP": "アクセス禁止",
 	},
 	ErrNotFoundKey: {
 		"en-US": "Resource not found",
-		"id-ID": "Sumber daya tidak ditemukan",
+		// "id-ID": "Sumber daya tidak ditemukan",
 		"ja-JP": "リソースが見つかりません",
 	},
 	ErrConflictKey: {
 		"en-US": "Resource conflict",
-		"id-ID": "Konflik sumber daya",
+		// "id-ID": "Konflik sumber daya",
 		"ja-JP": "リソースの競合",
 	},
 	ErrInternalKey: {
 		"en-US": "An unexpected internal error occurred",
-		"id-ID": "Terjadi kesalahan internal yang tidak terduga",
+		// "id-ID": "Terjadi kesalahan internal yang tidak terduga",
 		"ja-JP": "予期しない内部エラーが発生しました",
 	},
 	ErrValidationKey: {
 		"en-US": "Validation failed",
-		"id-ID": "Validasi gagal",
+		// "id-ID": "Validasi gagal",
 		"ja-JP": "検証に失敗しました",
 	},
 
 	// * User-specific error messages
 	ErrUserNotFoundKey: {
 		"en-US": "User not found",
-		"id-ID": "Pengguna tidak ditemukan",
+		// "id-ID": "Pengguna tidak ditemukan",
 		"ja-JP": "ユーザーが見つかりません",
 	},
 	ErrUserNameExistsKey: {
 		"en-US": "Name already exists",
-		"id-ID": "Nama pengguna sudah ada",
+		// "id-ID": "Nama pengguna sudah ada",
 		"ja-JP": "ユーザー名は既に存在します",
 	},
 	ErrUserEmailExistsKey: {
 		"en-US": "Email already exists",
-		"id-ID": "Email sudah ada",
+		// "id-ID": "Email sudah ada",
 		"ja-JP": "メールアドレスは既に存在します",
 	},
 	ErrUserIDRequiredKey: {
 		"en-US": "User ID is required",
-		"id-ID": "ID pengguna diperlukan",
+		// "id-ID": "ID pengguna diperlukan",
 		"ja-JP": "ユーザーIDが必要です",
 	},
 	ErrUserNameRequiredKey: {
 		"en-US": "Name is required",
-		"id-ID": "Nama pengguna diperlukan",
+		// "id-ID": "Nama pengguna diperlukan",
 		"ja-JP": "ユーザー名が必要です",
 	},
 	ErrUserEmailRequiredKey: {
 		"en-US": "Email is required",
-		"id-ID": "Email diperlukan",
+		// "id-ID": "Email diperlukan",
 		"ja-JP": "メールアドレスが必要です",
 	},
 
 	// * Category-specific error messages
 	ErrCategoryNotFoundKey: {
 		"en-US": "Category not found",
-		"id-ID": "Kategori tidak ditemukan",
+		// "id-ID": "Kategori tidak ditemukan",
 		"ja-JP": "カテゴリが見つかりません",
 	},
 	ErrCategoryCodeExistsKey: {
 		"en-US": "Category code already exists",
-		"id-ID": "Kode kategori sudah ada",
+		// "id-ID": "Kode kategori sudah ada",
 		"ja-JP": "カテゴリコードは既に存在します",
 	},
 	ErrCategoryIDRequiredKey: {
 		"en-US": "Category ID is required",
-		"id-ID": "ID kategori diperlukan",
+		// "id-ID": "ID kategori diperlukan",
 		"ja-JP": "カテゴリIDが必要です",
 	},
 	ErrCategoryCodeRequiredKey: {
 		"en-US": "Category code is required",
-		"id-ID": "Kode kategori diperlukan",
+		// "id-ID": "Kode kategori diperlukan",
 		"ja-JP": "カテゴリコードが必要です",
 	},
 	ErrCategoryNameRequiredKey: {
 		"en-US": "Category name is required",
-		"id-ID": "Nama kategori diperlukan",
+		// "id-ID": "Nama kategori diperlukan",
 		"ja-JP": "カテゴリ名が必要です",
 	},
 
 	// * Location-specific error messages
 	ErrLocationNotFoundKey: {
 		"en-US": "Location not found",
-		"id-ID": "Lokasi tidak ditemukan",
+		// "id-ID": "Lokasi tidak ditemukan",
 		"ja-JP": "ロケーションが見つかりません",
 	},
 	ErrLocationCodeExistsKey: {
 		"en-US": "Location code already exists",
-		"id-ID": "Kode lokasi sudah ada",
+		// "id-ID": "Kode lokasi sudah ada",
 		"ja-JP": "ロケーションコードは既に存在します",
 	},
 	ErrLocationIDRequiredKey: {
 		"en-US": "Location ID is required",
-		"id-ID": "ID lokasi diperlukan",
+		// "id-ID": "ID lokasi diperlukan",
 		"ja-JP": "ロケーションIDが必要です",
 	},
 	ErrLocationCodeRequiredKey: {
 		"en-US": "Location code is required",
-		"id-ID": "Kode lokasi diperlukan",
+		// "id-ID": "Kode lokasi diperlukan",
 		"ja-JP": "ロケーションコードが必要です",
 	},
 	ErrLocationNameRequiredKey: {
 		"en-US": "Location name is required",
-		"id-ID": "Nama lokasi diperlukan",
+		// "id-ID": "Nama lokasi diperlukan",
 		"ja-JP": "ロケーション名が必要です",
+	},
+
+	// * Asset-specific error messages
+	ErrAssetNotFoundKey: {
+		"en-US": "Asset not found",
+		// "id-ID": "Aset tidak ditemukan",
+		"ja-JP": "アセットが見つかりません",
+	},
+	ErrAssetTagExistsKey: {
+		"en-US": "Asset tag already exists",
+		// "id-ID": "Tag aset sudah ada",
+		"ja-JP": "アセットタグは既に存在します",
+	},
+	ErrAssetDataMatrixExistsKey: {
+		"en-US": "Data matrix already exists",
+		// "id-ID": "Data matrix sudah ada",
+		"ja-JP": "データマトリックスは既に存在します",
+	},
+	ErrAssetSerialNumberExistsKey: {
+		"en-US": "Serial number already exists",
+		// "id-ID": "Nomor seri sudah ada",
+		"ja-JP": "シリアル番号は既に存在します",
+	},
+	ErrAssetIDRequiredKey: {
+		"en-US": "Asset ID is required",
+		// "id-ID": "ID aset diperlukan",
+		"ja-JP": "アセットIDが必要です",
+	},
+	ErrAssetTagRequiredKey: {
+		"en-US": "Asset tag is required",
+		// "id-ID": "Tag aset diperlukan",
+		"ja-JP": "アセットタグが必要です",
+	},
+	ErrAssetDataMatrixRequiredKey: {
+		"en-US": "Data matrix is required",
+		// "id-ID": "Data matrix diperlukan",
+		"ja-JP": "データマトリックスが必要です",
+	},
+	ErrAssetSerialNumberRequiredKey: {
+		"en-US": "Serial number is required",
+		// "id-ID": "Nomor seri diperlukan",
+		"ja-JP": "シリアル番号が必要です",
+	},
+
+	// * Scan log-specific error messages
+	ErrScanLogNotFoundKey: {
+		"en-US": "Scan log not found",
+		// "id-ID": "Log scan tidak ditemukan",
+		"ja-JP": "スキャンログが見つかりません",
+	},
+	ErrScanLogIDRequiredKey: {
+		"en-US": "Scan log ID is required",
+		// "id-ID": "ID log scan diperlukan",
+		"ja-JP": "スキャンログIDが必要です",
 	},
 
 	// * Auth-specific error messages
 	ErrInvalidCredentialsKey: {
 		"en-US": "Invalid credentials",
-		"id-ID": "Kredensial tidak valid",
+		// "id-ID": "Kredensial tidak valid",
 		"ja-JP": "無効な資格情報",
 	},
 	ErrTokenExpiredKey: {
 		"en-US": "Token has expired",
-		"id-ID": "Token telah kedaluwarsa",
+		// "id-ID": "Token telah kedaluwarsa",
 		"ja-JP": "トークンの有効期限が切れています",
 	},
 	ErrTokenInvalidKey: {
 		"en-US": "Invalid token",
-		"id-ID": "Token tidak valid",
+		// "id-ID": "Token tidak valid",
 		"ja-JP": "無効なトークン",
 	},
 
 	// * File upload error messages
 	ErrFileRequiredKey: {
 		"en-US": "File is required",
-		"id-ID": "File diperlukan",
+		// "id-ID": "File diperlukan",
 		"ja-JP": "ファイルが必要です",
 	},
 	ErrFileTypeNotAllowedKey: {
 		"en-US": "File type not allowed",
-		"id-ID": "Tipe file tidak diizinkan",
+		// "id-ID": "Tipe file tidak diizinkan",
 		"ja-JP": "ファイルタイプは許可されていません",
 	},
 	ErrFileSizeTooLargeKey: {
 		"en-US": "File size too large",
-		"id-ID": "Ukuran file terlalu besar",
+		// "id-ID": "Ukuran file terlalu besar",
 		"ja-JP": "ファイルサイズが大きすぎます",
 	},
 	ErrTooManyFilesKey: {
 		"en-US": "Too many files",
-		"id-ID": "Terlalu banyak file",
+		// "id-ID": "Terlalu banyak file",
 		"ja-JP": "ファイルが多すぎます",
 	},
 	ErrFileUploadFailedKey: {
 		"en-US": "File upload failed",
-		"id-ID": "Unggah file gagal",
+		// "id-ID": "Unggah file gagal",
 		"ja-JP": "ファイルアップロードに失敗しました",
 	},
 	ErrFileDeleteFailedKey: {
 		"en-US": "File delete failed",
-		"id-ID": "Hapus file gagal",
+		// "id-ID": "Hapus file gagal",
 		"ja-JP": "ファイル削除に失敗しました",
 	},
 	ErrCloudinaryConfigKey: {
 		"en-US": "Cloudinary configuration error",
-		"id-ID": "Kesalahan konfigurasi Cloudinary",
+		// "id-ID": "Kesalahan konfigurasi Cloudinary",
 		"ja-JP": "Cloudinary設定エラー",
 	},
 
 	// * Success messages
 	SuccessCreatedKey: {
 		"en-US": "Created successfully",
-		"id-ID": "Berhasil dibuat",
+		// "id-ID": "Berhasil dibuat",
 		"ja-JP": "正常に作成されました",
 	},
 	SuccessUpdatedKey: {
 		"en-US": "Updated successfully",
-		"id-ID": "Berhasil diperbarui",
+		// "id-ID": "Berhasil diperbarui",
 		"ja-JP": "正常に更新されました",
 	},
 	SuccessDeletedKey: {
 		"en-US": "Deleted successfully",
-		"id-ID": "Berhasil dihapus",
+		// "id-ID": "Berhasil dihapus",
 		"ja-JP": "正常に削除されました",
 	},
 	SuccessRetrievedKey: {
 		"en-US": "Retrieved successfully",
-		"id-ID": "Berhasil diambil",
+		// "id-ID": "Berhasil diambil",
 		"ja-JP": "正常に取得されました",
 	},
 	SuccessCountedKey: {
 		"en-US": "Counted successfully",
-		"id-ID": "Berhasil dihitung",
+		// "id-ID": "Berhasil dihitung",
 		"ja-JP": "正常にカウントされました",
 	},
 	SuccessCheckedKey: {
 		"en-US": "Checked successfully",
-		"id-ID": "Berhasil diperiksa",
+		// "id-ID": "Berhasil diperiksa",
 		"ja-JP": "正常にチェックされました",
 	},
 
 	// * User-specific success messages
 	SuccessUserCreatedKey: {
 		"en-US": "User created successfully",
-		"id-ID": "Pengguna berhasil dibuat",
+		// "id-ID": "Pengguna berhasil dibuat",
 		"ja-JP": "ユーザーが正常に作成されました",
 	},
 	SuccessUserUpdatedKey: {
 		"en-US": "User updated successfully",
-		"id-ID": "Pengguna berhasil diperbarui",
+		// "id-ID": "Pengguna berhasil diperbarui",
 		"ja-JP": "ユーザーが正常に更新されました",
 	},
 	SuccessUserDeletedKey: {
 		"en-US": "User deleted successfully",
-		"id-ID": "Pengguna berhasil dihapus",
+		// "id-ID": "Pengguna berhasil dihapus",
 		"ja-JP": "ユーザーが正常に削除されました",
 	},
 	SuccessUserRetrievedKey: {
 		"en-US": "User retrieved successfully",
-		"id-ID": "Pengguna berhasil diambil",
+		// "id-ID": "Pengguna berhasil diambil",
 		"ja-JP": "ユーザーが正常に取得されました",
 	},
 	SuccessUserRetrievedByNameKey: {
 		"en-US": "User retrieved successfully by name",
-		"id-ID": "Pengguna berhasil diambil berdasarkan nama",
+		// "id-ID": "Pengguna berhasil diambil berdasarkan nama",
 		"ja-JP": "名前でユーザーが正常に取得されました",
 	},
 	SuccessUserRetrievedByEmailKey: {
 		"en-US": "User retrieved successfully by email",
-		"id-ID": "Pengguna berhasil diambil berdasarkan email",
+		// "id-ID": "Pengguna berhasil diambil berdasarkan email",
 		"ja-JP": "メールでユーザーが正常に取得されました",
 	},
 	SuccessUserCountedKey: {
 		"en-US": "Users counted successfully",
-		"id-ID": "Pengguna berhasil dihitung",
+		// "id-ID": "Pengguna berhasil dihitung",
 		"ja-JP": "ユーザーが正常にカウントされました",
 	},
 	SuccessUserExistenceCheckedKey: {
 		"en-US": "User existence checked successfully",
-		"id-ID": "Keberadaan pengguna berhasil diperiksa",
+		// "id-ID": "Keberadaan pengguna berhasil diperiksa",
 		"ja-JP": "ユーザーの存在が正常に確認されました",
 	},
 	SuccessUserNameExistenceCheckedKey: {
 		"en-US": "Name existence checked successfully",
-		"id-ID": "Keberadaan nama pengguna berhasil diperiksa",
+		// "id-ID": "Keberadaan nama pengguna berhasil diperiksa",
 		"ja-JP": "ユーザー名の存在が正常に確認されました",
 	},
 	SuccessUserEmailExistenceCheckedKey: {
 		"en-US": "Email existence checked successfully",
-		"id-ID": "Keberadaan email berhasil diperiksa",
+		// "id-ID": "Keberadaan email berhasil diperiksa",
 		"ja-JP": "メールの存在が正常に確認されました",
 	},
 	SuccessUserStatisticsRetrievedKey: {
 		"en-US": "User statistics retrieved successfully",
-		"id-ID": "Statistik pengguna berhasil diambil",
+		// "id-ID": "Statistik pengguna berhasil diambil",
 		"ja-JP": "ユーザー統計が正常に取得されました",
 	},
 
 	// * Category-specific success messages
 	SuccessCategoryCreatedKey: {
 		"en-US": "Category created successfully",
-		"id-ID": "Kategori berhasil dibuat",
+		// "id-ID": "Kategori berhasil dibuat",
 		"ja-JP": "カテゴリが正常に作成されました",
 	},
 	SuccessCategoryUpdatedKey: {
 		"en-US": "Category updated successfully",
-		"id-ID": "Kategori berhasil diperbarui",
+		// "id-ID": "Kategori berhasil diperbarui",
 		"ja-JP": "カテゴリが正常に更新されました",
 	},
 	SuccessCategoryDeletedKey: {
 		"en-US": "Category deleted successfully",
-		"id-ID": "Kategori berhasil dihapus",
+		// "id-ID": "Kategori berhasil dihapus",
 		"ja-JP": "カテゴリが正常に削除されました",
 	},
 	SuccessCategoryRetrievedKey: {
 		"en-US": "Categories retrieved successfully",
-		"id-ID": "Kategori berhasil diambil",
+		// "id-ID": "Kategori berhasil diambil",
 		"ja-JP": "カテゴリが正常に取得されました",
 	},
 	SuccessCategoryRetrievedByCodeKey: {
 		"en-US": "Category retrieved successfully by code",
-		"id-ID": "Kategori berhasil diambil berdasarkan kode",
+		// "id-ID": "Kategori berhasil diambil berdasarkan kode",
 		"ja-JP": "コードでカテゴリが正常に取得されました",
 	},
 	SuccessCategoryCountedKey: {
 		"en-US": "Categories counted successfully",
-		"id-ID": "Kategori berhasil dihitung",
+		// "id-ID": "Kategori berhasil dihitung",
 		"ja-JP": "カテゴリが正常にカウントされました",
 	},
 	SuccessCategoryExistenceCheckedKey: {
 		"en-US": "Category existence checked successfully",
-		"id-ID": "Keberadaan kategori berhasil diperiksa",
+		// "id-ID": "Keberadaan kategori berhasil diperiksa",
 		"ja-JP": "カテゴリの存在が正常に確認されました",
 	},
 	SuccessCategoryCodeExistenceCheckedKey: {
 		"en-US": "Category code existence checked successfully",
-		"id-ID": "Keberadaan kode kategori berhasil diperiksa",
+		// "id-ID": "Keberadaan kode kategori berhasil diperiksa",
 		"ja-JP": "カテゴリコードの存在が正常に確認されました",
 	},
 	SuccessCategoryStatisticsRetrievedKey: {
 		"en-US": "Category statistics retrieved successfully",
-		"id-ID": "Statistik kategori berhasil diambil",
+		// "id-ID": "Statistik kategori berhasil diambil",
 		"ja-JP": "カテゴリ統計が正常に取得されました",
 	},
 
 	// * Location-specific success messages
 	SuccessLocationCreatedKey: {
 		"en-US": "Location created successfully",
-		"id-ID": "Lokasi berhasil dibuat",
+		// "id-ID": "Lokasi berhasil dibuat",
 		"ja-JP": "ロケーションが正常に作成されました",
 	},
 	SuccessLocationUpdatedKey: {
 		"en-US": "Location updated successfully",
-		"id-ID": "Lokasi berhasil diperbarui",
+		// "id-ID": "Lokasi berhasil diperbarui",
 		"ja-JP": "ロケーションが正常に更新されました",
 	},
 	SuccessLocationDeletedKey: {
 		"en-US": "Location deleted successfully",
-		"id-ID": "Lokasi berhasil dihapus",
+		// "id-ID": "Lokasi berhasil dihapus",
 		"ja-JP": "ロケーションが正常に削除されました",
 	},
 	SuccessLocationRetrievedKey: {
 		"en-US": "Locations retrieved successfully",
-		"id-ID": "Lokasi berhasil diambil",
+		// "id-ID": "Lokasi berhasil diambil",
 		"ja-JP": "ロケーションが正常に取得されました",
 	},
 	SuccessLocationRetrievedByCodeKey: {
 		"en-US": "Location retrieved successfully by code",
-		"id-ID": "Lokasi berhasil diambil berdasarkan kode",
+		// "id-ID": "Lokasi berhasil diambil berdasarkan kode",
 		"ja-JP": "コードでロケーションが正常に取得されました",
 	},
 	SuccessLocationCountedKey: {
 		"en-US": "Locations counted successfully",
-		"id-ID": "Lokasi berhasil dihitung",
+		// "id-ID": "Lokasi berhasil dihitung",
 		"ja-JP": "ロケーションが正常にカウントされました",
 	},
 	SuccessLocationExistenceCheckedKey: {
 		"en-US": "Location existence checked successfully",
-		"id-ID": "Keberadaan lokasi berhasil diperiksa",
+		// "id-ID": "Keberadaan lokasi berhasil diperiksa",
 		"ja-JP": "ロケーションの存在が正常に確認されました",
 	},
 	SuccessLocationCodeExistenceCheckedKey: {
 		"en-US": "Location code existence checked successfully",
-		"id-ID": "Keberadaan kode lokasi berhasil diperiksa",
+		// "id-ID": "Keberadaan kode lokasi berhasil diperiksa",
 		"ja-JP": "ロケーションコードの存在が正常に確認されました",
 	},
 	SuccessLocationStatisticsRetrievedKey: {
 		"en-US": "Location statistics retrieved successfully",
-		"id-ID": "Statistik lokasi berhasil diambil",
+		// "id-ID": "Statistik lokasi berhasil diambil",
 		"ja-JP": "ロケーション統計が正常に取得されました",
+	},
+
+	// * Asset-specific success messages
+	SuccessAssetCreatedKey: {
+		"en-US": "Asset created successfully",
+		// "id-ID": "Aset berhasil dibuat",
+		"ja-JP": "アセットが正常に作成されました",
+	},
+	SuccessAssetUpdatedKey: {
+		"en-US": "Asset updated successfully",
+		// "id-ID": "Aset berhasil diperbarui",
+		"ja-JP": "アセットが正常に更新されました",
+	},
+	SuccessAssetDeletedKey: {
+		"en-US": "Asset deleted successfully",
+		// "id-ID": "Aset berhasil dihapus",
+		"ja-JP": "アセットが正常に削除されました",
+	},
+	SuccessAssetRetrievedKey: {
+		"en-US": "Assets retrieved successfully",
+		// "id-ID": "Aset berhasil diambil",
+		"ja-JP": "アセットが正常に取得されました",
+	},
+	SuccessAssetRetrievedByTagKey: {
+		"en-US": "Asset retrieved successfully by tag",
+		// "id-ID": "Aset berhasil diambil berdasarkan tag",
+		"ja-JP": "タグでアセットが正常に取得されました",
+	},
+	SuccessAssetRetrievedByDataMatrixKey: {
+		"en-US": "Asset retrieved successfully by data matrix",
+		// "id-ID": "Aset berhasil diambil berdasarkan data matrix",
+		"ja-JP": "データマトリックスでアセットが正常に取得されました",
+	},
+	SuccessAssetCountedKey: {
+		"en-US": "Assets counted successfully",
+		// "id-ID": "Aset berhasil dihitung",
+		"ja-JP": "アセットが正常にカウントされました",
+	},
+	SuccessAssetStatisticsRetrievedKey: {
+		"en-US": "Asset statistics retrieved successfully",
+		// "id-ID": "Statistik aset berhasil diambil",
+		"ja-JP": "アセット統計が正常に取得されました",
+	},
+	SuccessAssetExistenceCheckedKey: {
+		"en-US": "Asset existence checked successfully",
+		// "id-ID": "Keberadaan aset berhasil diperiksa",
+		"ja-JP": "アセットの存在が正常に確認されました",
+	},
+	SuccessAssetTagExistenceCheckedKey: {
+		"en-US": "Asset tag existence checked successfully",
+		// "id-ID": "Keberadaan tag aset berhasil diperiksa",
+		"ja-JP": "アセットタグの存在が正常に確認されました",
+	},
+	SuccessAssetDataMatrixExistenceCheckedKey: {
+		"en-US": "Data matrix existence checked successfully",
+		// "id-ID": "Keberadaan data matrix berhasil diperiksa",
+		"ja-JP": "データマトリックスの存在が正常に確認されました",
+	},
+	SuccessAssetSerialNumberExistenceCheckedKey: {
+		"en-US": "Serial number existence checked successfully",
+		// "id-ID": "Keberadaan nomor seri berhasil diperiksa",
+		"ja-JP": "シリアル番号の存在が正常に確認されました",
+	},
+
+	// * Scan log-specific success messages
+	SuccessScanLogCreatedKey: {
+		"en-US": "Scan log created successfully",
+		// "id-ID": "Log scan berhasil dibuat",
+		"ja-JP": "スキャンログが正常に作成されました",
+	},
+	SuccessScanLogDeletedKey: {
+		"en-US": "Scan log deleted successfully",
+		// "id-ID": "Log scan berhasil dihapus",
+		"ja-JP": "スキャンログが正常に削除されました",
+	},
+	SuccessScanLogRetrievedKey: {
+		"en-US": "Scan logs retrieved successfully",
+		// "id-ID": "Log scan berhasil diambil",
+		"ja-JP": "スキャンログが正常に取得されました",
+	},
+	SuccessScanLogCountedKey: {
+		"en-US": "Scan logs counted successfully",
+		// "id-ID": "Log scan berhasil dihitung",
+		"ja-JP": "スキャンログが正常にカウントされました",
+	},
+	SuccessScanLogStatisticsRetrievedKey: {
+		"en-US": "Scan log statistics retrieved successfully",
+		// "id-ID": "Statistik log scan berhasil diambil",
+		"ja-JP": "スキャンログ統計が正常に取得されました",
+	},
+	SuccessScanLogExistenceCheckedKey: {
+		"en-US": "Scan log existence checked successfully",
+		// "id-ID": "Keberadaan log scan berhasil diperiksa",
+		"ja-JP": "スキャンログの存在が正常に確認されました",
 	},
 
 	// * Auth-specific success messages
 	SuccessLoginKey: {
 		"en-US": "Login successful",
-		"id-ID": "Login berhasil",
+		// "id-ID": "Login berhasil",
 		"ja-JP": "ログイン成功",
 	},
 	SuccessLogoutKey: {
 		"en-US": "Logout successful",
-		"id-ID": "Logout berhasil",
+		// "id-ID": "Logout berhasil",
 		"ja-JP": "ログアウト成功",
 	},
 	SuccessRefreshKey: {
 		"en-US": "Token refreshed successfully",
-		"id-ID": "Token berhasil diperbarui",
+		// "id-ID": "Token berhasil diperbarui",
 		"ja-JP": "トークンが正常に更新されました",
 	},
 	SuccessTokenRefreshedKey: {
 		"en-US": "Token refreshed successfully",
-		"id-ID": "Token berhasil diperbarui",
+		// "id-ID": "Token berhasil diperbarui",
 		"ja-JP": "トークンが正常に更新されました",
 	},
 
 	// * File upload success messages
 	SuccessFileUploadedKey: {
 		"en-US": "File uploaded successfully",
-		"id-ID": "File berhasil diunggah",
+		// "id-ID": "File berhasil diunggah",
 		"ja-JP": "ファイルが正常にアップロードされました",
 	},
 	SuccessAvatarUploadedKey: {
 		"en-US": "Avatar uploaded successfully",
-		"id-ID": "Avatar berhasil diunggah",
+		// "id-ID": "Avatar berhasil diunggah",
 		"ja-JP": "アバターが正常にアップロードされました",
 	},
 	SuccessFileDeletedKey: {
 		"en-US": "File deleted successfully",
-		"id-ID": "File berhasil dihapus",
+		// "id-ID": "File berhasil dihapus",
 		"ja-JP": "ファイルが正常に削除されました",
 	},
 	SuccessMultipleFilesUploadedKey: {
 		"en-US": "Multiple files uploaded successfully",
-		"id-ID": "Beberapa file berhasil diunggah",
+		// "id-ID": "Beberapa file berhasil diunggah",
 		"ja-JP": "複数のファイルが正常にアップロードされました",
 	},
 
 	// * Notification error messages
 	ErrNotificationNotFoundKey: {
 		"en-US": "Notification not found",
-		"id-ID": "Notifikasi tidak ditemukan",
+		// "id-ID": "Notifikasi tidak ditemukan",
 		"ja-JP": "通知が見つかりません",
 	},
 	ErrNotificationIDRequiredKey: {
 		"en-US": "Notification ID is required",
-		"id-ID": "ID notifikasi diperlukan",
+		// "id-ID": "ID notifikasi diperlukan",
 		"ja-JP": "通知IDが必要です",
 	},
 	ErrNotificationUserIDRequiredKey: {
 		"en-US": "User ID is required",
-		"id-ID": "ID pengguna diperlukan",
+		// "id-ID": "ID pengguna diperlukan",
 		"ja-JP": "ユーザーIDが必要です",
 	},
 	ErrNotificationTypeRequiredKey: {
 		"en-US": "Notification type is required",
-		"id-ID": "Jenis notifikasi diperlukan",
+		// "id-ID": "Jenis notifikasi diperlukan",
 		"ja-JP": "通知タイプが必要です",
 	},
 	ErrNotificationTitleRequiredKey: {
 		"en-US": "Notification title is required",
-		"id-ID": "Judul notifikasi diperlukan",
+		// "id-ID": "Judul notifikasi diperlukan",
 		"ja-JP": "通知タイトルが必要です",
 	},
 	ErrNotificationMessageRequiredKey: {
 		"en-US": "Notification message is required",
-		"id-ID": "Pesan notifikasi diperlukan",
+		// "id-ID": "Pesan notifikasi diperlukan",
 		"ja-JP": "通知メッセージが必要です",
 	},
 
 	// * Notification success messages
 	SuccessNotificationCreatedKey: {
 		"en-US": "Notification created successfully",
-		"id-ID": "Notifikasi berhasil dibuat",
+		// "id-ID": "Notifikasi berhasil dibuat",
 		"ja-JP": "通知が正常に作成されました",
 	},
 	SuccessNotificationUpdatedKey: {
 		"en-US": "Notification updated successfully",
-		"id-ID": "Notifikasi berhasil diperbarui",
+		// "id-ID": "Notifikasi berhasil diperbarui",
 		"ja-JP": "通知が正常に更新されました",
 	},
 	SuccessNotificationDeletedKey: {
 		"en-US": "Notification deleted successfully",
-		"id-ID": "Notifikasi berhasil dihapus",
+		// "id-ID": "Notifikasi berhasil dihapus",
 		"ja-JP": "通知が正常に削除されました",
 	},
 	SuccessNotificationRetrievedKey: {
 		"en-US": "Notification retrieved successfully",
-		"id-ID": "Notifikasi berhasil diambil",
+		// "id-ID": "Notifikasi berhasil diambil",
 		"ja-JP": "通知が正常に取得されました",
 	},
 	SuccessNotificationCountedKey: {
 		"en-US": "Notification counted successfully",
-		"id-ID": "Notifikasi berhasil dihitung",
+		// "id-ID": "Notifikasi berhasil dihitung",
 		"ja-JP": "通知が正常にカウントされました",
 	},
 	SuccessNotificationStatisticsRetrievedKey: {
 		"en-US": "Notification statistics retrieved successfully",
-		"id-ID": "Statistik notifikasi berhasil diambil",
+		// "id-ID": "Statistik notifikasi berhasil diambil",
 		"ja-JP": "通知統計が正常に取得されました",
 	},
 	SuccessNotificationExistenceCheckedKey: {
 		"en-US": "Notification existence checked successfully",
-		"id-ID": "Keberadaan notifikasi berhasil diperiksa",
+		// "id-ID": "Keberadaan notifikasi berhasil diperiksa",
 		"ja-JP": "通知の存在が正常に確認されました",
 	},
 	SuccessNotificationMarkedAsReadKey: {
 		"en-US": "Notification marked as read successfully",
-		"id-ID": "Notifikasi berhasil ditandai sebagai sudah dibaca",
+		// "id-ID": "Notifikasi berhasil ditandai sebagai sudah dibaca",
 		"ja-JP": "通知が既読として正常にマークされました",
 	},
 	SuccessNotificationMarkedAsUnreadKey: {
 		"en-US": "Notification marked as unread successfully",
-		"id-ID": "Notifikasi berhasil ditandai sebagai belum dibaca",
+		// "id-ID": "Notifikasi berhasil ditandai sebagai belum dibaca",
 		"ja-JP": "通知が未読として正常にマークされました",
 	},
 
 	// * Issue report error messages
 	ErrIssueReportNotFoundKey: {
 		"en-US": "Issue report not found",
-		"id-ID": "Laporan masalah tidak ditemukan",
+		// "id-ID": "Laporan masalah tidak ditemukan",
 		"ja-JP": "問題レポートが見つかりません",
 	},
 	ErrIssueReportIDRequiredKey: {
 		"en-US": "Issue report ID is required",
-		"id-ID": "ID laporan masalah diperlukan",
+		// "id-ID": "ID laporan masalah diperlukan",
 		"ja-JP": "問題レポートIDが必要です",
 	},
 	ErrIssueReportAssetIDRequiredKey: {
 		"en-US": "Asset ID is required",
-		"id-ID": "ID aset diperlukan",
+		// "id-ID": "ID aset diperlukan",
 		"ja-JP": "アセットIDが必要です",
 	},
 	ErrIssueReportTypeRequiredKey: {
 		"en-US": "Issue type is required",
-		"id-ID": "Jenis masalah diperlukan",
+		// "id-ID": "Jenis masalah diperlukan",
 		"ja-JP": "問題タイプが必要です",
 	},
 	ErrIssueReportPriorityRequiredKey: {
 		"en-US": "Priority is required",
-		"id-ID": "Prioritas diperlukan",
+		// "id-ID": "Prioritas diperlukan",
 		"ja-JP": "優先度が必要です",
 	},
 	ErrIssueReportTitleRequiredKey: {
 		"en-US": "Title is required",
-		"id-ID": "Judul diperlukan",
+		// "id-ID": "Judul diperlukan",
 		"ja-JP": "タイトルが必要です",
 	},
 	ErrIssueReportAlreadyResolvedKey: {
 		"en-US": "Issue report is already resolved",
-		"id-ID": "Laporan masalah sudah diselesaikan",
+		// "id-ID": "Laporan masalah sudah diselesaikan",
 		"ja-JP": "問題レポートは既に解決されています",
 	},
 	ErrIssueReportCannotReopenKey: {
 		"en-US": "Cannot reopen closed issue report",
-		"id-ID": "Tidak dapat membuka kembali laporan masalah yang sudah ditutup",
+		// "id-ID": "Tidak dapat membuka kembali laporan masalah yang sudah ditutup",
 		"ja-JP": "閉じられた問題レポートを再開できません",
 	},
 
 	// * Issue report success messages
 	SuccessIssueReportCreatedKey: {
 		"en-US": "Issue report created successfully",
-		"id-ID": "Laporan masalah berhasil dibuat",
+		// "id-ID": "Laporan masalah berhasil dibuat",
 		"ja-JP": "問題レポートが正常に作成されました",
 	},
 	SuccessIssueReportUpdatedKey: {
 		"en-US": "Issue report updated successfully",
-		"id-ID": "Laporan masalah berhasil diperbarui",
+		// "id-ID": "Laporan masalah berhasil diperbarui",
 		"ja-JP": "問題レポートが正常に更新されました",
 	},
 	SuccessIssueReportDeletedKey: {
 		"en-US": "Issue report deleted successfully",
-		"id-ID": "Laporan masalah berhasil dihapus",
+		// "id-ID": "Laporan masalah berhasil dihapus",
 		"ja-JP": "問題レポートが正常に削除されました",
 	},
 	SuccessIssueReportRetrievedKey: {
 		"en-US": "Issue report retrieved successfully",
-		"id-ID": "Laporan masalah berhasil diambil",
+		// "id-ID": "Laporan masalah berhasil diambil",
 		"ja-JP": "問題レポートが正常に取得されました",
 	},
 	SuccessIssueReportCountedKey: {
 		"en-US": "Issue report counted successfully",
-		"id-ID": "Laporan masalah berhasil dihitung",
+		// "id-ID": "Laporan masalah berhasil dihitung",
 		"ja-JP": "問題レポートが正常にカウントされました",
 	},
 	SuccessIssueReportStatisticsRetrievedKey: {
 		"en-US": "Issue report statistics retrieved successfully",
-		"id-ID": "Statistik laporan masalah berhasil diambil",
+		// "id-ID": "Statistik laporan masalah berhasil diambil",
 		"ja-JP": "問題レポート統計が正常に取得されました",
 	},
 	SuccessIssueReportExistenceCheckedKey: {
 		"en-US": "Issue report existence checked successfully",
-		"id-ID": "Keberadaan laporan masalah berhasil diperiksa",
+		// "id-ID": "Keberadaan laporan masalah berhasil diperiksa",
 		"ja-JP": "問題レポートの存在が正常に確認されました",
 	},
 	SuccessIssueReportResolvedKey: {
 		"en-US": "Issue report resolved successfully",
-		"id-ID": "Laporan masalah berhasil diselesaikan",
+		// "id-ID": "Laporan masalah berhasil diselesaikan",
 		"ja-JP": "問題レポートが正常に解決されました",
 	},
 	SuccessIssueReportReopenedKey: {
 		"en-US": "Issue report reopened successfully",
-		"id-ID": "Laporan masalah berhasil dibuka kembali",
+		// "id-ID": "Laporan masalah berhasil dibuka kembali",
 		"ja-JP": "問題レポートが正常に再開されました",
 	},
 
 	// * Asset movement error messages
 	ErrAssetMovementNotFoundKey: {
 		"en-US": "Asset movement not found",
-		"id-ID": "Pergerakan aset tidak ditemukan",
+		// "id-ID": "Pergerakan aset tidak ditemukan",
 		"ja-JP": "アセット移動が見つかりません",
 	},
 	ErrAssetMovementIDRequiredKey: {
 		"en-US": "Asset movement ID is required",
-		"id-ID": "ID pergerakan aset diperlukan",
+		// "id-ID": "ID pergerakan aset diperlukan",
 		"ja-JP": "アセット移動IDが必要です",
 	},
 	ErrAssetMovementAssetIDRequiredKey: {
 		"en-US": "Asset ID is required",
-		"id-ID": "ID aset diperlukan",
+		// "id-ID": "ID aset diperlukan",
 		"ja-JP": "アセットIDが必要です",
 	},
 	ErrAssetMovementInvalidLocationKey: {
 		"en-US": "Invalid location specified",
-		"id-ID": "Lokasi yang ditentukan tidak valid",
+		// "id-ID": "Lokasi yang ditentukan tidak valid",
 		"ja-JP": "指定された場所が無効です",
 	},
 	ErrAssetMovementInvalidUserKey: {
 		"en-US": "Invalid user specified",
-		"id-ID": "Pengguna yang ditentukan tidak valid",
+		// "id-ID": "Pengguna yang ditentukan tidak valid",
 		"ja-JP": "指定されたユーザーが無効です",
 	},
 	ErrAssetMovementNoChangeKey: {
 		"en-US": "No change detected in asset location or assignment",
-		"id-ID": "Tidak ada perubahan yang terdeteksi dalam lokasi atau penugasan aset",
+		// "id-ID": "Tidak ada perubahan yang terdeteksi dalam lokasi atau penugasan aset",
 		"ja-JP": "アセットの場所または割り当てに変更が検出されませんでした",
 	},
 	ErrAssetMovementSameLocationKey: {
 		"en-US": "Asset is already at the specified location",
-		"id-ID": "Aset sudah berada di lokasi yang ditentukan",
+		// "id-ID": "Aset sudah berada di lokasi yang ditentukan",
 		"ja-JP": "アセットは既に指定された場所にあります",
 	},
 
 	// * Asset movement success messages
 	SuccessAssetMovementCreatedKey: {
 		"en-US": "Asset movement created successfully",
-		"id-ID": "Pergerakan aset berhasil dibuat",
+		// "id-ID": "Pergerakan aset berhasil dibuat",
 		"ja-JP": "アセット移動が正常に作成されました",
 	},
 	SuccessAssetMovementUpdatedKey: {
 		"en-US": "Asset movement updated successfully",
-		"id-ID": "Pergerakan aset berhasil diperbarui",
+		// "id-ID": "Pergerakan aset berhasil diperbarui",
 		"ja-JP": "アセット移動が正常に更新されました",
 	},
 	SuccessAssetMovementDeletedKey: {
 		"en-US": "Asset movement deleted successfully",
-		"id-ID": "Pergerakan aset berhasil dihapus",
+		// "id-ID": "Pergerakan aset berhasil dihapus",
 		"ja-JP": "アセット移動が正常に削除されました",
 	},
 	SuccessAssetMovementRetrievedKey: {
 		"en-US": "Asset movement retrieved successfully",
-		"id-ID": "Pergerakan aset berhasil diambil",
+		// "id-ID": "Pergerakan aset berhasil diambil",
 		"ja-JP": "アセット移動が正常に取得されました",
 	},
 	SuccessAssetMovementCountedKey: {
 		"en-US": "Asset movement counted successfully",
-		"id-ID": "Pergerakan aset berhasil dihitung",
+		// "id-ID": "Pergerakan aset berhasil dihitung",
 		"ja-JP": "アセット移動が正常にカウントされました",
 	},
 	SuccessAssetMovementStatisticsRetrievedKey: {
 		"en-US": "Asset movement statistics retrieved successfully",
-		"id-ID": "Statistik pergerakan aset berhasil diambil",
+		// "id-ID": "Statistik pergerakan aset berhasil diambil",
 		"ja-JP": "アセット移動統計が正常に取得されました",
 	},
 	SuccessAssetMovementExistenceCheckedKey: {
 		"en-US": "Asset movement existence checked successfully",
-		"id-ID": "Keberadaan pergerakan aset berhasil diperiksa",
+		// "id-ID": "Keberadaan pergerakan aset berhasil diperiksa",
 		"ja-JP": "アセット移動の存在が正常に確認されました",
 	},
 
 	// * Maintenance error messages
 	ErrMaintenanceScheduleNotFoundKey: {
 		"en-US": "Maintenance schedule not found",
-		"id-ID": "Jadwal pemeliharaan tidak ditemukan",
+		// "id-ID": "Jadwal pemeliharaan tidak ditemukan",
 		"ja-JP": "保守スケジュールが見つかりません",
 	},
 	ErrMaintenanceRecordNotFoundKey: {
 		"en-US": "Maintenance record not found",
-		"id-ID": "Catatan pemeliharaan tidak ditemukan",
+		// "id-ID": "Catatan pemeliharaan tidak ditemukan",
 		"ja-JP": "保守レコードが見つかりません",
 	},
 	ErrMaintenanceScheduleIDRequiredKey: {
 		"en-US": "Maintenance schedule ID is required",
-		"id-ID": "ID jadwal pemeliharaan diperlukan",
+		// "id-ID": "ID jadwal pemeliharaan diperlukan",
 		"ja-JP": "保守スケジュールIDが必要です",
 	},
 	ErrMaintenanceRecordIDRequiredKey: {
 		"en-US": "Maintenance record ID is required",
-		"id-ID": "ID catatan pemeliharaan diperlukan",
+		// "id-ID": "ID catatan pemeliharaan diperlukan",
 		"ja-JP": "保守レコードIDが必要です",
 	},
 	ErrMaintenanceAssetIDRequiredKey: {
 		"en-US": "Asset ID is required",
-		"id-ID": "ID aset diperlukan",
+		// "id-ID": "ID aset diperlukan",
 		"ja-JP": "アセットIDが必要です",
 	},
 	ErrMaintenanceScheduleDateRequiredKey: {
 		"en-US": "Scheduled date is required",
-		"id-ID": "Tanggal terjadwal diperlukan",
+		// "id-ID": "Tanggal terjadwal diperlukan",
 		"ja-JP": "予定日が必要です",
 	},
 	ErrMaintenanceRecordDateRequiredKey: {
 		"en-US": "Maintenance date is required",
-		"id-ID": "Tanggal pemeliharaan diperlukan",
+		// "id-ID": "Tanggal pemeliharaan diperlukan",
 		"ja-JP": "保守日が必要です",
 	},
 	ErrMaintenanceScheduleTitleRequiredKey: {
 		"en-US": "Schedule title is required",
-		"id-ID": "Judul jadwal diperlukan",
+		// "id-ID": "Judul jadwal diperlukan",
 		"ja-JP": "スケジュールタイトルが必要です",
 	},
 	ErrMaintenanceRecordTitleRequiredKey: {
 		"en-US": "Record title is required",
-		"id-ID": "Judul catatan diperlukan",
+		// "id-ID": "Judul catatan diperlukan",
 		"ja-JP": "レコードタイトルが必要です",
 	},
 
 	// * Maintenance success messages
 	SuccessMaintenanceScheduleCreatedKey: {
 		"en-US": "Maintenance schedule created successfully",
-		"id-ID": "Jadwal pemeliharaan berhasil dibuat",
+		// "id-ID": "Jadwal pemeliharaan berhasil dibuat",
 		"ja-JP": "保守スケジュールが正常に作成されました",
 	},
 	SuccessMaintenanceScheduleUpdatedKey: {
 		"en-US": "Maintenance schedule updated successfully",
-		"id-ID": "Jadwal pemeliharaan berhasil diperbarui",
+		// "id-ID": "Jadwal pemeliharaan berhasil diperbarui",
 		"ja-JP": "保守スケジュールが正常に更新されました",
 	},
 	SuccessMaintenanceScheduleDeletedKey: {
 		"en-US": "Maintenance schedule deleted successfully",
-		"id-ID": "Jadwal pemeliharaan berhasil dihapus",
+		// "id-ID": "Jadwal pemeliharaan berhasil dihapus",
 		"ja-JP": "保守スケジュールが正常に削除されました",
 	},
 	SuccessMaintenanceScheduleRetrievedKey: {
 		"en-US": "Maintenance schedules retrieved successfully",
-		"id-ID": "Jadwal pemeliharaan berhasil diambil",
+		// "id-ID": "Jadwal pemeliharaan berhasil diambil",
 		"ja-JP": "保守スケジュールが正常に取得されました",
 	},
 	SuccessMaintenanceScheduleCountedKey: {
 		"en-US": "Maintenance schedules counted successfully",
-		"id-ID": "Jadwal pemeliharaan berhasil dihitung",
+		// "id-ID": "Jadwal pemeliharaan berhasil dihitung",
 		"ja-JP": "保守スケジュールが正常にカウントされました",
 	},
 	SuccessMaintenanceScheduleStatisticsRetrievedKey: {
 		"en-US": "Maintenance schedule statistics retrieved successfully",
-		"id-ID": "Statistik jadwal pemeliharaan berhasil diambil",
+		// "id-ID": "Statistik jadwal pemeliharaan berhasil diambil",
 		"ja-JP": "保守スケジュール統計が正常に取得されました",
 	},
 	SuccessMaintenanceRecordCreatedKey: {
 		"en-US": "Maintenance record created successfully",
-		"id-ID": "Catatan pemeliharaan berhasil dibuat",
+		// "id-ID": "Catatan pemeliharaan berhasil dibuat",
 		"ja-JP": "保守レコードが正常に作成されました",
 	},
 	SuccessMaintenanceRecordUpdatedKey: {
 		"en-US": "Maintenance record updated successfully",
-		"id-ID": "Catatan pemeliharaan berhasil diperbarui",
+		// "id-ID": "Catatan pemeliharaan berhasil diperbarui",
 		"ja-JP": "保守レコードが正常に更新されました",
 	},
 	SuccessMaintenanceRecordDeletedKey: {
 		"en-US": "Maintenance record deleted successfully",
-		"id-ID": "Catatan pemeliharaan berhasil dihapus",
+		// "id-ID": "Catatan pemeliharaan berhasil dihapus",
 		"ja-JP": "保守レコードが正常に削除されました",
 	},
 	SuccessMaintenanceRecordRetrievedKey: {
 		"en-US": "Maintenance records retrieved successfully",
-		"id-ID": "Catatan pemeliharaan berhasil diambil",
+		// "id-ID": "Catatan pemeliharaan berhasil diambil",
 		"ja-JP": "保守レコードが正常に取得されました",
 	},
 	SuccessMaintenanceRecordCountedKey: {
 		"en-US": "Maintenance records counted successfully",
-		"id-ID": "Catatan pemeliharaan berhasil dihitung",
+		// "id-ID": "Catatan pemeliharaan berhasil dihitung",
 		"ja-JP": "保守レコードが正常にカウントされました",
 	},
 	SuccessMaintenanceRecordStatisticsRetrievedKey: {
 		"en-US": "Maintenance record statistics retrieved successfully",
-		"id-ID": "Statistik catatan pemeliharaan berhasil diambil",
+		// "id-ID": "Statistik catatan pemeliharaan berhasil diambil",
 		"ja-JP": "保守レコード統計が正常に取得されました",
 	},
 }
