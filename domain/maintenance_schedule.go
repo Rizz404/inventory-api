@@ -62,12 +62,12 @@ type MaintenanceScheduleResponse struct {
 	AssetID         string                                   `json:"assetId"`
 	MaintenanceType MaintenanceScheduleType                  `json:"maintenanceType"`
 	ScheduledDate   time.Time                                `json:"scheduledDate"`
-	FrequencyMonths *int                                     `json:"frequencyMonths,omitempty"`
+	FrequencyMonths *int                                     `json:"frequencyMonths"`
 	Status          ScheduleStatus                           `json:"status"`
 	CreatedByID     string                                   `json:"createdById"`
 	CreatedAt       time.Time                                `json:"createdAt"`
 	Title           string                                   `json:"title"`
-	Description     *string                                  `json:"description,omitempty"`
+	Description     *string                                  `json:"description"`
 	Translations    []MaintenanceScheduleTranslationResponse `json:"translations"`
 	// * Populated
 	Asset     AssetResponse `json:"asset"`
@@ -79,12 +79,12 @@ type MaintenanceScheduleListResponse struct {
 	AssetID         string                  `json:"assetId"`
 	MaintenanceType MaintenanceScheduleType `json:"maintenanceType"`
 	ScheduledDate   time.Time               `json:"scheduledDate"`
-	FrequencyMonths *int                    `json:"frequencyMonths,omitempty"`
+	FrequencyMonths *int                    `json:"frequencyMonths"`
 	Status          ScheduleStatus          `json:"status"`
 	CreatedByID     string                  `json:"createdById"`
 	CreatedAt       time.Time               `json:"createdAt"`
 	Title           string                  `json:"title"`
-	Description     *string                 `json:"description,omitempty"`
+	Description     *string                 `json:"description"`
 	// * Populated
 	Asset     AssetResponse `json:"asset"`
 	CreatedBy UserResponse  `json:"createdBy"`

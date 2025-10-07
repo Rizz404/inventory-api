@@ -43,43 +43,43 @@ type AssetMovementTranslationResponse struct {
 type AssetMovementResponse struct {
 	ID             string                             `json:"id"`
 	AssetID        string                             `json:"assetId"`
-	FromLocationID *string                            `json:"fromLocationId,omitempty"`
-	ToLocationID   *string                            `json:"toLocationId,omitempty"`
-	FromUserID     *string                            `json:"fromUserId,omitempty"`
-	ToUserID       *string                            `json:"toUserId,omitempty"`
+	FromLocationID *string                            `json:"fromLocationId"`
+	ToLocationID   *string                            `json:"toLocationId"`
+	FromUserID     *string                            `json:"fromUserId"`
+	ToUserID       *string                            `json:"toUserId"`
 	MovedByID      string                             `json:"movedById"`
 	MovementDate   time.Time                          `json:"movementDate"`
-	Notes          *string                            `json:"notes,omitempty"`
+	Notes          *string                            `json:"notes"`
 	CreatedAt      time.Time                          `json:"createdAt"`
 	UpdatedAt      time.Time                          `json:"updatedAt"`
 	Translations   []AssetMovementTranslationResponse `json:"translations"`
 	// * Populated
 	Asset        AssetResponse     `json:"asset"`
-	FromLocation *LocationResponse `json:"fromLocation,omitempty"`
-	ToLocation   *LocationResponse `json:"toLocation,omitempty"`
-	FromUser     *UserResponse     `json:"fromUser,omitempty"`
-	ToUser       *UserResponse     `json:"toUser,omitempty"`
+	FromLocation *LocationResponse `json:"fromLocation"`
+	ToLocation   *LocationResponse `json:"toLocation"`
+	FromUser     *UserResponse     `json:"fromUser"`
+	ToUser       *UserResponse     `json:"toUser"`
 	MovedBy      UserResponse      `json:"movedBy"`
 }
 
 type AssetMovementListResponse struct {
 	ID             string    `json:"id"`
 	AssetID        string    `json:"assetId"`
-	FromLocationID *string   `json:"fromLocationId,omitempty"`
-	ToLocationID   *string   `json:"toLocationId,omitempty"`
-	FromUserID     *string   `json:"fromUserId,omitempty"`
-	ToUserID       *string   `json:"toUserId,omitempty"`
+	FromLocationID *string   `json:"fromLocationId"`
+	ToLocationID   *string   `json:"toLocationId"`
+	FromUserID     *string   `json:"fromUserId"`
+	ToUserID       *string   `json:"toUserId"`
 	MovedByID      string    `json:"movedById"`
 	MovementDate   time.Time `json:"movementDate"`
-	Notes          *string   `json:"notes,omitempty"`
+	Notes          *string   `json:"notes"`
 	CreatedAt      time.Time `json:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt"`
 	// * Populated
 	Asset        AssetResponse     `json:"asset"`
-	FromLocation *LocationResponse `json:"fromLocation,omitempty"`
-	ToLocation   *LocationResponse `json:"toLocation,omitempty"`
-	FromUser     *UserResponse     `json:"fromUser,omitempty"`
-	ToUser       *UserResponse     `json:"toUser,omitempty"`
+	FromLocation *LocationResponse `json:"fromLocation"`
+	ToLocation   *LocationResponse `json:"toLocation"`
+	FromUser     *UserResponse     `json:"fromUser"`
+	ToUser       *UserResponse     `json:"toUser"`
 	MovedBy      UserResponse      `json:"movedBy"`
 }
 

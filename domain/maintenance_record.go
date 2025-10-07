@@ -24,6 +24,9 @@ type MaintenanceRecord struct {
 	CreatedAt         time.Time                      `json:"createdAt"`
 	UpdatedAt         time.Time                      `json:"updatedAt"`
 	Translations      []MaintenanceRecordTranslation `json:"translations,omitempty"`
+	// Preloaded relationships
+	Asset *Asset `json:"asset,omitempty"`
+	User  *User  `json:"user,omitempty"`
 }
 
 type MaintenanceRecordTranslation struct {
@@ -42,39 +45,39 @@ type MaintenanceRecordTranslationResponse struct {
 
 type MaintenanceRecordResponse struct {
 	ID                string                                 `json:"id"`
-	ScheduleID        *string                                `json:"scheduleId,omitempty"`
+	ScheduleID        *string                                `json:"scheduleId"`
 	AssetID           string                                 `json:"assetId"`
 	MaintenanceDate   time.Time                              `json:"maintenanceDate"`
-	PerformedByUserID *string                                `json:"performedByUserId,omitempty"`
-	PerformedByVendor *string                                `json:"performedByVendor,omitempty"`
-	ActualCost        *float64                               `json:"actualCost,omitempty"`
+	PerformedByUserID *string                                `json:"performedByUserId"`
+	PerformedByVendor *string                                `json:"performedByVendor"`
+	ActualCost        *float64                               `json:"actualCost"`
 	Title             string                                 `json:"title"`
-	Notes             *string                                `json:"notes,omitempty"`
+	Notes             *string                                `json:"notes"`
 	CreatedAt         time.Time                              `json:"createdAt"`
 	UpdatedAt         time.Time                              `json:"updatedAt"`
 	Translations      []MaintenanceRecordTranslationResponse `json:"translations"`
 	// * Populated
-	Schedule        *MaintenanceScheduleResponse `json:"schedule,omitempty"`
+	Schedule        *MaintenanceScheduleResponse `json:"schedule"`
 	Asset           AssetResponse                `json:"asset"`
-	PerformedByUser *UserResponse                `json:"performedByUser,omitempty"`
+	PerformedByUser *UserResponse                `json:"performedByUser"`
 }
 
 type MaintenanceRecordListResponse struct {
 	ID                string    `json:"id"`
-	ScheduleID        *string   `json:"scheduleId,omitempty"`
+	ScheduleID        *string   `json:"scheduleId"`
 	AssetID           string    `json:"assetId"`
 	MaintenanceDate   time.Time `json:"maintenanceDate"`
-	PerformedByUserID *string   `json:"performedByUserId,omitempty"`
-	PerformedByVendor *string   `json:"performedByVendor,omitempty"`
-	ActualCost        *float64  `json:"actualCost,omitempty"`
+	PerformedByUserID *string   `json:"performedByUserId"`
+	PerformedByVendor *string   `json:"performedByVendor"`
+	ActualCost        *float64  `json:"actualCost"`
 	Title             string    `json:"title"`
-	Notes             *string   `json:"notes,omitempty"`
+	Notes             *string   `json:"notes"`
 	CreatedAt         time.Time `json:"createdAt"`
 	UpdatedAt         time.Time `json:"updatedAt"`
 	// * Populated
-	Schedule        *MaintenanceScheduleResponse `json:"schedule,omitempty"`
+	Schedule        *MaintenanceScheduleResponse `json:"schedule"`
 	Asset           AssetResponse                `json:"asset"`
-	PerformedByUser *UserResponse                `json:"performedByUser,omitempty"`
+	PerformedByUser *UserResponse                `json:"performedByUser"`
 }
 
 // --- Payloads ---

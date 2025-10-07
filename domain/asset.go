@@ -69,23 +69,23 @@ type AssetResponse struct {
 	DataMatrixImageUrl string         `json:"dataMatrixImageUrl"`
 	AssetName          string         `json:"assetName"`
 	CategoryID         string         `json:"categoryId"`
-	Brand              *string        `json:"brand,omitempty"`
-	Model              *string        `json:"model,omitempty"`
-	SerialNumber       *string        `json:"serialNumber,omitempty"`
-	PurchaseDate       *time.Time     `json:"purchaseDate,omitempty"`
-	PurchasePrice      *float64       `json:"purchasePrice,omitempty"`
-	VendorName         *string        `json:"vendorName,omitempty"`
-	WarrantyEnd        *time.Time     `json:"warrantyEnd,omitempty"`
+	Brand              *string        `json:"brand"`
+	Model              *string        `json:"model"`
+	SerialNumber       *string        `json:"serialNumber"`
+	PurchaseDate       *time.Time     `json:"purchaseDate"`
+	PurchasePrice      *float64       `json:"purchasePrice"`
+	VendorName         *string        `json:"vendorName"`
+	WarrantyEnd        *time.Time     `json:"warrantyEnd"`
 	Status             AssetStatus    `json:"status"`
 	Condition          AssetCondition `json:"condition"`
-	LocationID         *string        `json:"locationId,omitempty"`
-	AssignedToID       *string        `json:"assignedToId,omitempty"`
+	LocationID         *string        `json:"locationId"`
+	AssignedToID       *string        `json:"assignedToId"`
 	CreatedAt          time.Time      `json:"createdAt"`
 	UpdatedAt          time.Time      `json:"updatedAt"`
 	// * Populated
-	Category   *CategoryResponse `json:"category,omitempty"`
-	Location   *LocationResponse `json:"location,omitempty"`
-	AssignedTo *UserResponse     `json:"assignedTo,omitempty"`
+	Category   *CategoryResponse `json:"category"`
+	Location   *LocationResponse `json:"location"`
+	AssignedTo *UserResponse     `json:"assignedTo"`
 }
 
 type AssetListResponse struct {
@@ -94,23 +94,23 @@ type AssetListResponse struct {
 	DataMatrixImageUrl string         `json:"dataMatrixImageUrl"`
 	AssetName          string         `json:"assetName"`
 	CategoryID         string         `json:"categoryId"`
-	Brand              *string        `json:"brand,omitempty"`
-	Model              *string        `json:"model,omitempty"`
-	SerialNumber       *string        `json:"serialNumber,omitempty"`
-	PurchaseDate       *time.Time     `json:"purchaseDate,omitempty"`
-	PurchasePrice      *float64       `json:"purchasePrice,omitempty"`
-	VendorName         *string        `json:"vendorName,omitempty"`
-	WarrantyEnd        *time.Time     `json:"warrantyEnd,omitempty"`
+	Brand              *string        `json:"brand"`
+	Model              *string        `json:"model"`
+	SerialNumber       *string        `json:"serialNumber"`
+	PurchaseDate       *time.Time     `json:"purchaseDate"`
+	PurchasePrice      *float64       `json:"purchasePrice"`
+	VendorName         *string        `json:"vendorName"`
+	WarrantyEnd        *time.Time     `json:"warrantyEnd"`
 	Status             AssetStatus    `json:"status"`
 	Condition          AssetCondition `json:"condition"`
-	LocationID         *string        `json:"locationId,omitempty"`
-	AssignedToID       *string        `json:"assignedToId,omitempty"`
+	LocationID         *string        `json:"locationId"`
+	AssignedToID       *string        `json:"assignedToId"`
 	CreatedAt          time.Time      `json:"createdAt"`
 	UpdatedAt          time.Time      `json:"updatedAt"`
 	// * Populated
-	Category   *CategoryResponse `json:"category,omitempty"`
-	Location   *LocationResponse `json:"location,omitempty"`
-	AssignedTo *UserResponse     `json:"assignedTo,omitempty"`
+	Category   *CategoryResponse `json:"category"`
+	Location   *LocationResponse `json:"location"`
+	AssignedTo *UserResponse     `json:"assignedTo"`
 }
 
 // --- Payloads ---

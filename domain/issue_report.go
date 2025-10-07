@@ -71,18 +71,18 @@ type IssueReportResponse struct {
 	IssueType       string                           `json:"issueType"`
 	Priority        IssuePriority                    `json:"priority"`
 	Status          IssueStatus                      `json:"status"`
-	ResolvedDate    *time.Time                       `json:"resolvedDate,omitempty"`
-	ResolvedByID    *string                          `json:"resolvedById,omitempty"`
+	ResolvedDate    *time.Time                       `json:"resolvedDate"`
+	ResolvedByID    *string                          `json:"resolvedById"`
 	Title           string                           `json:"title"`
-	Description     *string                          `json:"description,omitempty"`
-	ResolutionNotes *string                          `json:"resolutionNotes,omitempty"`
+	Description     *string                          `json:"description"`
+	ResolutionNotes *string                          `json:"resolutionNotes"`
 	CreatedAt       time.Time                        `json:"createdAt"`
 	UpdatedAt       time.Time                        `json:"updatedAt"`
 	Translations    []IssueReportTranslationResponse `json:"translations"`
 	// * Populated
 	Asset      AssetResponse `json:"asset"`
 	ReportedBy UserResponse  `json:"reportedBy"`
-	ResolvedBy *UserResponse `json:"resolvedBy,omitempty"`
+	ResolvedBy *UserResponse `json:"resolvedBy"`
 }
 
 type IssueReportListResponse struct {
@@ -93,17 +93,17 @@ type IssueReportListResponse struct {
 	IssueType       string        `json:"issueType"`
 	Priority        IssuePriority `json:"priority"`
 	Status          IssueStatus   `json:"status"`
-	ResolvedDate    *time.Time    `json:"resolvedDate,omitempty"`
-	ResolvedByID    *string       `json:"resolvedById,omitempty"`
+	ResolvedDate    *time.Time    `json:"resolvedDate"`
+	ResolvedByID    *string       `json:"resolvedById"`
 	Title           string        `json:"title"`
-	Description     *string       `json:"description,omitempty"`
-	ResolutionNotes *string       `json:"resolutionNotes,omitempty"`
+	Description     *string       `json:"description"`
+	ResolutionNotes *string       `json:"resolutionNotes"`
 	CreatedAt       time.Time     `json:"createdAt"`
 	UpdatedAt       time.Time     `json:"updatedAt"`
 	// * Populated
 	Asset      AssetResponse `json:"asset"`
 	ReportedBy UserResponse  `json:"reportedBy"`
-	ResolvedBy *UserResponse `json:"resolvedBy,omitempty"`
+	ResolvedBy *UserResponse `json:"resolvedBy"`
 }
 
 // --- Payloads ---

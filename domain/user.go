@@ -56,7 +56,7 @@ type UserResponse struct {
 	PreferredLang string    `json:"preferredLang" example:"en"`
 	IsActive      bool      `json:"isActive" example:"true"`
 	AvatarURL     *string   `json:"avatarUrl" example:"https://example.com/avatar.jpg"`
-	FCMToken      *string   `json:"fcmToken,omitempty"`
+	FCMToken      *string   `json:"fcmToken"`
 	CreatedAt     time.Time `json:"createdAt" example:"2023-01-01T00:00:00Z"`
 	UpdatedAt     time.Time `json:"updatedAt" example:"2023-01-01T00:00:00Z"`
 }

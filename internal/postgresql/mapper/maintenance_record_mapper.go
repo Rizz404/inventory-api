@@ -133,6 +133,18 @@ func ToDomainMaintenanceRecord(m *model.MaintenanceRecord) domain.MaintenanceRec
 		domainRecord.PerformedByUser = &performedByUserStr
 	}
 
+	// Convert Asset if preloaded
+	if !m.Asset.ID.IsZero() {
+		asset := ToDomainAsset(&m.Asset)
+		domainRecord.Asset = &asset
+	}
+
+	// Convert User if preloaded
+	if m.User != nil && !m.User.ID.IsZero() {
+		user := ToDomainUser(m.User)
+		domainRecord.User = &user
+	}
+
 	if len(m.Translations) > 0 {
 		domainRecord.Translations = make([]domain.MaintenanceRecordTranslation, len(m.Translations))
 		for i, translation := range m.Translations {
@@ -176,6 +188,17 @@ func MaintenanceRecordToResponse(d *domain.MaintenanceRecord, langCode string) d
 		Translations:      make([]domain.MaintenanceRecordTranslationResponse, len(d.Translations)),
 	}
 
+	// Populate Asset if available
+	if d.Asset != nil {
+		response.Asset = AssetToResponse(d.Asset)
+	}
+
+	// Populate User if available
+	if d.User != nil {
+		userResponse := UserToResponse(d.User)
+		response.PerformedByUser = &userResponse
+	}
+
 	// Populate translations
 	for i, translation := range d.Translations {
 		response.Translations[i] = domain.MaintenanceRecordTranslationResponse{
@@ -214,6 +237,17 @@ func MaintenanceRecordToListResponse(d *domain.MaintenanceRecord, langCode strin
 		ActualCost:        d.ActualCost,
 		CreatedAt:         d.CreatedAt,
 		UpdatedAt:         d.UpdatedAt,
+	}
+
+	// Populate Asset if available
+	if d.Asset != nil {
+		response.Asset = AssetToResponse(d.Asset)
+	}
+
+	// Populate User if available
+	if d.User != nil {
+		userResponse := UserToResponse(d.User)
+		response.PerformedByUser = &userResponse
 	}
 
 	// Find translation for the requested language

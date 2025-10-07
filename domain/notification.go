@@ -53,7 +53,7 @@ type NotificationTranslationResponse struct {
 type NotificationResponse struct {
 	ID             string                            `json:"id"`
 	UserID         string                            `json:"userId"`
-	RelatedAssetID *string                           `json:"relatedAssetId,omitempty"`
+	RelatedAssetID *string                           `json:"relatedAssetId"`
 	Type           NotificationType                  `json:"type"`
 	IsRead         bool                              `json:"isRead"`
 	CreatedAt      time.Time                         `json:"createdAt"`

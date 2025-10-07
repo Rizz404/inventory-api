@@ -46,13 +46,13 @@ type ScanLog struct {
 
 type ScanLogResponse struct {
 	ID              string         `json:"id"`
-	AssetID         *string        `json:"assetId,omitempty"`
+	AssetID         *string        `json:"assetId"`
 	ScannedValue    string         `json:"scannedValue"`
 	ScanMethod      ScanMethodType `json:"scanMethod"`
 	ScannedByID     string         `json:"scannedById"`
 	ScanTimestamp   time.Time      `json:"scanTimestamp"`
-	ScanLocationLat *float64       `json:"scanLocationLat,omitempty"`
-	ScanLocationLng *float64       `json:"scanLocationLng,omitempty"`
+	ScanLocationLat *float64       `json:"scanLocationLat"`
+	ScanLocationLng *float64       `json:"scanLocationLng"`
 	ScanResult      ScanResultType `json:"scanResult"`
 	// * Populated
 	// ! cuma scan log gak perlu populated table biar gak berat
@@ -62,13 +62,13 @@ type ScanLogResponse struct {
 
 type ScanLogListResponse struct {
 	ID              string         `json:"id"`
-	AssetID         *string        `json:"assetId,omitempty"`
+	AssetID         *string        `json:"assetId"`
 	ScannedValue    string         `json:"scannedValue"`
 	ScanMethod      ScanMethodType `json:"scanMethod"`
 	ScannedByID     string         `json:"scannedById"`
 	ScanTimestamp   time.Time      `json:"scanTimestamp"`
-	ScanLocationLat *float64       `json:"scanLocationLat,omitempty"`
-	ScanLocationLng *float64       `json:"scanLocationLng,omitempty"`
+	ScanLocationLat *float64       `json:"scanLocationLat"`
+	ScanLocationLng *float64       `json:"scanLocationLng"`
 	ScanResult      ScanResultType `json:"scanResult"`
 }
 
