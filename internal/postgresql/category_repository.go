@@ -214,6 +214,63 @@ func (r *CategoryRepository) DeleteCategory(ctx context.Context, categoryId stri
 	return nil
 }
 
+func (r *CategoryRepository) BulkDeleteCategories(ctx context.Context, categoryIds []string) (domain.BulkDeleteCategories, error) {
+	result := domain.BulkDeleteCategories{
+		RequestedIDS: categoryIds,
+		DeletedIDS:   []string{},
+	}
+
+	if len(categoryIds) == 0 {
+		return result, nil
+	}
+
+	// First, find which categories actually exist
+	var existingCategories []model.Category
+	if err := r.db.WithContext(ctx).Select("id").Where("id IN ?", categoryIds).Find(&existingCategories).Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	// Collect existing category IDs
+	existingIds := make([]string, 0, len(existingCategories))
+	for _, cat := range existingCategories {
+		existingIds = append(existingIds, cat.ID.String())
+	}
+
+	// If no categories exist, return early
+	if len(existingIds) == 0 {
+		return result, nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return result, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Delete translations first (foreign key constraint)
+	if err := tx.Delete(&model.CategoryTranslation{}, "category_id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	// Delete categories
+	if err := tx.Delete(&model.Category{}, "id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	result.DeletedIDS = existingIds
+	return result, nil
+}
+
 // *===========================QUERY===========================*
 func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.Category, error) {
 	var categories []model.Category

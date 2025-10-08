@@ -33,6 +33,11 @@ type CategoryTranslation struct {
 	Description  *string `json:"description"`
 }
 
+type BulkDeleteCategories struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
 type CategoryTranslationResponse struct {
 	LangCode     string  `json:"langCode"`
 	CategoryName string  `json:"categoryName"`
@@ -62,6 +67,11 @@ type CategoryListResponse struct {
 	UpdatedAt    time.Time             `json:"updatedAt"`
 }
 
+type BulkDeleteCategoriesResponse struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
 // --- Payloads ---
 
 type CreateCategoryPayload struct {
@@ -86,6 +96,10 @@ type UpdateCategoryTranslationPayload struct {
 	LangCode     string  `json:"langCode" validate:"required,max=5"`
 	CategoryName *string `json:"categoryName,omitempty" validate:"omitempty,max=100"`
 	Description  *string `json:"description,omitempty"`
+}
+
+type BulkDeleteCategoriesPayload struct {
+	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
 // --- Query Parameters ---

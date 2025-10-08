@@ -72,6 +72,16 @@ type ScanLogListResponse struct {
 	ScanResult      ScanResultType `json:"scanResult"`
 }
 
+type BulkDeleteScanLogs struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
+type BulkDeleteScanLogsResponse struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
 // --- Payloads ---
 
 type CreateScanLogPayload struct {
@@ -81,6 +91,10 @@ type CreateScanLogPayload struct {
 	ScanLocationLat *float64       `json:"scanLocationLat,omitempty" validate:"omitempty,latitude"`
 	ScanLocationLng *float64       `json:"scanLocationLng,omitempty" validate:"omitempty,longitude"`
 	ScanResult      ScanResultType `json:"scanResult"`
+}
+
+type BulkDeleteScanLogsPayload struct {
+	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
 // --- Query Parameters ---

@@ -14,6 +14,7 @@ type Repository interface {
 	CreateCategory(ctx context.Context, payload *domain.Category) (domain.Category, error)
 	UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.Category, error)
 	DeleteCategory(ctx context.Context, categoryId string) error
+	BulkDeleteCategories(ctx context.Context, categoryIds []string) (domain.BulkDeleteCategories, error)
 
 	// * QUERY
 	GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.Category, error)
@@ -33,6 +34,7 @@ type CategoryService interface {
 	CreateCategory(ctx context.Context, payload *domain.CreateCategoryPayload) (domain.CategoryResponse, error)
 	UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.CategoryResponse, error)
 	DeleteCategory(ctx context.Context, categoryId string) error
+	BulkDeleteCategories(ctx context.Context, payload *domain.BulkDeleteCategoriesPayload) (domain.BulkDeleteCategoriesResponse, error)
 
 	// * QUERY
 	GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryListResponse, int64, error)
@@ -141,6 +143,27 @@ func (s *Service) DeleteCategory(ctx context.Context, categoryId string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *Service) BulkDeleteCategories(ctx context.Context, payload *domain.BulkDeleteCategoriesPayload) (domain.BulkDeleteCategoriesResponse, error) {
+	// * Validate that IDs are provided
+	if len(payload.IDS) == 0 {
+		return domain.BulkDeleteCategoriesResponse{}, domain.ErrBadRequestWithKey(utils.ErrCategoryIDRequiredKey)
+	}
+
+	// * Perform bulk delete operation
+	result, err := s.Repo.BulkDeleteCategories(ctx, payload.IDS)
+	if err != nil {
+		return domain.BulkDeleteCategoriesResponse{}, err
+	}
+
+	// * Convert to response
+	response := domain.BulkDeleteCategoriesResponse{
+		RequestedIDS: result.RequestedIDS,
+		DeletedIDS:   result.DeletedIDS,
+	}
+
+	return response, nil
 }
 
 // *===========================QUERY===========================*

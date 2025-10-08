@@ -77,6 +77,16 @@ type NotificationListResponse struct {
 	Message        string           `json:"message"`
 }
 
+type BulkDeleteNotifications struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
+type BulkDeleteNotificationsResponse struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
 // --- Payloads ---
 
 // Notifications are typically created by the system, not directly by users.
@@ -97,6 +107,10 @@ type CreateNotificationTranslationPayload struct {
 type UpdateNotificationPayload struct {
 	IsRead       *bool                                  `json:"isRead,omitempty"`
 	Translations []CreateNotificationTranslationPayload `json:"translations,omitempty"`
+}
+
+type BulkDeleteNotificationsPayload struct {
+	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
 // --- Query Parameters ---

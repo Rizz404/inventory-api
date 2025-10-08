@@ -90,6 +90,16 @@ type MaintenanceScheduleListResponse struct {
 	CreatedBy UserResponse  `json:"createdBy"`
 }
 
+type BulkDeleteMaintenanceSchedules struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
+type BulkDeleteMaintenanceSchedulesResponse struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
 // --- Payloads ---
 
 type CreateMaintenanceSchedulePayload struct {
@@ -104,6 +114,10 @@ type CreateMaintenanceScheduleTranslationPayload struct {
 	LangCode    string  `json:"langCode" validate:"required,max=5"`
 	Title       string  `json:"title" validate:"required,max=200"`
 	Description *string `json:"description,omitempty"`
+}
+
+type BulkDeleteMaintenanceSchedulesPayload struct {
+	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
 // --- Query Parameters ---

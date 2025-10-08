@@ -61,6 +61,10 @@ type Asset struct {
 	AssignedTo         *string        `json:"assignedTo"`
 	CreatedAt          time.Time      `json:"createdAt"`
 	UpdatedAt          time.Time      `json:"updatedAt"`
+	// * Populated
+	Category *Category `json:"category"`
+	Location *Location `json:"location"`
+	User     *User     `json:"assignedTo"`
 }
 
 type AssetResponse struct {
@@ -82,7 +86,7 @@ type AssetResponse struct {
 	AssignedToID       *string        `json:"assignedToId"`
 	CreatedAt          time.Time      `json:"createdAt"`
 	UpdatedAt          time.Time      `json:"updatedAt"`
-	// * Populated
+	// ???
 	Category   *CategoryResponse `json:"category"`
 	Location   *LocationResponse `json:"location"`
 	AssignedTo *UserResponse     `json:"assignedTo"`
@@ -111,6 +115,16 @@ type AssetListResponse struct {
 	Category   *CategoryResponse `json:"category"`
 	Location   *LocationResponse `json:"location"`
 	AssignedTo *UserResponse     `json:"assignedTo"`
+}
+
+type BulkDeleteAssets struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
+type BulkDeleteAssetsResponse struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
 }
 
 // --- Payloads ---
@@ -149,6 +163,10 @@ type UpdateAssetPayload struct {
 	Condition          *AssetCondition `json:"condition,omitempty" validate:"omitempty,oneof=Good Fair Poor Damaged"`
 	LocationID         *string         `json:"locationId,omitempty" validate:"omitempty"`
 	AssignedTo         *string         `json:"assignedTo,omitempty" validate:"omitempty"`
+}
+
+type BulkDeleteAssetsPayload struct {
+	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
 // --- Query Parameters ---

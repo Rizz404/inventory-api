@@ -106,6 +106,16 @@ type IssueReportListResponse struct {
 	ResolvedBy *UserResponse `json:"resolvedBy"`
 }
 
+type BulkDeleteIssueReports struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
+type BulkDeleteIssueReportsResponse struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
 // --- Payloads ---
 
 type CreateIssueReportPayload struct {
@@ -136,6 +146,10 @@ type UpdateIssueReportTranslationPayload struct {
 	Title           *string `json:"title,omitempty" validate:"omitempty,max=200"`
 	Description     *string `json:"description,omitempty"`
 	ResolutionNotes *string `json:"resolutionNotes,omitempty"`
+}
+
+type BulkDeleteIssueReportsPayload struct {
+	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
 // --- Query Parameters ---

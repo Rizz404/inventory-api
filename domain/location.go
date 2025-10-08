@@ -64,6 +64,16 @@ type LocationListResponse struct {
 	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
+type BulkDeleteLocations struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
+type BulkDeleteLocationsResponse struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
 // --- Payloads ---
 
 type CreateLocationPayload struct {
@@ -92,6 +102,10 @@ type UpdateLocationPayload struct {
 type UpdateLocationTranslationPayload struct {
 	LangCode     string  `json:"langCode" validate:"required,max=5"`
 	LocationName *string `json:"locationName,omitempty" validate:"omitempty,max=100"`
+}
+
+type BulkDeleteLocationsPayload struct {
+	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
 // --- Query Parameters ---

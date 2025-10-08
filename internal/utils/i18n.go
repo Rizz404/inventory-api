@@ -135,6 +135,7 @@ const (
 	SuccessCategoryCreatedKey              MessageKey = "success.category.created"
 	SuccessCategoryUpdatedKey              MessageKey = "success.category.updated"
 	SuccessCategoryDeletedKey              MessageKey = "success.category.deleted"
+	SuccessCategoriesBulkDeletedKey        MessageKey = "success.category.bulk_deleted"
 	SuccessCategoryRetrievedKey            MessageKey = "success.category.retrieved"
 	SuccessCategoryRetrievedByCodeKey      MessageKey = "success.category.retrieved_by_code"
 	SuccessCategoryCountedKey              MessageKey = "success.category.counted"
@@ -570,6 +571,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Category deleted successfully",
 		// "id-ID": "Kategori berhasil dihapus",
 		"ja-JP": "カテゴリが正常に削除されました",
+	},
+	SuccessCategoriesBulkDeletedKey: {
+		"en-US": "Categories bulk deleted successfully",
+		// "id-ID": "Kategori berhasil dihapus secara massal",
+		"ja-JP": "カテゴリが一括削除されました",
 	},
 	SuccessCategoryRetrievedKey: {
 		"en-US": "Categories retrieved successfully",

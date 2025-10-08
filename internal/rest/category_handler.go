@@ -49,6 +49,11 @@ func NewCategoryHandler(app fiber.Router, s category.CategoryService) {
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
 		handler.DeleteCategory,
 	)
+	categories.Post("/bulk-delete",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.BulkDeleteCategories,
+	)
 }
 
 func (h *CategoryHandler) parseCategoryFiltersAndSort(c *fiber.Ctx) (domain.CategoryParams, error) {
@@ -135,6 +140,20 @@ func (h *CategoryHandler) DeleteCategory(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessCategoryDeletedKey, nil)
+}
+
+func (h *CategoryHandler) BulkDeleteCategories(c *fiber.Ctx) error {
+	var payload domain.BulkDeleteCategoriesPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	result, err := h.Service.BulkDeleteCategories(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessCategoriesBulkDeletedKey, result)
 }
 
 // *===========================QUERY===========================*

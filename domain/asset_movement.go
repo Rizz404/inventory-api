@@ -83,6 +83,16 @@ type AssetMovementListResponse struct {
 	MovedBy      UserResponse      `json:"movedBy"`
 }
 
+type BulkDeleteAssetMovements struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
+type BulkDeleteAssetMovementsResponse struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
 // --- Payloads ---
 
 type CreateAssetMovementPayload struct {
@@ -106,6 +116,10 @@ type UpdateAssetMovementPayload struct {
 type UpdateAssetMovementTranslationPayload struct {
 	LangCode string  `json:"langCode" validate:"required,max=5"`
 	Notes    *string `json:"notes,omitempty" validate:"omitempty"`
+}
+
+type BulkDeleteAssetMovementsPayload struct {
+	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
 // --- Query Parameters ---

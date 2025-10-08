@@ -84,6 +84,16 @@ type AuthResponse struct {
 // Alias untuk backward compatibility
 type LoginResponse = AuthResponse
 
+type BulkDeleteUsers struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
+type BulkDeleteUsersResponse struct {
+	RequestedIDS []string `json:"requestedIds"`
+	DeletedIDS   []string `json:"deletedIds"`
+}
+
 // --- Payloads ---
 
 type LoginPayload struct {
@@ -128,6 +138,10 @@ type UpdateFCMTokenPayload struct {
 
 type RefreshTokenPayload struct {
 	RefreshToken string `json:"refreshToken" form:"refreshToken" validate:"required"`
+}
+
+type BulkDeleteUsersPayload struct {
+	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
 // --- Query Parameters ---
