@@ -21,6 +21,7 @@ type Category struct {
 	CategoryCode string                `json:"categoryCode"`
 	CreatedAt    time.Time             `json:"createdAt"`
 	UpdatedAt    time.Time             `json:"updatedAt"`
+	Parent       *Category             `json:"parent,omitempty"`
 	Translations []CategoryTranslation `json:"translations,omitempty"`
 }
 
@@ -44,20 +45,21 @@ type CategoryResponse struct {
 	CategoryCode string                        `json:"categoryCode"`
 	CategoryName string                        `json:"categoryName"`
 	Description  *string                       `json:"description"`
-	Children     []CategoryResponse            `json:"children"`
+	Parent       *CategoryResponse             `json:"parent"`
 	CreatedAt    time.Time                     `json:"createdAt"`
 	UpdatedAt    time.Time                     `json:"updatedAt"`
 	Translations []CategoryTranslationResponse `json:"translations"`
 }
 
 type CategoryListResponse struct {
-	ID           string    `json:"id"`
-	ParentID     *string   `json:"parentId"`
-	CategoryCode string    `json:"categoryCode"`
-	CategoryName string    `json:"categoryName"`
-	Description  *string   `json:"description"`
-	CreatedAt    time.Time `json:"createdAt"`
-	UpdatedAt    time.Time `json:"updatedAt"`
+	ID           string                `json:"id"`
+	ParentID     *string               `json:"parentId"`
+	CategoryCode string                `json:"categoryCode"`
+	CategoryName string                `json:"categoryName"`
+	Description  *string               `json:"description"`
+	Parent       *CategoryListResponse `json:"parent"`
+	CreatedAt    time.Time             `json:"createdAt"`
+	UpdatedAt    time.Time             `json:"updatedAt"`
 }
 
 // --- Payloads ---

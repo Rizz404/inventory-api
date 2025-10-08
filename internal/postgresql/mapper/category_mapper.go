@@ -102,6 +102,11 @@ func ToDomainCategory(m *model.Category) domain.Category {
 		}
 	}
 
+	if m.Parent != nil {
+		parentDomain := ToDomainCategory(m.Parent)
+		domainCategory.Parent = &parentDomain
+	}
+
 	return domainCategory
 }
 
@@ -158,6 +163,12 @@ func CategoryToResponse(d *domain.Category, langCode string) domain.CategoryResp
 		response.Description = d.Translations[0].Description
 	}
 
+	// Populate parent if exists
+	if d.Parent != nil {
+		parentResponse := CategoryToResponse(d.Parent, langCode)
+		response.Parent = &parentResponse
+	}
+
 	return response
 }
 
@@ -191,6 +202,12 @@ func CategoryToListResponse(d *domain.Category, langCode string) domain.Category
 	if response.CategoryName == "" && len(d.Translations) > 0 {
 		response.CategoryName = d.Translations[0].CategoryName
 		response.Description = d.Translations[0].Description
+	}
+
+	// Populate parent if exists
+	if d.Parent != nil {
+		parentResponse := CategoryToListResponse(d.Parent, langCode)
+		response.Parent = &parentResponse
 	}
 
 	return response

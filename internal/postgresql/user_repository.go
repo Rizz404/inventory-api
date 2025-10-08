@@ -158,19 +158,28 @@ func (r *UserRepository) GetUsersCursor(ctx context.Context, params domain.UserP
 	// Apply filters
 	db = r.applyUserFilters(db, params.Filters)
 
-	// Apply sorting
-	db = r.applyUserSorts(db, params.Sort)
+	// Apply sorting - for cursor pagination, we need consistent ordering by ID
+	if params.Sort != nil && params.Sort.Field != "" {
+		db = r.applyUserSorts(db, params.Sort)
+	} else {
+		// Default to ID ASC for cursor pagination
+		db = db.Order("u.id ASC")
+	}
 
 	// Apply cursor-based pagination
 	if params.Pagination != nil {
+		if params.Pagination.Cursor != "" {
+			db = db.Where("u.id > ?", params.Pagination.Cursor)
+		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)
 		}
-		if params.Pagination.Cursor != "" {
-			// Assuming sorting DESC by ID for cursor
-			db = db.Where("l.id < ?", params.Pagination.Cursor)
-		}
 	}
+
+	if err := db.Find(&users).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
 	// Convert to domain users
 	return mapper.ToDomainUsers(users), nil
 }

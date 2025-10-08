@@ -219,7 +219,9 @@ func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params 
 	var categories []model.Category
 	db := r.db.WithContext(ctx).
 		Table("categories c").
-		Preload("Translations")
+		Preload("Translations").
+		Preload("Parent").
+		Preload("Parent.Translations")
 
 	needsJoin := params.SearchQuery != nil && *params.SearchQuery != "" ||
 		(params.Sort != nil && params.Sort.Field == domain.CategorySortByCategoryName)
@@ -262,7 +264,9 @@ func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params dom
 	var categories []model.Category
 	db := r.db.WithContext(ctx).
 		Table("categories c").
-		Preload("Translations")
+		Preload("Translations").
+		Preload("Parent").
+		Preload("Parent.Translations")
 
 	needsJoin := params.SearchQuery != nil && *params.SearchQuery != "" ||
 		(params.Sort != nil && params.Sort.Field == domain.CategorySortByCategoryName)
@@ -307,6 +311,8 @@ func (r *CategoryRepository) GetCategoryById(ctx context.Context, categoryId str
 	err := r.db.WithContext(ctx).
 		Table("categories c").
 		Preload("Translations").
+		Preload("Parent").
+		Preload("Parent.Translations").
 		First(&category, "id = ?", categoryId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -324,6 +330,8 @@ func (r *CategoryRepository) GetCategoryByCode(ctx context.Context, categoryCode
 	err := r.db.WithContext(ctx).
 		Table("categories c").
 		Preload("Translations").
+		Preload("Parent").
+		Preload("Parent.Translations").
 		First(&category, "category_code = ?", categoryCode).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
