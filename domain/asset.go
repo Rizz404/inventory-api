@@ -78,7 +78,7 @@ type AssetResponse struct {
 	Model              *string        `json:"model"`
 	SerialNumber       *string        `json:"serialNumber"`
 	PurchaseDate       *time.Time     `json:"purchaseDate"`
-	PurchasePrice      *float64       `json:"purchasePrice"`
+	PurchasePrice      *string        `json:"purchasePrice"` // Changed to *string to ensure consistent decimal formatting
 	VendorName         *string        `json:"vendorName"`
 	WarrantyEnd        *time.Time     `json:"warrantyEnd"`
 	Status             AssetStatus    `json:"status"`
@@ -103,7 +103,7 @@ type AssetListResponse struct {
 	Model              *string        `json:"model"`
 	SerialNumber       *string        `json:"serialNumber"`
 	PurchaseDate       *time.Time     `json:"purchaseDate"`
-	PurchasePrice      *float64       `json:"purchasePrice"`
+	PurchasePrice      *string        `json:"purchasePrice"` // Changed to *string to ensure consistent decimal formatting
 	VendorName         *string        `json:"vendorName"`
 	WarrantyEnd        *time.Time     `json:"warrantyEnd"`
 	Status             AssetStatus    `json:"status"`
@@ -331,12 +331,12 @@ type AssetAssignmentStatisticsResponse struct {
 }
 
 type AssetValueStatisticsResponse struct {
-	TotalValue         *float64 `json:"totalValue"`
-	AverageValue       *float64 `json:"averageValue"`
-	MinValue           *float64 `json:"minValue"`
-	MaxValue           *float64 `json:"maxValue"`
-	AssetsWithValue    int      `json:"assetsWithValue"`
-	AssetsWithoutValue int      `json:"assetsWithoutValue"`
+	TotalValue         *string `json:"totalValue"`   // Changed to *string to ensure consistent decimal formatting
+	AverageValue       *string `json:"averageValue"` // Changed to *string to ensure consistent decimal formatting
+	MinValue           *string `json:"minValue"`     // Changed to *string to ensure consistent decimal formatting
+	MaxValue           *string `json:"maxValue"`     // Changed to *string to ensure consistent decimal formatting
+	AssetsWithValue    int     `json:"assetsWithValue"`
+	AssetsWithoutValue int     `json:"assetsWithoutValue"`
 }
 
 type AssetWarrantyStatisticsResponse struct {
@@ -373,6 +373,6 @@ type AssetSummaryStatisticsResponse struct {
 	AverageAssetsPerDay         float64   `json:"averageAssetsPerDay"`
 	LatestCreationDate          time.Time `json:"latestCreationDate"`
 	EarliestCreationDate        time.Time `json:"earliestCreationDate"`
-	MostExpensiveAssetValue     *float64  `json:"mostExpensiveAssetValue"`
-	LeastExpensiveAssetValue    *float64  `json:"leastExpensiveAssetValue"`
+	MostExpensiveAssetValue     *string   `json:"mostExpensiveAssetValue"`  // Changed to *string to ensure consistent decimal formatting
+	LeastExpensiveAssetValue    *string   `json:"leastExpensiveAssetValue"` // Changed to *string to ensure consistent decimal formatting
 }

@@ -188,7 +188,7 @@ func MaintenanceRecordToResponse(d *domain.MaintenanceRecord, langCode string) d
 		MaintenanceDate:   d.MaintenanceDate,
 		PerformedByUserID: d.PerformedByUser,
 		PerformedByVendor: d.PerformedByVendor,
-		ActualCost:        d.ActualCost,
+		ActualCost:        formatPriceToString(d.ActualCost), // Format cost as string with 2 decimals
 		CreatedAt:         d.CreatedAt,
 		UpdatedAt:         d.UpdatedAt,
 		Translations:      make([]domain.MaintenanceRecordTranslationResponse, len(d.Translations)),
@@ -246,7 +246,7 @@ func MaintenanceRecordToListResponse(d *domain.MaintenanceRecord, langCode strin
 		MaintenanceDate:   d.MaintenanceDate,
 		PerformedByUserID: d.PerformedByUser,
 		PerformedByVendor: d.PerformedByVendor,
-		ActualCost:        d.ActualCost,
+		ActualCost:        formatPriceToString(d.ActualCost), // Format cost as string with 2 decimals
 		CreatedAt:         d.CreatedAt,
 		UpdatedAt:         d.UpdatedAt,
 	}
@@ -308,10 +308,10 @@ func MaintenanceRecordStatisticsToResponse(stats *domain.MaintenanceRecordStatis
 	resp := domain.MaintenanceRecordStatisticsResponse{
 		Total: domain.MaintenanceRecordCountStatisticsResponse{Count: stats.Total.Count},
 		CostStatistics: domain.MaintenanceRecordCostStatisticsResponse{
-			TotalCost:          stats.CostStatistics.TotalCost,
-			AverageCost:        stats.CostStatistics.AverageCost,
-			MinCost:            stats.CostStatistics.MinCost,
-			MaxCost:            stats.CostStatistics.MaxCost,
+			TotalCost:          formatPriceToString(stats.CostStatistics.TotalCost),
+			AverageCost:        formatPriceToString(stats.CostStatistics.AverageCost),
+			MinCost:            formatPriceToString(stats.CostStatistics.MinCost),
+			MaxCost:            formatPriceToString(stats.CostStatistics.MaxCost),
 			RecordsWithCost:    stats.CostStatistics.RecordsWithCost,
 			RecordsWithoutCost: stats.CostStatistics.RecordsWithoutCost,
 		},
@@ -324,8 +324,8 @@ func MaintenanceRecordStatisticsToResponse(stats *domain.MaintenanceRecordStatis
 			AverageRecordsPerDay:          stats.Summary.AverageRecordsPerDay,
 			LatestRecordDate:              stats.Summary.LatestRecordDate,
 			EarliestRecordDate:            stats.Summary.EarliestRecordDate,
-			MostExpensiveMaintenanceCost:  stats.Summary.MostExpensiveMaintenanceCost,
-			LeastExpensiveMaintenanceCost: stats.Summary.LeastExpensiveMaintenanceCost,
+			MostExpensiveMaintenanceCost:  formatPriceToString(stats.Summary.MostExpensiveMaintenanceCost),
+			LeastExpensiveMaintenanceCost: formatPriceToString(stats.Summary.LeastExpensiveMaintenanceCost),
 			AssetsWithMaintenance:         stats.Summary.AssetsWithMaintenance,
 			AverageMaintenancePerAsset:    stats.Summary.AverageMaintenancePerAsset,
 		},
@@ -340,8 +340,8 @@ func MaintenanceRecordStatisticsToResponse(stats *domain.MaintenanceRecordStatis
 			AssetTag:        a.AssetTag,
 			RecordCount:     a.RecordCount,
 			LastMaintenance: a.LastMaintenance,
-			TotalCost:       a.TotalCost,
-			AverageCost:     a.AverageCost,
+			TotalCost:       formatFloat64ToString(a.TotalCost),
+			AverageCost:     formatFloat64ToString(a.AverageCost),
 		}
 	}
 
@@ -353,8 +353,8 @@ func MaintenanceRecordStatisticsToResponse(stats *domain.MaintenanceRecordStatis
 			UserName:    u.UserName,
 			UserEmail:   u.UserEmail,
 			Count:       u.Count,
-			TotalCost:   u.TotalCost,
-			AverageCost: u.AverageCost,
+			TotalCost:   formatFloat64ToString(u.TotalCost),
+			AverageCost: formatFloat64ToString(u.AverageCost),
 		}
 	}
 
@@ -364,8 +364,8 @@ func MaintenanceRecordStatisticsToResponse(stats *domain.MaintenanceRecordStatis
 		resp.ByVendor[i] = domain.VendorMaintenanceRecordStatisticsResponse{
 			VendorName:  v.VendorName,
 			Count:       v.Count,
-			TotalCost:   v.TotalCost,
-			AverageCost: v.AverageCost,
+			TotalCost:   formatFloat64ToString(v.TotalCost),
+			AverageCost: formatFloat64ToString(v.AverageCost),
 		}
 	}
 
@@ -381,7 +381,7 @@ func MaintenanceRecordStatisticsToResponse(stats *domain.MaintenanceRecordStatis
 		resp.MonthlyTrends[i] = domain.MaintenanceRecordMonthlyTrendResponse{
 			Month:       mt.Month,
 			RecordCount: mt.RecordCount,
-			TotalCost:   mt.TotalCost,
+			TotalCost:   formatFloat64ToString(mt.TotalCost),
 		}
 	}
 

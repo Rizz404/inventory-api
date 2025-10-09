@@ -51,7 +51,7 @@ type MaintenanceRecordResponse struct {
 	MaintenanceDate   time.Time                              `json:"maintenanceDate"`
 	PerformedByUserID *string                                `json:"performedByUserId"`
 	PerformedByVendor *string                                `json:"performedByVendor"`
-	ActualCost        *float64                               `json:"actualCost"`
+	ActualCost        *string                                `json:"actualCost"` // Changed to *string to ensure consistent decimal formatting
 	Title             string                                 `json:"title"`
 	Notes             *string                                `json:"notes"`
 	CreatedAt         time.Time                              `json:"createdAt"`
@@ -70,7 +70,7 @@ type MaintenanceRecordListResponse struct {
 	MaintenanceDate   time.Time `json:"maintenanceDate"`
 	PerformedByUserID *string   `json:"performedByUserId"`
 	PerformedByVendor *string   `json:"performedByVendor"`
-	ActualCost        *float64  `json:"actualCost"`
+	ActualCost        *string   `json:"actualCost"` // Changed to *string to ensure consistent decimal formatting
 	Title             string    `json:"title"`
 	Notes             *string   `json:"notes"`
 	CreatedAt         time.Time `json:"createdAt"`
@@ -232,38 +232,38 @@ type MaintenanceRecordCountStatisticsResponse struct {
 }
 
 type UserMaintenanceRecordStatisticsResponse struct {
-	UserID      string  `json:"userId"`
-	UserName    string  `json:"userName"`
-	UserEmail   string  `json:"userEmail"`
-	Count       int     `json:"count"`
-	TotalCost   float64 `json:"totalCost"`
-	AverageCost float64 `json:"averageCost"`
+	UserID      string `json:"userId"`
+	UserName    string `json:"userName"`
+	UserEmail   string `json:"userEmail"`
+	Count       int    `json:"count"`
+	TotalCost   string `json:"totalCost"`   // Changed to string to ensure consistent decimal formatting
+	AverageCost string `json:"averageCost"` // Changed to string to ensure consistent decimal formatting
 }
 
 type VendorMaintenanceRecordStatisticsResponse struct {
-	VendorName  string  `json:"vendorName"`
-	Count       int     `json:"count"`
-	TotalCost   float64 `json:"totalCost"`
-	AverageCost float64 `json:"averageCost"`
+	VendorName  string `json:"vendorName"`
+	Count       int    `json:"count"`
+	TotalCost   string `json:"totalCost"`   // Changed to string to ensure consistent decimal formatting
+	AverageCost string `json:"averageCost"` // Changed to string to ensure consistent decimal formatting
 }
 
 type AssetMaintenanceRecordStatisticsResponse struct {
-	AssetID         string  `json:"assetId"`
-	AssetName       string  `json:"assetName"`
-	AssetTag        string  `json:"assetTag"`
-	RecordCount     int     `json:"recordCount"`
-	LastMaintenance string  `json:"lastMaintenance"`
-	TotalCost       float64 `json:"totalCost"`
-	AverageCost     float64 `json:"averageCost"`
+	AssetID         string `json:"assetId"`
+	AssetName       string `json:"assetName"`
+	AssetTag        string `json:"assetTag"`
+	RecordCount     int    `json:"recordCount"`
+	LastMaintenance string `json:"lastMaintenance"`
+	TotalCost       string `json:"totalCost"`   // Changed to string to ensure consistent decimal formatting
+	AverageCost     string `json:"averageCost"` // Changed to string to ensure consistent decimal formatting
 }
 
 type MaintenanceRecordCostStatisticsResponse struct {
-	TotalCost          *float64 `json:"totalCost"`
-	AverageCost        *float64 `json:"averageCost"`
-	MinCost            *float64 `json:"minCost"`
-	MaxCost            *float64 `json:"maxCost"`
-	RecordsWithCost    int      `json:"recordsWithCost"`
-	RecordsWithoutCost int      `json:"recordsWithoutCost"`
+	TotalCost          *string `json:"totalCost"`   // Changed to *string to ensure consistent decimal formatting
+	AverageCost        *string `json:"averageCost"` // Changed to *string to ensure consistent decimal formatting
+	MinCost            *string `json:"minCost"`     // Changed to *string to ensure consistent decimal formatting
+	MaxCost            *string `json:"maxCost"`     // Changed to *string to ensure consistent decimal formatting
+	RecordsWithCost    int     `json:"recordsWithCost"`
+	RecordsWithoutCost int     `json:"recordsWithoutCost"`
 }
 
 type MaintenanceRecordCompletionTrendResponse struct {
@@ -272,22 +272,22 @@ type MaintenanceRecordCompletionTrendResponse struct {
 }
 
 type MaintenanceRecordMonthlyTrendResponse struct {
-	Month       string  `json:"month"`
-	RecordCount int     `json:"recordCount"`
-	TotalCost   float64 `json:"totalCost"`
+	Month       string `json:"month"`
+	RecordCount int    `json:"recordCount"`
+	TotalCost   string `json:"totalCost"` // Changed to string to ensure consistent decimal formatting
 }
 
 type MaintenanceRecordSummaryStatisticsResponse struct {
-	TotalRecords                  int      `json:"totalRecords"`
-	RecordsWithCostInfo           int      `json:"recordsWithCostInfo"`
-	CostInfoPercentage            float64  `json:"costInfoPercentage"`
-	TotalUniqueVendors            int      `json:"totalUniqueVendors"`
-	TotalUniquePerformers         int      `json:"totalUniquePerformers"`
-	AverageRecordsPerDay          float64  `json:"averageRecordsPerDay"`
-	LatestRecordDate              string   `json:"latestRecordDate"`
-	EarliestRecordDate            string   `json:"earliestRecordDate"`
-	MostExpensiveMaintenanceCost  *float64 `json:"mostExpensiveMaintenanceCost"`
-	LeastExpensiveMaintenanceCost *float64 `json:"leastExpensiveMaintenanceCost"`
-	AssetsWithMaintenance         int      `json:"assetsWithMaintenance"`
-	AverageMaintenancePerAsset    float64  `json:"averageMaintenancePerAsset"`
+	TotalRecords                  int     `json:"totalRecords"`
+	RecordsWithCostInfo           int     `json:"recordsWithCostInfo"`
+	CostInfoPercentage            float64 `json:"costInfoPercentage"`
+	TotalUniqueVendors            int     `json:"totalUniqueVendors"`
+	TotalUniquePerformers         int     `json:"totalUniquePerformers"`
+	AverageRecordsPerDay          float64 `json:"averageRecordsPerDay"`
+	LatestRecordDate              string  `json:"latestRecordDate"`
+	EarliestRecordDate            string  `json:"earliestRecordDate"`
+	MostExpensiveMaintenanceCost  *string `json:"mostExpensiveMaintenanceCost"`  // Changed to *string to ensure consistent decimal formatting
+	LeastExpensiveMaintenanceCost *string `json:"leastExpensiveMaintenanceCost"` // Changed to *string to ensure consistent decimal formatting
+	AssetsWithMaintenance         int     `json:"assetsWithMaintenance"`
+	AverageMaintenancePerAsset    float64 `json:"averageMaintenancePerAsset"`
 }

@@ -1,12 +1,27 @@
 package mapper
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/oklog/ulid/v2"
 )
+
+// Helper function to format float64 pointer to string pointer with 2 decimal places
+func formatPriceToString(price *float64) *string {
+	if price == nil {
+		return nil
+	}
+	formatted := fmt.Sprintf("%.2f", *price)
+	return &formatted
+}
+
+// Helper function to format float64 to string with 2 decimal places
+func formatFloat64ToString(value float64) string {
+	return fmt.Sprintf("%.2f", value)
+}
 
 // *==================== Model conversions ====================
 func ToModelAsset(d *domain.Asset) model.Asset {
@@ -163,7 +178,7 @@ func AssetToResponse(d *domain.Asset, langCode string) domain.AssetResponse {
 		Model:              d.Model,
 		SerialNumber:       d.SerialNumber,
 		PurchaseDate:       d.PurchaseDate,
-		PurchasePrice:      d.PurchasePrice,
+		PurchasePrice:      formatPriceToString(d.PurchasePrice), // Format price as string with 2 decimals
 		VendorName:         d.VendorName,
 		WarrantyEnd:        d.WarrantyEnd,
 		Status:             d.Status,
@@ -212,7 +227,7 @@ func AssetToListResponse(d *domain.Asset, langCode string) domain.AssetListRespo
 		Model:              d.Model,
 		SerialNumber:       d.SerialNumber,
 		PurchaseDate:       d.PurchaseDate,
-		PurchasePrice:      d.PurchasePrice,
+		PurchasePrice:      formatPriceToString(d.PurchasePrice), // Format price as string with 2 decimals
 		VendorName:         d.VendorName,
 		WarrantyEnd:        d.WarrantyEnd,
 		Status:             d.Status,
@@ -272,10 +287,10 @@ func AssetStatisticsToResponse(stats *domain.AssetStatistics) domain.AssetStatis
 			Unassigned: stats.ByAssignment.Unassigned,
 		},
 		ValueStatistics: domain.AssetValueStatisticsResponse{
-			TotalValue:         stats.ValueStatistics.TotalValue,
-			AverageValue:       stats.ValueStatistics.AverageValue,
-			MinValue:           stats.ValueStatistics.MinValue,
-			MaxValue:           stats.ValueStatistics.MaxValue,
+			TotalValue:         formatPriceToString(stats.ValueStatistics.TotalValue),
+			AverageValue:       formatPriceToString(stats.ValueStatistics.AverageValue),
+			MinValue:           formatPriceToString(stats.ValueStatistics.MinValue),
+			MaxValue:           formatPriceToString(stats.ValueStatistics.MaxValue),
 			AssetsWithValue:    stats.ValueStatistics.AssetsWithValue,
 			AssetsWithoutValue: stats.ValueStatistics.AssetsWithoutValue,
 		},
@@ -307,8 +322,8 @@ func AssetStatisticsToResponse(stats *domain.AssetStatistics) domain.AssetStatis
 			AverageAssetsPerDay:         stats.Summary.AverageAssetsPerDay,
 			LatestCreationDate:          stats.Summary.LatestCreationDate,
 			EarliestCreationDate:        stats.Summary.EarliestCreationDate,
-			MostExpensiveAssetValue:     stats.Summary.MostExpensiveAssetValue,
-			LeastExpensiveAssetValue:    stats.Summary.LeastExpensiveAssetValue,
+			MostExpensiveAssetValue:     formatPriceToString(stats.Summary.MostExpensiveAssetValue),
+			LeastExpensiveAssetValue:    formatPriceToString(stats.Summary.LeastExpensiveAssetValue),
 		},
 	}
 
