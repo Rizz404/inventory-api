@@ -167,6 +167,7 @@ const (
 	SuccessAssetTagExistenceCheckedKey          MessageKey = "success.asset.tag_existence_checked"
 	SuccessAssetDataMatrixExistenceCheckedKey   MessageKey = "success.asset.datamatrix_existence_checked"
 	SuccessAssetSerialNumberExistenceCheckedKey MessageKey = "success.asset.serial_number_existence_checked"
+	SuccessAssetTagGeneratedKey                 MessageKey = "success.asset.tag_generated"
 
 	// * Scan log-specific success keys
 	SuccessScanLogCreatedKey             MessageKey = "success.scan_log.created"
@@ -715,6 +716,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Serial number existence checked successfully",
 		// "id-ID": "Keberadaan nomor seri berhasil diperiksa",
 		"ja-JP": "シリアル番号の存在が正常に確認されました",
+	},
+	SuccessAssetTagGeneratedKey: {
+		"en-US": "Asset tag suggestion generated successfully",
+		// "id-ID": "Saran tag aset berhasil dibuat",
+		"ja-JP": "アセットタグの提案が正常に生成されました",
 	},
 
 	// * Scan log-specific success messages

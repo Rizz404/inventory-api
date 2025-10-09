@@ -40,6 +40,7 @@ func NewAssetHandler(app fiber.Router, s asset.AssetService) {
 	assets.Get("/check/tag/:tag", handler.CheckAssetTagExists)
 	assets.Get("/check/serial/:serial", handler.CheckSerialNumberExists)
 	assets.Get("/check/:id", handler.CheckAssetExists)
+	assets.Post("/generate-tag", handler.GenerateAssetTagSuggestion)
 	assets.Get("/:id", handler.GetAssetById)
 	assets.Patch("/:id",
 		middleware.AuthMiddleware(),
@@ -351,4 +352,19 @@ func (h *AssetHandler) GetAssetStatistics(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessAssetStatisticsRetrievedKey, stats)
+}
+
+func (h *AssetHandler) GenerateAssetTagSuggestion(c *fiber.Ctx) error {
+	var payload domain.GenerateAssetTagPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	response, err := h.Service.GenerateAssetTagSuggestion(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessAssetTagGeneratedKey, response)
 }

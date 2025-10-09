@@ -2,6 +2,7 @@ package asset
 
 import (
 	"context"
+	"fmt"
 	"mime/multipart"
 	"strings"
 	"time"
@@ -32,6 +33,7 @@ type Repository interface {
 	CheckSerialNumberExistsExcluding(ctx context.Context, serialNumber string, excludeAssetId string) (bool, error)
 	CountAssets(ctx context.Context, params domain.AssetParams) (int64, error)
 	GetAssetStatistics(ctx context.Context) (domain.AssetStatistics, error)
+	GetLastAssetTagByCategory(ctx context.Context, categoryId string) (string, error)
 }
 
 // * AssetService interface defines the contract for asset business operations
@@ -51,6 +53,7 @@ type AssetService interface {
 	CheckSerialNumberExists(ctx context.Context, serialNumber string) (bool, error)
 	CountAssets(ctx context.Context, params domain.AssetParams) (int64, error)
 	GetAssetStatistics(ctx context.Context) (domain.AssetStatisticsResponse, error)
+	GenerateAssetTagSuggestion(ctx context.Context, payload *domain.GenerateAssetTagPayload) (domain.GenerateAssetTagResponse, error)
 }
 
 // * NotificationService interface for creating notifications
@@ -58,20 +61,27 @@ type NotificationService interface {
 	CreateNotification(ctx context.Context, payload *domain.CreateNotificationPayload) (domain.NotificationResponse, error)
 }
 
+// * CategoryService interface for getting category information
+type CategoryService interface {
+	GetCategoryById(ctx context.Context, categoryId string, langCode string) (domain.CategoryResponse, error)
+}
+
 type Service struct {
 	Repo                Repository
 	CloudinaryClient    *cloudinary.Client
 	NotificationService NotificationService
+	CategoryService     CategoryService
 }
 
 // * Ensure Service implements AssetService interface
 var _ AssetService = (*Service)(nil)
 
-func NewService(r Repository, cloudinaryClient *cloudinary.Client, notificationService NotificationService) AssetService {
+func NewService(r Repository, cloudinaryClient *cloudinary.Client, notificationService NotificationService, categoryService CategoryService) AssetService {
 	return &Service{
 		Repo:                r,
 		CloudinaryClient:    cloudinaryClient,
 		NotificationService: notificationService,
+		CategoryService:     categoryService,
 	}
 }
 
@@ -541,4 +551,46 @@ func (s *Service) sendAssetConditionChangeNotification(ctx context.Context, asse
 	}
 
 	_, _ = s.NotificationService.CreateNotification(ctx, notificationPayload)
+}
+
+// GenerateAssetTagSuggestion generates a suggested asset tag based on category code
+func (s *Service) GenerateAssetTagSuggestion(ctx context.Context, payload *domain.GenerateAssetTagPayload) (domain.GenerateAssetTagResponse, error) {
+	// * Get category to retrieve CategoryCode
+	category, err := s.CategoryService.GetCategoryById(ctx, payload.CategoryID, "en")
+	if err != nil {
+		return domain.GenerateAssetTagResponse{}, err
+	}
+
+	// * Get the last asset tag for this category
+	lastAssetTag, err := s.Repo.GetLastAssetTagByCategory(ctx, payload.CategoryID)
+	if err != nil {
+		return domain.GenerateAssetTagResponse{}, err
+	}
+
+	// * Calculate next increment
+	nextIncrement := 1
+	if lastAssetTag != "" {
+		// Extract the numeric part from the last asset tag
+		// Format expected: CATEGORYCODE000001
+		categoryCodeLen := len(category.CategoryCode)
+		if len(lastAssetTag) > categoryCodeLen {
+			numericPart := lastAssetTag[categoryCodeLen:]
+			// Try to parse the numeric part
+			var parsedNum int
+			_, err := fmt.Sscanf(numericPart, "%d", &parsedNum)
+			if err == nil {
+				nextIncrement = parsedNum + 1
+			}
+		}
+	}
+
+	// * Generate suggested tag with 6-digit padding
+	suggestedTag := fmt.Sprintf("%s%06d", category.CategoryCode, nextIncrement)
+
+	return domain.GenerateAssetTagResponse{
+		CategoryCode:  category.CategoryCode,
+		LastAssetTag:  lastAssetTag,
+		SuggestedTag:  suggestedTag,
+		NextIncrement: nextIncrement,
+	}, nil
 }

@@ -472,3 +472,24 @@ func (r *AssetRepository) GetAssetStatistics(ctx context.Context) (domain.AssetS
 
 	return stats, nil
 }
+
+func (r *AssetRepository) GetLastAssetTagByCategory(ctx context.Context, categoryId string) (string, error) {
+	var asset model.Asset
+
+	// Get the last asset tag for the given category, ordered by asset_tag descending
+	err := r.db.WithContext(ctx).
+		Where("category_id = ?", categoryId).
+		Order("asset_tag DESC").
+		Limit(1).
+		First(&asset).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No assets found for this category, return empty string
+			return "", nil
+		}
+		return "", domain.ErrInternal(err)
+	}
+
+	return asset.AssetTag, nil
+}

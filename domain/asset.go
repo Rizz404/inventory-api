@@ -170,6 +170,19 @@ type BulkDeleteAssetsPayload struct {
 	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
+type GenerateAssetTagPayload struct {
+	CategoryID string `json:"categoryId" validate:"required"`
+}
+
+// --- Responses ---
+
+type GenerateAssetTagResponse struct {
+	CategoryCode  string `json:"categoryCode"`
+	LastAssetTag  string `json:"lastAssetTag"`
+	SuggestedTag  string `json:"suggestedTag"`
+	NextIncrement int    `json:"nextIncrement"`
+}
+
 // --- Query Parameters ---
 
 type AssetFilterOptions struct {
