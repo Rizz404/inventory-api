@@ -191,7 +191,7 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 	}
 
 	// * Convert to AssetResponse using mapper
-	return mapper.AssetToResponse(&createdAsset), nil
+	return mapper.AssetToResponse(&createdAsset, langCode), nil
 }
 
 func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload, dataMatrixImageFile *multipart.FileHeader, langCode string) (domain.AssetResponse, error) {
@@ -275,7 +275,7 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 	// * Send notifications for changes
 	go s.sendUpdateNotifications(ctx, &existingAsset, &updatedAsset, payload)
 
-	return mapper.AssetToResponse(&updatedAsset), nil
+	return mapper.AssetToResponse(&updatedAsset, langCode), nil
 }
 
 func (s *Service) DeleteAsset(ctx context.Context, assetId string) error {
@@ -299,7 +299,7 @@ func (s *Service) GetAssetsPaginated(ctx context.Context, params domain.AssetPar
 		return nil, 0, err
 	}
 
-	return mapper.AssetsToResponses(assets), count, nil
+	return mapper.AssetsToResponses(assets, langCode), count, nil
 }
 
 func (s *Service) GetAssetsCursor(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.AssetResponse, error) {
@@ -308,7 +308,7 @@ func (s *Service) GetAssetsCursor(ctx context.Context, params domain.AssetParams
 		return nil, err
 	}
 
-	return mapper.AssetsToResponses(assets), nil
+	return mapper.AssetsToResponses(assets, langCode), nil
 }
 
 func (s *Service) GetAssetById(ctx context.Context, assetId string, langCode string) (domain.AssetResponse, error) {
@@ -317,7 +317,7 @@ func (s *Service) GetAssetById(ctx context.Context, assetId string, langCode str
 		return domain.AssetResponse{}, err
 	}
 
-	return mapper.AssetToResponse(&asset), nil
+	return mapper.AssetToResponse(&asset, langCode), nil
 }
 
 func (s *Service) GetAssetByAssetTag(ctx context.Context, assetTag string, langCode string) (domain.AssetResponse, error) {
@@ -326,7 +326,7 @@ func (s *Service) GetAssetByAssetTag(ctx context.Context, assetTag string, langC
 		return domain.AssetResponse{}, err
 	}
 
-	return mapper.AssetToResponse(&asset), nil
+	return mapper.AssetToResponse(&asset, langCode), nil
 }
 
 func (s *Service) CheckAssetExists(ctx context.Context, assetId string) (bool, error) {

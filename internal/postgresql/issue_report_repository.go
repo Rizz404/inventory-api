@@ -263,6 +263,11 @@ func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, pa
 		Table("issue_reports ir").
 		Preload("Translations").
 		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
 		Preload("ReportedByUser").
 		Preload("ResolvedByUser")
 
@@ -299,6 +304,11 @@ func (r *IssueReportRepository) GetIssueReportsCursor(ctx context.Context, param
 		Table("issue_reports ir").
 		Preload("Translations").
 		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
 		Preload("ReportedByUser").
 		Preload("ResolvedByUser")
 
@@ -336,6 +346,11 @@ func (r *IssueReportRepository) GetIssueReportById(ctx context.Context, issueRep
 		Table("issue_reports ir").
 		Preload("Translations").
 		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
 		Preload("ReportedByUser").
 		Preload("ResolvedByUser").
 		First(&issueReport, "id = ?", issueReportId).Error

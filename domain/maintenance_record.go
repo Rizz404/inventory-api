@@ -24,9 +24,10 @@ type MaintenanceRecord struct {
 	CreatedAt         time.Time                      `json:"createdAt"`
 	UpdatedAt         time.Time                      `json:"updatedAt"`
 	Translations      []MaintenanceRecordTranslation `json:"translations,omitempty"`
-	// Preloaded relationships
-	Asset *Asset `json:"asset,omitempty"`
-	User  *User  `json:"user,omitempty"`
+	// * Preloaded relationships
+	Schedule *MaintenanceSchedule `json:"schedule,omitempty"`
+	Asset    *Asset               `json:"asset,omitempty"`
+	User     *User                `json:"user,omitempty"`
 }
 
 type MaintenanceRecordTranslation struct {
@@ -75,9 +76,9 @@ type MaintenanceRecordListResponse struct {
 	CreatedAt         time.Time `json:"createdAt"`
 	UpdatedAt         time.Time `json:"updatedAt"`
 	// * Populated
-	Schedule        *MaintenanceScheduleResponse `json:"schedule"`
-	Asset           AssetResponse                `json:"asset"`
-	PerformedByUser *UserResponse                `json:"performedByUser"`
+	Schedule        *MaintenanceScheduleListResponse `json:"schedule"`
+	Asset           AssetResponse                    `json:"asset"`
+	PerformedByUser *UserResponse                    `json:"performedByUser"`
 }
 
 type BulkDeleteMaintenanceRecords struct {

@@ -26,6 +26,13 @@ type AssetMovement struct {
 	CreatedAt      time.Time                  `json:"createdAt"`
 	UpdatedAt      time.Time                  `json:"updatedAt"`
 	Translations   []AssetMovementTranslation `json:"translations,omitempty"`
+	// * Populated
+	Asset        *Asset    `json:"asset,omitempty"`
+	FromLocation *Location `json:"fromLocation,omitempty"`
+	ToLocation   *Location `json:"toLocation,omitempty"`
+	FromUser     *User     `json:"fromUser,omitempty"`
+	ToUser       *User     `json:"toUser,omitempty"`
+	MovedByUser  *User     `json:"movedByUser,omitempty"`
 }
 
 type AssetMovementTranslation struct {

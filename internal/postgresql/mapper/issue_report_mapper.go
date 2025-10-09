@@ -141,6 +141,22 @@ func ToDomainIssueReport(m *model.IssueReport) domain.IssueReport {
 		}
 	}
 
+	// Populate related entities if preloaded
+	if !m.Asset.ID.IsZero() {
+		asset := ToDomainAsset(&m.Asset)
+		domainReport.Asset = &asset
+	}
+
+	if !m.ReportedByUser.ID.IsZero() {
+		user := ToDomainUser(&m.ReportedByUser)
+		domainReport.ReportedByUser = &user
+	}
+
+	if m.ResolvedByUser != nil && !m.ResolvedByUser.ID.IsZero() {
+		user := ToDomainUser(m.ResolvedByUser)
+		domainReport.ResolvedByUser = &user
+	}
+
 	return domainReport
 }
 
@@ -178,6 +194,22 @@ func IssueReportToResponse(d *domain.IssueReport, langCode string) domain.IssueR
 		CreatedAt:    d.ReportedDate, // Use ReportedDate as CreatedAt since domain doesn't have CreatedAt
 		UpdatedAt:    d.ReportedDate, // Use ReportedDate as UpdatedAt since domain doesn't have UpdatedAt
 		Translations: make([]domain.IssueReportTranslationResponse, len(d.Translations)),
+	}
+
+	// Populate Asset if available
+	if d.Asset != nil {
+		response.Asset = AssetToResponse(d.Asset, langCode)
+	}
+
+	// Populate ReportedBy if available
+	if d.ReportedByUser != nil {
+		response.ReportedBy = UserToResponse(d.ReportedByUser)
+	}
+
+	// Populate ResolvedBy if available
+	if d.ResolvedByUser != nil {
+		userResponse := UserToResponse(d.ResolvedByUser)
+		response.ResolvedBy = &userResponse
 	}
 
 	// Populate translations
@@ -231,6 +263,22 @@ func IssueReportToListResponse(d *domain.IssueReport, langCode string) domain.Is
 		ResolvedByID: d.ResolvedBy,
 		CreatedAt:    d.ReportedDate, // Use ReportedDate as CreatedAt since domain doesn't have CreatedAt
 		UpdatedAt:    d.ReportedDate, // Use ReportedDate as UpdatedAt since domain doesn't have UpdatedAt
+	}
+
+	// Populate Asset if available
+	if d.Asset != nil {
+		response.Asset = AssetToResponse(d.Asset, langCode)
+	}
+
+	// Populate ReportedBy if available
+	if d.ReportedByUser != nil {
+		response.ReportedBy = UserToResponse(d.ReportedByUser)
+	}
+
+	// Populate ResolvedBy if available
+	if d.ResolvedByUser != nil {
+		userResponse := UserToResponse(d.ResolvedByUser)
+		response.ResolvedBy = &userResponse
 	}
 
 	// Find translation for the requested language

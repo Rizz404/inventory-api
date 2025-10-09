@@ -133,6 +133,12 @@ func ToDomainMaintenanceRecord(m *model.MaintenanceRecord) domain.MaintenanceRec
 		domainRecord.PerformedByUser = &performedByUserStr
 	}
 
+	// Convert Schedule if preloaded
+	if m.Schedule != nil && !m.Schedule.ID.IsZero() {
+		schedule := ToDomainMaintenanceSchedule(m.Schedule)
+		domainRecord.Schedule = &schedule
+	}
+
 	// Convert Asset if preloaded
 	if !m.Asset.ID.IsZero() {
 		asset := ToDomainAsset(&m.Asset)
@@ -188,9 +194,15 @@ func MaintenanceRecordToResponse(d *domain.MaintenanceRecord, langCode string) d
 		Translations:      make([]domain.MaintenanceRecordTranslationResponse, len(d.Translations)),
 	}
 
+	// Populate Schedule if available
+	if d.Schedule != nil {
+		scheduleResponse := MaintenanceScheduleToResponse(d.Schedule, langCode)
+		response.Schedule = &scheduleResponse
+	}
+
 	// Populate Asset if available
 	if d.Asset != nil {
-		response.Asset = AssetToResponse(d.Asset)
+		response.Asset = AssetToResponse(d.Asset, langCode)
 	}
 
 	// Populate User if available
@@ -239,9 +251,15 @@ func MaintenanceRecordToListResponse(d *domain.MaintenanceRecord, langCode strin
 		UpdatedAt:         d.UpdatedAt,
 	}
 
+	// Populate Schedule if available
+	if d.Schedule != nil {
+		scheduleResponse := MaintenanceScheduleToListResponse(d.Schedule, langCode)
+		response.Schedule = &scheduleResponse
+	}
+
 	// Populate Asset if available
 	if d.Asset != nil {
-		response.Asset = AssetToResponse(d.Asset)
+		response.Asset = AssetToResponse(d.Asset, langCode)
 	}
 
 	// Populate User if available

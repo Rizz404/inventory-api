@@ -41,6 +41,9 @@ type MaintenanceSchedule struct {
 	CreatedBy       string                           `json:"createdBy"`
 	CreatedAt       time.Time                        `json:"createdAt"`
 	Translations    []MaintenanceScheduleTranslation `json:"translations,omitempty"`
+	// * Populated
+	Asset         *Asset `json:"asset,omitempty"`
+	CreatedByUser *User  `json:"createdByUser,omitempty"`
 }
 
 type MaintenanceScheduleTranslation struct {

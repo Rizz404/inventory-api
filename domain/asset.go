@@ -62,9 +62,10 @@ type Asset struct {
 	CreatedAt          time.Time      `json:"createdAt"`
 	UpdatedAt          time.Time      `json:"updatedAt"`
 	// * Populated
+	// Todo: Masih pake translation populated, nanti benerin diakhir
 	Category *Category `json:"category"`
 	Location *Location `json:"location"`
-	User     *User     `json:"assignedTo"`
+	User     *User     `json:"user"`
 }
 
 type AssetResponse struct {

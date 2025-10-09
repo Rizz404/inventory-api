@@ -124,6 +124,22 @@ func ToDomainAsset(m *model.Asset) domain.Asset {
 		domainAsset.AssignedTo = &assignedToStr
 	}
 
+	// Populate related entities if preloaded
+	if !m.Category.ID.IsZero() {
+		category := ToDomainCategory(&m.Category)
+		domainAsset.Category = &category
+	}
+
+	if m.Location != nil && !m.Location.ID.IsZero() {
+		location := ToDomainLocation(m.Location)
+		domainAsset.Location = &location
+	}
+
+	if m.User != nil && !m.User.ID.IsZero() {
+		user := ToDomainUser(m.User)
+		domainAsset.User = &user
+	}
+
 	return domainAsset
 }
 
@@ -136,7 +152,7 @@ func ToDomainAssets(models []model.Asset) []domain.Asset {
 }
 
 // *==================== Entity Response conversions ====================
-func AssetToResponse(d *domain.Asset) domain.AssetResponse {
+func AssetToResponse(d *domain.Asset, langCode string) domain.AssetResponse {
 	response := domain.AssetResponse{
 		ID:                 d.ID,
 		AssetTag:           d.AssetTag,
@@ -158,18 +174,34 @@ func AssetToResponse(d *domain.Asset) domain.AssetResponse {
 		UpdatedAt:          d.UpdatedAt,
 	}
 
+	// Populate related entities
+	if d.Category != nil {
+		categoryResponse := CategoryToResponse(d.Category, langCode)
+		response.Category = &categoryResponse
+	}
+
+	if d.Location != nil {
+		locationResponse := LocationToResponse(d.Location, langCode)
+		response.Location = &locationResponse
+	}
+
+	if d.User != nil {
+		userResponse := UserToResponse(d.User)
+		response.AssignedTo = &userResponse
+	}
+
 	return response
 }
 
-func AssetsToResponses(assets []domain.Asset) []domain.AssetResponse {
+func AssetsToResponses(assets []domain.Asset, langCode string) []domain.AssetResponse {
 	responses := make([]domain.AssetResponse, len(assets))
 	for i, asset := range assets {
-		responses[i] = AssetToResponse(&asset)
+		responses[i] = AssetToResponse(&asset, langCode)
 	}
 	return responses
 }
 
-func AssetToListResponse(d *domain.Asset) domain.AssetListResponse {
+func AssetToListResponse(d *domain.Asset, langCode string) domain.AssetListResponse {
 	response := domain.AssetListResponse{
 		ID:                 d.ID,
 		AssetTag:           d.AssetTag,
@@ -191,13 +223,29 @@ func AssetToListResponse(d *domain.Asset) domain.AssetListResponse {
 		UpdatedAt:          d.UpdatedAt,
 	}
 
+	// Populate related entities
+	if d.Category != nil {
+		categoryResponse := CategoryToResponse(d.Category, langCode)
+		response.Category = &categoryResponse
+	}
+
+	if d.Location != nil {
+		locationResponse := LocationToResponse(d.Location, langCode)
+		response.Location = &locationResponse
+	}
+
+	if d.User != nil {
+		userResponse := UserToResponse(d.User)
+		response.AssignedTo = &userResponse
+	}
+
 	return response
 }
 
-func AssetsToListResponses(assets []domain.Asset) []domain.AssetListResponse {
+func AssetsToListResponses(assets []domain.Asset, langCode string) []domain.AssetListResponse {
 	responses := make([]domain.AssetListResponse, len(assets))
 	for i, asset := range assets {
-		responses[i] = AssetToListResponse(&asset)
+		responses[i] = AssetToListResponse(&asset, langCode)
 	}
 	return responses
 }

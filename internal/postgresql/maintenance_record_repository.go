@@ -209,7 +209,14 @@ func (r *MaintenanceRecordRepository) GetRecordsPaginated(ctx context.Context, p
 	db := r.db.WithContext(ctx).
 		Table("maintenance_records mr").
 		Preload("Translations").
+		Preload("Schedule").
+		Preload("Schedule.Translations").
 		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
 		Preload("User")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
@@ -242,7 +249,14 @@ func (r *MaintenanceRecordRepository) GetRecordsCursor(ctx context.Context, para
 	db := r.db.WithContext(ctx).
 		Table("maintenance_records mr").
 		Preload("Translations").
+		Preload("Schedule").
+		Preload("Schedule.Translations").
 		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
 		Preload("User")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
@@ -275,7 +289,14 @@ func (r *MaintenanceRecordRepository) GetRecordById(ctx context.Context, recordI
 	err := r.db.WithContext(ctx).
 		Table("maintenance_records mr").
 		Preload("Translations").
+		Preload("Schedule").
+		Preload("Schedule.Translations").
 		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
 		Preload("User").
 		First(&m, "id = ?", recordId).Error
 	if err != nil {

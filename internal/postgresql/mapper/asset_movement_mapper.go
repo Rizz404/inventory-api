@@ -212,6 +212,37 @@ func ToDomainAssetMovement(m *model.AssetMovement) domain.AssetMovement {
 		}
 	}
 
+	// Populate related entities if preloaded
+	if !m.Asset.ID.IsZero() {
+		asset := ToDomainAsset(&m.Asset)
+		domainMovement.Asset = &asset
+	}
+
+	if m.FromLocation != nil && !m.FromLocation.ID.IsZero() {
+		location := ToDomainLocation(m.FromLocation)
+		domainMovement.FromLocation = &location
+	}
+
+	if m.ToLocation != nil && !m.ToLocation.ID.IsZero() {
+		location := ToDomainLocation(m.ToLocation)
+		domainMovement.ToLocation = &location
+	}
+
+	if m.FromUser != nil && !m.FromUser.ID.IsZero() {
+		user := ToDomainUser(m.FromUser)
+		domainMovement.FromUser = &user
+	}
+
+	if m.ToUser != nil && !m.ToUser.ID.IsZero() {
+		user := ToDomainUser(m.ToUser)
+		domainMovement.ToUser = &user
+	}
+
+	if !m.MovedByUser.ID.IsZero() {
+		user := ToDomainUser(&m.MovedByUser)
+		domainMovement.MovedByUser = &user
+	}
+
 	return domainMovement
 }
 
@@ -246,6 +277,40 @@ func AssetMovementToResponse(d *domain.AssetMovement, langCode string) domain.As
 		CreatedAt:      d.CreatedAt,
 		UpdatedAt:      d.UpdatedAt,
 		Translations:   make([]domain.AssetMovementTranslationResponse, len(d.Translations)),
+	}
+
+	// Populate Asset if available
+	if d.Asset != nil {
+		response.Asset = AssetToResponse(d.Asset, langCode)
+	}
+
+	// Populate FromLocation if available
+	if d.FromLocation != nil {
+		locationResponse := LocationToResponse(d.FromLocation, langCode)
+		response.FromLocation = &locationResponse
+	}
+
+	// Populate ToLocation if available
+	if d.ToLocation != nil {
+		locationResponse := LocationToResponse(d.ToLocation, langCode)
+		response.ToLocation = &locationResponse
+	}
+
+	// Populate FromUser if available
+	if d.FromUser != nil {
+		userResponse := UserToResponse(d.FromUser)
+		response.FromUser = &userResponse
+	}
+
+	// Populate ToUser if available
+	if d.ToUser != nil {
+		userResponse := UserToResponse(d.ToUser)
+		response.ToUser = &userResponse
+	}
+
+	// Populate MovedBy if available
+	if d.MovedByUser != nil {
+		response.MovedBy = UserToResponse(d.MovedByUser)
 	}
 
 	// Populate translations
@@ -292,6 +357,40 @@ func AssetMovementToListResponse(d *domain.AssetMovement, langCode string) domai
 		MovementDate:   d.MovementDate,
 		CreatedAt:      d.CreatedAt,
 		UpdatedAt:      d.UpdatedAt,
+	}
+
+	// Populate Asset if available
+	if d.Asset != nil {
+		response.Asset = AssetToResponse(d.Asset, langCode)
+	}
+
+	// Populate FromLocation if available
+	if d.FromLocation != nil {
+		locationResponse := LocationToResponse(d.FromLocation, langCode)
+		response.FromLocation = &locationResponse
+	}
+
+	// Populate ToLocation if available
+	if d.ToLocation != nil {
+		locationResponse := LocationToResponse(d.ToLocation, langCode)
+		response.ToLocation = &locationResponse
+	}
+
+	// Populate FromUser if available
+	if d.FromUser != nil {
+		userResponse := UserToResponse(d.FromUser)
+		response.FromUser = &userResponse
+	}
+
+	// Populate ToUser if available
+	if d.ToUser != nil {
+		userResponse := UserToResponse(d.ToUser)
+		response.ToUser = &userResponse
+	}
+
+	// Populate MovedBy if available
+	if d.MovedByUser != nil {
+		response.MovedBy = UserToResponse(d.MovedByUser)
 	}
 
 	// Find translation for the requested language

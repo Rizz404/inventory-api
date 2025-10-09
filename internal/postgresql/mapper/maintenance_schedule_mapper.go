@@ -117,6 +117,17 @@ func ToDomainMaintenanceSchedule(m *model.MaintenanceSchedule) domain.Maintenanc
 		}
 	}
 
+	// Populate related entities if preloaded
+	if !m.Asset.ID.IsZero() {
+		asset := ToDomainAsset(&m.Asset)
+		domainSchedule.Asset = &asset
+	}
+
+	if !m.CreatedByUser.ID.IsZero() {
+		user := ToDomainUser(&m.CreatedByUser)
+		domainSchedule.CreatedByUser = &user
+	}
+
 	return domainSchedule
 }
 
@@ -150,6 +161,16 @@ func MaintenanceScheduleToResponse(d *domain.MaintenanceSchedule, langCode strin
 		CreatedByID:     d.CreatedBy,
 		CreatedAt:       d.CreatedAt,
 		Translations:    make([]domain.MaintenanceScheduleTranslationResponse, len(d.Translations)),
+	}
+
+	// Populate Asset if available
+	if d.Asset != nil {
+		response.Asset = AssetToResponse(d.Asset, langCode)
+	}
+
+	// Populate CreatedBy User if available
+	if d.CreatedByUser != nil {
+		response.CreatedBy = UserToResponse(d.CreatedByUser)
 	}
 
 	// Populate translations
@@ -189,6 +210,16 @@ func MaintenanceScheduleToListResponse(d *domain.MaintenanceSchedule, langCode s
 		Status:          d.Status,
 		CreatedByID:     d.CreatedBy,
 		CreatedAt:       d.CreatedAt,
+	}
+
+	// Populate Asset if available
+	if d.Asset != nil {
+		response.Asset = AssetToResponse(d.Asset, langCode)
+	}
+
+	// Populate CreatedBy User if available
+	if d.CreatedByUser != nil {
+		response.CreatedBy = UserToResponse(d.CreatedByUser)
 	}
 
 	// Find translation for the requested language

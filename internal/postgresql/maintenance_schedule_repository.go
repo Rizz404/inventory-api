@@ -206,6 +206,11 @@ func (r *MaintenanceScheduleRepository) GetSchedulesPaginated(ctx context.Contex
 		Table("maintenance_schedules ms").
 		Preload("Translations").
 		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
 		Preload("CreatedByUser")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
@@ -239,6 +244,11 @@ func (r *MaintenanceScheduleRepository) GetSchedulesCursor(ctx context.Context, 
 		Table("maintenance_schedules ms").
 		Preload("Translations").
 		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
 		Preload("CreatedByUser")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
@@ -272,6 +282,11 @@ func (r *MaintenanceScheduleRepository) GetScheduleById(ctx context.Context, sch
 		Table("maintenance_schedules ms").
 		Preload("Translations").
 		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
 		Preload("CreatedByUser").
 		First(&m, "id = ?", scheduleId).Error
 	if err != nil {

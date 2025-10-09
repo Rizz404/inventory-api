@@ -217,8 +217,15 @@ func (r *AssetMovementRepository) GetAssetMovementsPaginated(ctx context.Context
 		Table("asset_movements am").
 		Preload("Translations").
 		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
 		Preload("FromLocation").
+		Preload("FromLocation.Translations").
 		Preload("ToLocation").
+		Preload("ToLocation.Translations").
 		Preload("FromUser").
 		Preload("ToUser").
 		Preload("MovedByUser")
@@ -256,8 +263,15 @@ func (r *AssetMovementRepository) GetAssetMovementsCursor(ctx context.Context, p
 		Table("asset_movements am").
 		Preload("Translations").
 		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
 		Preload("FromLocation").
+		Preload("FromLocation.Translations").
 		Preload("ToLocation").
+		Preload("ToLocation.Translations").
 		Preload("FromUser").
 		Preload("ToUser").
 		Preload("MovedByUser")
@@ -296,8 +310,15 @@ func (r *AssetMovementRepository) GetAssetMovementById(ctx context.Context, move
 		Table("asset_movements am").
 		Preload("Translations").
 		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
 		Preload("FromLocation").
+		Preload("FromLocation.Translations").
 		Preload("ToLocation").
+		Preload("ToLocation.Translations").
 		Preload("FromUser").
 		Preload("ToUser").
 		Preload("MovedByUser").

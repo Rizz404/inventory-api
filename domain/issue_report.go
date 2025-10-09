@@ -45,6 +45,10 @@ type IssueReport struct {
 	ResolvedDate *time.Time               `json:"resolvedDate"`
 	ResolvedBy   *string                  `json:"resolvedBy"`
 	Translations []IssueReportTranslation `json:"translations,omitempty"`
+	// * Populated
+	Asset          *Asset `json:"asset,omitempty"`
+	ReportedByUser *User  `json:"reportedByUser,omitempty"`
+	ResolvedByUser *User  `json:"resolvedByUser,omitempty"`
 }
 
 type IssueReportTranslation struct {
