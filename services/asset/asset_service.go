@@ -126,7 +126,9 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 
 			uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, dataMatrixImageFile, uploadConfig)
 			if err != nil {
-				return domain.AssetResponse{}, domain.ErrBadRequestWithKey(utils.ErrFileUploadFailedKey)
+				// Provide detailed error message
+				errorMsg := "Failed to upload data matrix image: " + err.Error()
+				return domain.AssetResponse{}, domain.ErrBadRequest(errorMsg)
 			}
 			dataMatrixImageURL = uploadResult.SecureURL
 		} else {
@@ -242,7 +244,9 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 
 			uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, dataMatrixImageFile, uploadConfig)
 			if err != nil {
-				return domain.AssetResponse{}, domain.ErrBadRequestWithKey(utils.ErrFileUploadFailedKey)
+				// Provide detailed error message
+				errorMsg := "Failed to upload data matrix image: " + err.Error()
+				return domain.AssetResponse{}, domain.ErrBadRequest(errorMsg)
 			}
 
 			// Set new data matrix image URL in payload

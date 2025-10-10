@@ -2,7 +2,10 @@ package web
 
 import (
 	"fmt"
+	"mime/multipart"
+	"path/filepath"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -224,7 +227,7 @@ func setFieldValue(field reflect.Value, value string) error {
 		} else {
 			field.SetBool(boolVal)
 		}
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if field.Type().Elem().Kind() == reflect.String {
 			field.Set(reflect.ValueOf(&value))
 		} else {
@@ -239,4 +242,129 @@ func setFieldValue(field reflect.Value, value string) error {
 	}
 
 	return nil
+}
+
+// *===========================FILE VALIDATION===========================*
+
+// FileValidationError represents a file validation error with detailed information
+type FileValidationError struct {
+	Field   string
+	Message string
+}
+
+func (e *FileValidationError) Error() string {
+	return fmt.Sprintf("%s: %s", e.Field, e.Message)
+}
+
+// ValidateImageFile validates an image file with detailed error messages
+func ValidateImageFile(file *multipart.FileHeader, fieldName string, maxSizeMB int) error {
+	if file == nil {
+		return nil // Optional file
+	}
+
+	// Check file size
+	maxSizeBytes := int64(maxSizeMB * 1024 * 1024)
+	if file.Size > maxSizeBytes {
+		sizeMB := float64(file.Size) / (1024 * 1024)
+		return &FileValidationError{
+			Field:   fieldName,
+			Message: fmt.Sprintf("File size too large (%.2f MB). Maximum allowed size is %d MB", sizeMB, maxSizeMB),
+		}
+	}
+
+	if file.Size == 0 {
+		return &FileValidationError{
+			Field:   fieldName,
+			Message: "File is empty (0 bytes)",
+		}
+	}
+
+	// Check file extension
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	allowedExtensions := []string{".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff", ".tif", ".svg", ".ico", ".heic", ".heif", ".avif"}
+
+	isValidExtension := slices.Contains(allowedExtensions, ext)
+
+	if !isValidExtension {
+		return &FileValidationError{
+			Field:   fieldName,
+			Message: fmt.Sprintf("Invalid file type '%s'. Allowed types: JPG, JPEG, PNG, GIF, WEBP, BMP, TIFF, SVG, ICO, HEIC, HEIF, AVIF", ext),
+		}
+	}
+
+	// Check if filename is too long
+	if len(file.Filename) > 255 {
+		return &FileValidationError{
+			Field:   fieldName,
+			Message: fmt.Sprintf("Filename too long (%d characters). Maximum allowed is 255 characters", len(file.Filename)),
+		}
+	}
+
+	// Try to open file to ensure it's readable
+	src, err := file.Open()
+	if err != nil {
+		return &FileValidationError{
+			Field:   fieldName,
+			Message: fmt.Sprintf("Cannot read file: %s", err.Error()),
+		}
+	}
+	defer src.Close()
+
+	// Read first few bytes to verify it's actually an image
+	buffer := make([]byte, 512)
+	n, err := src.Read(buffer)
+	if err != nil {
+		return &FileValidationError{
+			Field:   fieldName,
+			Message: fmt.Sprintf("Cannot read file content: %s", err.Error()),
+		}
+	}
+
+	// Check magic numbers for common image formats
+	if n > 0 {
+		// JPEG: FF D8 FF
+		isJPEG := n >= 3 && buffer[0] == 0xFF && buffer[1] == 0xD8 && buffer[2] == 0xFF
+		// PNG: 89 50 4E 47
+		isPNG := n >= 4 && buffer[0] == 0x89 && buffer[1] == 0x50 && buffer[2] == 0x4E && buffer[3] == 0x47
+		// GIF: 47 49 46 38
+		isGIF := n >= 4 && buffer[0] == 0x47 && buffer[1] == 0x49 && buffer[2] == 0x46 && buffer[3] == 0x38
+		// WEBP: 52 49 46 46 ... 57 45 42 50
+		isWEBP := n >= 12 && buffer[0] == 0x52 && buffer[1] == 0x49 && buffer[2] == 0x46 && buffer[3] == 0x46 &&
+			buffer[8] == 0x57 && buffer[9] == 0x45 && buffer[10] == 0x42 && buffer[11] == 0x50
+		// BMP: 42 4D
+		isBMP := n >= 2 && buffer[0] == 0x42 && buffer[1] == 0x4D
+		// TIFF: 49 49 2A 00 (little-endian) or 4D 4D 00 2A (big-endian)
+		isTIFF := n >= 4 && ((buffer[0] == 0x49 && buffer[1] == 0x49 && buffer[2] == 0x2A && buffer[3] == 0x00) ||
+			(buffer[0] == 0x4D && buffer[1] == 0x4D && buffer[2] == 0x00 && buffer[3] == 0x2A))
+		// SVG: starts with < or <?xml
+		isSVG := n >= 5 && ((buffer[0] == 0x3C && buffer[1] == 0x3F && buffer[2] == 0x78 && buffer[3] == 0x6D && buffer[4] == 0x6C) || // <?xml
+			(buffer[0] == 0x3C && buffer[1] == 0x73 && buffer[2] == 0x76 && buffer[3] == 0x67)) // <svg
+		// ICO: 00 00 01 00
+		isICO := n >= 4 && buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0x01 && buffer[3] == 0x00
+		// HEIC/HEIF: starts with various patterns, checking for 'ftyp' at offset 4
+		isHEIC := n >= 12 && buffer[4] == 0x66 && buffer[5] == 0x74 && buffer[6] == 0x79 && buffer[7] == 0x70 &&
+			(buffer[8] == 0x68 && buffer[9] == 0x65 && buffer[10] == 0x69 && buffer[11] == 0x63) // heic
+		isHEIF := n >= 12 && buffer[4] == 0x66 && buffer[5] == 0x74 && buffer[6] == 0x79 && buffer[7] == 0x70 &&
+			(buffer[8] == 0x6D && buffer[9] == 0x69 && buffer[10] == 0x66 && buffer[11] == 0x31) // mif1
+		// AVIF: similar to HEIC but with 'avif' identifier
+		isAVIF := n >= 12 && buffer[4] == 0x66 && buffer[5] == 0x74 && buffer[6] == 0x79 && buffer[7] == 0x70 &&
+			(buffer[8] == 0x61 && buffer[9] == 0x76 && buffer[10] == 0x69 && buffer[11] == 0x66) // avif
+
+		if !isJPEG && !isPNG && !isGIF && !isWEBP && !isBMP && !isTIFF && !isSVG && !isICO && !isHEIC && !isHEIF && !isAVIF {
+			return &FileValidationError{
+				Field:   fieldName,
+				Message: fmt.Sprintf("File '%s' is not a valid image file. The file content does not match any supported image format", file.Filename),
+			}
+		}
+	}
+
+	return nil
+}
+
+// FormatFileValidationError formats a file validation error into a user-friendly message
+func FormatFileValidationError(err error) string {
+	if validationErr, ok := err.(*FileValidationError); ok {
+		return validationErr.Error()
+	}
+	return err.Error()
 }

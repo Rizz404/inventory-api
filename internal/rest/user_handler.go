@@ -112,6 +112,10 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 		// Try to get avatar file (optional)
 		file, err := c.FormFile("avatar")
 		if err == nil {
+			// Validate avatar file before processing (max 5MB)
+			if validationErr := web.ValidateImageFile(file, "avatar", 5); validationErr != nil {
+				return web.HandleError(c, domain.ErrBadRequest(web.FormatFileValidationError(validationErr)))
+			}
 			avatarFile = file
 		}
 		// Note: We don't return error if avatar file is missing since it's optional
@@ -151,6 +155,10 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 		// Try to get avatar file (optional)
 		file, err := c.FormFile("avatar")
 		if err == nil {
+			// Validate avatar file before processing (max 5MB)
+			if validationErr := web.ValidateImageFile(file, "avatar", 5); validationErr != nil {
+				return web.HandleError(c, domain.ErrBadRequest(web.FormatFileValidationError(validationErr)))
+			}
 			avatarFile = file
 		}
 		// Note: We don't return error if avatar file is missing since it's optional
@@ -190,6 +198,10 @@ func (h *UserHandler) UpdateCurrentUser(c *fiber.Ctx) error {
 		// Try to get avatar file (optional)
 		file, err := c.FormFile("avatar")
 		if err == nil {
+			// Validate avatar file before processing (max 5MB)
+			if validationErr := web.ValidateImageFile(file, "avatar", 5); validationErr != nil {
+				return web.HandleError(c, domain.ErrBadRequest(web.FormatFileValidationError(validationErr)))
+			}
 			avatarFile = file
 		}
 		// Note: We don't return error if avatar file is missing since it's optional

@@ -205,33 +205,10 @@ func (c *Client) validateFileType(file *multipart.FileHeader, allowedTypes []str
 	// Get file extension
 	ext := strings.ToLower(filepath.Ext(file.Filename))
 
-	// Check against allowed types
-	for _, allowedType := range allowedTypes {
-		// Support both MIME types and extensions
-		if strings.HasPrefix(allowedType, "image/") || strings.HasPrefix(allowedType, "application/") {
-			// Handle MIME type validation by opening and checking the file
-			src, err := file.Open()
-			if err != nil {
-				return fmt.Errorf("failed to open file for type validation: %w", err)
-			}
-			defer src.Close()
-
-			// Read first 512 bytes to detect content type
-			buffer := make([]byte, 512)
-			_, err = src.Read(buffer)
-			if err != nil {
-				return fmt.Errorf("failed to read file for type validation: %w", err)
-			}
-
-			// Use simple extension-based validation for now
-			if strings.HasSuffix(allowedType, ext[1:]) {
-				return nil
-			}
-		} else {
-			// Handle extension validation
-			if ext == allowedType || ext == "."+allowedType {
-				return nil
-			}
+	// Check against allowed extensions
+	for _, allowedExt := range allowedTypes {
+		if ext == allowedExt {
+			return nil
 		}
 	}
 
@@ -274,35 +251,70 @@ func (c *Client) GenerateTransformationURL(publicID string, transformations stri
 // GetAvatarUploadConfig returns a pre-configured upload config for user avatars
 func GetAvatarUploadConfig() UploadConfig {
 	return UploadConfig{
-		AllowedTypes: []string{"image/jpeg", "image/png", "image/gif", "image/webp"},
-		FolderName:   "avatars",
-		InputName:    "avatar",
-		MaxFiles:     1,
-		MaxFileSize:  5 * 1024 * 1024, // 5MB
-		Overwrite:    true,
+		AllowedTypes: []string{
+			".jpg",
+			".jpeg",
+			".png",
+			".gif",
+			".webp",
+			".bmp",
+			".tiff",
+			".tif",
+			".svg",
+			".ico",
+			".heic",
+			".heif",
+			".avif",
+		},
+		FolderName:  "avatars",
+		InputName:   "avatar",
+		MaxFiles:    1,
+		MaxFileSize: 5 * 1024 * 1024, // 5MB
+		Overwrite:   true,
 	}
 }
 
 // GetDataMatrixImageUploadConfig returns a pre-configured upload config for asset data matrix images
 func GetDataMatrixImageUploadConfig() UploadConfig {
 	return UploadConfig{
-		AllowedTypes: []string{"image/jpeg", "image/png", "image/gif", "image/webp"},
-		FolderName:   "datamatrix",
-		InputName:    "dataMatrixImage",
-		MaxFiles:     1,
-		MaxFileSize:  2 * 1024 * 1024, // 2MB
-		Overwrite:    true,
+		AllowedTypes: []string{
+			".jpg",
+			".jpeg",
+			".png",
+			".gif",
+			".webp",
+			".bmp",
+			".tiff",
+			".tif",
+			".svg",
+			".avif",
+		},
+		FolderName:  "datamatrix",
+		InputName:   "dataMatrixImage",
+		MaxFiles:    1,
+		MaxFileSize: 2 * 1024 * 1024, // 2MB
+		Overwrite:   true,
 	}
 }
 
 // GetDocumentUploadConfig returns a pre-configured upload config for documents
 func GetDocumentUploadConfig() UploadConfig {
 	return UploadConfig{
-		AllowedTypes: []string{"application/pdf", "image/jpeg", "image/png"},
-		FolderName:   "documents",
-		InputName:    "documents",
-		MaxFiles:     10,
-		MaxFileSize:  10 * 1024 * 1024, // 10MB
-		Overwrite:    false,
+		AllowedTypes: []string{
+			".pdf",
+			".jpg",
+			".jpeg",
+			".png",
+			".gif",
+			".webp",
+			".tiff",
+			".tif",
+			".bmp",
+		},
+		FolderName:  "documents",
+		InputName:   "documents",
+		MaxFiles:    10,
+		MaxFileSize: 10 * 1024 * 1024, // 10MB
+		Overwrite:   false,
 	}
 }

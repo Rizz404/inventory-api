@@ -135,6 +135,10 @@ func (h *AssetHandler) CreateAsset(c *fiber.Ctx) error {
 		// Try to get data matrix image file (optional)
 		file, err := c.FormFile("dataMatrixImage")
 		if err == nil {
+			// Validate data matrix image file before processing (max 10MB for QR/barcode images)
+			if validationErr := web.ValidateImageFile(file, "dataMatrixImage", 10); validationErr != nil {
+				return web.HandleError(c, domain.ErrBadRequest(web.FormatFileValidationError(validationErr)))
+			}
 			dataMatrixImageFile = file
 		}
 		// Note: We don't return error if data matrix image file is missing since it's optional
@@ -174,6 +178,10 @@ func (h *AssetHandler) UpdateAsset(c *fiber.Ctx) error {
 		// Try to get data matrix image file (optional)
 		file, err := c.FormFile("dataMatrixImage")
 		if err == nil {
+			// Validate data matrix image file before processing (max 10MB for QR/barcode images)
+			if validationErr := web.ValidateImageFile(file, "dataMatrixImage", 10); validationErr != nil {
+				return web.HandleError(c, domain.ErrBadRequest(web.FormatFileValidationError(validationErr)))
+			}
 			dataMatrixImageFile = file
 		}
 		// Note: We don't return error if data matrix image file is missing since it's optional

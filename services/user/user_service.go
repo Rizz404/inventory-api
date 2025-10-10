@@ -108,7 +108,9 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 
 			uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, avatarFile, uploadConfig)
 			if err != nil {
-				return domain.UserResponse{}, domain.ErrBadRequestWithKey(utils.ErrFileUploadFailedKey)
+				// Provide detailed error message
+				errorMsg := "Failed to upload avatar: " + err.Error()
+				return domain.UserResponse{}, domain.ErrBadRequest(errorMsg)
 			}
 			avatarURL = &uploadResult.SecureURL
 		} else {
@@ -197,7 +199,9 @@ func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain
 
 			uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, avatarFile, uploadConfig)
 			if err != nil {
-				return domain.UserResponse{}, domain.ErrBadRequestWithKey(utils.ErrFileUploadFailedKey)
+				// Provide detailed error message
+				errorMsg := "Failed to upload avatar: " + err.Error()
+				return domain.UserResponse{}, domain.ErrBadRequest(errorMsg)
 			}
 
 			// Set new avatar URL in payload
