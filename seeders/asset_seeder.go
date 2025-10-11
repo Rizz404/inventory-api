@@ -135,8 +135,8 @@ func (as *AssetSeeder) generateAssetPayload(categoryIDs []string, locationIDs []
 		PurchasePrice: &purchasePrice,
 		VendorName:    stringPtr(gofakeit.Company()),
 		WarrantyEnd:   &warrantyEndStr,
-		Status:        &status,
-		Condition:     &condition,
+		Status:        status,
+		Condition:     condition,
 		LocationID:    &locationID,
 		AssignedTo:    assignedTo,
 	}

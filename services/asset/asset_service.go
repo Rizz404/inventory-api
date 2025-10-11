@@ -104,13 +104,13 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 	}
 
 	status := domain.StatusActive
-	if payload.Status != nil {
-		status = *payload.Status
+	if payload.Status != "" {
+		status = payload.Status
 	}
 
 	condition := domain.ConditionGood
-	if payload.Condition != nil {
-		condition = *payload.Condition
+	if payload.Condition != "" {
+		condition = payload.Condition
 	}
 
 	// * Handle data matrix image upload if file is provided

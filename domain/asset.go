@@ -131,21 +131,21 @@ type BulkDeleteAssetsResponse struct {
 // --- Payloads ---
 
 type CreateAssetPayload struct {
-	AssetTag           string          `json:"assetTag" validate:"required,max=50"`
-	DataMatrixImageUrl *string         `json:"dataMatrixImageUrl,omitempty" validate:"omitempty,url"`
-	AssetName          string          `json:"assetName" validate:"required,max=200"`
-	CategoryID         string          `json:"categoryId" validate:"required"`
-	Brand              *string         `json:"brand,omitempty" validate:"omitempty,max=100"`
-	Model              *string         `json:"model,omitempty" validate:"omitempty,max=100"`
-	SerialNumber       *string         `json:"serialNumber,omitempty" validate:"omitempty,max=100"`
-	PurchaseDate       *string         `json:"purchaseDate,omitempty" validate:"omitempty,datetime=2006-01-02"`
-	PurchasePrice      *float64        `json:"purchasePrice,omitempty" validate:"omitempty,gt=0"`
-	VendorName         *string         `json:"vendorName,omitempty" validate:"omitempty,max=150"`
-	WarrantyEnd        *string         `json:"warrantyEnd,omitempty" validate:"omitempty,datetime=2006-01-02"`
-	Status             *AssetStatus    `json:"status,omitempty" validate:"omitempty,oneof=Active Maintenance Disposed Lost"`
-	Condition          *AssetCondition `json:"condition,omitempty" validate:"omitempty,oneof=Good Fair Poor Damaged"`
-	LocationID         *string         `json:"locationId,omitempty" validate:"omitempty"`
-	AssignedTo         *string         `json:"assignedTo,omitempty" validate:"omitempty"`
+	AssetTag           string         `json:"assetTag" validate:"required,max=50"`
+	DataMatrixImageUrl *string        `json:"dataMatrixImageUrl,omitempty" validate:"omitempty,url"`
+	AssetName          string         `json:"assetName" validate:"required,max=200"`
+	CategoryID         string         `json:"categoryId" validate:"required"`
+	Brand              *string        `json:"brand,omitempty" validate:"omitempty,max=100"`
+	Model              *string        `json:"model,omitempty" validate:"omitempty,max=100"`
+	SerialNumber       *string        `json:"serialNumber,omitempty" validate:"omitempty,max=100"`
+	PurchaseDate       *string        `json:"purchaseDate,omitempty" validate:"omitempty,datetime=2006-01-02"`
+	PurchasePrice      *float64       `json:"purchasePrice,omitempty" validate:"omitempty,gt=0"`
+	VendorName         *string        `json:"vendorName,omitempty" validate:"omitempty,max=150"`
+	WarrantyEnd        *string        `json:"warrantyEnd,omitempty" validate:"omitempty,datetime=2006-01-02"`
+	Status             AssetStatus    `json:"status,omitempty" validate:"omitempty,oneof=Active Maintenance Disposed Lost"`
+	Condition          AssetCondition `json:"condition,omitempty" validate:"omitempty,oneof=Good Fair Poor Damaged"`
+	LocationID         *string        `json:"locationId,omitempty" validate:"omitempty"`
+	AssignedTo         *string        `json:"assignedTo,omitempty" validate:"omitempty"`
 }
 
 type UpdateAssetPayload struct {
