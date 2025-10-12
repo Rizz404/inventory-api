@@ -552,19 +552,23 @@ func (r *IssueReportRepository) GetIssueReportStatistics(ctx context.Context) (d
 	}
 
 	// Get earliest and latest creation dates
-	var earliestDate, latestDate time.Time
+	var earliestDate, latestDate *time.Time
 	if err := r.db.WithContext(ctx).Model(&model.IssueReport{}).
 		Select("MIN(reported_date) as earliest, MAX(reported_date) as latest").
 		Row().Scan(&earliestDate, &latestDate); err != nil {
 		return domain.IssueReportStatistics{}, domain.ErrInternal(err)
 	}
 
-	stats.Summary.EarliestCreationDate = earliestDate
-	stats.Summary.LatestCreationDate = latestDate
+	if earliestDate != nil {
+		stats.Summary.EarliestCreationDate = *earliestDate
+	}
+	if latestDate != nil {
+		stats.Summary.LatestCreationDate = *latestDate
+	}
 
 	// Calculate average reports per day
-	if !earliestDate.IsZero() && !latestDate.IsZero() {
-		daysDiff := latestDate.Sub(earliestDate).Hours() / 24
+	if earliestDate != nil && latestDate != nil {
+		daysDiff := latestDate.Sub(*earliestDate).Hours() / 24
 		if daysDiff > 0 {
 			stats.Summary.AverageReportsPerDay = float64(totalCount) / daysDiff
 		}

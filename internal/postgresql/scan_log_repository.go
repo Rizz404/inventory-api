@@ -398,20 +398,20 @@ func (r *ScanLogRepository) GetScanLogStatistics(ctx context.Context) (domain.Sc
 	}
 
 	// Get earliest and latest scan dates
-	var earliestDate, latestDate time.Time
-	if err := r.db.WithContext(ctx).Model(&model.ScanLog{}).Select("MIN(scan_timestamp)").Scan(&earliestDate).Error; err != nil {
+	var earliestDate, latestDate *time.Time
+	if err := r.db.WithContext(ctx).Model(&model.ScanLog{}).Select("MIN(scan_timestamp)").Row().Scan(&earliestDate); err != nil {
 		return stats, domain.ErrInternal(err)
 	}
-	if err := r.db.WithContext(ctx).Model(&model.ScanLog{}).Select("MAX(scan_timestamp)").Scan(&latestDate).Error; err != nil {
+	if err := r.db.WithContext(ctx).Model(&model.ScanLog{}).Select("MAX(scan_timestamp)").Row().Scan(&latestDate); err != nil {
 		return stats, domain.ErrInternal(err)
 	}
 
-	if !earliestDate.IsZero() && !latestDate.IsZero() {
-		stats.Summary.EarliestScanDate = earliestDate
-		stats.Summary.LatestScanDate = latestDate
+	if earliestDate != nil && latestDate != nil {
+		stats.Summary.EarliestScanDate = *earliestDate
+		stats.Summary.LatestScanDate = *latestDate
 
 		// Calculate average scans per day
-		daysDiff := latestDate.Sub(earliestDate).Hours() / 24
+		daysDiff := latestDate.Sub(*earliestDate).Hours() / 24
 		if daysDiff > 0 {
 			stats.Summary.AverageScansPerDay = float64(totalCount) / daysDiff
 		}

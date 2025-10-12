@@ -411,10 +411,9 @@ func (r *AssetMovementRepository) GetAssetMovementStatistics(ctx context.Context
 	}
 	if err := r.db.WithContext(ctx).
 		Table("asset_movements am").
-		Select("am.asset_id, a.asset_tag, COALESCE(at.asset_name, '') as asset_name, COUNT(*) as movement_count").
+		Select("am.asset_id, a.asset_tag, COALESCE(a.asset_name, '') as asset_name, COUNT(*) as movement_count").
 		Joins("LEFT JOIN assets a ON am.asset_id = a.id").
-		Joins("LEFT JOIN asset_translations at ON a.id = at.asset_id AND at.lang_code = 'en-US'").
-		Group("am.asset_id, a.asset_tag, at.asset_name").
+		Group("am.asset_id, a.asset_tag, a.asset_name").
 		Order("movement_count DESC").
 		Limit(10).
 		Find(&assetStats).Error; err != nil {
@@ -563,7 +562,7 @@ func (r *AssetMovementRepository) GetAssetMovementStatistics(ctx context.Context
 		SELECT
 			am.id,
 			a.asset_tag,
-			COALESCE(at.asset_name, '') as asset_name,
+			COALESCE(a.asset_name, '') as asset_name,
 			COALESCE(fl.location_code, '') as from_location,
 			COALESCE(tl.location_code, '') as to_location,
 			COALESCE(fu.name, '') as from_user,
@@ -572,7 +571,6 @@ func (r *AssetMovementRepository) GetAssetMovementStatistics(ctx context.Context
 			am.movement_date
 		FROM asset_movements am
 		LEFT JOIN assets a ON am.asset_id = a.id
-		LEFT JOIN asset_translations at ON a.id = at.asset_id AND at.lang_code = 'en-US'
 		LEFT JOIN locations fl ON am.from_location_id = fl.id
 		LEFT JOIN locations tl ON am.to_location_id = tl.id
 		LEFT JOIN users fu ON am.from_user_id = fu.id

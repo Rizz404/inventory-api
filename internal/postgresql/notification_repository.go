@@ -442,19 +442,23 @@ func (r *NotificationRepository) GetNotificationStatistics(ctx context.Context) 
 	stats.Summary.MostCommonType = mostCommonType
 
 	// Get earliest and latest creation dates
-	var earliestDate, latestDate time.Time
+	var earliestDate, latestDate *time.Time
 	if err := r.db.WithContext(ctx).Model(&model.Notification{}).
 		Select("MIN(created_at) as earliest, MAX(created_at) as latest").
 		Row().Scan(&earliestDate, &latestDate); err != nil {
 		return domain.NotificationStatistics{}, domain.ErrInternal(err)
 	}
 
-	stats.Summary.EarliestCreationDate = earliestDate
-	stats.Summary.LatestCreationDate = latestDate
+	if earliestDate != nil {
+		stats.Summary.EarliestCreationDate = *earliestDate
+	}
+	if latestDate != nil {
+		stats.Summary.LatestCreationDate = *latestDate
+	}
 
 	// Calculate average notifications per day
-	if !earliestDate.IsZero() && !latestDate.IsZero() {
-		daysDiff := latestDate.Sub(earliestDate).Hours() / 24
+	if earliestDate != nil && latestDate != nil {
+		daysDiff := latestDate.Sub(*earliestDate).Hours() / 24
 		if daysDiff > 0 {
 			stats.Summary.AverageNotificationsPerDay = float64(totalCount) / daysDiff
 		}
