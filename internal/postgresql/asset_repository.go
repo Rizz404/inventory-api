@@ -563,11 +563,42 @@ func (r *AssetRepository) GetLastAssetTagByCategory(ctx context.Context, categor
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// No assets found for this category, return empty string
+			// Return empty string if no asset found for this category
 			return "", nil
 		}
 		return "", domain.ErrInternal(err)
 	}
 
 	return asset.AssetTag, nil
+}
+
+func (r *AssetRepository) GetAssetsForExport(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.Asset, error) {
+	var assets []model.Asset
+	db := r.db.WithContext(ctx).
+		Table("assets a").
+		Preload("Category").
+		Preload("Category.Translations").
+		Preload("Location").
+		Preload("Location.Translations").
+		Preload("User")
+
+	if params.SearchQuery != nil && *params.SearchQuery != "" {
+		searchPattern := "%" + *params.SearchQuery + "%"
+		db = db.Where("a.asset_tag ILIKE ? OR a.asset_name ILIKE ? OR a.brand ILIKE ? OR a.model ILIKE ? OR a.serial_number ILIKE ?",
+			searchPattern, searchPattern, searchPattern, searchPattern, searchPattern)
+	}
+
+	// Apply filters
+	db = r.applyAssetFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyAssetSorts(db, params.Sort)
+
+	// No pagination for export - get all matching assets
+	if err := db.Find(&assets).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	// Convert to domain assets using helper function
+	return mapper.ToDomainAssets(assets), nil
 }

@@ -52,6 +52,18 @@ func NewAssetHandler(app fiber.Router, s asset.AssetService) {
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
 		handler.DeleteAsset,
 	)
+
+	// * Export endpoints
+	assets.Post("/export/list",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleUser), // ! uncomment in production
+		handler.ExportAssetList,
+	)
+	assets.Get("/export/statistics",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleUser), // ! uncomment in production
+		handler.ExportAssetStatistics,
+	)
 }
 
 func (h *AssetHandler) parseAssetFiltersAndSort(c *fiber.Ctx) (domain.AssetParams, error) {
@@ -375,4 +387,53 @@ func (h *AssetHandler) GenerateAssetTagSuggestion(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessAssetTagGeneratedKey, response)
+}
+
+// *===========================EXPORT===========================*
+func (h *AssetHandler) ExportAssetList(c *fiber.Ctx) error {
+	var payload domain.ExportAssetListPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	// Export asset list
+	data, filename, err := h.Service.ExportAssetList(c.Context(), &payload, langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// Set appropriate content type and headers
+	var contentType string
+	switch payload.Format {
+	case domain.ExportFormatPDF:
+		contentType = "application/pdf"
+	case domain.ExportFormatExcel:
+		contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	}
+
+	c.Set("Content-Type", contentType)
+	c.Set("Content-Disposition", "attachment; filename="+filename)
+
+	return c.Send(data)
+}
+
+func (h *AssetHandler) ExportAssetStatistics(c *fiber.Ctx) error {
+	// Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	// Export asset statistics
+	data, filename, err := h.Service.ExportAssetStatistics(c.Context(), langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// Set appropriate content type and headers for PDF
+	c.Set("Content-Type", "application/pdf")
+	c.Set("Content-Disposition", "attachment; filename="+filename)
+
+	return c.Send(data)
 }

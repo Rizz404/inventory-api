@@ -34,6 +34,7 @@ type Repository interface {
 	CountAssets(ctx context.Context, params domain.AssetParams) (int64, error)
 	GetAssetStatistics(ctx context.Context) (domain.AssetStatistics, error)
 	GetLastAssetTagByCategory(ctx context.Context, categoryId string) (string, error)
+	GetAssetsForExport(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.Asset, error)
 }
 
 // * AssetService interface defines the contract for asset business operations
@@ -54,6 +55,10 @@ type AssetService interface {
 	CountAssets(ctx context.Context, params domain.AssetParams) (int64, error)
 	GetAssetStatistics(ctx context.Context) (domain.AssetStatisticsResponse, error)
 	GenerateAssetTagSuggestion(ctx context.Context, payload *domain.GenerateAssetTagPayload) (domain.GenerateAssetTagResponse, error)
+
+	// * EXPORT
+	ExportAssetList(ctx context.Context, payload *domain.ExportAssetListPayload, langCode string) ([]byte, string, error)
+	ExportAssetStatistics(ctx context.Context, langCode string) ([]byte, string, error)
 }
 
 // * NotificationService interface for creating notifications

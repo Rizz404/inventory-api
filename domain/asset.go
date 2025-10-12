@@ -40,6 +40,13 @@ const (
 	AssetSortByUpdatedAt     AssetSortField = "updatedAt"
 )
 
+type ExportFormat string
+
+const (
+	ExportFormatPDF   ExportFormat = "pdf"
+	ExportFormatExcel ExportFormat = "excel"
+)
+
 // --- Structs ---
 
 type Asset struct {
@@ -172,6 +179,18 @@ type BulkDeleteAssetsPayload struct {
 
 type GenerateAssetTagPayload struct {
 	CategoryID string `json:"categoryId" validate:"required"`
+}
+
+type ExportAssetListPayload struct {
+	Format                 ExportFormat        `json:"format" validate:"required,oneof=pdf excel"`
+	SearchQuery            *string             `json:"searchQuery,omitempty"`
+	Filters                *AssetFilterOptions `json:"filters,omitempty"`
+	Sort                   *AssetSortOptions   `json:"sort,omitempty"`
+	IncludeDataMatrixImage bool                `json:"includeDataMatrixImage,omitempty"` // Only for PDF
+}
+
+type ExportAssetStatisticsPayload struct {
+	// PDF only - statistics always exported as PDF with charts
 }
 
 // --- Responses ---
