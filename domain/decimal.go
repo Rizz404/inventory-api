@@ -5,55 +5,56 @@ import (
 	"fmt"
 )
 
-// DecimalPrice is a custom type that always formats as decimal with 2 places
-type DecimalPrice float64
+// Decimal2 is a custom float64 type that always marshals to JSON with exactly 2 decimal places as a number
+// Example: 3211.0 -> 3211.00, 38.095238095238095 -> 38.10
+type Decimal2 float64
 
-// MarshalJSON formats the float64 as a decimal with 2 decimal places
-func (d DecimalPrice) MarshalJSON() ([]byte, error) {
-	// Format with 2 decimal places
-	return json.Marshal(fmt.Sprintf("%.2f", float64(d)))
+// MarshalJSON formats the float64 as a number with exactly 2 decimal places
+func (d Decimal2) MarshalJSON() ([]byte, error) {
+	// Format to 2 decimal places using fmt.Sprintf to ensure .00 is always present
+	formatted := fmt.Sprintf("%.2f", float64(d))
+	return []byte(formatted), nil
 }
 
-// UnmarshalJSON parses the decimal string back to float64
-func (d *DecimalPrice) UnmarshalJSON(data []byte) error {
+// UnmarshalJSON parses a JSON number to Decimal2
+func (d *Decimal2) UnmarshalJSON(data []byte) error {
 	var f float64
 	if err := json.Unmarshal(data, &f); err != nil {
-		// Try parsing as string if it fails as number
-		var s string
-		if err := json.Unmarshal(data, &s); err != nil {
-			return err
-		}
-		_, err := fmt.Sscanf(s, "%f", &f)
-		if err != nil {
-			return err
-		}
+		return err
 	}
-	*d = DecimalPrice(f)
+	*d = Decimal2(f)
 	return nil
 }
 
 // Float64 returns the underlying float64 value
-func (d DecimalPrice) Float64() float64 {
+func (d Decimal2) Float64() float64 {
 	return float64(d)
 }
 
-// DecimalValue is a custom type that always formats as decimal with 2 places (for nullable fields)
-type DecimalValue struct {
-	Value float64
+// NewDecimal2 creates a new Decimal2 from a float64
+func NewDecimal2(value float64) Decimal2 {
+	return Decimal2(value)
+}
+
+// NullableDecimal2 is a nullable version of Decimal2
+type NullableDecimal2 struct {
+	Value Decimal2
 	Valid bool
 }
 
-// MarshalJSON formats the float64 as a decimal with 2 decimal places or null
-func (d DecimalValue) MarshalJSON() ([]byte, error) {
-	if !d.Valid {
-		return json.Marshal(nil)
+// MarshalJSON formats the float64 as a number with 2 decimal places or null
+// Uses pointer receiver to ensure it works with both pointer and value types
+func (d *NullableDecimal2) MarshalJSON() ([]byte, error) {
+	if d == nil || !d.Valid {
+		return []byte("null"), nil
 	}
-	// Format with 2 decimal places
-	return json.Marshal(fmt.Sprintf("%.2f", d.Value))
+	// Use fmt.Sprintf to ensure .00 is always present
+	formatted := fmt.Sprintf("%.2f", float64(d.Value))
+	return []byte(formatted), nil
 }
 
-// UnmarshalJSON parses the decimal string back to float64
-func (d *DecimalValue) UnmarshalJSON(data []byte) error {
+// UnmarshalJSON parses a JSON number or null to NullableDecimal2
+func (d *NullableDecimal2) UnmarshalJSON(data []byte) error {
 	// Check for null
 	if string(data) == "null" {
 		d.Valid = false
@@ -62,17 +63,25 @@ func (d *DecimalValue) UnmarshalJSON(data []byte) error {
 
 	var f float64
 	if err := json.Unmarshal(data, &f); err != nil {
-		// Try parsing as string if it fails as number
-		var s string
-		if err := json.Unmarshal(data, &s); err != nil {
-			return err
-		}
-		_, err := fmt.Sscanf(s, "%f", &f)
-		if err != nil {
-			return err
-		}
+		return err
 	}
-	d.Value = f
+	d.Value = Decimal2(f)
 	d.Valid = true
 	return nil
+}
+
+// Float64 returns the underlying float64 value if valid
+func (d NullableDecimal2) Float64() (float64, bool) {
+	if !d.Valid {
+		return 0, false
+	}
+	return d.Value.Float64(), true
+}
+
+// NewNullableDecimal2 creates a new NullableDecimal2 from a *float64
+func NewNullableDecimal2(value *float64) *NullableDecimal2 {
+	if value == nil {
+		return &NullableDecimal2{Valid: false}
+	}
+	return &NullableDecimal2{Value: Decimal2(*value), Valid: true}
 }

@@ -205,10 +205,10 @@ type FloorStatisticsResponse struct {
 }
 
 type GeographicStatisticsResponse struct {
-	WithCoordinates    int      `json:"withCoordinates"`
-	WithoutCoordinates int      `json:"withoutCoordinates"`
-	AverageLatitude    *float64 `json:"averageLatitude"`
-	AverageLongitude   *float64 `json:"averageLongitude"`
+	WithCoordinates    int               `json:"withCoordinates"`
+	WithoutCoordinates int               `json:"withoutCoordinates"`
+	AverageLatitude    *NullableDecimal2 `json:"averageLatitude"`  // Always 2 decimal places or null
+	AverageLongitude   *NullableDecimal2 `json:"averageLongitude"` // Always 2 decimal places or null
 }
 
 type LocationCreationTrendResponse struct {
@@ -223,12 +223,12 @@ type LocationSummaryStatisticsResponse struct {
 	LocationsWithFloor       int       `json:"locationsWithFloor"`
 	LocationsWithoutFloor    int       `json:"locationsWithoutFloor"`
 	LocationsWithCoordinates int       `json:"locationsWithCoordinates"`
-	CoordinatesPercentage    float64   `json:"coordinatesPercentage"`
-	BuildingPercentage       float64   `json:"buildingPercentage"`
-	FloorPercentage          float64   `json:"floorPercentage"`
+	CoordinatesPercentage    Decimal2  `json:"coordinatesPercentage"` // Always 2 decimal places
+	BuildingPercentage       Decimal2  `json:"buildingPercentage"`    // Always 2 decimal places
+	FloorPercentage          Decimal2  `json:"floorPercentage"`       // Always 2 decimal places
 	TotalBuildings           int       `json:"totalBuildings"`
 	TotalFloors              int       `json:"totalFloors"`
-	AverageLocationsPerDay   float64   `json:"averageLocationsPerDay"`
+	AverageLocationsPerDay   Decimal2  `json:"averageLocationsPerDay"` // Always 2 decimal places
 	LatestCreationDate       time.Time `json:"latestCreationDate"`
 	EarliestCreationDate     time.Time `json:"earliestCreationDate"`
 }

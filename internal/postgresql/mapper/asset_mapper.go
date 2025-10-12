@@ -1,27 +1,12 @@
 package mapper
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/oklog/ulid/v2"
 )
-
-// Helper function to format float64 pointer to string pointer with 2 decimal places
-func formatPriceToString(price *float64) *string {
-	if price == nil {
-		return nil
-	}
-	formatted := fmt.Sprintf("%.2f", *price)
-	return &formatted
-}
-
-// Helper function to format float64 to string with 2 decimal places
-func formatFloat64ToString(value float64) string {
-	return fmt.Sprintf("%.2f", value)
-}
 
 // *==================== Model conversions ====================
 func ToModelAsset(d *domain.Asset) model.Asset {
@@ -178,7 +163,7 @@ func AssetToResponse(d *domain.Asset, langCode string) domain.AssetResponse {
 		Model:              d.Model,
 		SerialNumber:       d.SerialNumber,
 		PurchaseDate:       d.PurchaseDate,
-		PurchasePrice:      formatPriceToString(d.PurchasePrice), // Format price as string with 2 decimals
+		PurchasePrice:      domain.NewNullableDecimal2(d.PurchasePrice), // Convert to NullableDecimal2 for 2 decimal places
 		VendorName:         d.VendorName,
 		WarrantyEnd:        d.WarrantyEnd,
 		Status:             d.Status,
@@ -227,7 +212,7 @@ func AssetToListResponse(d *domain.Asset, langCode string) domain.AssetListRespo
 		Model:              d.Model,
 		SerialNumber:       d.SerialNumber,
 		PurchaseDate:       d.PurchaseDate,
-		PurchasePrice:      formatPriceToString(d.PurchasePrice), // Format price as string with 2 decimals
+		PurchasePrice:      domain.NewNullableDecimal2(d.PurchasePrice), // Convert to NullableDecimal2 for 2 decimal places
 		VendorName:         d.VendorName,
 		WarrantyEnd:        d.WarrantyEnd,
 		Status:             d.Status,
@@ -287,10 +272,10 @@ func AssetStatisticsToResponse(stats *domain.AssetStatistics) domain.AssetStatis
 			Unassigned: stats.ByAssignment.Unassigned,
 		},
 		ValueStatistics: domain.AssetValueStatisticsResponse{
-			TotalValue:         formatPriceToString(stats.ValueStatistics.TotalValue),
-			AverageValue:       formatPriceToString(stats.ValueStatistics.AverageValue),
-			MinValue:           formatPriceToString(stats.ValueStatistics.MinValue),
-			MaxValue:           formatPriceToString(stats.ValueStatistics.MaxValue),
+			TotalValue:         domain.NewNullableDecimal2(stats.ValueStatistics.TotalValue),
+			AverageValue:       domain.NewNullableDecimal2(stats.ValueStatistics.AverageValue),
+			MinValue:           domain.NewNullableDecimal2(stats.ValueStatistics.MinValue),
+			MaxValue:           domain.NewNullableDecimal2(stats.ValueStatistics.MaxValue),
 			AssetsWithValue:    stats.ValueStatistics.AssetsWithValue,
 			AssetsWithoutValue: stats.ValueStatistics.AssetsWithoutValue,
 		},
@@ -301,29 +286,29 @@ func AssetStatisticsToResponse(stats *domain.AssetStatistics) domain.AssetStatis
 		},
 		Summary: domain.AssetSummaryStatisticsResponse{
 			TotalAssets:                 stats.Summary.TotalAssets,
-			ActiveAssetsPercentage:      stats.Summary.ActiveAssetsPercentage,
-			MaintenanceAssetsPercentage: stats.Summary.MaintenanceAssetsPercentage,
-			DisposedAssetsPercentage:    stats.Summary.DisposedAssetsPercentage,
-			LostAssetsPercentage:        stats.Summary.LostAssetsPercentage,
-			GoodConditionPercentage:     stats.Summary.GoodConditionPercentage,
-			FairConditionPercentage:     stats.Summary.FairConditionPercentage,
-			PoorConditionPercentage:     stats.Summary.PoorConditionPercentage,
-			DamagedConditionPercentage:  stats.Summary.DamagedConditionPercentage,
-			AssignedAssetsPercentage:    stats.Summary.AssignedAssetsPercentage,
-			UnassignedAssetsPercentage:  stats.Summary.UnassignedAssetsPercentage,
+			ActiveAssetsPercentage:      domain.NewDecimal2(stats.Summary.ActiveAssetsPercentage),
+			MaintenanceAssetsPercentage: domain.NewDecimal2(stats.Summary.MaintenanceAssetsPercentage),
+			DisposedAssetsPercentage:    domain.NewDecimal2(stats.Summary.DisposedAssetsPercentage),
+			LostAssetsPercentage:        domain.NewDecimal2(stats.Summary.LostAssetsPercentage),
+			GoodConditionPercentage:     domain.NewDecimal2(stats.Summary.GoodConditionPercentage),
+			FairConditionPercentage:     domain.NewDecimal2(stats.Summary.FairConditionPercentage),
+			PoorConditionPercentage:     domain.NewDecimal2(stats.Summary.PoorConditionPercentage),
+			DamagedConditionPercentage:  domain.NewDecimal2(stats.Summary.DamagedConditionPercentage),
+			AssignedAssetsPercentage:    domain.NewDecimal2(stats.Summary.AssignedAssetsPercentage),
+			UnassignedAssetsPercentage:  domain.NewDecimal2(stats.Summary.UnassignedAssetsPercentage),
 			AssetsWithPurchasePrice:     stats.Summary.AssetsWithPurchasePrice,
-			PurchasePricePercentage:     stats.Summary.PurchasePricePercentage,
+			PurchasePricePercentage:     domain.NewDecimal2(stats.Summary.PurchasePricePercentage),
 			AssetsWithDataMatrix:        stats.Summary.AssetsWithDataMatrix,
-			DataMatrixPercentage:        stats.Summary.DataMatrixPercentage,
+			DataMatrixPercentage:        domain.NewDecimal2(stats.Summary.DataMatrixPercentage),
 			AssetsWithWarranty:          stats.Summary.AssetsWithWarranty,
-			WarrantyPercentage:          stats.Summary.WarrantyPercentage,
+			WarrantyPercentage:          domain.NewDecimal2(stats.Summary.WarrantyPercentage),
 			TotalCategories:             stats.Summary.TotalCategories,
 			TotalLocations:              stats.Summary.TotalLocations,
-			AverageAssetsPerDay:         stats.Summary.AverageAssetsPerDay,
+			AverageAssetsPerDay:         domain.NewDecimal2(stats.Summary.AverageAssetsPerDay),
 			LatestCreationDate:          stats.Summary.LatestCreationDate,
 			EarliestCreationDate:        stats.Summary.EarliestCreationDate,
-			MostExpensiveAssetValue:     formatPriceToString(stats.Summary.MostExpensiveAssetValue),
-			LeastExpensiveAssetValue:    formatPriceToString(stats.Summary.LeastExpensiveAssetValue),
+			MostExpensiveAssetValue:     domain.NewNullableDecimal2(stats.Summary.MostExpensiveAssetValue),
+			LeastExpensiveAssetValue:    domain.NewNullableDecimal2(stats.Summary.LeastExpensiveAssetValue),
 		},
 	}
 

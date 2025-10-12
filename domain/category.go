@@ -183,12 +183,12 @@ type CategoryCreationTrendResponse struct {
 
 type CategorySummaryStatisticsResponse struct {
 	TotalCategories                int       `json:"totalCategories"`
-	TopLevelPercentage             float64   `json:"topLevelPercentage"`
-	SubCategoriesPercentage        float64   `json:"subCategoriesPercentage"`
+	TopLevelPercentage             Decimal2  `json:"topLevelPercentage"`      // Always 2 decimal places
+	SubCategoriesPercentage        Decimal2  `json:"subCategoriesPercentage"` // Always 2 decimal places
 	CategoriesWithChildrenCount    int       `json:"categoriesWithChildrenCount"`
 	CategoriesWithoutChildrenCount int       `json:"categoriesWithoutChildrenCount"`
 	MaxDepthLevel                  int       `json:"maxDepthLevel"`
-	AverageCategoriesPerDay        float64   `json:"averageCategoriesPerDay"`
+	AverageCategoriesPerDay        Decimal2  `json:"averageCategoriesPerDay"` // Always 2 decimal places
 	LatestCreationDate             time.Time `json:"latestCreationDate"`
 	EarliestCreationDate           time.Time `json:"earliestCreationDate"`
 }

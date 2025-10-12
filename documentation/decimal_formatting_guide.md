@@ -1,70 +1,85 @@
 # Decimal Formatting Guide
 
 ## Problem
-When JSON encoding in Go, `float64` values without decimal parts (e.g., `3211.0`) are automatically serialized as integers (`3211`) to save space. This causes issues with client applications (like Flutter) that expect consistent decimal formatting.
+When JSON encoding in Go, `float64` values without decimal parts (e.g., `3211.0`) are automatically serialized as integers (`3211`) to save space. This causes issues with client applications (like Flutter) that expect consistent decimal formatting with 2 decimal places.
 
 Example issue:
 ```json
 {
-  "purchasePrice": 3211  // Expected: "3211.00" or 3211.00
+  "purchasePrice": 3211  // Expected: 3211.00 (as number, not string)
 }
 ```
 
 ## Solution
-Convert all monetary values (prices, costs, etc.) to **strings with 2 decimal places** in the Response structs.
+Use **custom types with JSON marshaling** that always format monetary values as **numbers with exactly 2 decimal places** in Response structs.
 
 ### Changes Made
 
-#### 1. Domain Layer Updates
-Updated Response structs to use `*string` instead of `*float64` for monetary fields:
+#### 1. Custom Decimal Types
+Created `domain/decimal.go` with custom types that marshal as **numbers** (not strings) with 2 decimal places:
+
+```go
+// Decimal2 - Non-nullable decimal with 2 places
+type Decimal2 float64
+
+func (d Decimal2) MarshalJSON() ([]byte, error) {
+	formatted := strconv.FormatFloat(float64(d), 'f', 2, 64)
+	return []byte(formatted), nil  // Returns as number: 3211.00
+}
+
+// NullableDecimal2 - Nullable decimal with 2 places
+type NullableDecimal2 struct {
+	Value Decimal2
+	Valid bool
+}
+
+func (d NullableDecimal2) MarshalJSON() ([]byte, error) {
+	if !d.Valid {
+		return []byte("null"), nil
+	}
+	return d.Value.MarshalJSON()
+}
+```
+
+#### 2. Domain Layer Updates
+Updated Response structs to use custom decimal types:
 
 **Files Modified:**
 - `domain/asset.go`:
-  - `AssetResponse.PurchasePrice`: `*float64` → `*string`
-  - `AssetListResponse.PurchasePrice`: `*float64` → `*string`
-  - `AssetValueStatisticsResponse`: All value fields → `*string`
-  - `AssetSummaryStatisticsResponse.MostExpensiveAssetValue`: `*float64` → `*string`
-  - `AssetSummaryStatisticsResponse.LeastExpensiveAssetValue`: `*float64` → `*string`
+  - `AssetResponse.PurchasePrice`: `*float64` → `*NullableDecimal2`
+  - `AssetListResponse.PurchasePrice`: `*float64` → `*NullableDecimal2`
+  - `AssetValueStatisticsResponse`: All value fields → `*NullableDecimal2`
+  - `AssetSummaryStatisticsResponse.MostExpensiveAssetValue`: `*float64` → `*NullableDecimal2`
+  - `AssetSummaryStatisticsResponse.LeastExpensiveAssetValue`: `*float64` → `*NullableDecimal2`
 
 - `domain/maintenance_record.go`:
-  - `MaintenanceRecordResponse.ActualCost`: `*float64` → `*string`
-  - `MaintenanceRecordListResponse.ActualCost`: `*float64` → `*string`
-  - All statistics response cost fields → `string` or `*string`
+  - `MaintenanceRecordResponse.ActualCost`: `*float64` → `*NullableDecimal2`
+  - `MaintenanceRecordListResponse.ActualCost`: `*float64` → `*NullableDecimal2`
+  - Statistics responses: `float64` → `Decimal2` (non-nullable), `*float64` → `*NullableDecimal2` (nullable)
 
-#### 2. Mapper Layer Updates
-Created helper functions to format float64 values to strings with 2 decimal places:
+#### 3. Mapper Layer Updates
+Created helper functions to convert float64 to custom types:
 
 **File:** `internal/postgresql/mapper/asset_mapper.go`
 ```go
-// Helper function to format float64 pointer to string pointer with 2 decimal places
-func formatPriceToString(price *float64) *string {
-	if price == nil {
-		return nil
-	}
-	formatted := fmt.Sprintf("%.2f", *price)
-	return &formatted
+// Helper function to convert *float64 to *NullableDecimal2
+func toNullableDecimal2(price *float64) *domain.NullableDecimal2 {
+	return domain.NewNullableDecimal2(price)
 }
 
-// Helper function to format float64 to string with 2 decimal places
-func formatFloat64ToString(value float64) string {
-	return fmt.Sprintf("%.2f", value)
+// Helper function to convert float64 to Decimal2
+func toDecimal2(value float64) domain.Decimal2 {
+	return domain.Decimal2(value)
 }
 ```
 
 Updated mappers:
-- `AssetToResponse()` - Format `PurchasePrice`
-- `AssetToListResponse()` - Format `PurchasePrice`
-- `AssetStatisticsToResponse()` - Format all value statistics
-- `MaintenanceRecordToResponse()` - Format `ActualCost`
-- `MaintenanceRecordToListResponse()` - Format `ActualCost`
-- `MaintenanceRecordStatisticsToResponse()` - Format all cost statistics
-
-#### 3. Custom Decimal Type (Optional - Not Used)
-Created `domain/decimal.go` with custom types for more advanced use cases:
-- `DecimalPrice`: Always formats as decimal string
-- `DecimalValue`: Nullable decimal value
-
-This is available for future use if needed.
+- `AssetToResponse()` - Convert `PurchasePrice`
+- `AssetToListResponse()` - Convert `PurchasePrice`
+- `AssetStatisticsToResponse()` - Convert all value statistics
+- `MaintenanceRecordToResponse()` - Convert `ActualCost`
+- `MaintenanceRecordToListResponse()` - Convert `ActualCost`
+- `MaintenanceRecordStatisticsToResponse()` - Convert all cost statistics
 
 ### Important Notes
 
@@ -80,25 +95,24 @@ Only **Response structs** use `*string` for consistent JSON formatting.
 
 **Flutter/Dart:**
 ```dart
-// Parse string to double
-double price = double.parse(asset.purchasePrice ?? "0.0");
+// Values are already numbers, no parsing needed!
+double price = asset.purchasePrice ?? 0.0;
 
-// Or handle nullable
-double? price = asset.purchasePrice != null
-    ? double.parse(asset.purchasePrice!)
-    : null;
+// Handle nullable
+double? price = asset.purchasePrice;
+
+// The JSON will be: {"purchasePrice": 3211.00}
+// Not: {"purchasePrice": "3211.00"}
 ```
 
 **JavaScript:**
 ```javascript
-// Parse string to number
-const price = parseFloat(asset.purchasePrice || "0");
+// Values are already numbers, no conversion needed!
+const price = asset.purchasePrice || 0;
 
 // Or
-const price = Number(asset.purchasePrice);
-```
-
-### API Response Examples
+const price = asset.purchasePrice ?? 0;
+```### API Response Examples
 
 **Before:**
 ```json
@@ -112,19 +126,22 @@ const price = Number(asset.purchasePrice);
 **After:**
 ```json
 {
-  "purchasePrice": "3211.00",
-  "totalValue": "150000.00",
-  "averageValue": "5000.00"
+  "purchasePrice": 3211.00,
+  "totalValue": 150000.00,
+  "averageValue": 5000.00
 }
 ```
 
+**Note:** Values are returned as **JSON numbers** (not strings), ensuring type safety and consistency.
+
 ### Benefits
 
-1. ✅ **Consistent formatting**: Always 2 decimal places
-2. ✅ **Client-side compatibility**: No type confusion
-3. ✅ **Clear monetary values**: Explicit decimal representation
-4. ✅ **Backward compatible**: Clients can easily parse strings to numbers
+1. ✅ **Consistent formatting**: Always 2 decimal places as **numbers**
+2. ✅ **Type safety**: Returns as JSON number, not string
+3. ✅ **Client-side compatibility**: No parsing needed, direct number usage
+4. ✅ **Clear monetary values**: Explicit decimal representation (3211.00 not 3211)
 5. ✅ **Database unchanged**: Internal storage still uses DECIMAL/float64
+6. ✅ **Flutter/Dart friendly**: Direct double assignment without parsing
 
 ### Related Files
 
@@ -135,7 +152,21 @@ const price = Number(asset.purchasePrice);
 ### Future Considerations
 
 If you need to add new monetary fields:
-1. Use `*float64` in domain entity structs
-2. Use `*string` in response structs
-3. Use `formatPriceToString()` in mapper functions
-4. Document the field in this guide
+1. Use `*float64` in domain entity structs (internal representation)
+2. Use `*NullableDecimal2` in response structs (for nullable fields)
+3. Use `Decimal2` in response structs (for non-nullable fields)
+4. Use `toNullableDecimal2()` or `toDecimal2()` in mapper functions
+5. Document the field in this guide
+
+### Implementation Details
+
+**Custom Type Behavior:**
+- `Decimal2(3211.5)` → JSON: `3211.50`
+- `Decimal2(3211.0)` → JSON: `3211.00` (NOT `3211`)
+- `NullableDecimal2{Valid: false}` → JSON: `null`
+- `NullableDecimal2{Value: Decimal2(3211), Valid: true}` → JSON: `3211.00`
+
+**Database Mapping:**
+```
+PostgreSQL DECIMAL(15, 2) → Go *float64 → Response *NullableDecimal2 → JSON number with 2 decimals
+```

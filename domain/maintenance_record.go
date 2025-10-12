@@ -51,7 +51,7 @@ type MaintenanceRecordResponse struct {
 	MaintenanceDate   time.Time                              `json:"maintenanceDate"`
 	PerformedByUserID *string                                `json:"performedByUserId"`
 	PerformedByVendor *string                                `json:"performedByVendor"`
-	ActualCost        *string                                `json:"actualCost"` // Changed to *string to ensure consistent decimal formatting
+	ActualCost        *NullableDecimal2                      `json:"actualCost"` // Custom type to ensure 2 decimal places as number
 	Title             string                                 `json:"title"`
 	Notes             *string                                `json:"notes"`
 	CreatedAt         time.Time                              `json:"createdAt"`
@@ -64,17 +64,17 @@ type MaintenanceRecordResponse struct {
 }
 
 type MaintenanceRecordListResponse struct {
-	ID                string    `json:"id"`
-	ScheduleID        *string   `json:"scheduleId"`
-	AssetID           string    `json:"assetId"`
-	MaintenanceDate   time.Time `json:"maintenanceDate"`
-	PerformedByUserID *string   `json:"performedByUserId"`
-	PerformedByVendor *string   `json:"performedByVendor"`
-	ActualCost        *string   `json:"actualCost"` // Changed to *string to ensure consistent decimal formatting
-	Title             string    `json:"title"`
-	Notes             *string   `json:"notes"`
-	CreatedAt         time.Time `json:"createdAt"`
-	UpdatedAt         time.Time `json:"updatedAt"`
+	ID                string            `json:"id"`
+	ScheduleID        *string           `json:"scheduleId"`
+	AssetID           string            `json:"assetId"`
+	MaintenanceDate   time.Time         `json:"maintenanceDate"`
+	PerformedByUserID *string           `json:"performedByUserId"`
+	PerformedByVendor *string           `json:"performedByVendor"`
+	ActualCost        *NullableDecimal2 `json:"actualCost"` // Custom type to ensure 2 decimal places as number
+	Title             string            `json:"title"`
+	Notes             *string           `json:"notes"`
+	CreatedAt         time.Time         `json:"createdAt"`
+	UpdatedAt         time.Time         `json:"updatedAt"`
 	// * Populated
 	Schedule        *MaintenanceScheduleListResponse `json:"schedule"`
 	Asset           AssetResponse                    `json:"asset"`
@@ -232,38 +232,38 @@ type MaintenanceRecordCountStatisticsResponse struct {
 }
 
 type UserMaintenanceRecordStatisticsResponse struct {
-	UserID      string `json:"userId"`
-	UserName    string `json:"userName"`
-	UserEmail   string `json:"userEmail"`
-	Count       int    `json:"count"`
-	TotalCost   string `json:"totalCost"`   // Changed to string to ensure consistent decimal formatting
-	AverageCost string `json:"averageCost"` // Changed to string to ensure consistent decimal formatting
+	UserID      string   `json:"userId"`
+	UserName    string   `json:"userName"`
+	UserEmail   string   `json:"userEmail"`
+	Count       int      `json:"count"`
+	TotalCost   Decimal2 `json:"totalCost"`   // Custom type to ensure 2 decimal places as number
+	AverageCost Decimal2 `json:"averageCost"` // Custom type to ensure 2 decimal places as number
 }
 
 type VendorMaintenanceRecordStatisticsResponse struct {
-	VendorName  string `json:"vendorName"`
-	Count       int    `json:"count"`
-	TotalCost   string `json:"totalCost"`   // Changed to string to ensure consistent decimal formatting
-	AverageCost string `json:"averageCost"` // Changed to string to ensure consistent decimal formatting
+	VendorName  string   `json:"vendorName"`
+	Count       int      `json:"count"`
+	TotalCost   Decimal2 `json:"totalCost"`   // Custom type to ensure 2 decimal places as number
+	AverageCost Decimal2 `json:"averageCost"` // Custom type to ensure 2 decimal places as number
 }
 
 type AssetMaintenanceRecordStatisticsResponse struct {
-	AssetID         string `json:"assetId"`
-	AssetName       string `json:"assetName"`
-	AssetTag        string `json:"assetTag"`
-	RecordCount     int    `json:"recordCount"`
-	LastMaintenance string `json:"lastMaintenance"`
-	TotalCost       string `json:"totalCost"`   // Changed to string to ensure consistent decimal formatting
-	AverageCost     string `json:"averageCost"` // Changed to string to ensure consistent decimal formatting
+	AssetID         string   `json:"assetId"`
+	AssetName       string   `json:"assetName"`
+	AssetTag        string   `json:"assetTag"`
+	RecordCount     int      `json:"recordCount"`
+	LastMaintenance string   `json:"lastMaintenance"`
+	TotalCost       Decimal2 `json:"totalCost"`   // Custom type to ensure 2 decimal places as number
+	AverageCost     Decimal2 `json:"averageCost"` // Custom type to ensure 2 decimal places as number
 }
 
 type MaintenanceRecordCostStatisticsResponse struct {
-	TotalCost          *string `json:"totalCost"`   // Changed to *string to ensure consistent decimal formatting
-	AverageCost        *string `json:"averageCost"` // Changed to *string to ensure consistent decimal formatting
-	MinCost            *string `json:"minCost"`     // Changed to *string to ensure consistent decimal formatting
-	MaxCost            *string `json:"maxCost"`     // Changed to *string to ensure consistent decimal formatting
-	RecordsWithCost    int     `json:"recordsWithCost"`
-	RecordsWithoutCost int     `json:"recordsWithoutCost"`
+	TotalCost          *NullableDecimal2 `json:"totalCost"`   // Custom type to ensure 2 decimal places as number
+	AverageCost        *NullableDecimal2 `json:"averageCost"` // Custom type to ensure 2 decimal places as number
+	MinCost            *NullableDecimal2 `json:"minCost"`     // Custom type to ensure 2 decimal places as number
+	MaxCost            *NullableDecimal2 `json:"maxCost"`     // Custom type to ensure 2 decimal places as number
+	RecordsWithCost    int               `json:"recordsWithCost"`
+	RecordsWithoutCost int               `json:"recordsWithoutCost"`
 }
 
 type MaintenanceRecordCompletionTrendResponse struct {
@@ -272,22 +272,22 @@ type MaintenanceRecordCompletionTrendResponse struct {
 }
 
 type MaintenanceRecordMonthlyTrendResponse struct {
-	Month       string `json:"month"`
-	RecordCount int    `json:"recordCount"`
-	TotalCost   string `json:"totalCost"` // Changed to string to ensure consistent decimal formatting
+	Month       string   `json:"month"`
+	RecordCount int      `json:"recordCount"`
+	TotalCost   Decimal2 `json:"totalCost"` // Custom type to ensure 2 decimal places as number
 }
 
 type MaintenanceRecordSummaryStatisticsResponse struct {
-	TotalRecords                  int     `json:"totalRecords"`
-	RecordsWithCostInfo           int     `json:"recordsWithCostInfo"`
-	CostInfoPercentage            float64 `json:"costInfoPercentage"`
-	TotalUniqueVendors            int     `json:"totalUniqueVendors"`
-	TotalUniquePerformers         int     `json:"totalUniquePerformers"`
-	AverageRecordsPerDay          float64 `json:"averageRecordsPerDay"`
-	LatestRecordDate              string  `json:"latestRecordDate"`
-	EarliestRecordDate            string  `json:"earliestRecordDate"`
-	MostExpensiveMaintenanceCost  *string `json:"mostExpensiveMaintenanceCost"`  // Changed to *string to ensure consistent decimal formatting
-	LeastExpensiveMaintenanceCost *string `json:"leastExpensiveMaintenanceCost"` // Changed to *string to ensure consistent decimal formatting
-	AssetsWithMaintenance         int     `json:"assetsWithMaintenance"`
-	AverageMaintenancePerAsset    float64 `json:"averageMaintenancePerAsset"`
+	TotalRecords                  int               `json:"totalRecords"`
+	RecordsWithCostInfo           int               `json:"recordsWithCostInfo"`
+	CostInfoPercentage            float64           `json:"costInfoPercentage"`
+	TotalUniqueVendors            int               `json:"totalUniqueVendors"`
+	TotalUniquePerformers         int               `json:"totalUniquePerformers"`
+	AverageRecordsPerDay          float64           `json:"averageRecordsPerDay"`
+	LatestRecordDate              string            `json:"latestRecordDate"`
+	EarliestRecordDate            string            `json:"earliestRecordDate"`
+	MostExpensiveMaintenanceCost  *NullableDecimal2 `json:"mostExpensiveMaintenanceCost"`  // Custom type to ensure 2 decimal places as number
+	LeastExpensiveMaintenanceCost *NullableDecimal2 `json:"leastExpensiveMaintenanceCost"` // Custom type to ensure 2 decimal places as number
+	AssetsWithMaintenance         int               `json:"assetsWithMaintenance"`
+	AverageMaintenancePerAsset    float64           `json:"averageMaintenancePerAsset"`
 }

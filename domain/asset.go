@@ -69,24 +69,24 @@ type Asset struct {
 }
 
 type AssetResponse struct {
-	ID                 string         `json:"id"`
-	AssetTag           string         `json:"assetTag"`
-	DataMatrixImageUrl string         `json:"dataMatrixImageUrl"`
-	AssetName          string         `json:"assetName"`
-	CategoryID         string         `json:"categoryId"`
-	Brand              *string        `json:"brand"`
-	Model              *string        `json:"model"`
-	SerialNumber       *string        `json:"serialNumber"`
-	PurchaseDate       *time.Time     `json:"purchaseDate"`
-	PurchasePrice      *string        `json:"purchasePrice"` // Changed to *string to ensure consistent decimal formatting
-	VendorName         *string        `json:"vendorName"`
-	WarrantyEnd        *time.Time     `json:"warrantyEnd"`
-	Status             AssetStatus    `json:"status"`
-	Condition          AssetCondition `json:"condition"`
-	LocationID         *string        `json:"locationId"`
-	AssignedToID       *string        `json:"assignedToId"`
-	CreatedAt          time.Time      `json:"createdAt"`
-	UpdatedAt          time.Time      `json:"updatedAt"`
+	ID                 string            `json:"id"`
+	AssetTag           string            `json:"assetTag"`
+	DataMatrixImageUrl string            `json:"dataMatrixImageUrl"`
+	AssetName          string            `json:"assetName"`
+	CategoryID         string            `json:"categoryId"`
+	Brand              *string           `json:"brand"`
+	Model              *string           `json:"model"`
+	SerialNumber       *string           `json:"serialNumber"`
+	PurchaseDate       *time.Time        `json:"purchaseDate"`
+	PurchasePrice      *NullableDecimal2 `json:"purchasePrice"` // Custom type to ensure 2 decimal places as number
+	VendorName         *string           `json:"vendorName"`
+	WarrantyEnd        *time.Time        `json:"warrantyEnd"`
+	Status             AssetStatus       `json:"status"`
+	Condition          AssetCondition    `json:"condition"`
+	LocationID         *string           `json:"locationId"`
+	AssignedToID       *string           `json:"assignedToId"`
+	CreatedAt          time.Time         `json:"createdAt"`
+	UpdatedAt          time.Time         `json:"updatedAt"`
 	// ???
 	Category   *CategoryResponse `json:"category"`
 	Location   *LocationResponse `json:"location"`
@@ -94,24 +94,24 @@ type AssetResponse struct {
 }
 
 type AssetListResponse struct {
-	ID                 string         `json:"id"`
-	AssetTag           string         `json:"assetTag"`
-	DataMatrixImageUrl string         `json:"dataMatrixImageUrl"`
-	AssetName          string         `json:"assetName"`
-	CategoryID         string         `json:"categoryId"`
-	Brand              *string        `json:"brand"`
-	Model              *string        `json:"model"`
-	SerialNumber       *string        `json:"serialNumber"`
-	PurchaseDate       *time.Time     `json:"purchaseDate"`
-	PurchasePrice      *string        `json:"purchasePrice"` // Changed to *string to ensure consistent decimal formatting
-	VendorName         *string        `json:"vendorName"`
-	WarrantyEnd        *time.Time     `json:"warrantyEnd"`
-	Status             AssetStatus    `json:"status"`
-	Condition          AssetCondition `json:"condition"`
-	LocationID         *string        `json:"locationId"`
-	AssignedToID       *string        `json:"assignedToId"`
-	CreatedAt          time.Time      `json:"createdAt"`
-	UpdatedAt          time.Time      `json:"updatedAt"`
+	ID                 string            `json:"id"`
+	AssetTag           string            `json:"assetTag"`
+	DataMatrixImageUrl string            `json:"dataMatrixImageUrl"`
+	AssetName          string            `json:"assetName"`
+	CategoryID         string            `json:"categoryId"`
+	Brand              *string           `json:"brand"`
+	Model              *string           `json:"model"`
+	SerialNumber       *string           `json:"serialNumber"`
+	PurchaseDate       *time.Time        `json:"purchaseDate"`
+	PurchasePrice      *NullableDecimal2 `json:"purchasePrice"` // Custom type to ensure 2 decimal places as number
+	VendorName         *string           `json:"vendorName"`
+	WarrantyEnd        *time.Time        `json:"warrantyEnd"`
+	Status             AssetStatus       `json:"status"`
+	Condition          AssetCondition    `json:"condition"`
+	LocationID         *string           `json:"locationId"`
+	AssignedToID       *string           `json:"assignedToId"`
+	CreatedAt          time.Time         `json:"createdAt"`
+	UpdatedAt          time.Time         `json:"updatedAt"`
 	// * Populated
 	Category   *CategoryResponse `json:"category"`
 	Location   *LocationResponse `json:"location"`
@@ -331,12 +331,12 @@ type AssetAssignmentStatisticsResponse struct {
 }
 
 type AssetValueStatisticsResponse struct {
-	TotalValue         *string `json:"totalValue"`   // Changed to *string to ensure consistent decimal formatting
-	AverageValue       *string `json:"averageValue"` // Changed to *string to ensure consistent decimal formatting
-	MinValue           *string `json:"minValue"`     // Changed to *string to ensure consistent decimal formatting
-	MaxValue           *string `json:"maxValue"`     // Changed to *string to ensure consistent decimal formatting
-	AssetsWithValue    int     `json:"assetsWithValue"`
-	AssetsWithoutValue int     `json:"assetsWithoutValue"`
+	TotalValue         *NullableDecimal2 `json:"totalValue"`   // Custom type to ensure 2 decimal places as number
+	AverageValue       *NullableDecimal2 `json:"averageValue"` // Custom type to ensure 2 decimal places as number
+	MinValue           *NullableDecimal2 `json:"minValue"`     // Custom type to ensure 2 decimal places as number
+	MaxValue           *NullableDecimal2 `json:"maxValue"`     // Custom type to ensure 2 decimal places as number
+	AssetsWithValue    int               `json:"assetsWithValue"`
+	AssetsWithoutValue int               `json:"assetsWithoutValue"`
 }
 
 type AssetWarrantyStatisticsResponse struct {
@@ -351,28 +351,28 @@ type AssetCreationTrendResponse struct {
 }
 
 type AssetSummaryStatisticsResponse struct {
-	TotalAssets                 int       `json:"totalAssets"`
-	ActiveAssetsPercentage      float64   `json:"activeAssetsPercentage"`
-	MaintenanceAssetsPercentage float64   `json:"maintenanceAssetsPercentage"`
-	DisposedAssetsPercentage    float64   `json:"disposedAssetsPercentage"`
-	LostAssetsPercentage        float64   `json:"lostAssetsPercentage"`
-	GoodConditionPercentage     float64   `json:"goodConditionPercentage"`
-	FairConditionPercentage     float64   `json:"fairConditionPercentage"`
-	PoorConditionPercentage     float64   `json:"poorConditionPercentage"`
-	DamagedConditionPercentage  float64   `json:"damagedConditionPercentage"`
-	AssignedAssetsPercentage    float64   `json:"assignedAssetsPercentage"`
-	UnassignedAssetsPercentage  float64   `json:"unassignedAssetsPercentage"`
-	AssetsWithPurchasePrice     int       `json:"assetsWithPurchasePrice"`
-	PurchasePricePercentage     float64   `json:"purchasePricePercentage"`
-	AssetsWithDataMatrix        int       `json:"assetsWithDataMatrix"`
-	DataMatrixPercentage        float64   `json:"dataMatrixPercentage"`
-	AssetsWithWarranty          int       `json:"assetsWithWarranty"`
-	WarrantyPercentage          float64   `json:"warrantyPercentage"`
-	TotalCategories             int       `json:"totalCategories"`
-	TotalLocations              int       `json:"totalLocations"`
-	AverageAssetsPerDay         float64   `json:"averageAssetsPerDay"`
-	LatestCreationDate          time.Time `json:"latestCreationDate"`
-	EarliestCreationDate        time.Time `json:"earliestCreationDate"`
-	MostExpensiveAssetValue     *string   `json:"mostExpensiveAssetValue"`  // Changed to *string to ensure consistent decimal formatting
-	LeastExpensiveAssetValue    *string   `json:"leastExpensiveAssetValue"` // Changed to *string to ensure consistent decimal formatting
+	TotalAssets                 int               `json:"totalAssets"`
+	ActiveAssetsPercentage      Decimal2          `json:"activeAssetsPercentage"`      // Always 2 decimal places
+	MaintenanceAssetsPercentage Decimal2          `json:"maintenanceAssetsPercentage"` // Always 2 decimal places
+	DisposedAssetsPercentage    Decimal2          `json:"disposedAssetsPercentage"`    // Always 2 decimal places
+	LostAssetsPercentage        Decimal2          `json:"lostAssetsPercentage"`        // Always 2 decimal places
+	GoodConditionPercentage     Decimal2          `json:"goodConditionPercentage"`     // Always 2 decimal places
+	FairConditionPercentage     Decimal2          `json:"fairConditionPercentage"`     // Always 2 decimal places
+	PoorConditionPercentage     Decimal2          `json:"poorConditionPercentage"`     // Always 2 decimal places
+	DamagedConditionPercentage  Decimal2          `json:"damagedConditionPercentage"`  // Always 2 decimal places
+	AssignedAssetsPercentage    Decimal2          `json:"assignedAssetsPercentage"`    // Always 2 decimal places
+	UnassignedAssetsPercentage  Decimal2          `json:"unassignedAssetsPercentage"`  // Always 2 decimal places
+	AssetsWithPurchasePrice     int               `json:"assetsWithPurchasePrice"`
+	PurchasePricePercentage     Decimal2          `json:"purchasePricePercentage"` // Always 2 decimal places
+	AssetsWithDataMatrix        int               `json:"assetsWithDataMatrix"`
+	DataMatrixPercentage        Decimal2          `json:"dataMatrixPercentage"` // Always 2 decimal places
+	AssetsWithWarranty          int               `json:"assetsWithWarranty"`
+	WarrantyPercentage          Decimal2          `json:"warrantyPercentage"` // Always 2 decimal places
+	TotalCategories             int               `json:"totalCategories"`
+	TotalLocations              int               `json:"totalLocations"`
+	AverageAssetsPerDay         Decimal2          `json:"averageAssetsPerDay"` // Always 2 decimal places
+	LatestCreationDate          time.Time         `json:"latestCreationDate"`
+	EarliestCreationDate        time.Time         `json:"earliestCreationDate"`
+	MostExpensiveAssetValue     *NullableDecimal2 `json:"mostExpensiveAssetValue"`  // Always 2 decimal places or null
+	LeastExpensiveAssetValue    *NullableDecimal2 `json:"leastExpensiveAssetValue"` // Always 2 decimal places or null
 }
