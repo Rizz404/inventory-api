@@ -211,16 +211,16 @@ type AssetParams struct {
 
 // Internal statistics structs (used in repository layer)
 type AssetStatistics struct {
-	Total              AssetCountStatistics      `json:"total"`
-	ByStatus           AssetStatusStatistics     `json:"byStatus"`
-	ByCondition        AssetConditionStatistics  `json:"byCondition"`
-	ByCategory         []CategoryStatistics      `json:"byCategory"`
-	ByLocation         []LocationStatistics      `json:"byLocation"`
-	ByAssignment       AssetAssignmentStatistics `json:"byAssignment"`
-	ValueStatistics    AssetValueStatistics      `json:"valueStatistics"`
-	WarrantyStatistics AssetWarrantyStatistics   `json:"warrantyStatistics"`
-	CreationTrends     []AssetCreationTrend      `json:"creationTrends"`
-	Summary            AssetSummaryStatistics    `json:"summary"`
+	Total              AssetCountStatistics        `json:"total"`
+	ByStatus           AssetStatusStatistics       `json:"byStatus"`
+	ByCondition        AssetConditionStatistics    `json:"byCondition"`
+	ByCategory         []AssetByCategoryStatistics `json:"byCategory"`
+	ByLocation         []AssetByLocationStatistics `json:"byLocation"`
+	ByAssignment       AssetAssignmentStatistics   `json:"byAssignment"`
+	ValueStatistics    AssetValueStatistics        `json:"valueStatistics"`
+	WarrantyStatistics AssetWarrantyStatistics     `json:"warrantyStatistics"`
+	CreationTrends     []AssetCreationTrend        `json:"creationTrends"`
+	Summary            AssetSummaryStatistics      `json:"summary"`
 }
 
 type AssetCountStatistics struct {
@@ -239,6 +239,22 @@ type AssetConditionStatistics struct {
 	Fair    int `json:"fair"`
 	Poor    int `json:"poor"`
 	Damaged int `json:"damaged"`
+}
+
+type AssetByCategoryStatistics struct {
+	CategoryID   string  `json:"categoryId"`
+	CategoryName string  `json:"categoryName"`
+	CategoryCode string  `json:"categoryCode"`
+	AssetCount   int     `json:"assetCount"`
+	Percentage   float64 `json:"percentage"`
+}
+
+type AssetByLocationStatistics struct {
+	LocationID   string  `json:"locationId"`
+	LocationName string  `json:"locationName"`
+	LocationCode string  `json:"locationCode"`
+	AssetCount   int     `json:"assetCount"`
+	Percentage   float64 `json:"percentage"`
 }
 
 type AssetAssignmentStatistics struct {
@@ -295,16 +311,16 @@ type AssetSummaryStatistics struct {
 
 // Response statistics structs (used in service/handler layer)
 type AssetStatisticsResponse struct {
-	Total              AssetCountStatisticsResponse      `json:"total"`
-	ByStatus           AssetStatusStatisticsResponse     `json:"byStatus"`
-	ByCondition        AssetConditionStatisticsResponse  `json:"byCondition"`
-	ByCategory         []CategoryStatisticsResponse      `json:"byCategory"`
-	ByLocation         []LocationStatisticsResponse      `json:"byLocation"`
-	ByAssignment       AssetAssignmentStatisticsResponse `json:"byAssignment"`
-	ValueStatistics    AssetValueStatisticsResponse      `json:"valueStatistics"`
-	WarrantyStatistics AssetWarrantyStatisticsResponse   `json:"warrantyStatistics"`
-	CreationTrends     []AssetCreationTrendResponse      `json:"creationTrends"`
-	Summary            AssetSummaryStatisticsResponse    `json:"summary"`
+	Total              AssetCountStatisticsResponse        `json:"total"`
+	ByStatus           AssetStatusStatisticsResponse       `json:"byStatus"`
+	ByCondition        AssetConditionStatisticsResponse    `json:"byCondition"`
+	ByCategory         []AssetByCategoryStatisticsResponse `json:"byCategory"`
+	ByLocation         []AssetByLocationStatisticsResponse `json:"byLocation"`
+	ByAssignment       AssetAssignmentStatisticsResponse   `json:"byAssignment"`
+	ValueStatistics    AssetValueStatisticsResponse        `json:"valueStatistics"`
+	WarrantyStatistics AssetWarrantyStatisticsResponse     `json:"warrantyStatistics"`
+	CreationTrends     []AssetCreationTrendResponse        `json:"creationTrends"`
+	Summary            AssetSummaryStatisticsResponse      `json:"summary"`
 }
 
 type AssetCountStatisticsResponse struct {
@@ -323,6 +339,22 @@ type AssetConditionStatisticsResponse struct {
 	Fair    int `json:"fair"`
 	Poor    int `json:"poor"`
 	Damaged int `json:"damaged"`
+}
+
+type AssetByCategoryStatisticsResponse struct {
+	CategoryID   string   `json:"categoryId"`
+	CategoryName string   `json:"categoryName"`
+	CategoryCode string   `json:"categoryCode"`
+	AssetCount   int      `json:"assetCount"`
+	Percentage   Decimal2 `json:"percentage"` // Always 2 decimal places
+}
+
+type AssetByLocationStatisticsResponse struct {
+	LocationID   string   `json:"locationId"`
+	LocationName string   `json:"locationName"`
+	LocationCode string   `json:"locationCode"`
+	AssetCount   int      `json:"assetCount"`
+	Percentage   Decimal2 `json:"percentage"` // Always 2 decimal places
 }
 
 type AssetAssignmentStatisticsResponse struct {

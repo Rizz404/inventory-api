@@ -313,15 +313,27 @@ func AssetStatisticsToResponse(stats *domain.AssetStatistics) domain.AssetStatis
 	}
 
 	// Convert ByCategory slice
-	response.ByCategory = make([]domain.CategoryStatisticsResponse, len(stats.ByCategory))
+	response.ByCategory = make([]domain.AssetByCategoryStatisticsResponse, len(stats.ByCategory))
 	for i, category := range stats.ByCategory {
-		response.ByCategory[i] = CategoryStatisticsToResponse(&category)
+		response.ByCategory[i] = domain.AssetByCategoryStatisticsResponse{
+			CategoryID:   category.CategoryID,
+			CategoryName: category.CategoryName,
+			CategoryCode: category.CategoryCode,
+			AssetCount:   category.AssetCount,
+			Percentage:   domain.NewDecimal2(category.Percentage),
+		}
 	}
 
 	// Convert ByLocation slice
-	response.ByLocation = make([]domain.LocationStatisticsResponse, len(stats.ByLocation))
+	response.ByLocation = make([]domain.AssetByLocationStatisticsResponse, len(stats.ByLocation))
 	for i, location := range stats.ByLocation {
-		response.ByLocation[i] = LocationStatisticsToResponse(&location)
+		response.ByLocation[i] = domain.AssetByLocationStatisticsResponse{
+			LocationID:   location.LocationID,
+			LocationName: location.LocationName,
+			LocationCode: location.LocationCode,
+			AssetCount:   location.AssetCount,
+			Percentage:   domain.NewDecimal2(location.Percentage),
+		}
 	}
 
 	// Convert CreationTrends slice

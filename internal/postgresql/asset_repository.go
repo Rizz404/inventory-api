@@ -426,6 +426,84 @@ func (r *AssetRepository) GetAssetStatistics(ctx context.Context) (domain.AssetS
 		}
 	}
 
+	// Get asset counts by category
+	var categoryStats []struct {
+		CategoryID   string `json:"category_id"`
+		CategoryCode string `json:"category_code"`
+		CategoryName string `json:"category_name"`
+		AssetCount   int64  `json:"asset_count"`
+	}
+	if err := r.db.WithContext(ctx).
+		Table("assets a").
+		Select("c.id as category_id, c.category_code, COALESCE(ct.category_name, c.category_code) as category_name, COUNT(a.id) as asset_count").
+		Joins("INNER JOIN categories c ON a.category_id = c.id").
+		Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.lang_code = 'en'").
+		Group("c.id, c.category_code, ct.category_name").
+		Order("asset_count DESC").
+		Scan(&categoryStats).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.ByCategory = make([]domain.AssetByCategoryStatistics, len(categoryStats))
+	for i, cs := range categoryStats {
+		percentage := float64(0)
+		if totalCount > 0 {
+			percentage = float64(cs.AssetCount) / float64(totalCount) * 100
+		}
+		stats.ByCategory[i] = domain.AssetByCategoryStatistics{
+			CategoryID:   cs.CategoryID,
+			CategoryName: cs.CategoryName,
+			CategoryCode: cs.CategoryCode,
+			AssetCount:   int(cs.AssetCount),
+			Percentage:   percentage,
+		}
+	}
+
+	// Get asset counts by location
+	var locationStats []struct {
+		LocationID   string `json:"location_id"`
+		LocationCode string `json:"location_code"`
+		LocationName string `json:"location_name"`
+		AssetCount   int64  `json:"asset_count"`
+	}
+	if err := r.db.WithContext(ctx).
+		Table("assets a").
+		Select("l.id as location_id, l.location_code, COALESCE(lt.location_name, l.location_code) as location_name, COUNT(a.id) as asset_count").
+		Joins("INNER JOIN locations l ON a.location_id = l.id").
+		Joins("LEFT JOIN location_translations lt ON l.id = lt.location_id AND lt.lang_code = 'en'").
+		Where("a.location_id IS NOT NULL").
+		Group("l.id, l.location_code, lt.location_name").
+		Order("asset_count DESC").
+		Scan(&locationStats).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.ByLocation = make([]domain.AssetByLocationStatistics, len(locationStats))
+	for i, ls := range locationStats {
+		percentage := float64(0)
+		if totalCount > 0 {
+			percentage = float64(ls.AssetCount) / float64(totalCount) * 100
+		}
+		stats.ByLocation[i] = domain.AssetByLocationStatistics{
+			LocationID:   ls.LocationID,
+			LocationName: ls.LocationName,
+			LocationCode: ls.LocationCode,
+			AssetCount:   int(ls.AssetCount),
+			Percentage:   percentage,
+		}
+	}
+
+	// Count unique categories and locations for summary
+	var uniqueCategories, uniqueLocations int64
+	if err := r.db.WithContext(ctx).Model(&model.Asset{}).Distinct("category_id").Count(&uniqueCategories).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	if err := r.db.WithContext(ctx).Model(&model.Asset{}).Where("location_id IS NOT NULL").Distinct("location_id").Count(&uniqueLocations).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	stats.Summary.TotalCategories = int(uniqueCategories)
+	stats.Summary.TotalLocations = int(uniqueLocations)
+
 	// Calculate summary statistics
 	stats.Summary.TotalAssets = int(totalCount)
 
