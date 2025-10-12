@@ -318,16 +318,16 @@ func MaintenanceRecordStatisticsToResponse(stats *domain.MaintenanceRecordStatis
 		Summary: domain.MaintenanceRecordSummaryStatisticsResponse{
 			TotalRecords:                  stats.Summary.TotalRecords,
 			RecordsWithCostInfo:           stats.Summary.RecordsWithCostInfo,
-			CostInfoPercentage:            stats.Summary.CostInfoPercentage,
+			CostInfoPercentage:            domain.NewDecimal2(stats.Summary.CostInfoPercentage),
 			TotalUniqueVendors:            stats.Summary.TotalUniqueVendors,
 			TotalUniquePerformers:         stats.Summary.TotalUniquePerformers,
-			AverageRecordsPerDay:          stats.Summary.AverageRecordsPerDay,
+			AverageRecordsPerDay:          domain.NewDecimal2(stats.Summary.AverageRecordsPerDay),
 			LatestRecordDate:              stats.Summary.LatestRecordDate,
 			EarliestRecordDate:            stats.Summary.EarliestRecordDate,
 			MostExpensiveMaintenanceCost:  domain.NewNullableDecimal2(stats.Summary.MostExpensiveMaintenanceCost),
 			LeastExpensiveMaintenanceCost: domain.NewNullableDecimal2(stats.Summary.LeastExpensiveMaintenanceCost),
 			AssetsWithMaintenance:         stats.Summary.AssetsWithMaintenance,
-			AverageMaintenancePerAsset:    stats.Summary.AverageMaintenancePerAsset,
+			AverageMaintenancePerAsset:    domain.NewDecimal2(stats.Summary.AverageMaintenancePerAsset),
 		},
 	}
 

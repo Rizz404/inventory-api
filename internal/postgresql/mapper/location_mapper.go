@@ -229,8 +229,8 @@ func LocationStatisticsToResponse(stats *domain.LocationStatistics) domain.Locat
 		Geographic: domain.GeographicStatisticsResponse{
 			WithCoordinates:    stats.Geographic.WithCoordinates,
 			WithoutCoordinates: stats.Geographic.WithoutCoordinates,
-			AverageLatitude:    domain.NewNullableDecimal2(stats.Geographic.AverageLatitude),
-			AverageLongitude:   domain.NewNullableDecimal2(stats.Geographic.AverageLongitude),
+			AverageLatitude:    stats.Geographic.AverageLatitude,
+			AverageLongitude:   stats.Geographic.AverageLongitude,
 		},
 		CreationTrends: trends,
 		Summary: domain.LocationSummaryStatisticsResponse{

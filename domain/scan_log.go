@@ -215,10 +215,10 @@ type ScannerStatisticsResponse struct {
 
 type ScanLogSummaryStatisticsResponse struct {
 	TotalScans            int       `json:"totalScans"`
-	SuccessRate           float64   `json:"successRate"`
+	SuccessRate           Decimal2  `json:"successRate"`
 	ScansWithCoordinates  int       `json:"scansWithCoordinates"`
-	CoordinatesPercentage float64   `json:"coordinatesPercentage"`
-	AverageScansPerDay    float64   `json:"averageScansPerDay"`
+	CoordinatesPercentage Decimal2  `json:"coordinatesPercentage"`
+	AverageScansPerDay    Decimal2  `json:"averageScansPerDay"`
 	LatestScanDate        time.Time `json:"latestScanDate"`
 	EarliestScanDate      time.Time `json:"earliestScanDate"`
 }

@@ -205,10 +205,10 @@ type FloorStatisticsResponse struct {
 }
 
 type GeographicStatisticsResponse struct {
-	WithCoordinates    int               `json:"withCoordinates"`
-	WithoutCoordinates int               `json:"withoutCoordinates"`
-	AverageLatitude    *NullableDecimal2 `json:"averageLatitude"`  // Always 2 decimal places or null
-	AverageLongitude   *NullableDecimal2 `json:"averageLongitude"` // Always 2 decimal places or null
+	WithCoordinates    int      `json:"withCoordinates"`
+	WithoutCoordinates int      `json:"withoutCoordinates"`
+	AverageLatitude    *float64 `json:"averageLatitude"`  // Always 2 decimal places or null
+	AverageLongitude   *float64 `json:"averageLongitude"` // Always 2 decimal places or null
 }
 
 type LocationCreationTrendResponse struct {

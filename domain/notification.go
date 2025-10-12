@@ -210,10 +210,10 @@ type NotificationCreationTrendResponse struct {
 
 type NotificationSummaryStatisticsResponse struct {
 	TotalNotifications         int       `json:"totalNotifications"`
-	ReadPercentage             float64   `json:"readPercentage"`
-	UnreadPercentage           float64   `json:"unreadPercentage"`
+	ReadPercentage             Decimal2  `json:"readPercentage"`
+	UnreadPercentage           Decimal2  `json:"unreadPercentage"`
 	MostCommonType             string    `json:"mostCommonType"`
-	AverageNotificationsPerDay float64   `json:"averageNotificationsPerDay"`
+	AverageNotificationsPerDay Decimal2  `json:"averageNotificationsPerDay"`
 	LatestCreationDate         time.Time `json:"latestCreationDate"`
 	EarliestCreationDate       time.Time `json:"earliestCreationDate"`
 }

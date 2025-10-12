@@ -280,14 +280,14 @@ type MaintenanceRecordMonthlyTrendResponse struct {
 type MaintenanceRecordSummaryStatisticsResponse struct {
 	TotalRecords                  int               `json:"totalRecords"`
 	RecordsWithCostInfo           int               `json:"recordsWithCostInfo"`
-	CostInfoPercentage            float64           `json:"costInfoPercentage"`
+	CostInfoPercentage            Decimal2          `json:"costInfoPercentage"`
 	TotalUniqueVendors            int               `json:"totalUniqueVendors"`
 	TotalUniquePerformers         int               `json:"totalUniquePerformers"`
-	AverageRecordsPerDay          float64           `json:"averageRecordsPerDay"`
+	AverageRecordsPerDay          Decimal2          `json:"averageRecordsPerDay"`
 	LatestRecordDate              string            `json:"latestRecordDate"`
 	EarliestRecordDate            string            `json:"earliestRecordDate"`
 	MostExpensiveMaintenanceCost  *NullableDecimal2 `json:"mostExpensiveMaintenanceCost"`  // Custom type to ensure 2 decimal places as number
 	LeastExpensiveMaintenanceCost *NullableDecimal2 `json:"leastExpensiveMaintenanceCost"` // Custom type to ensure 2 decimal places as number
 	AssetsWithMaintenance         int               `json:"assetsWithMaintenance"`
-	AverageMaintenancePerAsset    float64           `json:"averageMaintenancePerAsset"`
+	AverageMaintenancePerAsset    Decimal2          `json:"averageMaintenancePerAsset"`
 }

@@ -273,13 +273,13 @@ type IssueReportCreationTrendResponse struct {
 
 type IssueReportSummaryStatisticsResponse struct {
 	TotalReports            int       `json:"totalReports"`
-	OpenPercentage          float64   `json:"openPercentage"`
-	ResolvedPercentage      float64   `json:"resolvedPercentage"`
-	AverageResolutionTime   float64   `json:"averageResolutionTimeInDays"`
+	OpenPercentage          Decimal2  `json:"openPercentage"`
+	ResolvedPercentage      Decimal2  `json:"resolvedPercentage"`
+	AverageResolutionTime   Decimal2  `json:"averageResolutionTimeInDays"`
 	MostCommonPriority      string    `json:"mostCommonPriority"`
 	MostCommonType          string    `json:"mostCommonType"`
 	CriticalUnresolvedCount int       `json:"criticalUnresolvedCount"`
-	AverageReportsPerDay    float64   `json:"averageReportsPerDay"`
+	AverageReportsPerDay    Decimal2  `json:"averageReportsPerDay"`
 	LatestCreationDate      time.Time `json:"latestCreationDate"`
 	EarliestCreationDate    time.Time `json:"earliestCreationDate"`
 }

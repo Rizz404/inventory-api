@@ -253,10 +253,10 @@ func NotificationStatisticsToResponse(stats *domain.NotificationStatistics) doma
 		},
 		Summary: domain.NotificationSummaryStatisticsResponse{
 			TotalNotifications:         stats.Summary.TotalNotifications,
-			ReadPercentage:             stats.Summary.ReadPercentage,
-			UnreadPercentage:           stats.Summary.UnreadPercentage,
+			ReadPercentage:             domain.NewDecimal2(stats.Summary.ReadPercentage),
+			UnreadPercentage:           domain.NewDecimal2(stats.Summary.UnreadPercentage),
 			MostCommonType:             stats.Summary.MostCommonType,
-			AverageNotificationsPerDay: stats.Summary.AverageNotificationsPerDay,
+			AverageNotificationsPerDay: domain.NewDecimal2(stats.Summary.AverageNotificationsPerDay),
 			LatestCreationDate:         stats.Summary.LatestCreationDate,
 			EarliestCreationDate:       stats.Summary.EarliestCreationDate,
 		},

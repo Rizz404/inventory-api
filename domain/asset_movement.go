@@ -309,8 +309,8 @@ type AssetMovementSummaryStatisticsResponse struct {
 	MostActiveAsset           string    `json:"mostActiveAsset"`
 	MostActiveLocation        string    `json:"mostActiveLocation"`
 	MostActiveUser            string    `json:"mostActiveUser"`
-	AverageMovementsPerDay    float64   `json:"averageMovementsPerDay"`
-	AverageMovementsPerAsset  float64   `json:"averageMovementsPerAsset"`
+	AverageMovementsPerDay    Decimal2  `json:"averageMovementsPerDay"`
+	AverageMovementsPerAsset  Decimal2  `json:"averageMovementsPerAsset"`
 	LatestMovementDate        time.Time `json:"latestMovementDate"`
 	EarliestMovementDate      time.Time `json:"earliestMovementDate"`
 	UniqueAssetsWithMovements int       `json:"uniqueAssetsWithMovements"`

@@ -312,17 +312,17 @@ type MaintenanceFrequencyTrendResponse struct {
 
 type MaintenanceScheduleSummaryStatisticsResponse struct {
 	TotalSchedules                    int       `json:"totalSchedules"`
-	ScheduledMaintenancePercentage    float64   `json:"scheduledMaintenancePercentage"`
-	CompletedMaintenancePercentage    float64   `json:"completedMaintenancePercentage"`
-	CancelledMaintenancePercentage    float64   `json:"cancelledMaintenancePercentage"`
-	PreventiveMaintenancePercentage   float64   `json:"preventiveMaintenancePercentage"`
-	CorrectiveMaintenancePercentage   float64   `json:"correctiveMaintenancePercentage"`
-	AverageScheduleFrequency          float64   `json:"averageScheduleFrequency"`
+	ScheduledMaintenancePercentage    Decimal2  `json:"scheduledMaintenancePercentage"`
+	CompletedMaintenancePercentage    Decimal2  `json:"completedMaintenancePercentage"`
+	CancelledMaintenancePercentage    Decimal2  `json:"cancelledMaintenancePercentage"`
+	PreventiveMaintenancePercentage   Decimal2  `json:"preventiveMaintenancePercentage"`
+	CorrectiveMaintenancePercentage   Decimal2  `json:"correctiveMaintenancePercentage"`
+	AverageScheduleFrequency          Decimal2  `json:"averageScheduleFrequency"`
 	UpcomingMaintenanceCount          int       `json:"upcomingMaintenanceCount"`
 	OverdueMaintenanceCount           int       `json:"overdueMaintenanceCount"`
 	AssetsWithScheduledMaintenance    int       `json:"assetsWithScheduledMaintenance"`
 	AssetsWithoutScheduledMaintenance int       `json:"assetsWithoutScheduledMaintenance"`
-	AverageSchedulesPerDay            float64   `json:"averageSchedulesPerDay"`
+	AverageSchedulesPerDay            Decimal2  `json:"averageSchedulesPerDay"`
 	LatestScheduleDate                time.Time `json:"latestScheduleDate"`
 	EarliestScheduleDate              time.Time `json:"earliestScheduleDate"`
 	TotalUniqueCreators               int       `json:"totalUniqueCreators"`

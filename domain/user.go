@@ -238,12 +238,12 @@ type RegistrationTrendResponse struct {
 
 type UserSummaryStatisticsResponse struct {
 	TotalUsers               int       `json:"totalUsers"`
-	ActiveUsersPercentage    float64   `json:"activeUsersPercentage"`
-	InactiveUsersPercentage  float64   `json:"inactiveUsersPercentage"`
-	AdminPercentage          float64   `json:"adminPercentage"`
-	StaffPercentage          float64   `json:"staffPercentage"`
-	EmployeePercentage       float64   `json:"employeePercentage"`
-	AverageUsersPerDay       float64   `json:"averageUsersPerDay"`
+	ActiveUsersPercentage    Decimal2  `json:"activeUsersPercentage"`
+	InactiveUsersPercentage  Decimal2  `json:"inactiveUsersPercentage"`
+	AdminPercentage          Decimal2  `json:"adminPercentage"`
+	StaffPercentage          Decimal2  `json:"staffPercentage"`
+	EmployeePercentage       Decimal2  `json:"employeePercentage"`
+	AverageUsersPerDay       Decimal2  `json:"averageUsersPerDay"`
 	LatestRegistrationDate   time.Time `json:"latestRegistrationDate"`
 	EarliestRegistrationDate time.Time `json:"earliestRegistrationDate"`
 }

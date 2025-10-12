@@ -152,10 +152,10 @@ func ScanLogStatisticsToResponse(stats *domain.ScanLogStatistics) domain.ScanLog
 		},
 		Summary: domain.ScanLogSummaryStatisticsResponse{
 			TotalScans:            stats.Summary.TotalScans,
-			SuccessRate:           stats.Summary.SuccessRate,
+			SuccessRate:           domain.NewDecimal2(stats.Summary.SuccessRate),
 			ScansWithCoordinates:  stats.Summary.ScansWithCoordinates,
-			CoordinatesPercentage: stats.Summary.CoordinatesPercentage,
-			AverageScansPerDay:    stats.Summary.AverageScansPerDay,
+			CoordinatesPercentage: domain.NewDecimal2(stats.Summary.CoordinatesPercentage),
+			AverageScansPerDay:    domain.NewDecimal2(stats.Summary.AverageScansPerDay),
 			LatestScanDate:        stats.Summary.LatestScanDate,
 			EarliestScanDate:      stats.Summary.EarliestScanDate,
 		},
