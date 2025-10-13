@@ -254,7 +254,7 @@ func CategoryStatisticsToResponse(stats *domain.CategoryStatistics) domain.Categ
 	}
 }
 
-// *==================== Update Map conversions ====================
+// *==================== Update Map conversions (Harus snake case karena untuk database) ====================
 func ToModelCategoryUpdateMap(payload *domain.UpdateCategoryPayload) map[string]any {
 	updates := make(map[string]any)
 

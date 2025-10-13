@@ -252,7 +252,7 @@ func LocationStatisticsToResponse(stats *domain.LocationStatistics) domain.Locat
 	}
 }
 
-// *==================== Update Map conversions ====================
+// *==================== Update Map conversions (Harus snake case karena untuk database) ====================
 func ToModelLocationUpdateMap(payload *domain.UpdateLocationPayload) map[string]any {
 	updates := make(map[string]any)
 

@@ -9,7 +9,6 @@ import (
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
-	"github.com/Rizz404/inventory-api/internal/utils"
 	"gorm.io/gorm"
 )
 
@@ -74,15 +73,6 @@ func (r *UserRepository) UpdateUser(ctx context.Context, userId string, payload 
 
 	// Build update map from payload
 	updates := mapper.ToModelUserUpdateMap(payload)
-
-	// If password is provided, hash it
-	if payload.Password != nil {
-		hashedPassword, err := utils.HashPassword(*payload.Password)
-		if err != nil {
-			return domain.User{}, domain.ErrInternal(err)
-		}
-		updates["password_hash"] = hashedPassword
-	}
 
 	// Perform update
 	err := r.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", userId).Updates(updates).Error

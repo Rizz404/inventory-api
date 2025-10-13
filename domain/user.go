@@ -122,7 +122,6 @@ type CreateUserPayload struct {
 type UpdateUserPayload struct {
 	Name          *string   `json:"name,omitempty" example:"john_doe" form:"name" validate:"omitempty,min=3,max=50"`
 	Email         *string   `json:"email,omitempty" example:"john.doe@example.com" form:"email" validate:"omitempty,email,max=255"`
-	Password      *string   `json:"password,omitempty" example:"password123" form:"password" validate:"omitempty,min=8,max=100"`
 	FullName      *string   `json:"fullName,omitempty" example:"John Doe" form:"fullName" validate:"omitempty,min=3,max=100"`
 	Role          *UserRole `json:"role,omitempty" example:"Admin" form:"role" validate:"omitempty,oneof=Admin Staff Employee"`
 	EmployeeID    *string   `json:"employeeId,omitempty" example:"EMP001" form:"employeeId" validate:"omitempty,max=20"` // ! gak usah diapa-apain dulu, soalnya belum ada
@@ -130,10 +129,6 @@ type UpdateUserPayload struct {
 	IsActive      *bool     `json:"isActive,omitempty" example:"true" form:"isActive" validate:"omitempty"`
 	AvatarURL     *string   `json:"avatarUrl,omitempty" example:"https://example.com/avatar.jpg" form:"avatarUrl" validate:"omitempty,url"`
 	FCMToken      *string   `json:"fcmToken,omitempty" form:"fcmToken" validate:"omitempty"`
-}
-
-type UpdateFCMTokenPayload struct {
-	FCMToken string `json:"fcmToken" form:"fcmToken" validate:"required"`
 }
 
 type RefreshTokenPayload struct {

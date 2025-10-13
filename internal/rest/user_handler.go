@@ -39,7 +39,6 @@ func NewUserHandler(app fiber.Router, s user.UserService) {
 	users.Get("/count", handler.CountUsers)
 	users.Get("/profile", middleware.AuthMiddleware(), handler.GetCurrentUser)
 	users.Patch("/profile", middleware.AuthMiddleware(), handler.UpdateCurrentUser)
-	users.Patch("/profile/fcm-token", middleware.AuthMiddleware(), handler.UpdateFCMToken)
 	users.Get("/name/:name", handler.GetUserByName)
 	users.Get("/email/:email", handler.GetUserByEmail)
 	users.Get("/check/name/:name", handler.CheckNameExists)
@@ -232,40 +231,6 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessUserDeletedKey, nil)
-}
-
-func (h *UserHandler) UpdateFCMToken(c *fiber.Ctx) error {
-	// Get user ID from auth context
-	userIdValue := c.Locals("userId")
-	if userIdValue == nil {
-		return web.HandleError(c, domain.ErrUnauthorizedWithKey(utils.ErrUnauthorizedKey))
-	}
-	userId, ok := userIdValue.(string)
-	if !ok {
-		return web.HandleError(c, domain.ErrUnauthorizedWithKey(utils.ErrUnauthorizedKey))
-	}
-
-	var payload domain.UpdateFCMTokenPayload
-	if err := c.BodyParser(&payload); err != nil {
-		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
-	}
-
-	// Validate payload
-	if err := web.Validate(&payload); err != nil {
-		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
-	}
-
-	// Update user's FCM token
-	updatePayload := domain.UpdateUserPayload{
-		FCMToken: &payload.FCMToken,
-	}
-
-	user, err := h.Service.UpdateUser(c.Context(), userId, &updatePayload, nil)
-	if err != nil {
-		return web.HandleError(c, err)
-	}
-
-	return web.Success(c, fiber.StatusOK, utils.SuccessUserUpdatedKey, user)
 }
 
 // *===========================QUERY===========================*

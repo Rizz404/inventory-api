@@ -348,7 +348,7 @@ func AssetStatisticsToResponse(stats *domain.AssetStatistics) domain.AssetStatis
 	return response
 }
 
-// *==================== Update Map conversions ====================
+// *==================== Update Map conversions (Harus snake case karena untuk database) ====================
 func ToModelAssetUpdateMap(payload *domain.UpdateAssetPayload) map[string]any {
 	updates := make(map[string]any)
 

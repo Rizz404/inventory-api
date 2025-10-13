@@ -151,7 +151,7 @@ func StatisticsToResponse(stats *domain.UserStatistics) domain.UserStatisticsRes
 	}
 }
 
-// *==================== Update Map conversions ====================
+// *==================== Update Map conversions (Harus snake case karena untuk database) ====================
 func ToModelUserUpdateMap(payload *domain.UpdateUserPayload) map[string]any {
 	updates := make(map[string]any)
 
@@ -160,9 +160,6 @@ func ToModelUserUpdateMap(payload *domain.UpdateUserPayload) map[string]any {
 	}
 	if payload.Email != nil {
 		updates["email"] = *payload.Email
-	}
-	if payload.Password != nil {
-		updates["password_hash"] = *payload.Password
 	}
 	if payload.FullName != nil {
 		updates["full_name"] = *payload.FullName
@@ -181,6 +178,9 @@ func ToModelUserUpdateMap(payload *domain.UpdateUserPayload) map[string]any {
 	}
 	if payload.AvatarURL != nil {
 		updates["avatar_url"] = payload.AvatarURL
+	}
+	if payload.FCMToken != nil {
+		updates["fcm_token"] = payload.FCMToken
 	}
 
 	return updates
