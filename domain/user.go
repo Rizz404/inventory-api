@@ -131,6 +131,11 @@ type UpdateUserPayload struct {
 	FCMToken      *string   `json:"fcmToken,omitempty" form:"fcmToken" validate:"omitempty"`
 }
 
+type ChangePasswordPayload struct {
+	OldPassword string `json:"oldPassword" form:"oldPassword" validate:"required,min=8" example:"oldpassword123"`
+	NewPassword string `json:"newPassword" form:"newPassword" validate:"required,min=8" example:"newpassword123"`
+}
+
 type RefreshTokenPayload struct {
 	RefreshToken string `json:"refreshToken" form:"refreshToken" validate:"required"`
 }

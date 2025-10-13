@@ -100,6 +100,22 @@ func (r *UserRepository) DeleteUser(ctx context.Context, userId string) error {
 	return nil
 }
 
+func (r *UserRepository) UpdatePassword(ctx context.Context, userId string, hashedPassword string) error {
+	// Update only the password_hash and updated_at
+	updates := map[string]interface{}{
+		"password_hash": hashedPassword,
+		"updated_at":    time.Now(),
+	}
+	err := r.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", userId).Updates(updates).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.ErrNotFound("user")
+		}
+		return domain.ErrInternal(err)
+	}
+	return nil
+}
+
 // *===========================QUERY===========================*
 func (r *UserRepository) GetUsersPaginated(ctx context.Context, params domain.UserParams) ([]domain.User, error) {
 	var users []model.User

@@ -39,6 +39,7 @@ func NewUserHandler(app fiber.Router, s user.UserService) {
 	users.Get("/count", handler.CountUsers)
 	users.Get("/profile", middleware.AuthMiddleware(), handler.GetCurrentUser)
 	users.Patch("/profile", middleware.AuthMiddleware(), handler.UpdateCurrentUser)
+	users.Patch("/profile/password", middleware.AuthMiddleware(), handler.ChangeCurrentUserPassword)
 	users.Get("/name/:name", handler.GetUserByName)
 	users.Get("/email/:email", handler.GetUserByEmail)
 	users.Get("/check/name/:name", handler.CheckNameExists)
@@ -46,6 +47,7 @@ func NewUserHandler(app fiber.Router, s user.UserService) {
 	users.Get("/check/:id", handler.CheckUserExists)
 	users.Get("/:id", handler.GetUserById)
 	users.Patch("/:id", handler.UpdateUser)
+	users.Patch("/:id/password", middleware.AuthMiddleware(), handler.ChangePassword)
 	users.Delete("/:id", handler.DeleteUser)
 }
 
@@ -217,6 +219,43 @@ func (h *UserHandler) UpdateCurrentUser(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessUserUpdatedKey, user)
+}
+
+func (h *UserHandler) ChangeCurrentUserPassword(c *fiber.Ctx) error {
+	id, ok := web.GetUserIDFromContext(c)
+	if !ok {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
+	}
+
+	var payload domain.ChangePasswordPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	if err := h.Service.ChangeCurrentUserPassword(c.Context(), id, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessUpdatedKey, nil)
+}
+
+func (h *UserHandler) ChangePassword(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
+	}
+
+	var payload domain.ChangePasswordPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// For admin changing another user's password we ignore OldPassword, but service.ChangePassword expects payload.NewPassword
+	if err := h.Service.ChangePassword(c.Context(), id, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessUpdatedKey, nil)
 }
 
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {

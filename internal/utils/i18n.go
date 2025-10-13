@@ -20,12 +20,13 @@ const (
 	ErrValidationKey   MessageKey = "error.validation"
 
 	// * User-specific error keys
-	ErrUserNotFoundKey      MessageKey = "error.user.not_found"
-	ErrUserNameExistsKey    MessageKey = "error.user.name_exists"
-	ErrUserEmailExistsKey   MessageKey = "error.user.email_exists"
-	ErrUserIDRequiredKey    MessageKey = "error.user.id_required"
-	ErrUserNameRequiredKey  MessageKey = "error.user.name_required"
-	ErrUserEmailRequiredKey MessageKey = "error.user.email_required"
+	ErrUserNotFoundKey       MessageKey = "error.user.not_found"
+	ErrUserNameExistsKey     MessageKey = "error.user.name_exists"
+	ErrUserEmailExistsKey    MessageKey = "error.user.email_exists"
+	ErrUserIDRequiredKey     MessageKey = "error.user.id_required"
+	ErrUserNameRequiredKey   MessageKey = "error.user.name_required"
+	ErrUserEmailRequiredKey  MessageKey = "error.user.email_required"
+	ErrInvalidOldPasswordKey MessageKey = "error.user.invalid_old_password"
 
 	// * Category-specific error keys
 	ErrCategoryNotFoundKey     MessageKey = "error.category.not_found"
@@ -304,6 +305,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Email is required",
 		// "id-ID": "Email diperlukan",
 		"ja-JP": "メールアドレスが必要です",
+	},
+	ErrInvalidOldPasswordKey: {
+		"en-US": "Old password is incorrect",
+		// "id-ID": "Kata sandi lama tidak cocok",
+		"ja-JP": "古いパスワードが正しくありません",
 	},
 
 	// * Category-specific error messages

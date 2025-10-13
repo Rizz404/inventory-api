@@ -32,6 +32,8 @@ type Repository interface {
 	CheckEmailExistsExcluding(ctx context.Context, email string, excludeUserId string) (bool, error)
 	CountUsers(ctx context.Context, params domain.UserParams) (int64, error)
 	GetUserStatistics(ctx context.Context) (domain.UserStatistics, error)
+	// Update password hash for a user
+	UpdatePassword(ctx context.Context, userId string, hashedPassword string) error
 }
 
 // * UserService interface defines the contract for user business operations
@@ -52,6 +54,10 @@ type UserService interface {
 	CheckEmailExists(ctx context.Context, email string) (bool, error)
 	CountUsers(ctx context.Context, params domain.UserParams) (int64, error)
 	GetUserStatistics(ctx context.Context) (domain.UserStatisticsResponse, error)
+
+	// Password changes
+	ChangePassword(ctx context.Context, userId string, payload *domain.ChangePasswordPayload) error
+	ChangeCurrentUserPassword(ctx context.Context, currentUserId string, payload *domain.ChangePasswordPayload) error
 }
 
 type Service struct {
@@ -244,6 +250,54 @@ func (s *Service) DeleteUser(ctx context.Context, userId string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// ChangePassword allows an admin (or authorized) to change another user's password without needing the old password.
+func (s *Service) ChangePassword(ctx context.Context, userId string, payload *domain.ChangePasswordPayload) error {
+	// Ensure user exists
+	_, err := s.Repo.GetUserById(ctx, userId)
+	if err != nil {
+		return err
+	}
+
+	// Hash new password
+	hashed, err := utils.HashPassword(payload.NewPassword)
+	if err != nil {
+		return domain.ErrInternal(err)
+	}
+
+	// Update repository
+	if err := s.Repo.UpdatePassword(ctx, userId, hashed); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ChangeCurrentUserPassword allows a user to change their own password by providing the old password.
+func (s *Service) ChangeCurrentUserPassword(ctx context.Context, currentUserId string, payload *domain.ChangePasswordPayload) error {
+	// Get existing user
+	existingUser, err := s.Repo.GetUserById(ctx, currentUserId)
+	if err != nil {
+		return err
+	}
+
+	// Verify old password matches
+	if !utils.CheckPasswordHash(payload.OldPassword, existingUser.PasswordHash) {
+		return domain.ErrBadRequestWithKey(utils.ErrInvalidOldPasswordKey)
+	}
+
+	// Hash new password
+	hashed, err := utils.HashPassword(payload.NewPassword)
+	if err != nil {
+		return domain.ErrInternal(err)
+	}
+
+	// Update password
+	if err := s.Repo.UpdatePassword(ctx, currentUserId, hashed); err != nil {
+		return err
+	}
+
 	return nil
 }
 
