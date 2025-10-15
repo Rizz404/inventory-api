@@ -2,9 +2,11 @@ package issue_report
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
@@ -27,6 +29,21 @@ type Repository interface {
 	GetIssueReportStatistics(ctx context.Context) (domain.IssueReportStatistics, error)
 }
 
+// * NotificationService interface for creating notifications
+type NotificationService interface {
+	CreateNotification(ctx context.Context, payload *domain.CreateNotificationPayload) (domain.NotificationResponse, error)
+}
+
+// * AssetService interface for getting asset information
+type AssetService interface {
+	GetAssetById(ctx context.Context, assetId string, langCode string) (domain.AssetResponse, error)
+}
+
+// * UserRepository interface for getting user details
+type UserRepository interface {
+	GetUsersPaginated(ctx context.Context, params domain.UserParams) ([]domain.User, error)
+}
+
 // * IssueReportService interface defines the contract for issue report business operations
 type IssueReportService interface {
 	// * MUTATION
@@ -46,15 +63,21 @@ type IssueReportService interface {
 }
 
 type Service struct {
-	Repo Repository
+	Repo                Repository
+	NotificationService NotificationService
+	AssetService        AssetService
+	UserRepo            UserRepository
 }
 
 // * Ensure Service implements IssueReportService interface
 var _ IssueReportService = (*Service)(nil)
 
-func NewService(r Repository) IssueReportService {
+func NewService(r Repository, notificationService NotificationService, assetService AssetService, userRepo UserRepository) IssueReportService {
 	return &Service{
-		Repo: r,
+		Repo:                r,
+		NotificationService: notificationService,
+		AssetService:        assetService,
+		UserRepo:            userRepo,
 	}
 }
 
@@ -85,6 +108,9 @@ func (s *Service) CreateIssueReport(ctx context.Context, payload *domain.CreateI
 		return domain.IssueReportResponse{}, err
 	}
 
+	// * Send notification asynchronously
+	go s.sendIssueReportedNotification(ctx, &createdIssueReport)
+
 	// * Convert to IssueReportResponse using mapper
 	return mapper.IssueReportToResponse(&createdIssueReport, mapper.DefaultLangCode), nil
 }
@@ -106,6 +132,9 @@ func (s *Service) UpdateIssueReport(ctx context.Context, issueReportId string, p
 		return domain.IssueReportResponse{}, err
 	}
 
+	// * Send notification asynchronously
+	go s.sendIssueUpdatedNotification(ctx, &updatedIssueReport)
+
 	// * Convert to IssueReportResponse using mapper
 	return mapper.IssueReportToResponse(&updatedIssueReport, mapper.DefaultLangCode), nil
 }
@@ -126,6 +155,9 @@ func (s *Service) ResolveIssueReport(ctx context.Context, issueReportId string, 
 	if err != nil {
 		return domain.IssueReportResponse{}, err
 	}
+
+	// * Send notification asynchronously
+	go s.sendIssueResolvedNotification(ctx, &resolvedIssueReport)
 
 	// * Convert to IssueReportResponse using mapper
 	return mapper.IssueReportToResponse(&resolvedIssueReport, mapper.DefaultLangCode), nil
@@ -152,6 +184,9 @@ func (s *Service) ReopenIssueReport(ctx context.Context, issueReportId string) (
 		return domain.IssueReportResponse{}, err
 	}
 
+	// * Send notification asynchronously
+	go s.sendIssueReopenedNotification(ctx, &reopenedIssueReport)
+
 	// * Convert to IssueReportResponse using mapper
 	return mapper.IssueReportToResponse(&reopenedIssueReport, mapper.DefaultLangCode), nil
 }
@@ -162,6 +197,268 @@ func (s *Service) DeleteIssueReport(ctx context.Context, issueReportId string) e
 		return err
 	}
 	return nil
+}
+
+// sendIssueReportedNotification sends notification when a new issue report is created
+func (s *Service) sendIssueReportedNotification(ctx context.Context, issueReport *domain.IssueReport) {
+	// Skip if notification service is not available
+	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping issue reported notification for issue report ID: %s", issueReport.ID)
+		return
+	}
+
+	// Get asset information
+	asset, err := s.AssetService.GetAssetById(ctx, issueReport.AssetID, mapper.DefaultLangCode)
+	if err != nil {
+		log.Printf("Failed to get asset for issue report notification (issue report ID: %s, asset ID: %s): %v", issueReport.ID, issueReport.AssetID, err)
+		return
+	}
+
+	log.Printf("Sending issue reported notification for issue report ID: %s, asset ID: %s, asset tag: %s", issueReport.ID, asset.ID, asset.AssetTag)
+
+	// Determine notification recipients
+	var userIds []string
+	if asset.AssignedToID != nil && *asset.AssignedToID != "" {
+		// Notify assigned user
+		userIds = []string{*asset.AssignedToID}
+	} else {
+		// Notify all admins
+		adminRole := domain.RoleAdmin
+		userParams := domain.UserParams{
+			Filters: &domain.UserFilterOptions{
+				Role: &adminRole,
+			},
+		}
+		admins, err := s.UserRepo.GetUsersPaginated(ctx, userParams)
+		if err != nil {
+			log.Printf("Failed to get admin users for issue report notification: %v", err)
+			return
+		}
+		for _, admin := range admins {
+			userIds = append(userIds, admin.ID)
+		}
+	}
+
+	// Get notification message keys and params
+	titleKey, messageKey, params := messages.IssueReportedNotification(asset.AssetName, asset.AssetTag)
+
+	// Get translations for all supported languages
+	msgTranslations := messages.GetIssueReportNotificationTranslations(titleKey, messageKey, params)
+
+	// Send notification to each recipient
+	for _, userId := range userIds {
+		// Convert to domain translations
+		translations := make([]domain.CreateNotificationTranslationPayload, len(msgTranslations))
+		for i, t := range msgTranslations {
+			translations[i] = domain.CreateNotificationTranslationPayload{
+				LangCode: t.LangCode,
+				Title:    t.Title,
+				Message:  t.Message,
+			}
+		}
+
+		notificationPayload := &domain.CreateNotificationPayload{
+			UserID:         userId,
+			RelatedAssetID: &issueReport.AssetID,
+			Type:           domain.NotificationTypeIssueReport,
+			Translations:   translations,
+		}
+
+		_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
+		if err != nil {
+			log.Printf("Failed to create issue reported notification for user ID: %s, issue report ID: %s: %v", userId, issueReport.ID, err)
+		}
+	}
+}
+
+// sendIssueUpdatedNotification sends notification when an issue report is updated
+func (s *Service) sendIssueUpdatedNotification(ctx context.Context, issueReport *domain.IssueReport) {
+	// Skip if notification service is not available
+	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping issue updated notification for issue report ID: %s", issueReport.ID)
+		return
+	}
+
+	// Get asset information
+	asset, err := s.AssetService.GetAssetById(ctx, issueReport.AssetID, mapper.DefaultLangCode)
+	if err != nil {
+		log.Printf("Failed to get asset for issue update notification (issue report ID: %s, asset ID: %s): %v", issueReport.ID, issueReport.AssetID, err)
+		return
+	}
+
+	log.Printf("Sending issue updated notification for issue report ID: %s, asset ID: %s, asset tag: %s", issueReport.ID, asset.ID, asset.AssetTag)
+
+	// Determine notification recipients: reporter and assigned user if different
+	userIds := []string{issueReport.ReportedBy}
+	if asset.AssignedToID != nil && *asset.AssignedToID != "" && *asset.AssignedToID != issueReport.ReportedBy {
+		userIds = append(userIds, *asset.AssignedToID)
+	}
+
+	// Get notification message keys and params
+	titleKey, messageKey, params := messages.IssueUpdatedNotification(asset.AssetName, asset.AssetTag)
+
+	// Get translations for all supported languages
+	msgTranslations := messages.GetIssueReportNotificationTranslations(titleKey, messageKey, params)
+
+	// Send notification to each recipient
+	for _, userId := range userIds {
+		// Convert to domain translations
+		translations := make([]domain.CreateNotificationTranslationPayload, len(msgTranslations))
+		for i, t := range msgTranslations {
+			translations[i] = domain.CreateNotificationTranslationPayload{
+				LangCode: t.LangCode,
+				Title:    t.Title,
+				Message:  t.Message,
+			}
+		}
+
+		notificationPayload := &domain.CreateNotificationPayload{
+			UserID:         userId,
+			RelatedAssetID: &issueReport.AssetID,
+			Type:           domain.NotificationTypeIssueReport,
+			Translations:   translations,
+		}
+
+		_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
+		if err != nil {
+			log.Printf("Failed to create issue updated notification for user ID: %s, issue report ID: %s: %v", userId, issueReport.ID, err)
+		}
+	}
+}
+
+// sendIssueResolvedNotification sends notification when an issue report is resolved
+func (s *Service) sendIssueResolvedNotification(ctx context.Context, issueReport *domain.IssueReport) {
+	// Skip if notification service is not available
+	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping issue resolved notification for issue report ID: %s", issueReport.ID)
+		return
+	}
+
+	// Get asset information
+	asset, err := s.AssetService.GetAssetById(ctx, issueReport.AssetID, mapper.DefaultLangCode)
+	if err != nil {
+		log.Printf("Failed to get asset for issue resolved notification (issue report ID: %s, asset ID: %s): %v", issueReport.ID, issueReport.AssetID, err)
+		return
+	}
+
+	log.Printf("Sending issue resolved notification for issue report ID: %s, asset ID: %s, asset tag: %s", issueReport.ID, asset.ID, asset.AssetTag)
+
+	// Notify reporter
+	userIds := []string{issueReport.ReportedBy}
+
+	// Get resolution notes from the issue report translations
+	var resolutionNotes string
+	if issueReport.Translations != nil && len(issueReport.Translations) > 0 {
+		for _, translation := range issueReport.Translations {
+			if translation.ResolutionNotes != nil && *translation.ResolutionNotes != "" {
+				resolutionNotes = *translation.ResolutionNotes
+				break
+			}
+		}
+	}
+
+	// Get notification message keys and params
+	titleKey, messageKey, params := messages.IssueResolvedNotification(asset.AssetName, asset.AssetTag, resolutionNotes)
+
+	// Get translations for all supported languages
+	msgTranslations := messages.GetIssueReportNotificationTranslations(titleKey, messageKey, params)
+
+	// Send notification to each recipient
+	for _, userId := range userIds {
+		// Convert to domain translations
+		translations := make([]domain.CreateNotificationTranslationPayload, len(msgTranslations))
+		for i, t := range msgTranslations {
+			translations[i] = domain.CreateNotificationTranslationPayload{
+				LangCode: t.LangCode,
+				Title:    t.Title,
+				Message:  t.Message,
+			}
+		}
+
+		notificationPayload := &domain.CreateNotificationPayload{
+			UserID:         userId,
+			RelatedAssetID: &issueReport.AssetID,
+			Type:           domain.NotificationTypeIssueReport,
+			Translations:   translations,
+		}
+
+		_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
+		if err != nil {
+			log.Printf("Failed to create issue resolved notification for user ID: %s, issue report ID: %s: %v", userId, issueReport.ID, err)
+		}
+	}
+}
+
+// sendIssueReopenedNotification sends notification when an issue report is reopened
+func (s *Service) sendIssueReopenedNotification(ctx context.Context, issueReport *domain.IssueReport) {
+	// Skip if notification service is not available
+	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping issue reopened notification for issue report ID: %s", issueReport.ID)
+		return
+	}
+
+	// Get asset information
+	asset, err := s.AssetService.GetAssetById(ctx, issueReport.AssetID, mapper.DefaultLangCode)
+	if err != nil {
+		log.Printf("Failed to get asset for issue reopened notification (issue report ID: %s, asset ID: %s): %v", issueReport.ID, issueReport.AssetID, err)
+		return
+	}
+
+	log.Printf("Sending issue reopened notification for issue report ID: %s, asset ID: %s, asset tag: %s", issueReport.ID, asset.ID, asset.AssetTag)
+
+	// Determine notification recipients
+	var userIds []string
+	if asset.AssignedToID != nil && *asset.AssignedToID != "" {
+		// Notify assigned user
+		userIds = []string{*asset.AssignedToID}
+	} else {
+		// Notify all admins
+		adminRole := domain.RoleAdmin
+		userParams := domain.UserParams{
+			Filters: &domain.UserFilterOptions{
+				Role: &adminRole,
+			},
+		}
+		admins, err := s.UserRepo.GetUsersPaginated(ctx, userParams)
+		if err != nil {
+			log.Printf("Failed to get admin users for issue reopened notification: %v", err)
+			return
+		}
+		for _, admin := range admins {
+			userIds = append(userIds, admin.ID)
+		}
+	}
+
+	// Get notification message keys and params
+	titleKey, messageKey, params := messages.IssueReopenedNotification(asset.AssetName, asset.AssetTag)
+
+	// Get translations for all supported languages
+	msgTranslations := messages.GetIssueReportNotificationTranslations(titleKey, messageKey, params)
+
+	// Send notification to each recipient
+	for _, userId := range userIds {
+		// Convert to domain translations
+		translations := make([]domain.CreateNotificationTranslationPayload, len(msgTranslations))
+		for i, t := range msgTranslations {
+			translations[i] = domain.CreateNotificationTranslationPayload{
+				LangCode: t.LangCode,
+				Title:    t.Title,
+				Message:  t.Message,
+			}
+		}
+
+		notificationPayload := &domain.CreateNotificationPayload{
+			UserID:         userId,
+			RelatedAssetID: &issueReport.AssetID,
+			Type:           domain.NotificationTypeIssueReport,
+			Translations:   translations,
+		}
+
+		_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
+		if err != nil {
+			log.Printf("Failed to create issue reopened notification for user ID: %s, issue report ID: %s: %v", userId, issueReport.ID, err)
+		}
+	}
 }
 
 // *===========================QUERY===========================*

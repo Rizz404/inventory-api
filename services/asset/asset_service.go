@@ -10,6 +10,7 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/client/cloudinary"
+	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/oklog/ulid/v2"
@@ -436,14 +437,14 @@ func (s *Service) sendAssetAssignmentNotification(ctx context.Context, asset *do
 	assetIdStr := asset.ID
 
 	// Get notification message keys and params using helper function
-	titleKey, messageKey, params := utils.AssetAssignmentNotification(asset.AssetName, asset.AssetTag, isNewAsset)
+	titleKey, messageKey, params := messages.AssetAssignmentNotification(asset.AssetName, asset.AssetTag, isNewAsset)
 
 	// Get translations for all supported languages
-	utilTranslations := utils.GetNotificationTranslations(titleKey, messageKey, params)
+	msgTranslations := messages.GetAssetNotificationTranslations(titleKey, messageKey, params)
 
 	// Convert to domain translations
-	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
-	for i, t := range utilTranslations {
+	translations := make([]domain.CreateNotificationTranslationPayload, len(msgTranslations))
+	for i, t := range msgTranslations {
 		translations[i] = domain.CreateNotificationTranslationPayload{
 			LangCode: t.LangCode,
 			Title:    t.Title,
@@ -477,8 +478,8 @@ func (s *Service) sendAssetUnassignmentNotification(ctx context.Context, asset *
 	log.Printf("Sending asset unassignment notification for asset ID: %s, asset tag: %s, user ID: %s", asset.ID, asset.AssetTag, userId)
 
 	assetIdStr := asset.ID
-	titleKey, messageKey, params := utils.AssetUnassignmentNotification(asset.AssetName, asset.AssetTag)
-	utilTranslations := utils.GetNotificationTranslations(titleKey, messageKey, params)
+	titleKey, messageKey, params := messages.AssetUnassignmentNotification(asset.AssetName, asset.AssetTag)
+	utilTranslations := messages.GetAssetNotificationTranslations(titleKey, messageKey, params)
 
 	// Convert to domain translations
 	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
@@ -521,12 +522,12 @@ func (s *Service) sendAssetStatusChangeNotification(ctx context.Context, asset *
 	log.Printf("Sending asset status change notification for asset ID: %s, asset tag: %s, old status: %s, new status: %s, user ID: %s", asset.ID, asset.AssetTag, oldStatus, newStatus, *asset.AssignedTo)
 
 	assetIdStr := asset.ID
-	titleKey, messageKey, params := utils.AssetStatusChangeNotification(asset.AssetName, string(oldStatus), string(newStatus))
+	titleKey, messageKey, params := messages.AssetStatusChangeNotification(asset.AssetName, string(oldStatus), string(newStatus))
 
 	// Add assetTag to params if not already there
 	params["assetTag"] = asset.AssetTag
 
-	utilTranslations := utils.GetNotificationTranslations(titleKey, messageKey, params)
+	utilTranslations := messages.GetAssetNotificationTranslations(titleKey, messageKey, params)
 
 	// Convert to domain translations
 	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
@@ -569,8 +570,8 @@ func (s *Service) sendAssetConditionChangeNotification(ctx context.Context, asse
 	log.Printf("Sending asset condition change notification for asset ID: %s, asset tag: %s, old condition: %s, new condition: %s, user ID: %s", asset.ID, asset.AssetTag, oldCondition, newCondition, *asset.AssignedTo)
 
 	assetIdStr := asset.ID
-	titleKey, messageKey, params := utils.AssetConditionChangeNotification(asset.AssetName, asset.AssetTag, string(oldCondition), string(newCondition))
-	utilTranslations := utils.GetNotificationTranslations(titleKey, messageKey, params)
+	titleKey, messageKey, params := messages.AssetConditionChangeNotification(asset.AssetName, asset.AssetTag, string(oldCondition), string(newCondition))
+	utilTranslations := messages.GetAssetNotificationTranslations(titleKey, messageKey, params)
 
 	// Convert to domain translations
 	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))

@@ -1,0 +1,91 @@
+package messages
+
+// Maintenance Schedule notification message keys
+const (
+	// Maintenance Scheduled
+	NotifMaintenanceScheduledTitleKey   NotificationMessageKey = "notification.maintenance_schedule.scheduled.title"
+	NotifMaintenanceScheduledMessageKey NotificationMessageKey = "notification.maintenance_schedule.scheduled.message"
+
+	// Maintenance Due Soon
+	NotifMaintenanceDueSoonTitleKey   NotificationMessageKey = "notification.maintenance_schedule.due_soon.title"
+	NotifMaintenanceDueSoonMessageKey NotificationMessageKey = "notification.maintenance_schedule.due_soon.message"
+
+	// Maintenance Overdue
+	NotifMaintenanceOverdueTitleKey   NotificationMessageKey = "notification.maintenance_schedule.overdue.title"
+	NotifMaintenanceOverdueMessageKey NotificationMessageKey = "notification.maintenance_schedule.overdue.message"
+)
+
+// maintenanceScheduleNotificationTranslations contains all maintenance schedule notification message translations
+var maintenanceScheduleNotificationTranslations = map[NotificationMessageKey]map[string]string{
+	// ==================== MAINTENANCE SCHEDULED ====================
+	NotifMaintenanceScheduledTitleKey: {
+		"en-US": "Maintenance Scheduled",
+		"ja-JP": "メンテナンスがスケジュールされました",
+	},
+	NotifMaintenanceScheduledMessageKey: {
+		"en-US": "Maintenance for asset \"{assetName}\" (\"{assetTag}\") is scheduled on {scheduledDate}.",
+		"ja-JP": "資産 \"{assetName}\" (\"{assetTag}\") のメンテナンスが {scheduledDate} にスケジュールされました。",
+	},
+
+	// ==================== MAINTENANCE DUE SOON ====================
+	NotifMaintenanceDueSoonTitleKey: {
+		"en-US": "Maintenance Due Soon",
+		"ja-JP": "メンテナンス期限が近づいています",
+	},
+	NotifMaintenanceDueSoonMessageKey: {
+		"en-US": "Maintenance for asset \"{assetName}\" (\"{assetTag}\") is due on {scheduledDate}. Please prepare.",
+		"ja-JP": "資産 \"{assetName}\" (\"{assetTag}\") のメンテナンス期限が {scheduledDate} です。準備してください。",
+	},
+
+	// ==================== MAINTENANCE OVERDUE ====================
+	NotifMaintenanceOverdueTitleKey: {
+		"en-US": "Maintenance Overdue",
+		"ja-JP": "メンテナンスが期限切れです",
+	},
+	NotifMaintenanceOverdueMessageKey: {
+		"en-US": "Maintenance for asset \"{assetName}\" (\"{assetTag}\") is overdue. Scheduled date was {scheduledDate}.",
+		"ja-JP": "資産 \"{assetName}\" (\"{assetTag}\") のメンテナンスが期限切れです。スケジュールされた日付は {scheduledDate} でした。",
+	},
+}
+
+// GetMaintenanceScheduleNotificationMessage returns the localized maintenance schedule notification message
+func GetMaintenanceScheduleNotificationMessage(key NotificationMessageKey, langCode string, params map[string]string) string {
+	return GetNotificationMessage(key, langCode, params, maintenanceScheduleNotificationTranslations)
+}
+
+// GetMaintenanceScheduleNotificationTranslations returns all translations for a maintenance schedule notification
+func GetMaintenanceScheduleNotificationTranslations(titleKey, messageKey NotificationMessageKey, params map[string]string) []NotificationTranslation {
+	return GetNotificationTranslations(titleKey, messageKey, params, maintenanceScheduleNotificationTranslations)
+}
+
+// ==================== MAINTENANCE SCHEDULE NOTIFICATION HELPER FUNCTIONS ====================
+
+// MaintenanceScheduledNotification creates notification for new maintenance schedule
+func MaintenanceScheduledNotification(assetName, assetTag, scheduledDate string) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
+	params := map[string]string{
+		"assetName":     assetName,
+		"assetTag":      assetTag,
+		"scheduledDate": scheduledDate,
+	}
+	return NotifMaintenanceScheduledTitleKey, NotifMaintenanceScheduledMessageKey, params
+}
+
+// MaintenanceDueSoonNotification creates notification for maintenance due soon
+func MaintenanceDueSoonNotification(assetName, assetTag, scheduledDate string) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
+	params := map[string]string{
+		"assetName":     assetName,
+		"assetTag":      assetTag,
+		"scheduledDate": scheduledDate,
+	}
+	return NotifMaintenanceDueSoonTitleKey, NotifMaintenanceDueSoonMessageKey, params
+}
+
+// MaintenanceOverdueNotification creates notification for overdue maintenance
+func MaintenanceOverdueNotification(assetName, assetTag, scheduledDate string) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
+	params := map[string]string{
+		"assetName":     assetName,
+		"assetTag":      assetTag,
+		"scheduledDate": scheduledDate,
+	}
+	return NotifMaintenanceOverdueTitleKey, NotifMaintenanceOverdueMessageKey, params
+}

@@ -1,13 +1,6 @@
-package utils
+package messages
 
-import (
-	"fmt"
-)
-
-// * NotificationMessageKey represents a notification message key
-type NotificationMessageKey string
-
-// * Asset notification message keys
+// Asset notification message keys
 const (
 	// Asset Assignment
 	NotifAssetAssignedTitleKey   NotificationMessageKey = "notification.asset.assigned.title"
@@ -68,243 +61,180 @@ const (
 	NotifAssetHighValueMessageKey NotificationMessageKey = "notification.asset.high_value.message"
 )
 
-// * notificationMessageTranslations contains all notification message translations
-var notificationMessageTranslations = map[NotificationMessageKey]map[string]string{
+// assetNotificationTranslations contains all asset notification message translations
+var assetNotificationTranslations = map[NotificationMessageKey]map[string]string{
 	// ==================== ASSET ASSIGNMENT ====================
 	NotifAssetAssignedTitleKey: {
-		"en":    "Asset Assigned",
-		"id-ID": "Aset Ditugaskan",
+		"en-US": "Asset Assigned",
+		"ja-JP": "資産が割り当てられました",
 	},
 	NotifAssetAssignedMessageKey: {
-		"en":    "Asset '{assetName}' (Tag: {assetTag}) has been assigned to you.",
-		"id-ID": "Aset '{assetName}' (Tag: {assetTag}) telah ditugaskan kepada Anda.",
+		"en-US": "Asset \"{assetName}\" has been assigned to you.",
+		"ja-JP": "資産 \"{assetName}\" があなたに割り当てられました。",
 	},
 
 	NotifAssetNewAssignedTitleKey: {
-		"en":    "New Asset Assigned",
-		"id-ID": "Aset Baru Ditugaskan",
+		"en-US": "New Asset Assigned",
+		"ja-JP": "新しい資産が割り当てられました",
 	},
 	NotifAssetNewAssignedMessageKey: {
-		"en":    "New asset '{assetName}' (Tag: {assetTag}) has been assigned to you.",
-		"id-ID": "Aset baru '{assetName}' (Tag: {assetTag}) telah ditugaskan kepada Anda.",
+		"en-US": "New asset \"{assetName}\" has been assigned to you.",
+		"ja-JP": "新しい資産 \"{assetName}\" があなたに割り当てられました。",
 	},
 
 	NotifAssetUnassignedTitleKey: {
-		"en":    "Asset Unassigned",
-		"id-ID": "Aset Tidak Ditugaskan Lagi",
+		"en-US": "Asset Unassigned",
+		"ja-JP": "資産の割り当てが解除されました",
 	},
 	NotifAssetUnassignedMessageKey: {
-		"en":    "Asset '{assetName}' (Tag: {assetTag}) has been unassigned from you.",
-		"id-ID": "Aset '{assetName}' (Tag: {assetTag}) telah dilepaskan dari Anda.",
+		"en-US": "Asset \"{assetName}\" has been unassigned from you.",
+		"ja-JP": "資産 \"{assetName}\" の割り当てがあなたから解除されました。",
 	},
 
 	// ==================== ASSET STATUS CHANGE ====================
 	NotifAssetStatusChangedTitleKey: {
-		"en":    "Asset Status Changed",
-		"id-ID": "Status Aset Berubah",
+		"en-US": "Asset Status Changed",
+		"ja-JP": "資産ステータスが変更されました",
 	},
 	NotifAssetStatusChangedMessageKey: {
-		"en":    "Asset '{assetName}' status changed from {oldStatus} to {newStatus}.",
-		"id-ID": "Status aset '{assetName}' berubah dari {oldStatus} menjadi {newStatus}.",
+		"en-US": "Asset \"{assetName}\" status changed from {oldStatus} to {newStatus}.",
+		"ja-JP": "資産 \"{assetName}\" のステータスが {oldStatus} から {newStatus} に変更されました。",
 	},
 
 	NotifAssetActivatedTitleKey: {
-		"en":    "Asset Activated",
-		"id-ID": "Aset Diaktifkan",
+		"en-US": "Asset Activated",
+		"ja-JP": "資産が有効化されました",
 	},
 	NotifAssetActivatedMessageKey: {
-		"en":    "Asset '{assetName}' (Tag: {assetTag}) is now active and ready to use.",
-		"id-ID": "Aset '{assetName}' (Tag: {assetTag}) sekarang aktif dan siap digunakan.",
+		"en-US": "Asset \"{assetName}\" is now active and ready to use.",
+		"ja-JP": "資産 \"{assetName}\" が有効化され、使用準備が整いました。",
 	},
 
 	NotifAssetMaintenanceTitleKey: {
-		"en":    "Asset Under Maintenance",
-		"id-ID": "Aset Dalam Pemeliharaan",
+		"en-US": "Asset Under Maintenance",
+		"ja-JP": "資産がメンテナンス中です",
 	},
 	NotifAssetMaintenanceMessageKey: {
-		"en":    "Asset '{assetName}' (Tag: {assetTag}) has been moved to maintenance status.",
-		"id-ID": "Aset '{assetName}' (Tag: {assetTag}) telah dipindahkan ke status pemeliharaan.",
+		"en-US": "Asset \"{assetName}\" has been moved to maintenance status.",
+		"ja-JP": "資産 \"{assetName}\" がメンテナンスステータスに移動されました。",
 	},
 
 	NotifAssetDisposedTitleKey: {
-		"en":    "Asset Disposed",
-		"id-ID": "Aset Dibuang",
+		"en-US": "Asset Disposed",
+		"ja-JP": "資産が廃棄されました",
 	},
 	NotifAssetDisposedMessageKey: {
-		"en":    "Asset '{assetName}' (Tag: {assetTag}) has been disposed.",
-		"id-ID": "Aset '{assetName}' (Tag: {assetTag}) telah dibuang.",
+		"en-US": "Asset \"{assetName}\" has been disposed.",
+		"ja-JP": "資産 \"{assetName}\" が廃棄されました。",
 	},
 
 	NotifAssetLostTitleKey: {
-		"en":    "Asset Reported Lost",
-		"id-ID": "Aset Dilaporkan Hilang",
+		"en-US": "Asset Reported Lost",
+		"ja-JP": "資産が行方不明として報告されました",
 	},
 	NotifAssetLostMessageKey: {
-		"en":    "Asset '{assetName}' (Tag: {assetTag}) has been reported as lost.",
-		"id-ID": "Aset '{assetName}' (Tag: {assetTag}) telah dilaporkan hilang.",
+		"en-US": "Asset \"{assetName}\" has been reported as lost.",
+		"ja-JP": "資産 \"{assetName}\" が行方不明として報告されました。",
 	},
 
 	// ==================== ASSET CONDITION CHANGE ====================
 	NotifAssetConditionChangedTitleKey: {
-		"en":    "Asset Condition Changed",
-		"id-ID": "Kondisi Aset Berubah",
+		"en-US": "Asset Condition Changed",
+		"ja-JP": "資産の状態が変更されました",
 	},
 	NotifAssetConditionChangedMessageKey: {
-		"en":    "Asset '{assetName}' condition changed from {oldCondition} to {newCondition}.",
-		"id-ID": "Kondisi aset '{assetName}' berubah dari {oldCondition} menjadi {newCondition}.",
+		"en-US": "Asset \"{assetName}\" condition changed from {oldCondition} to {newCondition}.",
+		"ja-JP": "資産 \"{assetName}\" の状態が {oldCondition} から {newCondition} に変更されました。",
 	},
 
 	NotifAssetConditionDamagedTitleKey: {
-		"en":    "Asset Damaged",
-		"id-ID": "Aset Rusak",
+		"en-US": "Asset Damaged",
+		"ja-JP": "資産が損傷しました",
 	},
 	NotifAssetConditionDamagedMessageKey: {
-		"en":    "Asset '{assetName}' (Tag: {assetTag}) has been marked as damaged. Please check immediately.",
-		"id-ID": "Aset '{assetName}' (Tag: {assetTag}) telah ditandai sebagai rusak. Mohon segera dicek.",
+		"en-US": "Asset \"{assetName}\" has been marked as damaged. Please check immediately.",
+		"ja-JP": "資産 \"{assetName}\" が損傷としてマークされました。すぐに確認してください。",
 	},
 
 	NotifAssetConditionPoorTitleKey: {
-		"en":    "Asset in Poor Condition",
-		"id-ID": "Aset Kondisi Buruk",
+		"en-US": "Asset in Poor Condition",
+		"ja-JP": "資産の状態が不良です",
 	},
 	NotifAssetConditionPoorMessageKey: {
-		"en":    "Asset '{assetName}' (Tag: {assetTag}) condition has deteriorated to poor. Maintenance may be needed.",
-		"id-ID": "Aset '{assetName}' (Tag: {assetTag}) kondisinya memburuk. Mungkin perlu pemeliharaan.",
+		"en-US": "Asset \"{assetName}\" condition has deteriorated to poor. Maintenance may be needed.",
+		"ja-JP": "資産 \"{assetName}\" の状態が不良に悪化しました。メンテナンスが必要かもしれません。",
 	},
 
 	// ==================== ASSET LOCATION CHANGE ====================
 	NotifAssetLocationChangedTitleKey: {
-		"en":    "Asset Location Changed",
-		"id-ID": "Lokasi Aset Berubah",
+		"en-US": "Asset Location Changed",
+		"ja-JP": "資産の場所が変更されました",
 	},
 	NotifAssetLocationChangedMessageKey: {
-		"en":    "Asset '{assetName}' has been moved from {oldLocation} to {newLocation}.",
-		"id-ID": "Aset '{assetName}' telah dipindahkan dari {oldLocation} ke {newLocation}.",
+		"en-US": "Asset \"{assetName}\" has been moved from {oldLocation} to {newLocation}.",
+		"ja-JP": "資産 \"{assetName}\" が {oldLocation} から {newLocation} に移動されました。",
 	},
 
 	// ==================== ASSET CREATION/DELETION ====================
 	NotifAssetCreatedTitleKey: {
-		"en":    "New Asset Created",
-		"id-ID": "Aset Baru Dibuat",
+		"en-US": "New Asset Created",
+		"ja-JP": "新しい資産が作成されました",
 	},
 	NotifAssetCreatedMessageKey: {
-		"en":    "New asset '{assetName}' (Tag: {assetTag}) has been added to the inventory.",
-		"id-ID": "Aset baru '{assetName}' (Tag: {assetTag}) telah ditambahkan ke inventaris.",
+		"en-US": "New asset \"{assetName}\" has been added to the inventory.",
+		"ja-JP": "新しい資産 \"{assetName}\" が在庫に追加されました。",
 	},
 
 	NotifAssetDeletedTitleKey: {
-		"en":    "Asset Deleted",
-		"id-ID": "Aset Dihapus",
+		"en-US": "Asset Deleted",
+		"ja-JP": "資産が削除されました",
 	},
 	NotifAssetDeletedMessageKey: {
-		"en":    "Asset '{assetName}' (Tag: {assetTag}) has been removed from the inventory.",
-		"id-ID": "Aset '{assetName}' (Tag: {assetTag}) telah dihapus dari inventaris.",
+		"en-US": "Asset \"{assetName}\" has been removed from the inventory.",
+		"ja-JP": "資産 \"{assetName}\" が在庫から削除されました。",
 	},
 
 	// ==================== ASSET WARRANTY ====================
 	NotifAssetWarrantyExpiringSoonTitleKey: {
-		"en":    "Warranty Expiring Soon",
-		"id-ID": "Garansi Akan Habis",
+		"en-US": "Warranty Expiring Soon",
+		"ja-JP": "保証期間がまもなく終了します",
 	},
 	NotifAssetWarrantyExpiringSoonMessageKey: {
-		"en":    "Warranty for asset '{assetName}' (Tag: {assetTag}) will expire on {expiryDate}.",
-		"id-ID": "Garansi untuk aset '{assetName}' (Tag: {assetTag}) akan berakhir pada {expiryDate}.",
+		"en-US": "Warranty for asset \"{assetName}\" will expire on {expiryDate}.",
+		"ja-JP": "資産 \"{assetName}\" の保証期間が {expiryDate} に終了します。",
 	},
 
 	NotifAssetWarrantyExpiredTitleKey: {
-		"en":    "Warranty Expired",
-		"id-ID": "Garansi Telah Habis",
+		"en-US": "Warranty Expired",
+		"ja-JP": "保証期間が終了しました",
 	},
 	NotifAssetWarrantyExpiredMessageKey: {
-		"en":    "Warranty for asset '{assetName}' (Tag: {assetTag}) has expired.",
-		"id-ID": "Garansi untuk aset '{assetName}' (Tag: {assetTag}) telah habis.",
+		"en-US": "Warranty for asset \"{assetName}\" has expired.",
+		"ja-JP": "資産 \"{assetName}\" の保証期間が終了しました。",
 	},
 
 	// ==================== ASSET VALUE/PURCHASE ====================
 	NotifAssetHighValueTitleKey: {
-		"en":    "High Value Asset Added",
-		"id-ID": "Aset Bernilai Tinggi Ditambahkan",
+		"en-US": "High Value Asset Added",
+		"ja-JP": "高額資産が追加されました",
 	},
 	NotifAssetHighValueMessageKey: {
-		"en":    "High value asset '{assetName}' (Tag: {assetTag}) worth {value} has been added to your inventory.",
-		"id-ID": "Aset bernilai tinggi '{assetName}' (Tag: {assetTag}) senilai {value} telah ditambahkan ke inventaris Anda.",
+		"en-US": "High value asset \"{assetName}\" worth {value} has been added to your inventory.",
+		"ja-JP": "高額資産 \"{assetName}\" 価値 {value} が在庫に追加されました。",
 	},
 }
 
-// * GetNotificationMessage returns the localized notification message
-func GetNotificationMessage(key NotificationMessageKey, langCode string, params map[string]string) string {
-	translations, exists := notificationMessageTranslations[key]
-	if !exists {
-		return string(key)
-	}
-
-	normalizedLang := normalizeLanguageCode(langCode)
-	message, exists := translations[normalizedLang]
-	if !exists {
-		// Fallback to English
-		message, exists = translations["en"]
-		if !exists {
-			return string(key)
-		}
-	}
-
-	// Replace placeholders with actual values
-	for placeholder, value := range params {
-		message = replaceAllCaseInsensitive(message, "{"+placeholder+"}", value)
-	}
-
-	return message
+// GetAssetNotificationMessage returns the localized asset notification message
+func GetAssetNotificationMessage(key NotificationMessageKey, langCode string, params map[string]string) string {
+	return GetNotificationMessage(key, langCode, params, assetNotificationTranslations)
 }
 
-// * NotificationTranslation represents a notification translation
-type NotificationTranslation struct {
-	LangCode string
-	Title    string
-	Message  string
+// GetAssetNotificationTranslations returns all translations for an asset notification
+func GetAssetNotificationTranslations(titleKey, messageKey NotificationMessageKey, params map[string]string) []NotificationTranslation {
+	return GetNotificationTranslations(titleKey, messageKey, params, assetNotificationTranslations)
 }
 
-// * GetNotificationTranslations returns all translations for a notification message key
-func GetNotificationTranslations(titleKey, messageKey NotificationMessageKey, params map[string]string) []NotificationTranslation {
-	translations := []NotificationTranslation{}
-
-	// Get available languages
-	languages := []string{"en", "id-ID"}
-
-	for _, lang := range languages {
-		title := GetNotificationMessage(titleKey, lang, params)
-		message := GetNotificationMessage(messageKey, lang, params)
-
-		translations = append(translations, NotificationTranslation{
-			LangCode: lang,
-			Title:    title,
-			Message:  message,
-		})
-	}
-
-	return translations
-}
-
-// * Helper function to replace all occurrences of a string (case-insensitive)
-func replaceAllCaseInsensitive(s, old, new string) string {
-	// Simple implementation - for production, consider using regex for case-insensitive replace
-	result := s
-	for {
-		index := -1
-		for i := 0; i <= len(result)-len(old); i++ {
-			if result[i:i+len(old)] == old {
-				index = i
-				break
-			}
-		}
-		if index == -1 {
-			break
-		}
-		result = result[:index] + new + result[index+len(old):]
-	}
-	return result
-}
-
-// * Asset notification helper functions
+// ==================== ASSET NOTIFICATION HELPER FUNCTIONS ====================
 
 // AssetAssignmentNotification creates notification for asset assignment
 func AssetAssignmentNotification(assetName, assetTag string, isNew bool) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
@@ -376,17 +306,18 @@ func AssetConditionChangeNotification(assetName, assetTag string, oldCondition, 
 }
 
 // AssetLocationChangeNotification creates notification for asset location change
-func AssetLocationChangeNotification(assetName, oldLocation, newLocation string) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
+func AssetLocationChangeNotification(assetName, assetTag, oldLocation, newLocation string) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
 	params := map[string]string{
 		"assetName":   assetName,
+		"assetTag":    assetTag,
 		"oldLocation": oldLocation,
 		"newLocation": newLocation,
 	}
 	return NotifAssetLocationChangedTitleKey, NotifAssetLocationChangedMessageKey, params
 }
 
-// AssetCreationNotification creates notification for new asset creation
-func AssetCreationNotification(assetName, assetTag string) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
+// AssetCreatedNotification creates notification for new asset creation
+func AssetCreatedNotification(assetName, assetTag string) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
 	params := map[string]string{
 		"assetName": assetName,
 		"assetTag":  assetTag,
@@ -394,8 +325,8 @@ func AssetCreationNotification(assetName, assetTag string) (NotificationMessageK
 	return NotifAssetCreatedTitleKey, NotifAssetCreatedMessageKey, params
 }
 
-// AssetDeletionNotification creates notification for asset deletion
-func AssetDeletionNotification(assetName, assetTag string) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
+// AssetDeletedNotification creates notification for asset deletion
+func AssetDeletedNotification(assetName, assetTag string) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
 	params := map[string]string{
 		"assetName": assetName,
 		"assetTag":  assetTag,
@@ -430,16 +361,4 @@ func AssetHighValueNotification(assetName, assetTag, value string) (Notification
 		"value":     value,
 	}
 	return NotifAssetHighValueTitleKey, NotifAssetHighValueMessageKey, params
-}
-
-// * Utility function to format currency
-func FormatCurrency(value float64) string {
-	// Simple formatting - you can enhance this based on locale
-	return fmt.Sprintf("$%.2f", value)
-}
-
-// * Utility function to format date
-func FormatDate(date string) string {
-	// Simple formatting - you can enhance this based on locale
-	return date
 }
