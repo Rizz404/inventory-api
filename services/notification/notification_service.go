@@ -2,6 +2,7 @@ package notification
 
 import (
 	"context"
+	"log"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/client/fcm"
@@ -217,19 +218,23 @@ func (s *Service) GetNotificationStatistics(ctx context.Context) (domain.Notific
 func (s *Service) sendFCMNotification(ctx context.Context, notification *domain.Notification) {
 	// * Skip if FCM client is not initialized
 	if s.FCMClient == nil {
+		log.Printf("FCM client not initialized, skipping FCM notification for notification ID: %s", notification.ID)
 		return
 	}
+
+	log.Printf("Starting FCM notification send for notification ID: %s, user ID: %s", notification.ID, notification.UserID)
 
 	// * Get user to retrieve FCM token and preferred language
 	user, err := s.UserRepo.GetUserById(ctx, notification.UserID)
 	if err != nil {
 		// Log error but don't fail the notification creation
-		// log.Printf("Failed to get user for FCM notification: %v", err)
+		log.Printf("Failed to get user for FCM notification (notification ID: %s, user ID: %s): %v", notification.ID, notification.UserID, err)
 		return
 	}
 
 	// * Skip if user doesn't have FCM token
 	if user.FCMToken == nil || *user.FCMToken == "" {
+		log.Printf("User has no FCM token, skipping FCM notification for notification ID: %s, user ID: %s", notification.ID, notification.UserID)
 		return
 	}
 
@@ -272,6 +277,8 @@ func (s *Service) sendFCMNotification(ctx context.Context, notification *domain.
 	_, err = s.FCMClient.SendToToken(ctx, fcmNotification)
 	if err != nil {
 		// Log error but don't fail the notification creation
-		// log.Printf("Failed to send FCM notification: %v", err)
+		log.Printf("Failed to send FCM notification (notification ID: %s, user ID: %s): %v", notification.ID, notification.UserID, err)
+	} else {
+		log.Printf("Successfully sent FCM notification for notification ID: %s, user ID: %s", notification.ID, notification.UserID)
 	}
 }

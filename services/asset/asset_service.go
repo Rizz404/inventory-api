@@ -3,6 +3,7 @@ package asset
 import (
 	"context"
 	"fmt"
+	"log"
 	"mime/multipart"
 	"strings"
 	"time"
@@ -426,8 +427,11 @@ func (s *Service) sendUpdateNotifications(ctx context.Context, oldAsset, newAsse
 func (s *Service) sendAssetAssignmentNotification(ctx context.Context, asset *domain.Asset, userId string, isNewAsset bool) {
 	// Skip if notification service is not available
 	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping asset assignment notification for asset ID: %s, user ID: %s", asset.ID, userId)
 		return
 	}
+
+	log.Printf("Sending asset assignment notification for asset ID: %s, asset tag: %s, user ID: %s, is new asset: %t", asset.ID, asset.AssetTag, userId, isNewAsset)
 
 	assetIdStr := asset.ID
 
@@ -455,14 +459,22 @@ func (s *Service) sendAssetAssignmentNotification(ctx context.Context, asset *do
 	}
 
 	// Send notification (errors are logged internally, won't block asset creation/update)
-	_, _ = s.NotificationService.CreateNotification(ctx, notificationPayload)
+	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
+	if err != nil {
+		log.Printf("Failed to create asset assignment notification for asset ID: %s, user ID: %s: %v", asset.ID, userId, err)
+	} else {
+		log.Printf("Successfully created asset assignment notification for asset ID: %s, user ID: %s", asset.ID, userId)
+	}
 }
 
 // sendAssetUnassignmentNotification sends notification when asset is unassigned from a user
 func (s *Service) sendAssetUnassignmentNotification(ctx context.Context, asset *domain.Asset, userId string) {
 	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping asset unassignment notification for asset ID: %s, user ID: %s", asset.ID, userId)
 		return
 	}
+
+	log.Printf("Sending asset unassignment notification for asset ID: %s, asset tag: %s, user ID: %s", asset.ID, asset.AssetTag, userId)
 
 	assetIdStr := asset.ID
 	titleKey, messageKey, params := utils.AssetUnassignmentNotification(asset.AssetName, asset.AssetTag)
@@ -485,19 +497,28 @@ func (s *Service) sendAssetUnassignmentNotification(ctx context.Context, asset *
 		Translations:   translations,
 	}
 
-	_, _ = s.NotificationService.CreateNotification(ctx, notificationPayload)
+	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
+	if err != nil {
+		log.Printf("Failed to create asset unassignment notification for asset ID: %s, user ID: %s: %v", asset.ID, userId, err)
+	} else {
+		log.Printf("Successfully created asset unassignment notification for asset ID: %s, user ID: %s", asset.ID, userId)
+	}
 }
 
 // sendAssetStatusChangeNotification sends notification when asset status changes
 func (s *Service) sendAssetStatusChangeNotification(ctx context.Context, asset *domain.Asset, oldStatus, newStatus domain.AssetStatus) {
 	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping asset status change notification for asset ID: %s", asset.ID)
 		return
 	}
 
 	// Notify assigned user if exists
 	if asset.AssignedTo == nil || *asset.AssignedTo == "" {
+		log.Printf("Asset not assigned to any user, skipping status change notification for asset ID: %s", asset.ID)
 		return
 	}
+
+	log.Printf("Sending asset status change notification for asset ID: %s, asset tag: %s, old status: %s, new status: %s, user ID: %s", asset.ID, asset.AssetTag, oldStatus, newStatus, *asset.AssignedTo)
 
 	assetIdStr := asset.ID
 	titleKey, messageKey, params := utils.AssetStatusChangeNotification(asset.AssetName, string(oldStatus), string(newStatus))
@@ -524,19 +545,28 @@ func (s *Service) sendAssetStatusChangeNotification(ctx context.Context, asset *
 		Translations:   translations,
 	}
 
-	_, _ = s.NotificationService.CreateNotification(ctx, notificationPayload)
+	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
+	if err != nil {
+		log.Printf("Failed to create asset status change notification for asset ID: %s, user ID: %s: %v", asset.ID, *asset.AssignedTo, err)
+	} else {
+		log.Printf("Successfully created asset status change notification for asset ID: %s, user ID: %s", asset.ID, *asset.AssignedTo)
+	}
 }
 
 // sendAssetConditionChangeNotification sends notification when asset condition changes
 func (s *Service) sendAssetConditionChangeNotification(ctx context.Context, asset *domain.Asset, oldCondition, newCondition domain.AssetCondition) {
 	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping asset condition change notification for asset ID: %s", asset.ID)
 		return
 	}
 
 	// Notify assigned user if exists
 	if asset.AssignedTo == nil || *asset.AssignedTo == "" {
+		log.Printf("Asset not assigned to any user, skipping condition change notification for asset ID: %s", asset.ID)
 		return
 	}
+
+	log.Printf("Sending asset condition change notification for asset ID: %s, asset tag: %s, old condition: %s, new condition: %s, user ID: %s", asset.ID, asset.AssetTag, oldCondition, newCondition, *asset.AssignedTo)
 
 	assetIdStr := asset.ID
 	titleKey, messageKey, params := utils.AssetConditionChangeNotification(asset.AssetName, asset.AssetTag, string(oldCondition), string(newCondition))
@@ -559,7 +589,12 @@ func (s *Service) sendAssetConditionChangeNotification(ctx context.Context, asse
 		Translations:   translations,
 	}
 
-	_, _ = s.NotificationService.CreateNotification(ctx, notificationPayload)
+	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
+	if err != nil {
+		log.Printf("Failed to create asset condition change notification for asset ID: %s, user ID: %s: %v", asset.ID, *asset.AssignedTo, err)
+	} else {
+		log.Printf("Successfully created asset condition change notification for asset ID: %s, user ID: %s", asset.ID, *asset.AssignedTo)
+	}
 }
 
 // GenerateAssetTagSuggestion generates a suggested asset tag based on category code
