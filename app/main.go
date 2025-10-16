@@ -105,15 +105,22 @@ func main() {
 	// *===================================SERVICE===================================*
 	authService := auth.NewService(userRepository)
 	userService := user.NewService(userRepository, clients.Cloudinary)
-	categoryService := category.NewService(categoryRepository)
-	locationService := location.NewService(locationRepository)
 	notificationService := notification.NewService(notificationRepository, userRepository, clients.FCM)
-	assetService := asset.NewService(assetRepository, clients.Cloudinary, notificationService, categoryService)
+	categoryService := category.NewService(categoryRepository, notificationService, userRepository)
+	locationService := location.NewService(locationRepository, notificationService, userRepository)
+	assetService := asset.NewService(assetRepository, clients.Cloudinary, notificationService, categoryService, userRepository)
 	scanLogService := scanLog.NewService(scanLogRepository)
-	issueReportService := issueReport.NewService(issueReportRepository)
-	assetMovementService := assetMovement.NewService(assetMovementRepository, assetService, locationService, userService)
-	maintenanceScheduleService := maintenanceSchedule.NewService(maintenanceScheduleRepository, assetService, userService)
-	maintenanceRecordService := maintenanceRecord.NewService(maintenanceRecordRepository, assetService, userService)
+	issueReportService := issueReport.NewService(issueReportRepository, notificationService, assetService, userRepository)
+	assetMovementService := assetMovement.NewService(assetMovementRepository, assetService, locationService, userService, notificationService)
+	maintenanceScheduleService := maintenanceSchedule.NewService(maintenanceScheduleRepository, assetService, userService, notificationService)
+	maintenanceRecordService := maintenanceRecord.NewService(maintenanceRecordRepository, assetService, userService, notificationService)
+
+	// *===================================CRON SERVICE===================================*
+	assetCronService := asset.NewCronService(assetRepository, notificationService)
+	if err := assetCronService.Start(); err != nil {
+		log.Fatalf("Failed to start asset cron service: %v", err)
+	}
+	defer assetCronService.Stop()
 
 	// *===================================SERVER CONFIG===================================*
 	app := fiber.New(fiber.Config{

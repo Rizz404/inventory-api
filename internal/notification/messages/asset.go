@@ -38,17 +38,6 @@ const (
 	NotifAssetConditionPoorTitleKey   NotificationMessageKey = "notification.asset.condition_poor.title"
 	NotifAssetConditionPoorMessageKey NotificationMessageKey = "notification.asset.condition_poor.message"
 
-	// Asset Location Change
-	NotifAssetLocationChangedTitleKey   NotificationMessageKey = "notification.asset.location_changed.title"
-	NotifAssetLocationChangedMessageKey NotificationMessageKey = "notification.asset.location_changed.message"
-
-	// Asset Creation/Deletion
-	NotifAssetCreatedTitleKey   NotificationMessageKey = "notification.asset.created.title"
-	NotifAssetCreatedMessageKey NotificationMessageKey = "notification.asset.created.message"
-
-	NotifAssetDeletedTitleKey   NotificationMessageKey = "notification.asset.deleted.title"
-	NotifAssetDeletedMessageKey NotificationMessageKey = "notification.asset.deleted.message"
-
 	// Asset Warranty
 	NotifAssetWarrantyExpiringSoonTitleKey   NotificationMessageKey = "notification.asset.warranty_expiring_soon.title"
 	NotifAssetWarrantyExpiringSoonMessageKey NotificationMessageKey = "notification.asset.warranty_expiring_soon.message"
@@ -165,35 +154,6 @@ var assetNotificationTranslations = map[NotificationMessageKey]map[string]string
 		"ja-JP": "資産 \"{assetName}\" の状態が不良に悪化しました。メンテナンスが必要かもしれません。",
 	},
 
-	// ==================== ASSET LOCATION CHANGE ====================
-	NotifAssetLocationChangedTitleKey: {
-		"en-US": "Asset Location Changed",
-		"ja-JP": "資産の場所が変更されました",
-	},
-	NotifAssetLocationChangedMessageKey: {
-		"en-US": "Asset \"{assetName}\" has been moved from {oldLocation} to {newLocation}.",
-		"ja-JP": "資産 \"{assetName}\" が {oldLocation} から {newLocation} に移動されました。",
-	},
-
-	// ==================== ASSET CREATION/DELETION ====================
-	NotifAssetCreatedTitleKey: {
-		"en-US": "New Asset Created",
-		"ja-JP": "新しい資産が作成されました",
-	},
-	NotifAssetCreatedMessageKey: {
-		"en-US": "New asset \"{assetName}\" has been added to the inventory.",
-		"ja-JP": "新しい資産 \"{assetName}\" が在庫に追加されました。",
-	},
-
-	NotifAssetDeletedTitleKey: {
-		"en-US": "Asset Deleted",
-		"ja-JP": "資産が削除されました",
-	},
-	NotifAssetDeletedMessageKey: {
-		"en-US": "Asset \"{assetName}\" has been removed from the inventory.",
-		"ja-JP": "資産 \"{assetName}\" が在庫から削除されました。",
-	},
-
 	// ==================== ASSET WARRANTY ====================
 	NotifAssetWarrantyExpiringSoonTitleKey: {
 		"en-US": "Warranty Expiring Soon",
@@ -303,35 +263,6 @@ func AssetConditionChangeNotification(assetName, assetTag string, oldCondition, 
 	default:
 		return NotifAssetConditionChangedTitleKey, NotifAssetConditionChangedMessageKey, params
 	}
-}
-
-// AssetLocationChangeNotification creates notification for asset location change
-func AssetLocationChangeNotification(assetName, assetTag, oldLocation, newLocation string) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
-	params := map[string]string{
-		"assetName":   assetName,
-		"assetTag":    assetTag,
-		"oldLocation": oldLocation,
-		"newLocation": newLocation,
-	}
-	return NotifAssetLocationChangedTitleKey, NotifAssetLocationChangedMessageKey, params
-}
-
-// AssetCreatedNotification creates notification for new asset creation
-func AssetCreatedNotification(assetName, assetTag string) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
-	params := map[string]string{
-		"assetName": assetName,
-		"assetTag":  assetTag,
-	}
-	return NotifAssetCreatedTitleKey, NotifAssetCreatedMessageKey, params
-}
-
-// AssetDeletedNotification creates notification for asset deletion
-func AssetDeletedNotification(assetName, assetTag string) (NotificationMessageKey, NotificationMessageKey, map[string]string) {
-	params := map[string]string{
-		"assetName": assetName,
-		"assetTag":  assetTag,
-	}
-	return NotifAssetDeletedTitleKey, NotifAssetDeletedMessageKey, params
 }
 
 // AssetWarrantyExpiringNotification creates notification for warranty expiring soon

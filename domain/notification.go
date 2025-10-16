@@ -7,11 +7,16 @@ import "time"
 type NotificationType string
 
 const (
-	NotificationTypeMaintenance  NotificationType = "MAINTENANCE"
-	NotificationTypeWarranty     NotificationType = "WARRANTY"
-	NotificationTypeStatusChange NotificationType = "STATUS_CHANGE"
-	NotificationTypeMovement     NotificationType = "MOVEMENT"
-	NotificationTypeIssueReport  NotificationType = "ISSUE_REPORT"
+	NotificationTypeMaintenance    NotificationType = "MAINTENANCE"
+	NotificationTypeWarranty       NotificationType = "WARRANTY"
+	NotificationTypeStatusChange   NotificationType = "STATUS_CHANGE"
+	NotificationTypeMovement       NotificationType = "MOVEMENT"
+	NotificationTypeIssueReport    NotificationType = "ISSUE_REPORT"
+	NotificationTypeLocationChange NotificationType = "LOCATION_CHANGE"
+	NotificationTypeCategoryChange NotificationType = "CATEGORY_CHANGE"
+	NotificationTypeAssetCreated   NotificationType = "ASSET_CREATED"
+	NotificationTypeAssetDeleted   NotificationType = "ASSET_DELETED"
+	NotificationTypeHighValue      NotificationType = "HIGH_VALUE"
 )
 
 type NotificationSortField string

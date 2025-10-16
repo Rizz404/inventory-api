@@ -2,8 +2,10 @@ package category
 
 import (
 	"context"
+	"log"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
@@ -47,16 +49,30 @@ type CategoryService interface {
 	GetCategoryStatistics(ctx context.Context) (domain.CategoryStatisticsResponse, error)
 }
 
+// * NotificationService interface for creating notifications
+type NotificationService interface {
+	CreateNotification(ctx context.Context, payload *domain.CreateNotificationPayload) (domain.NotificationResponse, error)
+}
+
+// * UserRepository interface for getting user details
+type UserRepository interface {
+	GetUsersPaginated(ctx context.Context, params domain.UserParams) ([]domain.User, error)
+}
+
 type Service struct {
-	Repo Repository
+	Repo                Repository
+	NotificationService NotificationService
+	UserRepo            UserRepository
 }
 
 // * Ensure Service implements CategoryService interface
 var _ CategoryService = (*Service)(nil)
 
-func NewService(r Repository) CategoryService {
+func NewService(r Repository, notificationService NotificationService, userRepo UserRepository) CategoryService {
 	return &Service{
-		Repo: r,
+		Repo:                r,
+		NotificationService: notificationService,
+		UserRepo:            userRepo,
 	}
 }
 
@@ -99,6 +115,9 @@ func (s *Service) CreateCategory(ctx context.Context, payload *domain.CreateCate
 		return domain.CategoryResponse{}, err
 	}
 
+	// * Send notification to all admin users
+	s.sendCategoryUpdatedNotificationToAdmins(ctx, &createdCategory)
+
 	// * Convert to CategoryResponse using mapper
 	return mapper.CategoryToResponse(&createdCategory, mapper.DefaultLangCode), nil
 }
@@ -132,6 +151,9 @@ func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload
 	if err != nil {
 		return domain.CategoryResponse{}, err
 	}
+
+	// * Send notification to all admin users
+	s.sendCategoryUpdatedNotificationToAdmins(ctx, &updatedCategory)
 
 	// * Convert to CategoryResponse using mapper
 	return mapper.CategoryToResponse(&updatedCategory, mapper.DefaultLangCode), nil
@@ -249,4 +271,87 @@ func (s *Service) GetCategoryStatistics(ctx context.Context) (domain.CategorySta
 
 	// Convert to CategoryStatisticsResponse using mapper
 	return mapper.CategoryStatisticsToResponse(&stats), nil
+}
+
+// *===========================HELPER METHODS===========================*
+
+// sendCategoryUpdatedNotificationToAdmins sends notification for category update to all admin users
+func (s *Service) sendCategoryUpdatedNotificationToAdmins(ctx context.Context, category *domain.Category) {
+	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping category updated notification for category ID: %s", category.ID)
+		return
+	}
+
+	if s.UserRepo == nil {
+		log.Printf("User repository not available, skipping category updated notification for category ID: %s", category.ID)
+		return
+	}
+
+	log.Printf("Sending category updated notification to admins for category ID: %s, category code: %s", category.ID, category.CategoryCode)
+
+	// Get category name in default language
+	categoryName := ""
+	for _, translation := range category.Translations {
+		if translation.LangCode == "en-US" {
+			categoryName = translation.CategoryName
+			break
+		}
+	}
+	if categoryName == "" && len(category.Translations) > 0 {
+		categoryName = category.Translations[0].CategoryName
+	}
+
+	// Get all admin users
+	adminRole := domain.RoleAdmin
+	userParams := domain.UserParams{
+		Filters: &domain.UserFilterOptions{
+			Role: &adminRole,
+		},
+	}
+	admins, err := s.UserRepo.GetUsersPaginated(ctx, userParams)
+	if err != nil {
+		log.Printf("Failed to get admin users for category updated notification: %v", err)
+		return
+	}
+
+	if len(admins) == 0 {
+		log.Printf("No admin users found, skipping category updated notification for category ID: %s", category.ID)
+		return
+	}
+
+	// Send notification to each admin
+	for _, admin := range admins {
+		s.sendCategoryUpdatedNotification(ctx, categoryName, admin.ID)
+	}
+
+	log.Printf("Successfully sent category updated notification to %d admin(s) for category ID: %s", len(admins), category.ID)
+}
+
+// sendCategoryUpdatedNotification sends notification for category update to a specific user
+func (s *Service) sendCategoryUpdatedNotification(ctx context.Context, categoryName, userID string) {
+	titleKey, messageKey, params := messages.CategoryUpdatedNotification(categoryName)
+	utilTranslations := messages.GetCategoryNotificationTranslations(titleKey, messageKey, params)
+
+	// Convert to domain translations
+	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
+	for i, t := range utilTranslations {
+		translations[i] = domain.CreateNotificationTranslationPayload{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Message:  t.Message,
+		}
+	}
+
+	notificationPayload := &domain.CreateNotificationPayload{
+		UserID:       userID,
+		Type:         domain.NotificationTypeCategoryChange,
+		Translations: translations,
+	}
+
+	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
+	if err != nil {
+		log.Printf("Failed to create category updated notification for user ID: %s: %v", userID, err)
+	} else {
+		log.Printf("Successfully created category updated notification for user ID: %s", userID)
+	}
 }

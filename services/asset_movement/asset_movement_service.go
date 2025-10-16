@@ -2,9 +2,11 @@ package asset_movement
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
@@ -35,14 +37,19 @@ type AssetService interface {
 // * LocationService interface for checking location existence
 type LocationService interface {
 	CheckLocationExists(ctx context.Context, locationId string) (bool, error)
+	GetLocationById(ctx context.Context, locationId string, langCode string) (domain.LocationResponse, error)
 }
 
 // * UserService interface for checking user existence
 type UserService interface {
 	CheckUserExists(ctx context.Context, userId string) (bool, error)
+	GetUserById(ctx context.Context, userId string) (domain.UserResponse, error)
 }
 
-// * AssetMovementService interface defines the contract for asset movement business operations
+// * NotificationService interface for creating notifications
+type NotificationService interface {
+	CreateNotification(ctx context.Context, payload *domain.CreateNotificationPayload) (domain.NotificationResponse, error)
+}
 type AssetMovementService interface {
 	// * MUTATION
 	CreateAssetMovement(ctx context.Context, payload *domain.CreateAssetMovementPayload, movedBy string) (domain.AssetMovementResponse, error)
@@ -60,21 +67,23 @@ type AssetMovementService interface {
 }
 
 type Service struct {
-	Repo            Repository
-	AssetService    AssetService
-	LocationService LocationService
-	UserService     UserService
+	Repo                Repository
+	AssetService        AssetService
+	LocationService     LocationService
+	UserService         UserService
+	NotificationService NotificationService
 }
 
 // * Ensure Service implements AssetMovementService interface
 var _ AssetMovementService = (*Service)(nil)
 
-func NewService(r Repository, assetService AssetService, locationService LocationService, userService UserService) AssetMovementService {
+func NewService(r Repository, assetService AssetService, locationService LocationService, userService UserService, notificationService NotificationService) AssetMovementService {
 	return &Service{
-		Repo:            r,
-		AssetService:    assetService,
-		LocationService: locationService,
-		UserService:     userService,
+		Repo:                r,
+		AssetService:        assetService,
+		LocationService:     locationService,
+		UserService:         userService,
+		NotificationService: notificationService,
 	}
 }
 
@@ -160,6 +169,11 @@ func (s *Service) CreateAssetMovement(ctx context.Context, payload *domain.Creat
 	createdMovement, err := s.Repo.CreateAssetMovement(ctx, &newMovement)
 	if err != nil {
 		return domain.AssetMovementResponse{}, err
+	}
+
+	// * Send notification if asset is assigned to a user
+	if asset.AssignedToID != nil && *asset.AssignedToID != "" {
+		s.sendAssetMovedNotification(ctx, &createdMovement, &asset)
 	}
 
 	// * Convert to AssetMovementResponse using mapper
@@ -297,4 +311,69 @@ func (s *Service) GetAssetMovementStatistics(ctx context.Context) (domain.AssetM
 
 	// Convert to AssetMovementStatisticsResponse using mapper
 	return mapper.AssetMovementStatisticsToResponse(&stats), nil
+}
+
+// *===========================HELPER METHODS===========================*
+
+// sendAssetMovedNotification sends notification when asset is moved
+func (s *Service) sendAssetMovedNotification(ctx context.Context, movement *domain.AssetMovement, asset *domain.AssetResponse) {
+	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping asset moved notification for asset ID: %s", asset.ID)
+		return
+	}
+
+	// Get old location name
+	oldLocation := "Unknown"
+	if movement.FromLocationID != nil && *movement.FromLocationID != "" {
+		if loc, err := s.LocationService.GetLocationById(ctx, *movement.FromLocationID, "en-US"); err == nil {
+			oldLocation = loc.LocationName
+		}
+	} else if movement.FromUserID != nil && *movement.FromUserID != "" {
+		if user, err := s.UserService.GetUserById(ctx, *movement.FromUserID); err == nil {
+			oldLocation = user.Name
+		}
+	} else {
+		oldLocation = "Unassigned"
+	}
+
+	// Get new location name
+	newLocation := "Unknown"
+	if movement.ToLocationID != nil && *movement.ToLocationID != "" {
+		if loc, err := s.LocationService.GetLocationById(ctx, *movement.ToLocationID, "en-US"); err == nil {
+			newLocation = loc.LocationName
+		}
+	} else if movement.ToUserID != nil && *movement.ToUserID != "" {
+		if user, err := s.UserService.GetUserById(ctx, *movement.ToUserID); err == nil {
+			newLocation = user.Name
+		}
+	} else {
+		newLocation = "Unassigned"
+	}
+
+	titleKey, messageKey, params := messages.AssetMovedNotification(asset.AssetName, asset.AssetTag, oldLocation, newLocation)
+	utilTranslations := messages.GetAssetMovementNotificationTranslations(titleKey, messageKey, params)
+
+	// Convert to domain translations
+	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
+	for i, t := range utilTranslations {
+		translations[i] = domain.CreateNotificationTranslationPayload{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Message:  t.Message,
+		}
+	}
+
+	notificationPayload := &domain.CreateNotificationPayload{
+		UserID:         *asset.AssignedToID,
+		RelatedAssetID: &asset.ID,
+		Type:           domain.NotificationTypeMovement,
+		Translations:   translations,
+	}
+
+	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
+	if err != nil {
+		log.Printf("Failed to create asset moved notification for asset ID: %s: %v", asset.ID, err)
+	} else {
+		log.Printf("Successfully created asset moved notification for asset ID: %s, user ID: %s", asset.ID, *asset.AssignedToID)
+	}
 }

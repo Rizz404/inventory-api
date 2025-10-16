@@ -37,6 +37,8 @@ type Repository interface {
 	GetAssetStatistics(ctx context.Context) (domain.AssetStatistics, error)
 	GetLastAssetTagByCategory(ctx context.Context, categoryId string) (string, error)
 	GetAssetsForExport(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.Asset, error)
+	GetAssetsWithWarrantyExpiring(ctx context.Context, daysFromNow int) ([]domain.Asset, error)
+	GetAssetsWithExpiredWarranty(ctx context.Context) ([]domain.Asset, error)
 }
 
 // * AssetService interface defines the contract for asset business operations
@@ -73,22 +75,29 @@ type CategoryService interface {
 	GetCategoryById(ctx context.Context, categoryId string, langCode string) (domain.CategoryResponse, error)
 }
 
+// * UserRepository interface for getting user details
+type UserRepository interface {
+	GetUsersPaginated(ctx context.Context, params domain.UserParams) ([]domain.User, error)
+}
+
 type Service struct {
 	Repo                Repository
 	CloudinaryClient    *cloudinary.Client
 	NotificationService NotificationService
 	CategoryService     CategoryService
+	UserRepo            UserRepository
 }
 
 // * Ensure Service implements AssetService interface
 var _ AssetService = (*Service)(nil)
 
-func NewService(r Repository, cloudinaryClient *cloudinary.Client, notificationService NotificationService, categoryService CategoryService) AssetService {
+func NewService(r Repository, cloudinaryClient *cloudinary.Client, notificationService NotificationService, categoryService CategoryService, userRepo UserRepository) AssetService {
 	return &Service{
 		Repo:                r,
 		CloudinaryClient:    cloudinaryClient,
 		NotificationService: notificationService,
 		CategoryService:     categoryService,
+		UserRepo:            userRepo,
 	}
 }
 
@@ -189,6 +198,11 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 	// * Send notification if asset is assigned to a user
 	if payload.AssignedTo != nil && *payload.AssignedTo != "" {
 		go s.sendAssetAssignmentNotification(ctx, &createdAsset, *payload.AssignedTo, true)
+	}
+
+	// * Send notification if asset is high-value
+	if payload.PurchasePrice != nil && *payload.PurchasePrice > 10000 {
+		go s.sendHighValueAssetNotificationToAdmins(ctx, &createdAsset)
 	}
 
 	// * Update data matrix image public ID with actual asset ID if file was uploaded
@@ -388,6 +402,48 @@ func (s *Service) GetAssetStatistics(ctx context.Context) (domain.AssetStatistic
 		return domain.AssetStatisticsResponse{}, err
 	}
 	return mapper.AssetStatisticsToResponse(&stats), nil
+}
+
+// GenerateAssetTagSuggestion generates a suggested asset tag based on category code
+func (s *Service) GenerateAssetTagSuggestion(ctx context.Context, payload *domain.GenerateAssetTagPayload) (domain.GenerateAssetTagResponse, error) {
+	// * Get category to retrieve CategoryCode
+	category, err := s.CategoryService.GetCategoryById(ctx, payload.CategoryID, "en")
+	if err != nil {
+		return domain.GenerateAssetTagResponse{}, err
+	}
+
+	// * Get the last asset tag for this category
+	lastAssetTag, err := s.Repo.GetLastAssetTagByCategory(ctx, payload.CategoryID)
+	if err != nil {
+		return domain.GenerateAssetTagResponse{}, err
+	}
+
+	// * Calculate next increment
+	nextIncrement := 1
+	if lastAssetTag != "" {
+		// Extract the numeric part from the last asset tag
+		// Format expected: CATEGORYCODE000001
+		categoryCodeLen := len(category.CategoryCode)
+		if len(lastAssetTag) > categoryCodeLen {
+			numericPart := lastAssetTag[categoryCodeLen:]
+			// Try to parse the numeric part
+			var parsedNum int
+			_, err := fmt.Sscanf(numericPart, "%d", &parsedNum)
+			if err == nil {
+				nextIncrement = parsedNum + 1
+			}
+		}
+	}
+
+	// * Generate suggested tag with 6-digit padding
+	suggestedTag := fmt.Sprintf("%s%06d", category.CategoryCode, nextIncrement)
+
+	return domain.GenerateAssetTagResponse{
+		CategoryCode:  category.CategoryCode,
+		LastAssetTag:  lastAssetTag,
+		SuggestedTag:  suggestedTag,
+		NextIncrement: nextIncrement,
+	}, nil
 }
 
 // *===========================HELPER METHODS===========================*
@@ -598,44 +654,88 @@ func (s *Service) sendAssetConditionChangeNotification(ctx context.Context, asse
 	}
 }
 
-// GenerateAssetTagSuggestion generates a suggested asset tag based on category code
-func (s *Service) GenerateAssetTagSuggestion(ctx context.Context, payload *domain.GenerateAssetTagPayload) (domain.GenerateAssetTagResponse, error) {
-	// * Get category to retrieve CategoryCode
-	category, err := s.CategoryService.GetCategoryById(ctx, payload.CategoryID, "en")
-	if err != nil {
-		return domain.GenerateAssetTagResponse{}, err
+// sendHighValueAssetNotification sends notification for high-value asset creation
+func (s *Service) sendHighValueAssetNotification(ctx context.Context, asset *domain.Asset, recipientUserId string) {
+	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping high-value asset notification for asset ID: %s", asset.ID)
+		return
 	}
 
-	// * Get the last asset tag for this category
-	lastAssetTag, err := s.Repo.GetLastAssetTagByCategory(ctx, payload.CategoryID)
-	if err != nil {
-		return domain.GenerateAssetTagResponse{}, err
+	log.Printf("Sending high-value asset notification for asset ID: %s, asset tag: %s, user ID: %s",
+		asset.ID, asset.AssetTag, recipientUserId)
+
+	assetIdStr := asset.ID
+
+	// Format purchase price
+	value := "N/A"
+	if asset.PurchasePrice != nil {
+		value = fmt.Sprintf("%.2f", *asset.PurchasePrice)
 	}
 
-	// * Calculate next increment
-	nextIncrement := 1
-	if lastAssetTag != "" {
-		// Extract the numeric part from the last asset tag
-		// Format expected: CATEGORYCODE000001
-		categoryCodeLen := len(category.CategoryCode)
-		if len(lastAssetTag) > categoryCodeLen {
-			numericPart := lastAssetTag[categoryCodeLen:]
-			// Try to parse the numeric part
-			var parsedNum int
-			_, err := fmt.Sscanf(numericPart, "%d", &parsedNum)
-			if err == nil {
-				nextIncrement = parsedNum + 1
-			}
+	titleKey, messageKey, params := messages.AssetHighValueNotification(asset.AssetName, asset.AssetTag, value)
+	utilTranslations := messages.GetAssetNotificationTranslations(titleKey, messageKey, params)
+
+	// Convert to domain translations
+	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
+	for i, t := range utilTranslations {
+		translations[i] = domain.CreateNotificationTranslationPayload{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Message:  t.Message,
 		}
 	}
 
-	// * Generate suggested tag with 6-digit padding
-	suggestedTag := fmt.Sprintf("%s%06d", category.CategoryCode, nextIncrement)
+	notificationPayload := &domain.CreateNotificationPayload{
+		UserID:         recipientUserId,
+		RelatedAssetID: &assetIdStr,
+		Type:           domain.NotificationTypeHighValue,
+		Translations:   translations,
+	}
 
-	return domain.GenerateAssetTagResponse{
-		CategoryCode:  category.CategoryCode,
-		LastAssetTag:  lastAssetTag,
-		SuggestedTag:  suggestedTag,
-		NextIncrement: nextIncrement,
-	}, nil
+	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
+	if err != nil {
+		log.Printf("Failed to create high-value asset notification for asset ID: %s, user ID: %s: %v", asset.ID, recipientUserId, err)
+	} else {
+		log.Printf("Successfully created high-value asset notification for asset ID: %s, user ID: %s", asset.ID, recipientUserId)
+	}
+}
+
+// sendHighValueAssetNotificationToAdmins sends notification for high-value asset creation to all admin users
+func (s *Service) sendHighValueAssetNotificationToAdmins(ctx context.Context, asset *domain.Asset) {
+	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping high-value asset notification for asset ID: %s", asset.ID)
+		return
+	}
+
+	if s.UserRepo == nil {
+		log.Printf("User repository not available, skipping high-value asset notification for asset ID: %s", asset.ID)
+		return
+	}
+
+	log.Printf("Sending high-value asset notification to admins for asset ID: %s, asset tag: %s", asset.ID, asset.AssetTag)
+
+	// Get all admin users
+	adminRole := domain.RoleAdmin
+	userParams := domain.UserParams{
+		Filters: &domain.UserFilterOptions{
+			Role: &adminRole,
+		},
+	}
+	admins, err := s.UserRepo.GetUsersPaginated(ctx, userParams)
+	if err != nil {
+		log.Printf("Failed to get admin users for high-value asset notification: %v", err)
+		return
+	}
+
+	if len(admins) == 0 {
+		log.Printf("No admin users found, skipping high-value asset notification for asset ID: %s", asset.ID)
+		return
+	}
+
+	// Send notification to each admin
+	for _, admin := range admins {
+		s.sendHighValueAssetNotification(ctx, asset, admin.ID)
+	}
+
+	log.Printf("Successfully sent high-value asset notification to %d admin(s) for asset ID: %s", len(admins), asset.ID)
 }

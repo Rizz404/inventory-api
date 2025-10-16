@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
-	"github.com/Rizz404/inventory-api/services/auth"
 	"github.com/Rizz404/inventory-api/services/user"
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/google/uuid"
@@ -16,14 +15,12 @@ import (
 
 // UserSeeder handles user data seeding
 type UserSeeder struct {
-	authService auth.Service
 	userService user.UserService
 }
 
 // NewUserSeeder creates a new user seeder
-func NewUserSeeder(authService auth.Service, userService user.UserService) *UserSeeder {
+func NewUserSeeder(userService user.UserService) *UserSeeder {
 	return &UserSeeder{
-		authService: authService,
 		userService: userService,
 	}
 }

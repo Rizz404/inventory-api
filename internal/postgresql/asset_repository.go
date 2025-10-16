@@ -602,3 +602,55 @@ func (r *AssetRepository) GetAssetsForExport(ctx context.Context, params domain.
 	// Convert to domain assets using helper function
 	return mapper.ToDomainAssets(assets), nil
 }
+
+// GetAssetsWithWarrantyExpiring retrieves assets with warranties expiring within specified days
+func (r *AssetRepository) GetAssetsWithWarrantyExpiring(ctx context.Context, daysFromNow int) ([]domain.Asset, error) {
+	var assets []model.Asset
+
+	// Calculate date range
+	now := time.Now()
+	futureDate := now.AddDate(0, 0, daysFromNow)
+
+	db := r.db.WithContext(ctx).
+		Preload("Category").
+		Preload("Category.Translations").
+		Preload("Location").
+		Preload("Location.Translations").
+		Preload("User").
+		Where("warranty_end IS NOT NULL").
+		Where("warranty_end > ?", now).
+		Where("warranty_end <= ?", futureDate).
+		Where("assigned_to IS NOT NULL")
+
+	if err := db.Find(&assets).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	return mapper.ToDomainAssets(assets), nil
+}
+
+// GetAssetsWithExpiredWarranty retrieves assets with expired warranties (today)
+func (r *AssetRepository) GetAssetsWithExpiredWarranty(ctx context.Context) ([]domain.Asset, error) {
+	var assets []model.Asset
+
+	// Calculate yesterday and today
+	now := time.Now()
+	yesterday := now.AddDate(0, 0, -1)
+
+	db := r.db.WithContext(ctx).
+		Preload("Category").
+		Preload("Category.Translations").
+		Preload("Location").
+		Preload("Location.Translations").
+		Preload("User").
+		Where("warranty_end IS NOT NULL").
+		Where("warranty_end < ?", now).
+		Where("warranty_end >= ?", yesterday).
+		Where("assigned_to IS NOT NULL")
+
+	if err := db.Find(&assets).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	return mapper.ToDomainAssets(assets), nil
+}

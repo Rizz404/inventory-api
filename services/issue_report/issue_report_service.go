@@ -199,6 +199,8 @@ func (s *Service) DeleteIssueReport(ctx context.Context, issueReportId string) e
 	return nil
 }
 
+// *===========================HELPER METHODS===========================*
+
 // sendIssueReportedNotification sends notification when a new issue report is created
 func (s *Service) sendIssueReportedNotification(ctx context.Context, issueReport *domain.IssueReport) {
 	// Skip if notification service is not available

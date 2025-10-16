@@ -573,3 +573,49 @@ func (r *MaintenanceScheduleRepository) GetMaintenanceScheduleStatistics(ctx con
 
 	return stats, nil
 }
+
+// GetSchedulesDueSoon retrieves maintenance schedules that are due within the specified number of days from now
+func (r *MaintenanceScheduleRepository) GetSchedulesDueSoon(ctx context.Context, daysFromNow int) ([]domain.MaintenanceSchedule, error) {
+	var models []model.MaintenanceSchedule
+	now := time.Now()
+	futureDate := now.AddDate(0, 0, daysFromNow)
+
+	err := r.db.WithContext(ctx).
+		Preload("Translations").
+		Where("scheduled_date >= ? AND scheduled_date <= ? AND status = ?",
+			now, futureDate, domain.StatusScheduled).
+		Find(&models).Error
+
+	if err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	schedules := make([]domain.MaintenanceSchedule, len(models))
+	for i, m := range models {
+		schedules[i] = mapper.ToDomainMaintenanceSchedule(&m)
+	}
+
+	return schedules, nil
+}
+
+// GetOverdueSchedules retrieves maintenance schedules that are overdue (past scheduled date and still scheduled)
+func (r *MaintenanceScheduleRepository) GetOverdueSchedules(ctx context.Context) ([]domain.MaintenanceSchedule, error) {
+	var models []model.MaintenanceSchedule
+	now := time.Now()
+
+	err := r.db.WithContext(ctx).
+		Preload("Translations").
+		Where("scheduled_date < ? AND status = ?", now, domain.StatusScheduled).
+		Find(&models).Error
+
+	if err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	schedules := make([]domain.MaintenanceSchedule, len(models))
+	for i, m := range models {
+		schedules[i] = mapper.ToDomainMaintenanceSchedule(&m)
+	}
+
+	return schedules, nil
+}

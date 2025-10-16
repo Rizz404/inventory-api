@@ -13,7 +13,6 @@ import (
 	"github.com/Rizz404/inventory-api/seeders"
 	"github.com/Rizz404/inventory-api/services/asset"
 	"github.com/Rizz404/inventory-api/services/asset_movement"
-	"github.com/Rizz404/inventory-api/services/auth"
 	"github.com/Rizz404/inventory-api/services/category"
 	"github.com/Rizz404/inventory-api/services/issue_report"
 	"github.com/Rizz404/inventory-api/services/location"
@@ -69,7 +68,6 @@ func main() {
 
 	// Initialize seeder manager
 	seederManager := seeders.NewSeederManager(
-		services.Auth,
 		services.User,
 		services.Category,
 		services.Location,
@@ -168,7 +166,6 @@ func initDatabase() (*gorm.DB, error) {
 }
 
 type Services struct {
-	Auth                auth.Service
 	User                user.UserService
 	Category            category.CategoryService
 	Location            location.LocationService
@@ -202,18 +199,16 @@ func initServices(db *gorm.DB) *Services {
 	maintenanceRecordRepository := postgresql.NewMaintenanceRecordRepository(db)
 
 	// Initialize services
-	authService := auth.NewService(userRepository)
 	userService := user.NewService(userRepository, cloudinaryClient)
-	categoryService := category.NewService(categoryRepository)
-	locationService := location.NewService(locationRepository)
-	assetService := asset.NewService(assetRepository, cloudinaryClient, nil, categoryService) // nil for notification service in seeder
-	assetMovementService := asset_movement.NewService(assetMovementRepository, assetService, locationService, userService)
-	issueReportService := issue_report.NewService(issueReportRepository)
-	maintenanceScheduleService := maintenance_schedule.NewService(maintenanceScheduleRepository, assetService, userService)
-	maintenanceRecordService := maintenance_record.NewService(maintenanceRecordRepository, assetService, userService)
+	categoryService := category.NewService(categoryRepository, nil, userRepository)                                              // nil for notification in seeder
+	locationService := location.NewService(locationRepository, nil, userRepository)                                              // nil for notification in seeder
+	assetService := asset.NewService(assetRepository, cloudinaryClient, nil, categoryService, userRepository)                    // nil for notification in seeder
+	assetMovementService := asset_movement.NewService(assetMovementRepository, assetService, locationService, userService, nil)  // nil for notification in seeder
+	issueReportService := issue_report.NewService(issueReportRepository, nil, assetService, userRepository)                      // nil for notification in seeder
+	maintenanceScheduleService := maintenance_schedule.NewService(maintenanceScheduleRepository, assetService, userService, nil) // nil for notification in seeder
+	maintenanceRecordService := maintenance_record.NewService(maintenanceRecordRepository, assetService, userService, nil)       // nil for notification in seeder
 
 	return &Services{
-		Auth:                *authService,
 		User:                userService,
 		Category:            categoryService,
 		Location:            locationService,

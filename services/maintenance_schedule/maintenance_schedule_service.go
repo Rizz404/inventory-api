@@ -25,6 +25,10 @@ type Repository interface {
 
 	// Statistics
 	GetMaintenanceScheduleStatistics(ctx context.Context) (domain.MaintenanceScheduleStatistics, error)
+
+	// Cron-related queries
+	GetSchedulesDueSoon(ctx context.Context, daysFromNow int) ([]domain.MaintenanceSchedule, error)
+	GetOverdueSchedules(ctx context.Context) ([]domain.MaintenanceSchedule, error)
 }
 
 // AssetService for existence checks and populating asset info
@@ -37,6 +41,11 @@ type AssetService interface {
 type UserService interface {
 	CheckUserExists(ctx context.Context, userId string) (bool, error)
 	GetUserById(ctx context.Context, userId string) (domain.UserResponse, error)
+}
+
+// NotificationService interface for creating notifications
+type NotificationService interface {
+	CreateNotification(ctx context.Context, payload *domain.CreateNotificationPayload) (domain.NotificationResponse, error)
 }
 
 // MaintenanceScheduleService business operations
@@ -53,15 +62,16 @@ type MaintenanceScheduleService interface {
 }
 
 type Service struct {
-	Repo         Repository
-	AssetService AssetService
-	UserService  UserService
+	Repo                Repository
+	AssetService        AssetService
+	UserService         UserService
+	NotificationService NotificationService
 }
 
 var _ MaintenanceScheduleService = (*Service)(nil)
 
-func NewService(r Repository, assetSvc AssetService, userSvc UserService) MaintenanceScheduleService {
-	return &Service{Repo: r, AssetService: assetSvc, UserService: userSvc}
+func NewService(r Repository, assetSvc AssetService, userSvc UserService, notificationSvc NotificationService) MaintenanceScheduleService {
+	return &Service{Repo: r, AssetService: assetSvc, UserService: userSvc, NotificationService: notificationSvc}
 }
 
 func (s *Service) CreateMaintenanceSchedule(ctx context.Context, payload *domain.CreateMaintenanceSchedulePayload, createdBy string) (domain.MaintenanceScheduleResponse, error) {

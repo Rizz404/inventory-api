@@ -378,7 +378,7 @@ RelatedAssetID: nil
 | Location Changed            | Assigned User         | Location Change   | ❌           |
 | Warranty Expiring (30 days) | Admin                 | Warranty Alert    | ❌           |
 | Warranty Expired            | Admin                 | Warranty Alert    | ❌           |
-| High Value Asset Created    | Admin                 | Asset Created     | ❌           |
+| High Value Asset Created    | Admin                 | Asset Created     | ✅           |
 | Asset Deleted               | Admin                 | Asset Deleted     | ❌           |
 
 ## Testing

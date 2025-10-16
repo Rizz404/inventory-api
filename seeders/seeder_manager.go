@@ -7,7 +7,6 @@ import (
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/services/asset"
 	"github.com/Rizz404/inventory-api/services/asset_movement"
-	"github.com/Rizz404/inventory-api/services/auth"
 	"github.com/Rizz404/inventory-api/services/category"
 	"github.com/Rizz404/inventory-api/services/issue_report"
 	"github.com/Rizz404/inventory-api/services/location"
@@ -30,7 +29,6 @@ type SeederManager struct {
 
 // NewSeederManager creates a new seeder manager
 func NewSeederManager(
-	authService auth.Service,
 	userService user.UserService,
 	categoryService category.CategoryService,
 	locationService location.LocationService,
@@ -41,7 +39,7 @@ func NewSeederManager(
 	maintenanceRecordService maintenance_record.MaintenanceRecordService,
 ) *SeederManager {
 	return &SeederManager{
-		userSeeder:                NewUserSeeder(authService, userService),
+		userSeeder:                NewUserSeeder(userService),
 		categorySeeder:            NewCategorySeeder(categoryService),
 		locationSeeder:            NewLocationSeeder(locationService),
 		assetSeeder:               NewAssetSeeder(assetService),

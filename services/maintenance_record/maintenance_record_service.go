@@ -2,9 +2,11 @@ package maintenance_record
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
@@ -39,6 +41,11 @@ type UserService interface {
 	GetUserById(ctx context.Context, userId string) (domain.UserResponse, error)
 }
 
+// NotificationService interface for creating notifications
+type NotificationService interface {
+	CreateNotification(ctx context.Context, payload *domain.CreateNotificationPayload) (domain.NotificationResponse, error)
+}
+
 // MaintenanceRecordService business operations
 type MaintenanceRecordService interface {
 	CreateMaintenanceRecord(ctx context.Context, payload *domain.CreateMaintenanceRecordPayload, performedBy string) (domain.MaintenanceRecordResponse, error)
@@ -53,15 +60,16 @@ type MaintenanceRecordService interface {
 }
 
 type Service struct {
-	Repo         Repository
-	AssetService AssetService
-	UserService  UserService
+	Repo                Repository
+	AssetService        AssetService
+	UserService         UserService
+	NotificationService NotificationService
 }
 
 var _ MaintenanceRecordService = (*Service)(nil)
 
-func NewService(r Repository, assetSvc AssetService, userSvc UserService) MaintenanceRecordService {
-	return &Service{Repo: r, AssetService: assetSvc, UserService: userSvc}
+func NewService(r Repository, assetSvc AssetService, userSvc UserService, notificationSvc NotificationService) MaintenanceRecordService {
+	return &Service{Repo: r, AssetService: assetSvc, UserService: userSvc, NotificationService: notificationSvc}
 }
 
 func (s *Service) CreateMaintenanceRecord(ctx context.Context, payload *domain.CreateMaintenanceRecordPayload, performedBy string) (domain.MaintenanceRecordResponse, error) {
@@ -117,6 +125,10 @@ func (s *Service) CreateMaintenanceRecord(ctx context.Context, payload *domain.C
 	if err != nil {
 		return domain.MaintenanceRecordResponse{}, err
 	}
+
+	// Send notification for completed maintenance
+	s.sendMaintenanceCompletedNotification(ctx, &created)
+
 	return mapper.MaintenanceRecordToResponse(&created, mapper.DefaultLangCode), nil
 }
 
@@ -177,6 +189,19 @@ func (s *Service) UpdateMaintenanceRecord(ctx context.Context, recordId string, 
 	if err != nil {
 		return domain.MaintenanceRecordResponse{}, err
 	}
+
+	// Check if this update indicates a failed maintenance (e.g., notes contain "failed")
+	failureReason := ""
+	for _, t := range payload.Translations {
+		if t.Notes != nil && (strings.Contains(strings.ToLower(*t.Notes), "failed") || strings.Contains(strings.ToLower(*t.Notes), "error")) {
+			failureReason = *t.Notes
+			break
+		}
+	}
+	if failureReason != "" {
+		s.sendMaintenanceFailedNotification(ctx, &updated, failureReason)
+	}
+
 	return mapper.MaintenanceRecordToResponse(&updated, mapper.DefaultLangCode), nil
 }
 
@@ -232,4 +257,100 @@ func (s *Service) GetMaintenanceRecordStatistics(ctx context.Context) (domain.Ma
 		return domain.MaintenanceRecordStatisticsResponse{}, err
 	}
 	return mapper.MaintenanceRecordStatisticsToResponse(&stats), nil
+}
+
+// sendMaintenanceCompletedNotification sends notification for completed maintenance
+func (s *Service) sendMaintenanceCompletedNotification(ctx context.Context, record *domain.MaintenanceRecord) {
+	if s.NotificationService == nil {
+		return
+	}
+
+	// Get asset details
+	asset, err := s.AssetService.GetAssetById(ctx, record.AssetID, "en-US") // Default lang
+	if err != nil {
+		return
+	}
+
+	if asset.AssignedToID == nil || *asset.AssignedToID == "" {
+		return
+	}
+
+	// Get notes from translations (default to first or empty)
+	notes := ""
+	for _, t := range record.Translations {
+		if t.LangCode == "en-US" && t.Notes != nil {
+			notes = *t.Notes
+			break
+		}
+	}
+	if notes == "" && len(record.Translations) > 0 && record.Translations[0].Notes != nil {
+		notes = *record.Translations[0].Notes
+	}
+
+	titleKey, messageKey, params := messages.MaintenanceCompletedNotification(asset.AssetName, asset.AssetTag, notes)
+	utilTranslations := messages.GetMaintenanceRecordNotificationTranslations(titleKey, messageKey, params)
+
+	// Convert to domain translations
+	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
+	for i, t := range utilTranslations {
+		translations[i] = domain.CreateNotificationTranslationPayload{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Message:  t.Message,
+		}
+	}
+
+	notificationPayload := &domain.CreateNotificationPayload{
+		UserID:         *asset.AssignedToID,
+		RelatedAssetID: &record.AssetID,
+		Type:           domain.NotificationTypeMaintenance,
+		Translations:   translations,
+	}
+
+	_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
+	if err != nil {
+		// Log error but don't fail the operation
+	}
+}
+
+// sendMaintenanceFailedNotification sends notification for failed maintenance
+func (s *Service) sendMaintenanceFailedNotification(ctx context.Context, record *domain.MaintenanceRecord, failureReason string) {
+	if s.NotificationService == nil {
+		return
+	}
+
+	// Get asset details
+	asset, err := s.AssetService.GetAssetById(ctx, record.AssetID, "en-US") // Default lang
+	if err != nil {
+		return
+	}
+
+	if asset.AssignedToID == nil || *asset.AssignedToID == "" {
+		return
+	}
+
+	titleKey, messageKey, params := messages.MaintenanceFailedNotification(asset.AssetName, asset.AssetTag, failureReason)
+	utilTranslations := messages.GetMaintenanceRecordNotificationTranslations(titleKey, messageKey, params)
+
+	// Convert to domain translations
+	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
+	for i, t := range utilTranslations {
+		translations[i] = domain.CreateNotificationTranslationPayload{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Message:  t.Message,
+		}
+	}
+
+	notificationPayload := &domain.CreateNotificationPayload{
+		UserID:         *asset.AssignedToID,
+		RelatedAssetID: &record.AssetID,
+		Type:           domain.NotificationTypeMaintenance,
+		Translations:   translations,
+	}
+
+	_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
+	if err != nil {
+		// Log error but don't fail the operation
+	}
 }
