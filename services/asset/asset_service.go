@@ -435,8 +435,8 @@ func (s *Service) GenerateAssetTagSuggestion(ctx context.Context, payload *domai
 		}
 	}
 
-	// * Generate suggested tag with 6-digit padding
-	suggestedTag := fmt.Sprintf("%s%06d", category.CategoryCode, nextIncrement)
+	// * Generate suggested tag with 5-digit padding
+	suggestedTag := fmt.Sprintf("%s%05d", category.CategoryCode, nextIncrement)
 
 	return domain.GenerateAssetTagResponse{
 		CategoryCode:  category.CategoryCode,

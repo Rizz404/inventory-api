@@ -167,11 +167,11 @@ func (mrs *MaintenanceRecordSeeder) generateMaintenanceRecordPayload(assetIDs []
 			Title:    title,
 			Notes:    &notes,
 		},
-		{
-			LangCode: "id-ID",
-			Title:    title,
-			Notes:    &notes,
-		},
+		// {
+		// 	LangCode: "id-ID",
+		// 	Title:    title,
+		// 	Notes:    &notes,
+		// },
 	}
 
 	// Format maintenance date

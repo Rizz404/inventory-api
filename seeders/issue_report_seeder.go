@@ -143,11 +143,11 @@ func (irs *IssueReportSeeder) generateIssueReportPayload(assetIDs []string, user
 			Title:       title,
 			Description: &description,
 		},
-		{
-			LangCode:    "id-ID",
-			Title:       title,
-			Description: &description,
-		},
+		// {
+		// 	LangCode:    "id-ID",
+		// 	Title:       title,
+		// 	Description: &description,
+		// },
 	}
 
 	return &domain.CreateIssueReportPayload{

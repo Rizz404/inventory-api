@@ -78,7 +78,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Longitude:    float64Ptr(106.8456),
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Headquarters Lobby"},
-				{LangCode: "id-ID", LocationName: "Lobi Kantor Pusat"},
+				// {LangCode: "id-ID", LocationName: "Lobi Kantor Pusat"},
 				{LangCode: "ja-JP", LocationName: "本社ロビー"},
 			},
 		},
@@ -90,7 +90,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Longitude:    float64Ptr(106.8456),
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "IT Server Room"},
-				{LangCode: "id-ID", LocationName: "Ruang Server IT"},
+				// {LangCode: "id-ID", LocationName: "Ruang Server IT"},
 				{LangCode: "ja-JP", LocationName: "ITサーバールーム"},
 			},
 		},
@@ -102,7 +102,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Longitude:    float64Ptr(106.8456),
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Meeting Room A"},
-				{LangCode: "id-ID", LocationName: "Ruang Rapat A"},
+				// {LangCode: "id-ID", LocationName: "Ruang Rapat A"},
 				{LangCode: "ja-JP", LocationName: "会議室A"},
 			},
 		},
@@ -114,7 +114,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Longitude:    float64Ptr(106.8456),
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Meeting Room B"},
-				{LangCode: "id-ID", LocationName: "Ruang Rapat B"},
+				// {LangCode: "id-ID", LocationName: "Ruang Rapat B"},
 				{LangCode: "ja-JP", LocationName: "会議室B"},
 			},
 		},
@@ -126,7 +126,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Longitude:    float64Ptr(106.8278),
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Warehouse A - Main Storage"},
-				{LangCode: "id-ID", LocationName: "Gudang A - Penyimpanan Utama"},
+				// {LangCode: "id-ID", LocationName: "Gudang A - Penyimpanan Utama"},
 				{LangCode: "ja-JP", LocationName: "倉庫A - メインストレージ"},
 			},
 		},
@@ -138,7 +138,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Longitude:    float64Ptr(106.8278),
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Warehouse B - Electronics"},
-				{LangCode: "id-ID", LocationName: "Gudang B - Elektronik"},
+				// {LangCode: "id-ID", LocationName: "Gudang B - Elektronik"},
 				{LangCode: "ja-JP", LocationName: "倉庫B - 電子機器"},
 			},
 		},
@@ -150,7 +150,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Longitude:    float64Ptr(106.8452),
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Office Floor 1 - General"},
-				{LangCode: "id-ID", LocationName: "Lantai Kantor 1 - Umum"},
+				// {LangCode: "id-ID", LocationName: "Lantai Kantor 1 - Umum"},
 				{LangCode: "ja-JP", LocationName: "オフィスフロア1 - 一般"},
 			},
 		},
@@ -162,7 +162,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Longitude:    float64Ptr(106.8452),
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Office Floor 2 - Management"},
-				{LangCode: "id-ID", LocationName: "Lantai Kantor 2 - Manajemen"},
+				// {LangCode: "id-ID", LocationName: "Lantai Kantor 2 - Manajemen"},
 				{LangCode: "ja-JP", LocationName: "オフィスフロア2 - 管理"},
 			},
 		},
@@ -174,7 +174,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Longitude:    float64Ptr(106.8460),
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Parking Area A"},
-				{LangCode: "id-ID", LocationName: "Area Parkir A"},
+				// {LangCode: "id-ID", LocationName: "Area Parkir A"},
 				{LangCode: "ja-JP", LocationName: "駐車場A"},
 			},
 		},
@@ -186,7 +186,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Longitude:    float64Ptr(106.8452),
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Employee Cafeteria"},
-				{LangCode: "id-ID", LocationName: "Kafeteria Karyawan"},
+				// {LangCode: "id-ID", LocationName: "Kafeteria Karyawan"},
 				{LangCode: "ja-JP", LocationName: "社員食堂"},
 			},
 		},
@@ -226,7 +226,7 @@ func (ls *LocationSeeder) generateRandomLocation(index int) *domain.CreateLocati
 
 	// Generate location names
 	locationNameEN := fmt.Sprintf("%s - %s", buildingName, locationName)
-	locationNameID := translateLocationToID(buildingName, locationName)
+	// locationNameID := translateLocationToID(buildingName, locationName)
 	locationNameJP := translateLocationToJP(buildingName, locationName)
 
 	return &domain.CreateLocationPayload{
@@ -240,10 +240,10 @@ func (ls *LocationSeeder) generateRandomLocation(index int) *domain.CreateLocati
 				LangCode:     "en-US",
 				LocationName: locationNameEN,
 			},
-			{
-				LangCode:     "id-ID",
-				LocationName: locationNameID,
-			},
+			// {
+			// 	LangCode:     "id-ID",
+			// 	LocationName: locationNameID,
+			// },
 			{
 				LangCode:     "ja-JP",
 				LocationName: locationNameJP,

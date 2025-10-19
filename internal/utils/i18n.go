@@ -234,6 +234,28 @@ const (
 	SuccessAvatarUploadedKey        MessageKey = "success.file.avatar_uploaded"
 	SuccessFileDeletedKey           MessageKey = "success.file.deleted"
 	SuccessMultipleFilesUploadedKey MessageKey = "success.file.multiple_uploaded"
+
+	// * PDF Export labels
+	PDFAssetListReportKey       MessageKey = "pdf.asset_list_report"
+	PDFGeneratedOnKey           MessageKey = "pdf.generated_on"
+	PDFTotalAssetsKey           MessageKey = "pdf.total_assets"
+	PDFAssetTagKey              MessageKey = "pdf.asset_tag"
+	PDFAssetNameKey             MessageKey = "pdf.asset_name"
+	PDFCategoryKey              MessageKey = "pdf.category"
+	PDFBrandKey                 MessageKey = "pdf.brand"
+	PDFModelKey                 MessageKey = "pdf.model"
+	PDFStatusKey                MessageKey = "pdf.status"
+	PDFConditionKey             MessageKey = "pdf.condition"
+	PDFLocationKey              MessageKey = "pdf.location"
+	PDFSerialNumberKey          MessageKey = "pdf.serial_number"
+	PDFPurchaseDateKey          MessageKey = "pdf.purchase_date"
+	PDFPurchasePriceKey         MessageKey = "pdf.purchase_price"
+	PDFVendorKey                MessageKey = "pdf.vendor"
+	PDFWarrantyEndKey           MessageKey = "pdf.warranty_end"
+	PDFAssignedToKey            MessageKey = "pdf.assigned_to"
+	PDFPageKey                  MessageKey = "pdf.page"
+	PDFOfKey                    MessageKey = "pdf.of"
+	PDFAssetStatisticsReportKey MessageKey = "pdf.asset_statistics_report"
 )
 
 // * messageTranslations contains all message translations
@@ -803,6 +825,88 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Multiple files uploaded successfully",
 		// "id-ID": "Beberapa file berhasil diunggah",
 		"ja-JP": "複数のファイルが正常にアップロードされました",
+	},
+
+	// * PDF Export labels
+	PDFAssetListReportKey: {
+		"en-US": "Asset List Report",
+		"ja-JP": "資産一覧レポート",
+	},
+	PDFGeneratedOnKey: {
+		"en-US": "Generated on",
+		"ja-JP": "生成日時",
+	},
+	PDFTotalAssetsKey: {
+		"en-US": "Total Assets",
+		"ja-JP": "総資産数",
+	},
+	PDFAssetTagKey: {
+		"en-US": "Asset Tag",
+		"ja-JP": "資産タグ",
+	},
+	PDFAssetNameKey: {
+		"en-US": "Asset Name",
+		"ja-JP": "資産名",
+	},
+	PDFCategoryKey: {
+		"en-US": "Category",
+		"ja-JP": "カテゴリ",
+	},
+	PDFBrandKey: {
+		"en-US": "Brand",
+		"ja-JP": "ブランド",
+	},
+	PDFModelKey: {
+		"en-US": "Model",
+		"ja-JP": "モデル",
+	},
+	PDFStatusKey: {
+		"en-US": "Status",
+		"ja-JP": "ステータス",
+	},
+	PDFConditionKey: {
+		"en-US": "Condition",
+		"ja-JP": "状態",
+	},
+	PDFLocationKey: {
+		"en-US": "Location",
+		"ja-JP": "場所",
+	},
+	PDFSerialNumberKey: {
+		"en-US": "Serial Number",
+		"ja-JP": "シリアル番号",
+	},
+	PDFPurchaseDateKey: {
+		"en-US": "Purchase Date",
+		"ja-JP": "購入日",
+	},
+	PDFPurchasePriceKey: {
+		"en-US": "Purchase Price",
+		"ja-JP": "購入価格",
+	},
+	PDFVendorKey: {
+		"en-US": "Vendor",
+		"ja-JP": "ベンダー",
+	},
+	PDFWarrantyEndKey: {
+		"en-US": "Warranty End",
+		"ja-JP": "保証終了日",
+	},
+	PDFAssignedToKey: {
+		"en-US": "Assigned To",
+		"ja-JP": "割り当て先",
+	},
+	PDFPageKey: {
+		"en-US": "Page",
+		"ja-JP": "ページ",
+	},
+	PDFOfKey: {
+		"en-US": "of",
+		"ja-JP": "/",
+	},
+	PDFAssetStatisticsReportKey: {
+		"en-US": "Asset Statistics Report",
+		"ja-JP": "資産統計レポート",
 	},
 
 	// * Notification error messages
