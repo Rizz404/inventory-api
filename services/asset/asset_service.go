@@ -422,10 +422,10 @@ func (s *Service) GenerateAssetTagSuggestion(ctx context.Context, payload *domai
 	nextIncrement := 1
 	if lastAssetTag != "" {
 		// Extract the numeric part from the last asset tag
-		// Format expected: CATEGORYCODE000001
-		categoryCodeLen := len(category.CategoryCode)
-		if len(lastAssetTag) > categoryCodeLen {
-			numericPart := lastAssetTag[categoryCodeLen:]
+		// Format expected: CATEGORYCODE-00001
+		dashIndex := strings.Index(lastAssetTag, "-")
+		if dashIndex != -1 && dashIndex < len(lastAssetTag)-1 {
+			numericPart := lastAssetTag[dashIndex+1:]
 			// Try to parse the numeric part
 			var parsedNum int
 			_, err := fmt.Sscanf(numericPart, "%d", &parsedNum)
@@ -435,8 +435,8 @@ func (s *Service) GenerateAssetTagSuggestion(ctx context.Context, payload *domai
 		}
 	}
 
-	// * Generate suggested tag with 5-digit padding
-	suggestedTag := fmt.Sprintf("%s%05d", category.CategoryCode, nextIncrement)
+	// * Generate suggested tag with dash and 5-digit padding
+	suggestedTag := fmt.Sprintf("%s-%05d", category.CategoryCode, nextIncrement)
 
 	return domain.GenerateAssetTagResponse{
 		CategoryCode:  category.CategoryCode,
