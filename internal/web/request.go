@@ -228,9 +228,16 @@ func setFieldValue(field reflect.Value, value string) error {
 			field.SetBool(boolVal)
 		}
 	case reflect.Pointer:
-		if field.Type().Elem().Kind() == reflect.String {
-			field.Set(reflect.ValueOf(&value))
+		elemKind := field.Type().Elem().Kind()
+
+		// Handle pointer to string or custom string types
+		if elemKind == reflect.String {
+			// Create new value of the correct type
+			newVal := reflect.New(field.Type().Elem())
+			newVal.Elem().SetString(value)
+			field.Set(newVal)
 		} else {
+			// Handle other pointer types recursively
 			newVal := reflect.New(field.Type().Elem())
 			if err := setFieldValue(newVal.Elem(), value); err != nil {
 				return err
