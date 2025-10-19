@@ -107,6 +107,22 @@ func (r *AssetMovementRepository) CreateAssetMovement(ctx context.Context, paylo
 		}
 	}
 
+	// * Update asset location/user based on movement destination
+	updates := make(map[string]interface{})
+	if payload.ToLocationID != nil {
+		updates["location_id"] = *payload.ToLocationID
+	}
+	if payload.ToUserID != nil {
+		updates["assigned_to"] = *payload.ToUserID
+	}
+
+	if len(updates) > 0 {
+		if err := tx.Table("assets").Where("id = ?", payload.AssetID).Updates(updates).Error; err != nil {
+			tx.Rollback()
+			return domain.AssetMovement{}, err
+		}
+	}
+
 	if err := tx.Commit().Error; err != nil {
 		return domain.AssetMovement{}, err
 	}
@@ -136,6 +152,16 @@ func (r *AssetMovementRepository) UpdateAssetMovement(ctx context.Context, movem
 		}
 	}()
 
+	// Get existing movement to retrieve asset_id
+	var existingMovement model.AssetMovement
+	if err := tx.Where("id = ?", movementId).First(&existingMovement).Error; err != nil {
+		tx.Rollback()
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.AssetMovement{}, domain.ErrNotFound("asset movement")
+		}
+		return domain.AssetMovement{}, domain.ErrInternal(err)
+	}
+
 	// Update asset movement basic info
 	updates := mapper.ToModelAssetMovementUpdateMap(payload)
 	if len(updates) > 0 {
@@ -164,6 +190,22 @@ func (r *AssetMovementRepository) UpdateAssetMovement(ctx context.Context, movem
 				tx.Rollback()
 				return domain.AssetMovement{}, domain.ErrInternal(err)
 			}
+		}
+	}
+
+	// * Update asset location/user if destination changed
+	assetUpdates := make(map[string]interface{})
+	if payload.ToLocationID != nil {
+		assetUpdates["location_id"] = *payload.ToLocationID
+	}
+	if payload.ToUserID != nil {
+		assetUpdates["assigned_to"] = *payload.ToUserID
+	}
+
+	if len(assetUpdates) > 0 {
+		if err := tx.Table("assets").Where("id = ?", existingMovement.AssetID).Updates(assetUpdates).Error; err != nil {
+			tx.Rollback()
+			return domain.AssetMovement{}, domain.ErrInternal(err)
 		}
 	}
 

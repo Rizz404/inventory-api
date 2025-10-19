@@ -172,7 +172,7 @@ func (s *Service) CreateAssetMovement(ctx context.Context, payload *domain.Creat
 	}
 
 	// * Send notification if asset is assigned to a user
-	if asset.AssignedToID != nil && *asset.AssignedToID != "" {
+	if payload.ToUserID != nil && *payload.ToUserID != "" {
 		s.sendAssetMovedNotification(ctx, &createdMovement, &asset)
 	}
 
