@@ -107,14 +107,17 @@ func (h *MaintenanceRecordHandler) UpdateMaintenanceRecord(c *fiber.Ctx) error {
 	if id == "" {
 		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrMaintenanceRecordIDRequiredKey))
 	}
-	var payload domain.CreateMaintenanceRecordPayload
+
+	var payload domain.UpdateMaintenanceRecordPayload
 	if err := web.ParseAndValidate(c, &payload); err != nil {
 		return web.HandleError(c, err)
 	}
+
 	record, err := h.Service.UpdateMaintenanceRecord(c.Context(), id, &payload)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
+
 	return web.Success(c, fiber.StatusOK, utils.SuccessMaintenanceRecordUpdatedKey, record)
 }
 

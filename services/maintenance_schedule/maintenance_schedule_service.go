@@ -13,7 +13,7 @@ import (
 type Repository interface {
 	// Schedule mutations
 	CreateSchedule(ctx context.Context, payload *domain.MaintenanceSchedule) (domain.MaintenanceSchedule, error)
-	UpdateSchedule(ctx context.Context, scheduleId string, payload *domain.MaintenanceSchedule) (domain.MaintenanceSchedule, error)
+	UpdateSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload) (domain.MaintenanceSchedule, error)
 	DeleteSchedule(ctx context.Context, scheduleId string) error
 
 	// Schedule queries
@@ -51,7 +51,7 @@ type NotificationService interface {
 // MaintenanceScheduleService business operations
 type MaintenanceScheduleService interface {
 	CreateMaintenanceSchedule(ctx context.Context, payload *domain.CreateMaintenanceSchedulePayload, createdBy string) (domain.MaintenanceScheduleResponse, error)
-	UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.CreateMaintenanceSchedulePayload) (domain.MaintenanceScheduleResponse, error)
+	UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload) (domain.MaintenanceScheduleResponse, error)
 	DeleteMaintenanceSchedule(ctx context.Context, scheduleId string) error
 	GetMaintenanceSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, int64, error)
 	GetMaintenanceSchedulesCursor(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, error)
@@ -121,7 +121,7 @@ func (s *Service) CreateMaintenanceSchedule(ctx context.Context, payload *domain
 	return mapper.MaintenanceScheduleToResponse(&created, mapper.DefaultLangCode), nil
 }
 
-func (s *Service) UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.CreateMaintenanceSchedulePayload) (domain.MaintenanceScheduleResponse, error) {
+func (s *Service) UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload) (domain.MaintenanceScheduleResponse, error) {
 	// Ensure schedule exists
 	if exists, err := s.Repo.CheckScheduleExist(ctx, scheduleId); err != nil {
 		return domain.MaintenanceScheduleResponse{}, err
@@ -129,42 +129,7 @@ func (s *Service) UpdateMaintenanceSchedule(ctx context.Context, scheduleId stri
 		return domain.MaintenanceScheduleResponse{}, domain.ErrNotFoundWithKey(utils.ErrMaintenanceScheduleNotFoundKey)
 	}
 
-	// Validate asset if provided
-	if payload.AssetID != "" {
-		if exists, err := s.AssetService.CheckAssetExists(ctx, payload.AssetID); err != nil {
-			return domain.MaintenanceScheduleResponse{}, err
-		} else if !exists {
-			return domain.MaintenanceScheduleResponse{}, domain.ErrNotFoundWithKey(utils.ErrAssetNotFoundKey)
-		}
-	}
-
-	// Parse scheduled date
-	var scheduledDate time.Time
-	if payload.ScheduledDate != "" {
-		d, err := time.Parse("2006-01-02", payload.ScheduledDate)
-		if err != nil {
-			return domain.MaintenanceScheduleResponse{}, domain.ErrBadRequestWithKey(utils.ErrMaintenanceScheduleDateRequiredKey)
-		}
-		scheduledDate = d
-	}
-
-	// Build partial domain for update
-	schedule := domain.MaintenanceSchedule{
-		AssetID:         payload.AssetID,
-		MaintenanceType: payload.MaintenanceType,
-		ScheduledDate:   scheduledDate,
-		FrequencyMonths: payload.FrequencyMonths,
-		Translations:    make([]domain.MaintenanceScheduleTranslation, len(payload.Translations)),
-	}
-	for i, t := range payload.Translations {
-		schedule.Translations[i] = domain.MaintenanceScheduleTranslation{
-			LangCode:    t.LangCode,
-			Title:       t.Title,
-			Description: t.Description,
-		}
-	}
-
-	updated, err := s.Repo.UpdateSchedule(ctx, scheduleId, &schedule)
+	updated, err := s.Repo.UpdateSchedule(ctx, scheduleId, payload)
 	if err != nil {
 		return domain.MaintenanceScheduleResponse{}, err
 	}

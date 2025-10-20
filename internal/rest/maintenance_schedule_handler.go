@@ -113,14 +113,17 @@ func (h *MaintenanceScheduleHandler) UpdateMaintenanceSchedule(c *fiber.Ctx) err
 	if id == "" {
 		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrMaintenanceScheduleIDRequiredKey))
 	}
-	var payload domain.CreateMaintenanceSchedulePayload
+
+	var payload domain.UpdateMaintenanceSchedulePayload
 	if err := web.ParseAndValidate(c, &payload); err != nil {
 		return web.HandleError(c, err)
 	}
+
 	schedule, err := h.Service.UpdateMaintenanceSchedule(c.Context(), id, &payload)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
+
 	return web.Success(c, fiber.StatusOK, utils.SuccessMaintenanceScheduleUpdatedKey, schedule)
 }
 

@@ -119,6 +119,19 @@ type CreateMaintenanceScheduleTranslationPayload struct {
 	Description *string `json:"description,omitempty"`
 }
 
+type UpdateMaintenanceSchedulePayload struct {
+	MaintenanceType *MaintenanceScheduleType                      `json:"maintenanceType,omitempty" validate:"omitempty,oneof=Preventive Corrective"`
+	ScheduledDate   *string                                       `json:"scheduledDate,omitempty" validate:"omitempty,datetime=2006-01-02"`
+	FrequencyMonths *int                                          `json:"frequencyMonths,omitempty" validate:"omitempty,gt=0"`
+	Translations    []UpdateMaintenanceScheduleTranslationPayload `json:"translations,omitempty" validate:"omitempty,dive"`
+}
+
+type UpdateMaintenanceScheduleTranslationPayload struct {
+	LangCode    string  `json:"langCode" validate:"required,max=5"`
+	Title       *string `json:"title,omitempty" validate:"omitempty,max=200"`
+	Description *string `json:"description,omitempty"`
+}
+
 type BulkDeleteMaintenanceSchedulesPayload struct {
 	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }

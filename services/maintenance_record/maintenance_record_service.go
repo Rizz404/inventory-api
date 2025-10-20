@@ -15,7 +15,7 @@ import (
 type Repository interface {
 	// Record mutations
 	CreateRecord(ctx context.Context, payload *domain.MaintenanceRecord) (domain.MaintenanceRecord, error)
-	UpdateRecord(ctx context.Context, recordId string, payload *domain.MaintenanceRecord) (domain.MaintenanceRecord, error)
+	UpdateRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload) (domain.MaintenanceRecord, error)
 	DeleteRecord(ctx context.Context, recordId string) error
 
 	// Record queries
@@ -49,7 +49,7 @@ type NotificationService interface {
 // MaintenanceRecordService business operations
 type MaintenanceRecordService interface {
 	CreateMaintenanceRecord(ctx context.Context, payload *domain.CreateMaintenanceRecordPayload, performedBy string) (domain.MaintenanceRecordResponse, error)
-	UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.CreateMaintenanceRecordPayload) (domain.MaintenanceRecordResponse, error)
+	UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload) (domain.MaintenanceRecordResponse, error)
 	DeleteMaintenanceRecord(ctx context.Context, recordId string) error
 	GetMaintenanceRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, int64, error)
 	GetMaintenanceRecordsCursor(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, error)
@@ -132,7 +132,7 @@ func (s *Service) CreateMaintenanceRecord(ctx context.Context, payload *domain.C
 	return mapper.MaintenanceRecordToResponse(&created, mapper.DefaultLangCode), nil
 }
 
-func (s *Service) UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.CreateMaintenanceRecordPayload) (domain.MaintenanceRecordResponse, error) {
+func (s *Service) UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload) (domain.MaintenanceRecordResponse, error) {
 	// Ensure record exists
 	if exists, err := s.Repo.CheckRecordExist(ctx, recordId); err != nil {
 		return domain.MaintenanceRecordResponse{}, err
@@ -140,16 +140,7 @@ func (s *Service) UpdateMaintenanceRecord(ctx context.Context, recordId string, 
 		return domain.MaintenanceRecordResponse{}, domain.ErrNotFoundWithKey(utils.ErrMaintenanceRecordNotFoundKey)
 	}
 
-	// Validate asset if provided
-	if payload.AssetID != "" {
-		if exists, err := s.AssetService.CheckAssetExists(ctx, payload.AssetID); err != nil {
-			return domain.MaintenanceRecordResponse{}, err
-		} else if !exists {
-			return domain.MaintenanceRecordResponse{}, domain.ErrNotFoundWithKey(utils.ErrAssetNotFoundKey)
-		}
-	}
-
-	// Validate performer if provided
+	// Validate performer if being updated
 	if payload.PerformedByUser != nil && *payload.PerformedByUser != "" {
 		if exists, err := s.UserService.CheckUserExists(ctx, *payload.PerformedByUser); err != nil {
 			return domain.MaintenanceRecordResponse{}, err
@@ -158,34 +149,7 @@ func (s *Service) UpdateMaintenanceRecord(ctx context.Context, recordId string, 
 		}
 	}
 
-	// Parse date if provided
-	var maintenanceDate time.Time
-	if payload.MaintenanceDate != "" {
-		d, err := time.Parse("2006-01-02", payload.MaintenanceDate)
-		if err != nil {
-			return domain.MaintenanceRecordResponse{}, domain.ErrBadRequestWithKey(utils.ErrMaintenanceRecordDateRequiredKey)
-		}
-		maintenanceDate = d
-	}
-
-	record := domain.MaintenanceRecord{
-		ScheduleID:        payload.ScheduleID,
-		AssetID:           payload.AssetID,
-		MaintenanceDate:   maintenanceDate,
-		PerformedByUser:   payload.PerformedByUser,
-		PerformedByVendor: payload.PerformedByVendor,
-		ActualCost:        payload.ActualCost,
-		Translations:      make([]domain.MaintenanceRecordTranslation, len(payload.Translations)),
-	}
-	for i, t := range payload.Translations {
-		record.Translations[i] = domain.MaintenanceRecordTranslation{
-			LangCode: t.LangCode,
-			Title:    t.Title,
-			Notes:    t.Notes,
-		}
-	}
-
-	updated, err := s.Repo.UpdateRecord(ctx, recordId, &record)
+	updated, err := s.Repo.UpdateRecord(ctx, recordId, payload)
 	if err != nil {
 		return domain.MaintenanceRecordResponse{}, err
 	}

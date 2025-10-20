@@ -1,6 +1,8 @@
 package mapper
 
 import (
+	"time"
+
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/oklog/ulid/v2"
@@ -365,4 +367,31 @@ func MapMaintenanceScheduleSortFieldToColumn(field domain.MaintenanceScheduleSor
 		return column
 	}
 	return "ms.scheduled_date"
+}
+
+// *==================== Update Map conversions (Harus snake case karena untuk database) ====================
+func ToModelMaintenanceScheduleUpdateMap(payload *domain.UpdateMaintenanceSchedulePayload) map[string]any {
+	updates := make(map[string]any)
+
+	if payload.MaintenanceType != nil {
+		if *payload.MaintenanceType == "" {
+			updates["maintenance_type"] = nil
+		} else {
+			updates["maintenance_type"] = *payload.MaintenanceType
+		}
+	}
+	if payload.ScheduledDate != nil {
+		if *payload.ScheduledDate == "" {
+			updates["scheduled_date"] = nil
+		} else {
+			if parsedDate, err := time.Parse("2006-01-02", *payload.ScheduledDate); err == nil {
+				updates["scheduled_date"] = parsedDate
+			}
+		}
+	}
+	if payload.FrequencyMonths != nil {
+		updates["frequency_months"] = *payload.FrequencyMonths
+	}
+
+	return updates
 }

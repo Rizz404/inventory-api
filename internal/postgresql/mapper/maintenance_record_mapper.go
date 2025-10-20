@@ -1,6 +1,8 @@
 package mapper
 
 import (
+	"time"
+
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/oklog/ulid/v2"
@@ -400,4 +402,41 @@ func MapMaintenanceRecordSortFieldToColumn(field domain.MaintenanceRecordSortFie
 		return column
 	}
 	return "mr.created_at"
+}
+
+// *==================== Update Map conversions (Harus snake case karena untuk database) ====================
+func ToModelMaintenanceRecordUpdateMap(payload *domain.UpdateMaintenanceRecordPayload) map[string]any {
+	updates := make(map[string]any)
+
+	if payload.ScheduleID != nil {
+		if *payload.ScheduleID == "" {
+			updates["schedule_id"] = nil
+		} else {
+			updates["schedule_id"] = *payload.ScheduleID
+		}
+	}
+	if payload.MaintenanceDate != nil {
+		if *payload.MaintenanceDate == "" {
+			updates["maintenance_date"] = nil
+		} else {
+			if parsedDate, err := time.Parse("2006-01-02", *payload.MaintenanceDate); err == nil {
+				updates["maintenance_date"] = parsedDate
+			}
+		}
+	}
+	if payload.PerformedByUser != nil {
+		if *payload.PerformedByUser == "" {
+			updates["performed_by_user"] = nil
+		} else {
+			updates["performed_by_user"] = *payload.PerformedByUser
+		}
+	}
+	if payload.PerformedByVendor != nil {
+		updates["performed_by_vendor"] = *payload.PerformedByVendor
+	}
+	if payload.ActualCost != nil {
+		updates["actual_cost"] = *payload.ActualCost
+	}
+
+	return updates
 }

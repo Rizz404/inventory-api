@@ -109,6 +109,21 @@ type CreateMaintenanceRecordTranslationPayload struct {
 	Notes    *string `json:"notes,omitempty"`
 }
 
+type UpdateMaintenanceRecordPayload struct {
+	ScheduleID        *string                                     `json:"scheduleId,omitempty"`
+	MaintenanceDate   *string                                     `json:"maintenanceDate,omitempty" validate:"omitempty,datetime=2006-01-02"`
+	PerformedByUser   *string                                     `json:"performedByUser,omitempty" validate:"omitempty"`
+	PerformedByVendor *string                                     `json:"performedByVendor,omitempty" validate:"omitempty,max=150"`
+	ActualCost        *float64                                    `json:"actualCost,omitempty" validate:"omitempty,gt=0"`
+	Translations      []UpdateMaintenanceRecordTranslationPayload `json:"translations,omitempty" validate:"omitempty,dive"`
+}
+
+type UpdateMaintenanceRecordTranslationPayload struct {
+	LangCode string  `json:"langCode" validate:"required,max=5"`
+	Title    *string `json:"title,omitempty" validate:"omitempty,max=200"`
+	Notes    *string `json:"notes,omitempty"`
+}
+
 type BulkDeleteMaintenanceRecordsPayload struct {
 	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }

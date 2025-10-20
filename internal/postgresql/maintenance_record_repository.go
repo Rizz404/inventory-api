@@ -9,7 +9,6 @@ import (
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
-	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
 )
 
@@ -107,7 +106,7 @@ func (r *MaintenanceRecordRepository) CreateRecord(ctx context.Context, payload 
 	return domainRecord, nil
 }
 
-func (r *MaintenanceRecordRepository) UpdateRecord(ctx context.Context, recordId string, payload *domain.MaintenanceRecord) (domain.MaintenanceRecord, error) {
+func (r *MaintenanceRecordRepository) UpdateRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload) (domain.MaintenanceRecord, error) {
 	tx := r.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return domain.MaintenanceRecord{}, domain.ErrInternal(tx.Error)
@@ -118,53 +117,32 @@ func (r *MaintenanceRecordRepository) UpdateRecord(ctx context.Context, recordId
 		}
 	}()
 
-	updates := map[string]any{}
-	if payload.AssetID != "" {
-		if parsed, err := ulid.Parse(payload.AssetID); err == nil {
-			updates["asset_id"] = model.SQLULID(parsed)
-		}
-	}
-	if payload.ScheduleID != nil {
-		if *payload.ScheduleID == "" {
-			updates["schedule_id"] = nil
-		} else if parsed, err := ulid.Parse(*payload.ScheduleID); err == nil {
-			v := model.SQLULID(parsed)
-			updates["schedule_id"] = &v
-		}
-	}
-	if !payload.MaintenanceDate.IsZero() {
-		updates["maintenance_date"] = payload.MaintenanceDate
-	}
-	if payload.PerformedByUser != nil {
-		if *payload.PerformedByUser == "" {
-			updates["performed_by_user"] = nil
-		} else if parsed, err := ulid.Parse(*payload.PerformedByUser); err == nil {
-			v := model.SQLULID(parsed)
-			updates["performed_by_user"] = &v
-		}
-	}
-	if payload.PerformedByVendor != nil {
-		updates["performed_by_vendor"] = payload.PerformedByVendor
-	}
-	if payload.ActualCost != nil {
-		updates["actual_cost"] = payload.ActualCost
-	}
-
+	// Update maintenance record basic info
+	updates := mapper.ToModelMaintenanceRecordUpdateMap(payload)
 	if len(updates) > 0 {
-		if err := tx.Model(&model.MaintenanceRecord{}).Where("id = ?", recordId).Updates(updates).Error; err != nil {
+		if err := tx.Table("maintenance_records").Where("id = ?", recordId).Updates(updates).Error; err != nil {
 			tx.Rollback()
 			return domain.MaintenanceRecord{}, domain.ErrInternal(err)
 		}
 	}
 
+	// Update translations if provided
 	if len(payload.Translations) > 0 {
-		if err := tx.Delete(&model.MaintenanceRecordTranslation{}, "record_id = ?", recordId).Error; err != nil {
+		// Delete existing translations
+		if err := tx.Where("record_id = ?", recordId).Delete(&model.MaintenanceRecordTranslation{}).Error; err != nil {
 			tx.Rollback()
 			return domain.MaintenanceRecord{}, domain.ErrInternal(err)
 		}
-		for _, t := range payload.Translations {
-			mt := mapper.ToModelMaintenanceRecordTranslationForCreate(recordId, &t)
-			if err := tx.Create(&mt).Error; err != nil {
+
+		// Create new translations
+		for _, translationPayload := range payload.Translations {
+			translation := domain.MaintenanceRecordTranslation{
+				LangCode: translationPayload.LangCode,
+				Title:    *translationPayload.Title,
+				Notes:    translationPayload.Notes,
+			}
+			modelTranslation := mapper.ToModelMaintenanceRecordTranslationForCreate(recordId, &translation)
+			if err := tx.Create(&modelTranslation).Error; err != nil {
 				tx.Rollback()
 				return domain.MaintenanceRecord{}, domain.ErrInternal(err)
 			}
