@@ -144,23 +144,17 @@ func (h *IssueReportHandler) parseIssueReportFiltersAndSort(c *fiber.Ctx) (domai
 
 // *===========================MUTATION===========================*
 func (h *IssueReportHandler) CreateIssueReport(c *fiber.Ctx) error {
+	reporterID, ok := web.GetUserIDFromContext(c)
+	if !ok {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
+	}
+
 	var payload domain.CreateIssueReportPayload
 	if err := web.ParseAndValidate(c, &payload); err != nil {
 		return web.HandleError(c, err)
 	}
 
-	// Get reporter ID from context (set by auth middleware)
-	reporterID := c.Locals("userID")
-	if reporterID == nil {
-		return web.HandleError(c, domain.ErrUnauthorized("user ID not found"))
-	}
-
-	reporterIDStr, ok := reporterID.(string)
-	if !ok {
-		return web.HandleError(c, domain.ErrUnauthorized("invalid user ID"))
-	}
-
-	issueReport, err := h.Service.CreateIssueReport(c.Context(), &payload, reporterIDStr)
+	issueReport, err := h.Service.CreateIssueReport(c.Context(), &payload, reporterID)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
@@ -199,14 +193,9 @@ func (h *IssueReportHandler) ResolveIssueReport(c *fiber.Ctx) error {
 	}
 
 	// Get resolver ID from context (set by auth middleware)
-	resolverID := c.Locals("userID")
-	if resolverID == nil {
-		return web.HandleError(c, domain.ErrUnauthorized("user ID not found"))
-	}
-
-	resolverIDStr, ok := resolverID.(string)
+	resolverIDStr, ok := web.GetUserIDFromContext(c)
 	if !ok {
-		return web.HandleError(c, domain.ErrUnauthorized("invalid user ID"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
 	}
 
 	issueReport, err := h.Service.ResolveIssueReport(c.Context(), id, resolverIDStr, &payload)
