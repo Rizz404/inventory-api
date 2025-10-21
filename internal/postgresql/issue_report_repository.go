@@ -9,6 +9,7 @@ import (
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
+	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
 )
 
@@ -134,12 +135,69 @@ func (r *IssueReportRepository) UpdateIssueReport(ctx context.Context, issueRepo
 		}
 	}()
 
+	// Get current issue report to check status change
+	var currentReport model.IssueReport
+	if err := tx.First(&currentReport, "id = ?", issueReportId).Error; err != nil {
+		tx.Rollback()
+		return domain.IssueReport{}, domain.ErrInternal(err)
+	}
+
 	// Update issue report basic info
 	updates := mapper.ToModelIssueReportUpdateMap(payload)
+
+	// Handle resolved_date based on status change
+	if payload.Status != nil {
+		if *payload.Status == domain.IssueStatusResolved {
+			// If changing to resolved, set resolved_date
+			now := time.Now()
+			updates["resolved_date"] = &now
+		} else if currentReport.Status == domain.IssueStatusResolved && *payload.Status != domain.IssueStatusResolved {
+			// If changing from resolved to something else, clear resolved_date and resolved_by
+			updates["resolved_date"] = nil
+			updates["resolved_by"] = nil
+		}
+	}
+
 	if len(updates) > 0 {
 		if err := tx.Model(&model.IssueReport{}).Where("id = ?", issueReportId).Updates(updates).Error; err != nil {
 			tx.Rollback()
 			return domain.IssueReport{}, domain.ErrInternal(err)
+		}
+	}
+
+	// Update translations if provided
+	if len(payload.Translations) > 0 {
+		for _, translationPayload := range payload.Translations {
+			translationUpdates := mapper.ToModelIssueReportTranslationUpdateMap(&translationPayload)
+			if len(translationUpdates) > 0 {
+				// Try to update existing translation
+				result := tx.Model(&model.IssueReportTranslation{}).
+					Where("report_id = ? AND lang_code = ?", issueReportId, translationPayload.LangCode).
+					Updates(translationUpdates)
+
+				if result.Error != nil {
+					tx.Rollback()
+					return domain.IssueReport{}, domain.ErrInternal(result.Error)
+				}
+
+				// If no rows affected, create new translation
+				if result.RowsAffected == 0 {
+					newTranslation := model.IssueReportTranslation{
+						LangCode:        translationPayload.LangCode,
+						Title:           *translationPayload.Title,
+						Description:     translationPayload.Description,
+						ResolutionNotes: translationPayload.ResolutionNotes,
+					}
+					if parsedReportID, err := ulid.Parse(issueReportId); err == nil {
+						newTranslation.ReportID = model.SQLULID(parsedReportID)
+					}
+
+					if err := tx.Create(&newTranslation).Error; err != nil {
+						tx.Rollback()
+						return domain.IssueReport{}, domain.ErrInternal(err)
+					}
+				}
+			}
 		}
 	}
 
@@ -148,81 +206,6 @@ func (r *IssueReportRepository) UpdateIssueReport(ctx context.Context, issueRepo
 	}
 
 	// Fetch updated issue report with translations and relations
-	return r.GetIssueReportById(ctx, issueReportId)
-}
-
-func (r *IssueReportRepository) ResolveIssueReport(ctx context.Context, issueReportId string, resolvedBy string, resolutionNotes string) (domain.IssueReport, error) {
-	tx := r.db.WithContext(ctx).Begin()
-	if tx.Error != nil {
-		return domain.IssueReport{}, domain.ErrInternal(tx.Error)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	now := time.Now()
-	updates := map[string]interface{}{
-		"status":        domain.IssueStatusResolved,
-		"resolved_date": &now,
-		"resolved_by":   resolvedBy,
-	}
-
-	if err := tx.Model(&model.IssueReport{}).Where("id = ?", issueReportId).Updates(updates).Error; err != nil {
-		tx.Rollback()
-		return domain.IssueReport{}, domain.ErrInternal(err)
-	}
-
-	// Update resolution notes in all translations
-	if err := tx.Model(&model.IssueReportTranslation{}).
-		Where("report_id = ?", issueReportId).
-		Update("resolution_notes", resolutionNotes).Error; err != nil {
-		tx.Rollback()
-		return domain.IssueReport{}, domain.ErrInternal(err)
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		return domain.IssueReport{}, domain.ErrInternal(err)
-	}
-
-	return r.GetIssueReportById(ctx, issueReportId)
-}
-
-func (r *IssueReportRepository) ReopenIssueReport(ctx context.Context, issueReportId string) (domain.IssueReport, error) {
-	tx := r.db.WithContext(ctx).Begin()
-	if tx.Error != nil {
-		return domain.IssueReport{}, domain.ErrInternal(tx.Error)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	updates := map[string]interface{}{
-		"status":        domain.IssueStatusOpen,
-		"resolved_date": nil,
-		"resolved_by":   nil,
-	}
-
-	if err := tx.Model(&model.IssueReport{}).Where("id = ?", issueReportId).Updates(updates).Error; err != nil {
-		tx.Rollback()
-		return domain.IssueReport{}, domain.ErrInternal(err)
-	}
-
-	// Clear resolution notes in all translations
-	if err := tx.Model(&model.IssueReportTranslation{}).
-		Where("report_id = ?", issueReportId).
-		Update("resolution_notes", nil).Error; err != nil {
-		tx.Rollback()
-		return domain.IssueReport{}, domain.ErrInternal(err)
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		return domain.IssueReport{}, domain.ErrInternal(err)
-	}
-
 	return r.GetIssueReportById(ctx, issueReportId)
 }
 
@@ -324,7 +307,7 @@ func (r *IssueReportRepository) GetIssueReportsCursor(ctx context.Context, param
 	db = r.applyIssueReportSorts(db, params.Sort)
 	if params.Pagination != nil {
 		if params.Pagination.Cursor != "" {
-			db = db.Where("ir.id > ?", params.Pagination.Cursor)
+			db = db.Where("ir.id < ?", params.Pagination.Cursor)
 		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)
@@ -356,7 +339,7 @@ func (r *IssueReportRepository) GetIssueReportById(ctx context.Context, issueRep
 		First(&issueReport, "id = ?", issueReportId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.IssueReport{}, domain.ErrNotFound("issue report not found")
+			return domain.IssueReport{}, domain.ErrNotFound("issue report")
 		}
 		return domain.IssueReport{}, domain.ErrInternal(err)
 	}

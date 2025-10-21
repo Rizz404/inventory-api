@@ -136,13 +136,10 @@ type CreateIssueReportTranslationPayload struct {
 }
 
 type UpdateIssueReportPayload struct {
-	Priority        *IssuePriority `json:"priority,omitempty" validate:"omitempty,oneof=Low Medium High Critical"`
-	Status          *IssueStatus   `json:"status,omitempty" validate:"omitempty,oneof=Open 'In Progress' Resolved Closed"`
-	ResolutionNotes *string        `json:"resolutionNotes,omitempty"` // This should be updated via a specific action
-}
-
-type ResolveIssueReportPayload struct {
-	ResolutionNotes string `json:"resolutionNotes" validate:"required,max=1000"`
+	Priority     *IssuePriority                        `json:"priority,omitempty" validate:"omitempty,oneof=Low Medium High Critical"`
+	Status       *IssueStatus                          `json:"status,omitempty" validate:"omitempty,oneof=Open 'In Progress' Resolved Closed"`
+	ResolvedBy   *string                               `json:"resolvedBy,omitempty"`
+	Translations []UpdateIssueReportTranslationPayload `json:"translations,omitempty" validate:"omitempty,dive"`
 }
 
 type UpdateIssueReportTranslationPayload struct {

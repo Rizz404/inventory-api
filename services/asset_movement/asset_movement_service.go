@@ -171,9 +171,9 @@ func (s *Service) CreateAssetMovement(ctx context.Context, payload *domain.Creat
 		return domain.AssetMovementResponse{}, err
 	}
 
-	// * Send notification if asset is assigned to a user
+	// * Send notification asynchronously if asset is assigned to a user
 	if payload.ToUserID != nil && *payload.ToUserID != "" {
-		s.sendAssetMovedNotification(ctx, &createdMovement, &asset)
+		go s.sendAssetMovedNotification(context.Background(), &createdMovement, &asset)
 	}
 
 	// * Convert to AssetMovementResponse using mapper

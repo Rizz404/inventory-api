@@ -8,7 +8,6 @@ import (
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
-	"github.com/Rizz404/inventory-api/internal/utils"
 )
 
 // * Repository interface defines the contract for issue report data operations
@@ -16,8 +15,6 @@ type Repository interface {
 	// * MUTATION
 	CreateIssueReport(ctx context.Context, payload *domain.IssueReport) (domain.IssueReport, error)
 	UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload) (domain.IssueReport, error)
-	ResolveIssueReport(ctx context.Context, issueReportId string, resolvedBy string, resolutionNotes string) (domain.IssueReport, error)
-	ReopenIssueReport(ctx context.Context, issueReportId string) (domain.IssueReport, error)
 	DeleteIssueReport(ctx context.Context, issueReportId string) error
 
 	// * QUERY
@@ -49,8 +46,6 @@ type IssueReportService interface {
 	// * MUTATION
 	CreateIssueReport(ctx context.Context, payload *domain.CreateIssueReportPayload, reportedBy string) (domain.IssueReportResponse, error)
 	UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload) (domain.IssueReportResponse, error)
-	ResolveIssueReport(ctx context.Context, issueReportId string, resolvedBy string, payload *domain.ResolveIssueReportPayload) (domain.IssueReportResponse, error)
-	ReopenIssueReport(ctx context.Context, issueReportId string) (domain.IssueReportResponse, error)
 	DeleteIssueReport(ctx context.Context, issueReportId string) error
 
 	// * QUERY
@@ -109,7 +104,7 @@ func (s *Service) CreateIssueReport(ctx context.Context, payload *domain.CreateI
 	}
 
 	// * Send notification asynchronously
-	go s.sendIssueReportedNotification(ctx, &createdIssueReport)
+	go s.sendIssueReportedNotification(context.Background(), &createdIssueReport)
 
 	// * Convert to IssueReportResponse using mapper
 	return mapper.IssueReportToResponse(&createdIssueReport, mapper.DefaultLangCode), nil
@@ -117,14 +112,9 @@ func (s *Service) CreateIssueReport(ctx context.Context, payload *domain.CreateI
 
 func (s *Service) UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload) (domain.IssueReportResponse, error) {
 	// * Check if issue report exists
-	existingReport, err := s.Repo.GetIssueReportById(ctx, issueReportId)
+	_, err := s.Repo.GetIssueReportById(ctx, issueReportId)
 	if err != nil {
 		return domain.IssueReportResponse{}, err
-	}
-
-	// * Business logic: Check if the report is already closed and trying to change status
-	if existingReport.Status == domain.IssueStatusClosed && payload.Status != nil && *payload.Status != domain.IssueStatusClosed {
-		return domain.IssueReportResponse{}, domain.ErrBadRequestWithKey(utils.ErrIssueReportCannotReopenKey)
 	}
 
 	updatedIssueReport, err := s.Repo.UpdateIssueReport(ctx, issueReportId, payload)
@@ -133,62 +123,10 @@ func (s *Service) UpdateIssueReport(ctx context.Context, issueReportId string, p
 	}
 
 	// * Send notification asynchronously
-	go s.sendIssueUpdatedNotification(ctx, &updatedIssueReport)
+	go s.sendIssueUpdatedNotification(context.Background(), &updatedIssueReport)
 
 	// * Convert to IssueReportResponse using mapper
 	return mapper.IssueReportToResponse(&updatedIssueReport, mapper.DefaultLangCode), nil
-}
-
-func (s *Service) ResolveIssueReport(ctx context.Context, issueReportId string, resolvedBy string, payload *domain.ResolveIssueReportPayload) (domain.IssueReportResponse, error) {
-	// * Check if issue report exists
-	existingReport, err := s.Repo.GetIssueReportById(ctx, issueReportId)
-	if err != nil {
-		return domain.IssueReportResponse{}, err
-	}
-
-	// * Business logic: Check if the report is already resolved
-	if existingReport.Status == domain.IssueStatusResolved || existingReport.Status == domain.IssueStatusClosed {
-		return domain.IssueReportResponse{}, domain.ErrBadRequestWithKey(utils.ErrIssueReportAlreadyResolvedKey)
-	}
-
-	resolvedIssueReport, err := s.Repo.ResolveIssueReport(ctx, issueReportId, resolvedBy, payload.ResolutionNotes)
-	if err != nil {
-		return domain.IssueReportResponse{}, err
-	}
-
-	// * Send notification asynchronously
-	go s.sendIssueResolvedNotification(ctx, &resolvedIssueReport)
-
-	// * Convert to IssueReportResponse using mapper
-	return mapper.IssueReportToResponse(&resolvedIssueReport, mapper.DefaultLangCode), nil
-}
-
-func (s *Service) ReopenIssueReport(ctx context.Context, issueReportId string) (domain.IssueReportResponse, error) {
-	// * Check if issue report exists
-	existingReport, err := s.Repo.GetIssueReportById(ctx, issueReportId)
-	if err != nil {
-		return domain.IssueReportResponse{}, err
-	}
-
-	// * Business logic: Check if the report can be reopened
-	if existingReport.Status == domain.IssueStatusClosed {
-		return domain.IssueReportResponse{}, domain.ErrBadRequestWithKey(utils.ErrIssueReportCannotReopenKey)
-	}
-
-	if existingReport.Status == domain.IssueStatusOpen || existingReport.Status == domain.IssueStatusInProgress {
-		return domain.IssueReportResponse{}, domain.ErrBadRequest("issue report is already open")
-	}
-
-	reopenedIssueReport, err := s.Repo.ReopenIssueReport(ctx, issueReportId)
-	if err != nil {
-		return domain.IssueReportResponse{}, err
-	}
-
-	// * Send notification asynchronously
-	go s.sendIssueReopenedNotification(ctx, &reopenedIssueReport)
-
-	// * Convert to IssueReportResponse using mapper
-	return mapper.IssueReportToResponse(&reopenedIssueReport, mapper.DefaultLangCode), nil
 }
 
 func (s *Service) DeleteIssueReport(ctx context.Context, issueReportId string) error {
@@ -324,141 +262,6 @@ func (s *Service) sendIssueUpdatedNotification(ctx context.Context, issueReport 
 		_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
 		if err != nil {
 			log.Printf("Failed to create issue updated notification for user ID: %s, issue report ID: %s: %v", userId, issueReport.ID, err)
-		}
-	}
-}
-
-// sendIssueResolvedNotification sends notification when an issue report is resolved
-func (s *Service) sendIssueResolvedNotification(ctx context.Context, issueReport *domain.IssueReport) {
-	// Skip if notification service is not available
-	if s.NotificationService == nil {
-		log.Printf("Notification service not available, skipping issue resolved notification for issue report ID: %s", issueReport.ID)
-		return
-	}
-
-	// Get asset information
-	asset, err := s.AssetService.GetAssetById(ctx, issueReport.AssetID, mapper.DefaultLangCode)
-	if err != nil {
-		log.Printf("Failed to get asset for issue resolved notification (issue report ID: %s, asset ID: %s): %v", issueReport.ID, issueReport.AssetID, err)
-		return
-	}
-
-	log.Printf("Sending issue resolved notification for issue report ID: %s, asset ID: %s, asset tag: %s", issueReport.ID, asset.ID, asset.AssetTag)
-
-	// Notify reporter
-	userIds := []string{issueReport.ReportedBy}
-
-	// Get resolution notes from the issue report translations
-	var resolutionNotes string
-	if issueReport.Translations != nil && len(issueReport.Translations) > 0 {
-		for _, translation := range issueReport.Translations {
-			if translation.ResolutionNotes != nil && *translation.ResolutionNotes != "" {
-				resolutionNotes = *translation.ResolutionNotes
-				break
-			}
-		}
-	}
-
-	// Get notification message keys and params
-	titleKey, messageKey, params := messages.IssueResolvedNotification(asset.AssetName, asset.AssetTag, resolutionNotes)
-
-	// Get translations for all supported languages
-	msgTranslations := messages.GetIssueReportNotificationTranslations(titleKey, messageKey, params)
-
-	// Send notification to each recipient
-	for _, userId := range userIds {
-		// Convert to domain translations
-		translations := make([]domain.CreateNotificationTranslationPayload, len(msgTranslations))
-		for i, t := range msgTranslations {
-			translations[i] = domain.CreateNotificationTranslationPayload{
-				LangCode: t.LangCode,
-				Title:    t.Title,
-				Message:  t.Message,
-			}
-		}
-
-		notificationPayload := &domain.CreateNotificationPayload{
-			UserID:         userId,
-			RelatedAssetID: &issueReport.AssetID,
-			Type:           domain.NotificationTypeIssueReport,
-			Translations:   translations,
-		}
-
-		_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
-		if err != nil {
-			log.Printf("Failed to create issue resolved notification for user ID: %s, issue report ID: %s: %v", userId, issueReport.ID, err)
-		}
-	}
-}
-
-// sendIssueReopenedNotification sends notification when an issue report is reopened
-func (s *Service) sendIssueReopenedNotification(ctx context.Context, issueReport *domain.IssueReport) {
-	// Skip if notification service is not available
-	if s.NotificationService == nil {
-		log.Printf("Notification service not available, skipping issue reopened notification for issue report ID: %s", issueReport.ID)
-		return
-	}
-
-	// Get asset information
-	asset, err := s.AssetService.GetAssetById(ctx, issueReport.AssetID, mapper.DefaultLangCode)
-	if err != nil {
-		log.Printf("Failed to get asset for issue reopened notification (issue report ID: %s, asset ID: %s): %v", issueReport.ID, issueReport.AssetID, err)
-		return
-	}
-
-	log.Printf("Sending issue reopened notification for issue report ID: %s, asset ID: %s, asset tag: %s", issueReport.ID, asset.ID, asset.AssetTag)
-
-	// Determine notification recipients
-	var userIds []string
-	if asset.AssignedToID != nil && *asset.AssignedToID != "" {
-		// Notify assigned user
-		userIds = []string{*asset.AssignedToID}
-	} else {
-		// Notify all admins
-		adminRole := domain.RoleAdmin
-		userParams := domain.UserParams{
-			Filters: &domain.UserFilterOptions{
-				Role: &adminRole,
-			},
-		}
-		admins, err := s.UserRepo.GetUsersPaginated(ctx, userParams)
-		if err != nil {
-			log.Printf("Failed to get admin users for issue reopened notification: %v", err)
-			return
-		}
-		for _, admin := range admins {
-			userIds = append(userIds, admin.ID)
-		}
-	}
-
-	// Get notification message keys and params
-	titleKey, messageKey, params := messages.IssueReopenedNotification(asset.AssetName, asset.AssetTag)
-
-	// Get translations for all supported languages
-	msgTranslations := messages.GetIssueReportNotificationTranslations(titleKey, messageKey, params)
-
-	// Send notification to each recipient
-	for _, userId := range userIds {
-		// Convert to domain translations
-		translations := make([]domain.CreateNotificationTranslationPayload, len(msgTranslations))
-		for i, t := range msgTranslations {
-			translations[i] = domain.CreateNotificationTranslationPayload{
-				LangCode: t.LangCode,
-				Title:    t.Title,
-				Message:  t.Message,
-			}
-		}
-
-		notificationPayload := &domain.CreateNotificationPayload{
-			UserID:         userId,
-			RelatedAssetID: &issueReport.AssetID,
-			Type:           domain.NotificationTypeIssueReport,
-			Translations:   translations,
-		}
-
-		_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
-		if err != nil {
-			log.Printf("Failed to create issue reopened notification for user ID: %s, issue report ID: %s: %v", userId, issueReport.ID, err)
 		}
 	}
 }

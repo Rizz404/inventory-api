@@ -321,8 +321,34 @@ func ToModelIssueReportUpdateMap(payload *domain.UpdateIssueReportPayload) map[s
 		updates["status"] = *payload.Status
 	}
 
+	if payload.ResolvedBy != nil {
+		if *payload.ResolvedBy != "" {
+			if parsedResolvedBy, err := ulid.Parse(*payload.ResolvedBy); err == nil {
+				modelULID := model.SQLULID(parsedResolvedBy)
+				updates["resolved_by"] = &modelULID
+			}
+		} else {
+			updates["resolved_by"] = nil
+		}
+	}
+
+	return updates
+}
+
+// ToModelIssueReportTranslationUpdateMap converts UpdateIssueReportTranslationPayload to map for database updates
+func ToModelIssueReportTranslationUpdateMap(payload *domain.UpdateIssueReportTranslationPayload) map[string]interface{} {
+	updates := make(map[string]interface{})
+
+	if payload.Title != nil {
+		updates["title"] = *payload.Title
+	}
+
+	if payload.Description != nil {
+		updates["description"] = payload.Description
+	}
+
 	if payload.ResolutionNotes != nil {
-		updates["resolution_notes"] = *payload.ResolutionNotes
+		updates["resolution_notes"] = payload.ResolutionNotes
 	}
 
 	return updates

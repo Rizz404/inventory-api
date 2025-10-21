@@ -47,16 +47,6 @@ func NewIssueReportHandler(app fiber.Router, s issue_report.IssueReportService) 
 	issueReports.Get("/check/:id", handler.CheckIssueReportExists)
 	issueReports.Get("/:id", handler.GetIssueReportById)
 
-	// * Resolve/Reopen operations
-	issueReports.Patch("/:id/resolve",
-		middleware.AuthMiddleware(),
-		handler.ResolveIssueReport,
-	)
-	issueReports.Patch("/:id/reopen",
-		middleware.AuthMiddleware(),
-		handler.ReopenIssueReport,
-	)
-
 	issueReports.Patch("/:id",
 		middleware.AuthMiddleware(),
 		handler.UpdateIssueReport,
@@ -173,51 +163,21 @@ func (h *IssueReportHandler) UpdateIssueReport(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
+	// * Auto-set resolvedBy if status is being changed to resolved and resolvedBy is not provided
+	if payload.Status != nil && *payload.Status == domain.IssueStatusResolved && payload.ResolvedBy == nil {
+		userID, ok := web.GetUserIDFromContext(c)
+		if !ok {
+			return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
+		}
+		payload.ResolvedBy = &userID
+	}
+
 	issueReport, err := h.Service.UpdateIssueReport(c.Context(), id, &payload)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessIssueReportUpdatedKey, issueReport)
-}
-
-func (h *IssueReportHandler) ResolveIssueReport(c *fiber.Ctx) error {
-	id := c.Params("id")
-	if id == "" {
-		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrIssueReportIDRequiredKey))
-	}
-
-	var payload domain.ResolveIssueReportPayload
-	if err := web.ParseAndValidate(c, &payload); err != nil {
-		return web.HandleError(c, err)
-	}
-
-	// Get resolver ID from context (set by auth middleware)
-	resolverIDStr, ok := web.GetUserIDFromContext(c)
-	if !ok {
-		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
-	}
-
-	issueReport, err := h.Service.ResolveIssueReport(c.Context(), id, resolverIDStr, &payload)
-	if err != nil {
-		return web.HandleError(c, err)
-	}
-
-	return web.Success(c, fiber.StatusOK, utils.SuccessIssueReportResolvedKey, issueReport)
-}
-
-func (h *IssueReportHandler) ReopenIssueReport(c *fiber.Ctx) error {
-	id := c.Params("id")
-	if id == "" {
-		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrIssueReportIDRequiredKey))
-	}
-
-	issueReport, err := h.Service.ReopenIssueReport(c.Context(), id)
-	if err != nil {
-		return web.HandleError(c, err)
-	}
-
-	return web.Success(c, fiber.StatusOK, utils.SuccessIssueReportReopenedKey, issueReport)
 }
 
 func (h *IssueReportHandler) DeleteIssueReport(c *fiber.Ctx) error {

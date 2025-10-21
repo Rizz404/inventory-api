@@ -68,9 +68,10 @@ func (cs *CronService) checkMaintenanceDueSoon() {
 		return
 	}
 
-	// Send notification for each schedule
+	// Send notification asynchronously for each schedule
 	for _, schedule := range schedules {
-		cs.sendMaintenanceDueSoonNotification(ctx, &schedule)
+		scheduleCopy := schedule // Avoid closure issue
+		go cs.sendMaintenanceDueSoonNotification(context.Background(), &scheduleCopy)
 	}
 
 	log.Printf("Maintenance due soon check completed. Found %d schedules due within 7 days", len(schedules))
@@ -88,9 +89,10 @@ func (cs *CronService) checkOverdueMaintenance() {
 		return
 	}
 
-	// Send notification for each schedule
+	// Send notification asynchronously for each schedule
 	for _, schedule := range schedules {
-		cs.sendMaintenanceOverdueNotification(ctx, &schedule)
+		scheduleCopy := schedule // Avoid closure issue
+		go cs.sendMaintenanceOverdueNotification(context.Background(), &scheduleCopy)
 	}
 
 	log.Printf("Overdue maintenance check completed. Found %d overdue schedules", len(schedules))
