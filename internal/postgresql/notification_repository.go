@@ -30,11 +30,20 @@ func (r *NotificationRepository) applyNotificationFilters(db *gorm.DB, filters *
 	if filters.UserID != nil {
 		db = db.Where("n.user_id = ?", filters.UserID)
 	}
+	if filters.RelatedEntityType != nil {
+		db = db.Where("n.related_entity_type = ?", filters.RelatedEntityType)
+	}
+	if filters.RelatedEntityID != nil {
+		db = db.Where("n.related_entity_id = ?", filters.RelatedEntityID)
+	}
 	if filters.RelatedAssetID != nil {
 		db = db.Where("n.related_asset_id = ?", filters.RelatedAssetID)
 	}
 	if filters.Type != nil {
 		db = db.Where("n.type = ?", filters.Type)
+	}
+	if filters.Priority != nil {
+		db = db.Where("n.priority = ?", filters.Priority)
 	}
 	if filters.IsRead != nil {
 		db = db.Where("n.is_read = ?", filters.IsRead)
@@ -366,12 +375,16 @@ func (r *NotificationRepository) GetNotificationStatistics(ctx context.Context) 
 			stats.ByType.Maintenance = int(ts.Count)
 		case domain.NotificationTypeWarranty:
 			stats.ByType.Warranty = int(ts.Count)
-		case domain.NotificationTypeStatusChange:
-			stats.ByType.StatusChange = int(ts.Count)
+		case domain.NotificationTypeIssue:
+			stats.ByType.Issue = int(ts.Count)
 		case domain.NotificationTypeMovement:
 			stats.ByType.Movement = int(ts.Count)
-		case domain.NotificationTypeIssueReport:
-			stats.ByType.IssueReport = int(ts.Count)
+		case domain.NotificationTypeStatusChange:
+			stats.ByType.StatusChange = int(ts.Count)
+		case domain.NotificationTypeLocationChange:
+			stats.ByType.LocationChange = int(ts.Count)
+		case domain.NotificationTypeCategoryChange:
+			stats.ByType.CategoryChange = int(ts.Count)
 		}
 	}
 
@@ -428,16 +441,24 @@ func (r *NotificationRepository) GetNotificationStatistics(ctx context.Context) 
 		mostCommonCount = stats.ByType.Warranty
 		mostCommonType = "WARRANTY"
 	}
-	if stats.ByType.StatusChange > mostCommonCount {
-		mostCommonCount = stats.ByType.StatusChange
-		mostCommonType = "STATUS_CHANGE"
+	if stats.ByType.Issue > mostCommonCount {
+		mostCommonCount = stats.ByType.Issue
+		mostCommonType = "ISSUE"
 	}
 	if stats.ByType.Movement > mostCommonCount {
 		mostCommonCount = stats.ByType.Movement
 		mostCommonType = "MOVEMENT"
 	}
-	if stats.ByType.IssueReport > mostCommonCount {
-		mostCommonType = "ISSUE_REPORT"
+	if stats.ByType.StatusChange > mostCommonCount {
+		mostCommonCount = stats.ByType.StatusChange
+		mostCommonType = "STATUS_CHANGE"
+	}
+	if stats.ByType.LocationChange > mostCommonCount {
+		mostCommonCount = stats.ByType.LocationChange
+		mostCommonType = "LOCATION_CHANGE"
+	}
+	if stats.ByType.CategoryChange > mostCommonCount {
+		mostCommonType = "CATEGORY_CHANGE"
 	}
 	stats.Summary.MostCommonType = mostCommonType
 
@@ -469,9 +490,19 @@ func (r *NotificationRepository) GetNotificationStatistics(ctx context.Context) 
 
 // Mark notification as read/unread
 func (r *NotificationRepository) MarkNotificationAsRead(ctx context.Context, notificationId string, isRead bool) error {
+	updates := map[string]interface{}{
+		"is_read": isRead,
+	}
+
+	if isRead {
+		updates["read_at"] = time.Now()
+	} else {
+		updates["read_at"] = nil
+	}
+
 	err := r.db.WithContext(ctx).Model(&model.Notification{}).
 		Where("id = ?", notificationId).
-		Update("is_read", isRead).Error
+		Updates(updates).Error
 	if err != nil {
 		return domain.ErrInternal(err)
 	}
@@ -480,9 +511,14 @@ func (r *NotificationRepository) MarkNotificationAsRead(ctx context.Context, not
 
 // Mark all notifications for a user as read
 func (r *NotificationRepository) MarkAllNotificationsAsRead(ctx context.Context, userId string) error {
+	updates := map[string]interface{}{
+		"is_read": true,
+		"read_at": time.Now(),
+	}
+
 	err := r.db.WithContext(ctx).Model(&model.Notification{}).
 		Where("user_id = ? AND is_read = ?", userId, false).
-		Update("is_read", true).Error
+		Updates(updates).Error
 	if err != nil {
 		return domain.ErrInternal(err)
 	}

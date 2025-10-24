@@ -198,10 +198,13 @@ func (s *Service) sendIssueReportedNotification(ctx context.Context, issueReport
 		}
 
 		notificationPayload := &domain.CreateNotificationPayload{
-			UserID:         userId,
-			RelatedAssetID: &issueReport.AssetID,
-			Type:           domain.NotificationTypeIssueReport,
-			Translations:   translations,
+			UserID:            userId,
+			RelatedEntityType: stringPtr("issue_report"),
+			RelatedEntityID:   &issueReport.ID,
+			RelatedAssetID:    &issueReport.AssetID,
+			Type:              domain.NotificationTypeIssue,
+			Priority:          determinePriorityFromIssue(issueReport),
+			Translations:      translations,
 		}
 
 		_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
@@ -253,16 +256,40 @@ func (s *Service) sendIssueUpdatedNotification(ctx context.Context, issueReport 
 		}
 
 		notificationPayload := &domain.CreateNotificationPayload{
-			UserID:         userId,
-			RelatedAssetID: &issueReport.AssetID,
-			Type:           domain.NotificationTypeIssueReport,
-			Translations:   translations,
+			UserID:            userId,
+			RelatedEntityType: stringPtr("issue_report"),
+			RelatedEntityID:   &issueReport.ID,
+			RelatedAssetID:    &issueReport.AssetID,
+			Type:              domain.NotificationTypeIssue,
+			Priority:          determinePriorityFromIssue(issueReport),
+			Translations:      translations,
 		}
 
 		_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
 		if err != nil {
 			log.Printf("Failed to create issue updated notification for user ID: %s, issue report ID: %s: %v", userId, issueReport.ID, err)
 		}
+	}
+}
+
+// Helper function to create string pointer
+func stringPtr(s string) *string {
+	return &s
+}
+
+// Helper function to determine notification priority based on issue priority
+func determinePriorityFromIssue(issue *domain.IssueReport) domain.NotificationPriority {
+	switch issue.Priority {
+	case domain.PriorityCritical:
+		return domain.NotificationPriorityUrgent
+	case domain.PriorityHigh:
+		return domain.NotificationPriorityHigh
+	case domain.PriorityMedium:
+		return domain.NotificationPriorityNormal
+	case domain.PriorityLow:
+		return domain.NotificationPriorityLow
+	default:
+		return domain.NotificationPriorityNormal
 	}
 }
 

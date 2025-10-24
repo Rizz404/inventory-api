@@ -71,11 +71,15 @@ func NewService(r Repository, userRepo UserRepository, fcmClient *fcm.Client) No
 func (s *Service) CreateNotification(ctx context.Context, payload *domain.CreateNotificationPayload) (domain.NotificationResponse, error) {
 	// * Prepare domain notification
 	newNotification := domain.Notification{
-		UserID:         payload.UserID,
-		RelatedAssetID: payload.RelatedAssetID,
-		Type:           payload.Type,
-		IsRead:         false, // New notifications are always unread
-		Translations:   make([]domain.NotificationTranslation, len(payload.Translations)),
+		UserID:            payload.UserID,
+		RelatedEntityType: payload.RelatedEntityType,
+		RelatedEntityID:   payload.RelatedEntityID,
+		RelatedAssetID:    payload.RelatedAssetID,
+		Type:              payload.Type,
+		Priority:          payload.Priority,
+		IsRead:            false, // New notifications are always unread
+		ExpiresAt:         payload.ExpiresAt,
+		Translations:      make([]domain.NotificationTranslation, len(payload.Translations)),
 	}
 
 	// * Convert translation payloads to domain translations
@@ -256,19 +260,29 @@ func (s *Service) sendFCMNotification(ctx context.Context, notification *domain.
 
 	// * Prepare FCM notification data
 	fcmNotification := &fcm.PushNotification{
-		Token: *user.FCMToken,
-		Title: title,
-		Body:  message,
+		Token:    *user.FCMToken,
+		Title:    title,
+		Body:     message,
+		Priority: notification.Priority.ToFCMPriority(), // Map notification priority to FCM priority
 		Data: map[string]string{
 			"notification_id": notification.ID,
 			"user_id":         notification.UserID,
 			"type":            string(notification.Type),
+			"priority":        string(notification.Priority),
 			"is_read":         "false",
 			"click_action":    "FLUTTER_NOTIFICATION_CLICK",
 		},
 	}
 
-	// * Add related asset ID if available
+	// * Add related entity info if available
+	if notification.RelatedEntityType != nil {
+		fcmNotification.Data["related_entity_type"] = *notification.RelatedEntityType
+	}
+	if notification.RelatedEntityID != nil {
+		fcmNotification.Data["related_entity_id"] = *notification.RelatedEntityID
+	}
+
+	// * Add related asset ID if available (legacy support)
 	if notification.RelatedAssetID != nil {
 		fcmNotification.Data["related_asset_id"] = *notification.RelatedAssetID
 	}
@@ -279,6 +293,6 @@ func (s *Service) sendFCMNotification(ctx context.Context, notification *domain.
 		// Log error but don't fail the notification creation
 		log.Printf("Failed to send FCM notification (notification ID: %s, user ID: %s): %v", notification.ID, notification.UserID, err)
 	} else {
-		log.Printf("Successfully sent FCM notification for notification ID: %s, user ID: %s", notification.ID, notification.UserID)
+		log.Printf("Successfully sent FCM notification for notification ID: %s, user ID: %s, priority: %s", notification.ID, notification.UserID, notification.Priority)
 	}
 }

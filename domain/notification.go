@@ -7,22 +7,40 @@ import "time"
 type NotificationType string
 
 const (
-	NotificationTypeMaintenance    NotificationType = "MAINTENANCE"
-	NotificationTypeWarranty       NotificationType = "WARRANTY"
-	NotificationTypeStatusChange   NotificationType = "STATUS_CHANGE"
-	NotificationTypeMovement       NotificationType = "MOVEMENT"
-	NotificationTypeIssueReport    NotificationType = "ISSUE_REPORT"
-	NotificationTypeLocationChange NotificationType = "LOCATION_CHANGE"
-	NotificationTypeCategoryChange NotificationType = "CATEGORY_CHANGE"
-	NotificationTypeAssetCreated   NotificationType = "ASSET_CREATED"
-	NotificationTypeAssetDeleted   NotificationType = "ASSET_DELETED"
-	NotificationTypeHighValue      NotificationType = "HIGH_VALUE"
+	// Core notification types
+	NotificationTypeMaintenance    NotificationType = "MAINTENANCE"     // All maintenance-related (due, overdue, completed)
+	NotificationTypeWarranty       NotificationType = "WARRANTY"        // Warranty expiring/expired
+	NotificationTypeIssue          NotificationType = "ISSUE"           // Issue reports (reported, updated, resolved)
+	NotificationTypeMovement       NotificationType = "MOVEMENT"        // Asset movements
+	NotificationTypeStatusChange   NotificationType = "STATUS_CHANGE"   // Asset status changes
+	NotificationTypeLocationChange NotificationType = "LOCATION_CHANGE" // Location changes
+	NotificationTypeCategoryChange NotificationType = "CATEGORY_CHANGE" // Category changes
 )
+
+type NotificationPriority string
+
+const (
+	NotificationPriorityLow    NotificationPriority = "LOW"
+	NotificationPriorityNormal NotificationPriority = "NORMAL"
+	NotificationPriorityHigh   NotificationPriority = "HIGH"
+	NotificationPriorityUrgent NotificationPriority = "URGENT"
+)
+
+// ToFCMPriority maps notification priority to FCM priority
+func (p NotificationPriority) ToFCMPriority() string {
+	switch p {
+	case NotificationPriorityUrgent, NotificationPriorityHigh:
+		return "high"
+	default:
+		return "normal"
+	}
+}
 
 type NotificationSortField string
 
 const (
 	NotificationSortByType      NotificationSortField = "type"
+	NotificationSortByPriority  NotificationSortField = "priority"
 	NotificationSortByTitle     NotificationSortField = "title"
 	NotificationSortByMessage   NotificationSortField = "message"
 	NotificationSortByIsRead    NotificationSortField = "isRead"
@@ -32,13 +50,28 @@ const (
 // --- Structs ---
 
 type Notification struct {
-	ID             string                    `json:"id"`
-	UserID         string                    `json:"userId"`
-	RelatedAssetID *string                   `json:"relatedAssetId"`
-	Type           NotificationType          `json:"type"`
-	IsRead         bool                      `json:"isRead"`
-	CreatedAt      time.Time                 `json:"createdAt"`
-	Translations   []NotificationTranslation `json:"translations,omitempty"`
+	ID     string `json:"id"`
+	UserID string `json:"userId"`
+
+	// Related entity (polymorphic)
+	RelatedEntityType *string `json:"relatedEntityType,omitempty"`
+	RelatedEntityID   *string `json:"relatedEntityId,omitempty"`
+
+	// Legacy support (deprecated, use RelatedEntityID instead)
+	RelatedAssetID *string `json:"relatedAssetId,omitempty"`
+
+	Type     NotificationType     `json:"type"`
+	Priority NotificationPriority `json:"priority"`
+
+	// Status
+	IsRead bool       `json:"isRead"`
+	ReadAt *time.Time `json:"readAt,omitempty"`
+
+	// Expiration
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
+
+	CreatedAt    time.Time                 `json:"createdAt"`
+	Translations []NotificationTranslation `json:"translations,omitempty"`
 }
 
 type NotificationTranslation struct {
@@ -56,30 +89,36 @@ type NotificationTranslationResponse struct {
 }
 
 type NotificationResponse struct {
-	ID             string                            `json:"id"`
-	UserID         string                            `json:"userId"`
-	RelatedAssetID *string                           `json:"relatedAssetId"`
-	Type           NotificationType                  `json:"type"`
-	IsRead         bool                              `json:"isRead"`
-	CreatedAt      time.Time                         `json:"createdAt"`
-	Title          string                            `json:"title"`
-	Message        string                            `json:"message"`
-	Translations   []NotificationTranslationResponse `json:"translations"`
-	// * Populated
-	// ! cuma notification gak perlu populated table biar gak berat
-	// User         UserResponse   `json:"user"`
-	// RelatedAsset *AssetResponse `json:"relatedAsset,omitempty"`
+	ID                string                            `json:"id"`
+	UserID            string                            `json:"userId"`
+	RelatedEntityType *string                           `json:"relatedEntityType,omitempty"`
+	RelatedEntityID   *string                           `json:"relatedEntityId,omitempty"`
+	RelatedAssetID    *string                           `json:"relatedAssetId,omitempty"` // deprecated
+	Type              NotificationType                  `json:"type"`
+	Priority          NotificationPriority              `json:"priority"`
+	IsRead            bool                              `json:"isRead"`
+	ReadAt            *time.Time                        `json:"readAt,omitempty"`
+	ExpiresAt         *time.Time                        `json:"expiresAt,omitempty"`
+	CreatedAt         time.Time                         `json:"createdAt"`
+	Title             string                            `json:"title"`
+	Message           string                            `json:"message"`
+	Translations      []NotificationTranslationResponse `json:"translations"`
 }
 
 type NotificationListResponse struct {
-	ID             string           `json:"id"`
-	UserID         string           `json:"userId"`
-	RelatedAssetID *string          `json:"relatedAssetId,omitempty"`
-	Type           NotificationType `json:"type"`
-	IsRead         bool             `json:"isRead"`
-	CreatedAt      time.Time        `json:"createdAt"`
-	Title          string           `json:"title"`
-	Message        string           `json:"message"`
+	ID                string               `json:"id"`
+	UserID            string               `json:"userId"`
+	RelatedEntityType *string              `json:"relatedEntityType,omitempty"`
+	RelatedEntityID   *string              `json:"relatedEntityId,omitempty"`
+	RelatedAssetID    *string              `json:"relatedAssetId,omitempty"` // deprecated
+	Type              NotificationType     `json:"type"`
+	Priority          NotificationPriority `json:"priority"`
+	IsRead            bool                 `json:"isRead"`
+	ReadAt            *time.Time           `json:"readAt,omitempty"`
+	ExpiresAt         *time.Time           `json:"expiresAt,omitempty"`
+	CreatedAt         time.Time            `json:"createdAt"`
+	Title             string               `json:"title"`
+	Message           string               `json:"message"`
 }
 
 type BulkDeleteNotifications struct {
@@ -97,10 +136,14 @@ type BulkDeleteNotificationsResponse struct {
 // Notifications are typically created by the system, not directly by users.
 // Payloads might not be needed for direct API exposure but can be used internally.
 type CreateNotificationPayload struct {
-	UserID         string                                 `json:"userId"`
-	RelatedAssetID *string                                `json:"relatedAssetId,omitempty"`
-	Type           NotificationType                       `json:"type"`
-	Translations   []CreateNotificationTranslationPayload `json:"translations"`
+	UserID            string                                 `json:"userId"`
+	RelatedEntityType *string                                `json:"relatedEntityType,omitempty"`
+	RelatedEntityID   *string                                `json:"relatedEntityId,omitempty"`
+	RelatedAssetID    *string                                `json:"relatedAssetId,omitempty"` // deprecated
+	Type              NotificationType                       `json:"type"`
+	Priority          NotificationPriority                   `json:"priority"`
+	ExpiresAt         *time.Time                             `json:"expiresAt,omitempty"`
+	Translations      []CreateNotificationTranslationPayload `json:"translations"`
 }
 
 type CreateNotificationTranslationPayload struct {
@@ -111,6 +154,8 @@ type CreateNotificationTranslationPayload struct {
 
 type UpdateNotificationPayload struct {
 	IsRead       *bool                                  `json:"isRead,omitempty"`
+	Priority     *NotificationPriority                  `json:"priority,omitempty"`
+	ExpiresAt    *time.Time                             `json:"expiresAt,omitempty"`
 	Translations []CreateNotificationTranslationPayload `json:"translations,omitempty"`
 }
 
@@ -121,10 +166,13 @@ type BulkDeleteNotificationsPayload struct {
 // --- Query Parameters ---
 
 type NotificationFilterOptions struct {
-	UserID         *string           `json:"userId,omitempty"`
-	RelatedAssetID *string           `json:"relatedAssetId,omitempty"`
-	Type           *NotificationType `json:"type,omitempty"`
-	IsRead         *bool             `json:"isRead,omitempty"`
+	UserID            *string               `json:"userId,omitempty"`
+	RelatedEntityType *string               `json:"relatedEntityType,omitempty"`
+	RelatedEntityID   *string               `json:"relatedEntityId,omitempty"`
+	RelatedAssetID    *string               `json:"relatedAssetId,omitempty"` // deprecated
+	Type              *NotificationType     `json:"type,omitempty"`
+	Priority          *NotificationPriority `json:"priority,omitempty"`
+	IsRead            *bool                 `json:"isRead,omitempty"`
 }
 
 type NotificationSortOptions struct {
@@ -155,11 +203,13 @@ type NotificationCountStatistics struct {
 }
 
 type NotificationTypeStatistics struct {
-	Maintenance  int `json:"maintenance"`
-	Warranty     int `json:"warranty"`
-	StatusChange int `json:"statusChange"`
-	Movement     int `json:"movement"`
-	IssueReport  int `json:"issueReport"`
+	Maintenance    int `json:"maintenance"`
+	Warranty       int `json:"warranty"`
+	Issue          int `json:"issue"`
+	Movement       int `json:"movement"`
+	StatusChange   int `json:"statusChange"`
+	LocationChange int `json:"locationChange"`
+	CategoryChange int `json:"categoryChange"`
 }
 
 type NotificationStatusStatistics struct {
@@ -196,11 +246,13 @@ type NotificationCountStatisticsResponse struct {
 }
 
 type NotificationTypeStatisticsResponse struct {
-	Maintenance  int `json:"maintenance"`
-	Warranty     int `json:"warranty"`
-	StatusChange int `json:"statusChange"`
-	Movement     int `json:"movement"`
-	IssueReport  int `json:"issueReport"`
+	Maintenance    int `json:"maintenance"`
+	Warranty       int `json:"warranty"`
+	Issue          int `json:"issue"`
+	Movement       int `json:"movement"`
+	StatusChange   int `json:"statusChange"`
+	LocationChange int `json:"locationChange"`
+	CategoryChange int `json:"categoryChange"`
 }
 
 type NotificationStatusStatisticsResponse struct {

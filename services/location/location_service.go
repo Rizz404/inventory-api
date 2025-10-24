@@ -306,6 +306,7 @@ func (s *Service) sendLocationUpdatedNotification(ctx context.Context, locationN
 	notificationPayload := &domain.CreateNotificationPayload{
 		UserID:       userID,
 		Type:         domain.NotificationTypeLocationChange,
+		Priority:     domain.NotificationPriorityLow, // Location change = low priority
 		Translations: translations,
 	}
 

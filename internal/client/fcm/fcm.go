@@ -18,6 +18,7 @@ type PushNotification struct {
 	Tokens   []string          `json:"tokens,omitempty"`
 	Title    string            `json:"title"`
 	Body     string            `json:"body"`
+	Priority string            `json:"priority,omitempty"` // "high" or "normal"
 	Data     map[string]string `json:"data,omitempty"`
 	ImageURL string            `json:"image_url,omitempty"`
 }
@@ -57,6 +58,12 @@ func NewClientWithConfig(ctx context.Context, config *firebase.Config, credentia
 
 // * SendToToken sends notification to a single device token
 func (c *Client) SendToToken(ctx context.Context, notification *PushNotification) (string, error) {
+	// Determine Android priority based on notification priority
+	androidPriority := "normal"
+	if notification.Priority == "high" {
+		androidPriority = "high"
+	}
+
 	message := &messaging.Message{
 		Notification: &messaging.Notification{
 			Title: notification.Title,
@@ -64,6 +71,19 @@ func (c *Client) SendToToken(ctx context.Context, notification *PushNotification
 		},
 		Token: notification.Token,
 		Data:  notification.Data,
+		Android: &messaging.AndroidConfig{
+			Priority: androidPriority,
+		},
+		APNS: &messaging.APNSConfig{
+			Headers: map[string]string{
+				"apns-priority": func() string {
+					if notification.Priority == "high" {
+						return "10"
+					}
+					return "5"
+				}(),
+			},
+		},
 	}
 
 	if notification.ImageURL != "" {

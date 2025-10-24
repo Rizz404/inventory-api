@@ -265,16 +265,24 @@ func (s *Service) sendMaintenanceCompletedNotification(ctx context.Context, reco
 	}
 
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:         *asset.AssignedToID,
-		RelatedAssetID: &record.AssetID,
-		Type:           domain.NotificationTypeMaintenance,
-		Translations:   translations,
+		UserID:            *asset.AssignedToID,
+		RelatedEntityType: stringPtr("maintenance_record"),
+		RelatedEntityID:   &record.ID,
+		RelatedAssetID:    &record.AssetID,
+		Type:              domain.NotificationTypeMaintenance,
+		Priority:          domain.NotificationPriorityNormal, // Completed = normal priority
+		Translations:      translations,
 	}
 
 	_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
 	if err != nil {
 		// Log error but don't fail the operation
 	}
+}
+
+// Helper function to create string pointer
+func stringPtr(s string) *string {
+	return &s
 }
 
 // sendMaintenanceFailedNotification sends notification for failed maintenance
@@ -307,10 +315,13 @@ func (s *Service) sendMaintenanceFailedNotification(ctx context.Context, record 
 	}
 
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:         *asset.AssignedToID,
-		RelatedAssetID: &record.AssetID,
-		Type:           domain.NotificationTypeMaintenance,
-		Translations:   translations,
+		UserID:            *asset.AssignedToID,
+		RelatedEntityType: stringPtr("maintenance_record"),
+		RelatedEntityID:   &record.ID,
+		RelatedAssetID:    &record.AssetID,
+		Type:              domain.NotificationTypeMaintenance,
+		Priority:          domain.NotificationPriorityHigh, // Failed = high priority
+		Translations:      translations,
 	}
 
 	_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)

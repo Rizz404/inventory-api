@@ -57,12 +57,13 @@ const (
 	ErrScanLogIDRequiredKey MessageKey = "error.scan_log.id_required"
 
 	// * Notification-specific error keys
-	ErrNotificationNotFoundKey        MessageKey = "error.notification.not_found"
-	ErrNotificationIDRequiredKey      MessageKey = "error.notification.id_required"
-	ErrNotificationUserIDRequiredKey  MessageKey = "error.notification.user_id_required"
-	ErrNotificationTypeRequiredKey    MessageKey = "error.notification.type_required"
-	ErrNotificationTitleRequiredKey   MessageKey = "error.notification.title_required"
-	ErrNotificationMessageRequiredKey MessageKey = "error.notification.message_required"
+	ErrNotificationNotFoundKey         MessageKey = "error.notification.not_found"
+	ErrNotificationIDRequiredKey       MessageKey = "error.notification.id_required"
+	ErrNotificationUserIDRequiredKey   MessageKey = "error.notification.user_id_required"
+	ErrNotificationTypeRequiredKey     MessageKey = "error.notification.type_required"
+	ErrNotificationPriorityRequiredKey MessageKey = "error.notification.priority_required"
+	ErrNotificationTitleRequiredKey    MessageKey = "error.notification.title_required"
+	ErrNotificationMessageRequiredKey  MessageKey = "error.notification.message_required"
 
 	// * Issue report-specific error keys
 	ErrIssueReportNotFoundKey         MessageKey = "error.issue_report.not_found"
@@ -929,6 +930,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Notification type is required",
 		// "id-ID": "Jenis notifikasi diperlukan",
 		"ja-JP": "通知タイプが必要です",
+	},
+	ErrNotificationPriorityRequiredKey: {
+		"en-US": "Notification priority is required",
+		// "id-ID": "Prioritas notifikasi diperlukan",
+		"ja-JP": "通知の優先度が必要です",
 	},
 	ErrNotificationTitleRequiredKey: {
 		"en-US": "Notification title is required",

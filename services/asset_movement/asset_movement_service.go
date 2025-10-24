@@ -363,11 +363,17 @@ func (s *Service) sendAssetMovedNotification(ctx context.Context, movement *doma
 		}
 	}
 
+	entityType := "asset_movement"
+	priority := domain.NotificationPriorityNormal
+
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:         *asset.AssignedToID,
-		RelatedAssetID: &asset.ID,
-		Type:           domain.NotificationTypeMovement,
-		Translations:   translations,
+		UserID:            *asset.AssignedToID,
+		RelatedEntityType: &entityType,
+		RelatedEntityID:   &movement.ID,
+		RelatedAssetID:    &asset.ID,
+		Type:              domain.NotificationTypeMovement,
+		Priority:          priority,
+		Translations:      translations,
 	}
 
 	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)

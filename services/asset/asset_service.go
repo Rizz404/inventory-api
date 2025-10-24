@@ -508,11 +508,17 @@ func (s *Service) sendAssetAssignmentNotification(ctx context.Context, asset *do
 		}
 	}
 
+	entityType := "asset"
+	priority := domain.NotificationPriorityNormal
+
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:         userId,
-		RelatedAssetID: &assetIdStr,
-		Type:           domain.NotificationTypeStatusChange,
-		Translations:   translations,
+		UserID:            userId,
+		RelatedEntityType: &entityType,
+		RelatedEntityID:   &assetIdStr,
+		RelatedAssetID:    &assetIdStr,
+		Type:              domain.NotificationTypeStatusChange,
+		Priority:          priority,
+		Translations:      translations,
 	}
 
 	// Send notification (errors are logged internally, won't block asset creation/update)
@@ -547,11 +553,17 @@ func (s *Service) sendAssetUnassignmentNotification(ctx context.Context, asset *
 		}
 	}
 
+	entityType := "asset"
+	priority := domain.NotificationPriorityNormal
+
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:         userId,
-		RelatedAssetID: &assetIdStr,
-		Type:           domain.NotificationTypeStatusChange,
-		Translations:   translations,
+		UserID:            userId,
+		RelatedEntityType: &entityType,
+		RelatedEntityID:   &assetIdStr,
+		RelatedAssetID:    &assetIdStr,
+		Type:              domain.NotificationTypeStatusChange,
+		Priority:          priority,
+		Translations:      translations,
 	}
 
 	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
@@ -595,11 +607,17 @@ func (s *Service) sendAssetStatusChangeNotification(ctx context.Context, asset *
 		}
 	}
 
+	entityType := "asset"
+	priority := domain.NotificationPriorityNormal
+
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:         *asset.AssignedTo,
-		RelatedAssetID: &assetIdStr,
-		Type:           domain.NotificationTypeStatusChange,
-		Translations:   translations,
+		UserID:            *asset.AssignedTo,
+		RelatedEntityType: &entityType,
+		RelatedEntityID:   &assetIdStr,
+		RelatedAssetID:    &assetIdStr,
+		Type:              domain.NotificationTypeStatusChange,
+		Priority:          priority,
+		Translations:      translations,
 	}
 
 	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
@@ -639,11 +657,17 @@ func (s *Service) sendAssetConditionChangeNotification(ctx context.Context, asse
 		}
 	}
 
+	entityType := "asset"
+	priority := domain.NotificationPriorityNormal
+
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:         *asset.AssignedTo,
-		RelatedAssetID: &assetIdStr,
-		Type:           domain.NotificationTypeStatusChange,
-		Translations:   translations,
+		UserID:            *asset.AssignedTo,
+		RelatedEntityType: &entityType,
+		RelatedEntityID:   &assetIdStr,
+		RelatedAssetID:    &assetIdStr,
+		Type:              domain.NotificationTypeStatusChange,
+		Priority:          priority,
+		Translations:      translations,
 	}
 
 	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
@@ -685,11 +709,17 @@ func (s *Service) sendHighValueAssetNotification(ctx context.Context, asset *dom
 		}
 	}
 
+	entityType := "asset"
+	priority := domain.NotificationPriorityHigh
+
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:         recipientUserId,
-		RelatedAssetID: &assetIdStr,
-		Type:           domain.NotificationTypeHighValue,
-		Translations:   translations,
+		UserID:            recipientUserId,
+		RelatedEntityType: &entityType,
+		RelatedEntityID:   &assetIdStr,
+		RelatedAssetID:    &assetIdStr,
+		Type:              domain.NotificationTypeStatusChange,
+		Priority:          priority,
+		Translations:      translations,
 	}
 
 	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)

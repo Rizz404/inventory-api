@@ -99,6 +99,14 @@ func (h *NotificationHandler) parseNotificationFiltersAndSort(c *fiber.Ctx) (dom
 		filters.UserID = &userID
 	}
 
+	if relatedEntityType := c.Query("relatedEntityType"); relatedEntityType != "" {
+		filters.RelatedEntityType = &relatedEntityType
+	}
+
+	if relatedEntityID := c.Query("relatedEntityId"); relatedEntityID != "" {
+		filters.RelatedEntityID = &relatedEntityID
+	}
+
 	if relatedAssetID := c.Query("relatedAssetId"); relatedAssetID != "" {
 		filters.RelatedAssetID = &relatedAssetID
 	}
@@ -106,6 +114,12 @@ func (h *NotificationHandler) parseNotificationFiltersAndSort(c *fiber.Ctx) (dom
 	if notificationType := c.Query("type"); notificationType != "" {
 		if nType := domain.NotificationType(notificationType); nType != "" {
 			filters.Type = &nType
+		}
+	}
+
+	if priorityStr := c.Query("priority"); priorityStr != "" {
+		if priority := domain.NotificationPriority(priorityStr); priority != "" {
+			filters.Priority = &priority
 		}
 	}
 

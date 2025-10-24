@@ -132,10 +132,13 @@ func (cs *CronService) sendMaintenanceDueSoonNotification(ctx context.Context, s
 	}
 
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:         *asset.AssignedToID,
-		RelatedAssetID: &schedule.AssetID,
-		Type:           domain.NotificationTypeMaintenance,
-		Translations:   translations,
+		UserID:            *asset.AssignedToID,
+		RelatedEntityType: stringPtr("maintenance_schedule"),
+		RelatedEntityID:   &schedule.ID,
+		RelatedAssetID:    &schedule.AssetID,
+		Type:              domain.NotificationTypeMaintenance,
+		Priority:          domain.NotificationPriorityNormal, // Due soon = normal priority
+		Translations:      translations,
 	}
 
 	_, err = cs.notificationService.CreateNotification(ctx, notificationPayload)
@@ -144,6 +147,11 @@ func (cs *CronService) sendMaintenanceDueSoonNotification(ctx context.Context, s
 	} else {
 		log.Printf("Successfully created maintenance due soon notification for schedule ID: %s, user ID: %s", schedule.ID, *asset.AssignedToID)
 	}
+}
+
+// Helper function to create string pointer
+func stringPtr(s string) *string {
+	return &s
 }
 
 // sendMaintenanceOverdueNotification sends notification for overdue maintenance
@@ -180,10 +188,13 @@ func (cs *CronService) sendMaintenanceOverdueNotification(ctx context.Context, s
 	}
 
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:         *asset.AssignedToID,
-		RelatedAssetID: &schedule.AssetID,
-		Type:           domain.NotificationTypeMaintenance,
-		Translations:   translations,
+		UserID:            *asset.AssignedToID,
+		RelatedEntityType: stringPtr("maintenance_schedule"),
+		RelatedEntityID:   &schedule.ID,
+		RelatedAssetID:    &schedule.AssetID,
+		Type:              domain.NotificationTypeMaintenance,
+		Priority:          domain.NotificationPriorityHigh, // Overdue = high priority
+		Translations:      translations,
 	}
 
 	_, err = cs.notificationService.CreateNotification(ctx, notificationPayload)

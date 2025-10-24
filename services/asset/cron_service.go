@@ -125,11 +125,17 @@ func (cs *CronService) sendWarrantyExpiringNotification(ctx context.Context, ass
 		}
 	}
 
+	entityType := "asset"
+	priority := domain.NotificationPriorityNormal
+
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:         *asset.AssignedTo,
-		RelatedAssetID: &assetIdStr,
-		Type:           domain.NotificationTypeWarranty,
-		Translations:   translations,
+		UserID:            *asset.AssignedTo,
+		RelatedEntityType: &entityType,
+		RelatedEntityID:   &assetIdStr,
+		RelatedAssetID:    &assetIdStr,
+		Type:              domain.NotificationTypeWarranty,
+		Priority:          priority,
+		Translations:      translations,
 	}
 
 	_, err := cs.notificationService.CreateNotification(ctx, notificationPayload)
@@ -162,11 +168,17 @@ func (cs *CronService) sendWarrantyExpiredNotification(ctx context.Context, asse
 		}
 	}
 
+	entityType := "asset"
+	priority := domain.NotificationPriorityHigh
+
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:         *asset.AssignedTo,
-		RelatedAssetID: &assetIdStr,
-		Type:           domain.NotificationTypeWarranty,
-		Translations:   translations,
+		UserID:            *asset.AssignedTo,
+		RelatedEntityType: &entityType,
+		RelatedEntityID:   &assetIdStr,
+		RelatedAssetID:    &assetIdStr,
+		Type:              domain.NotificationTypeWarranty,
+		Priority:          priority,
+		Translations:      translations,
 	}
 
 	_, err := cs.notificationService.CreateNotification(ctx, notificationPayload)

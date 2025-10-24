@@ -10,13 +10,28 @@ import (
 )
 
 type Notification struct {
-	ID             SQLULID                 `gorm:"primaryKey;type:varchar(26)"`
-	UserID         SQLULID                 `gorm:"type:varchar(26);not null"`
-	RelatedAssetID *SQLULID                `gorm:"type:varchar(26)"`
-	Type           domain.NotificationType `gorm:"type:notification_type;not null"`
-	IsRead         bool                    `gorm:"default:false"`
-	CreatedAt      time.Time
-	Translations   []NotificationTranslation `gorm:"foreignKey:NotificationID"`
+	ID     SQLULID `gorm:"primaryKey;type:varchar(26)"`
+	UserID SQLULID `gorm:"type:varchar(26);not null"`
+
+	// Related entity (polymorphic)
+	RelatedEntityType *string  `gorm:"type:varchar(50)"`
+	RelatedEntityID   *SQLULID `gorm:"type:varchar(26)"`
+
+	// Legacy support (deprecated)
+	RelatedAssetID *SQLULID `gorm:"type:varchar(26)"`
+
+	Type     domain.NotificationType     `gorm:"type:notification_type;not null"`
+	Priority domain.NotificationPriority `gorm:"type:notification_priority;default:'NORMAL'"`
+
+	// Status
+	IsRead bool       `gorm:"default:false"`
+	ReadAt *time.Time `gorm:"type:timestamp with time zone"`
+
+	// Expiration
+	ExpiresAt *time.Time `gorm:"type:timestamp with time zone"`
+
+	CreatedAt    time.Time
+	Translations []NotificationTranslation `gorm:"foreignKey:NotificationID"`
 }
 
 func (Notification) TableName() string {

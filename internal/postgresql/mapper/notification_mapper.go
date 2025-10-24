@@ -1,6 +1,8 @@
 package mapper
 
 import (
+	"time"
+
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/oklog/ulid/v2"
@@ -10,8 +12,11 @@ import (
 
 func ToModelNotification(d *domain.Notification) model.Notification {
 	modelNotification := model.Notification{
-		Type:   d.Type,
-		IsRead: d.IsRead,
+		Type:      d.Type,
+		Priority:  d.Priority,
+		IsRead:    d.IsRead,
+		ReadAt:    d.ReadAt,
+		ExpiresAt: d.ExpiresAt,
 	}
 
 	if d.ID != "" {
@@ -26,6 +31,19 @@ func ToModelNotification(d *domain.Notification) model.Notification {
 		}
 	}
 
+	// Related entity (polymorphic)
+	if d.RelatedEntityType != nil {
+		modelNotification.RelatedEntityType = d.RelatedEntityType
+	}
+
+	if d.RelatedEntityID != nil && *d.RelatedEntityID != "" {
+		if parsedEntityID, err := ulid.Parse(*d.RelatedEntityID); err == nil {
+			sqlEntityID := model.SQLULID(parsedEntityID)
+			modelNotification.RelatedEntityID = &sqlEntityID
+		}
+	}
+
+	// Legacy support
 	if d.RelatedAssetID != nil && *d.RelatedAssetID != "" {
 		if parsedAssetID, err := ulid.Parse(*d.RelatedAssetID); err == nil {
 			modelULID := model.SQLULID(parsedAssetID)
@@ -38,8 +56,11 @@ func ToModelNotification(d *domain.Notification) model.Notification {
 
 func ToModelNotificationForCreate(d *domain.Notification) model.Notification {
 	modelNotification := model.Notification{
-		Type:   d.Type,
-		IsRead: d.IsRead,
+		Type:      d.Type,
+		Priority:  d.Priority,
+		IsRead:    d.IsRead,
+		ReadAt:    d.ReadAt,
+		ExpiresAt: d.ExpiresAt,
 	}
 
 	if d.UserID != "" {
@@ -48,6 +69,19 @@ func ToModelNotificationForCreate(d *domain.Notification) model.Notification {
 		}
 	}
 
+	// Related entity (polymorphic)
+	if d.RelatedEntityType != nil {
+		modelNotification.RelatedEntityType = d.RelatedEntityType
+	}
+
+	if d.RelatedEntityID != nil && *d.RelatedEntityID != "" {
+		if parsedEntityID, err := ulid.Parse(*d.RelatedEntityID); err == nil {
+			sqlEntityID := model.SQLULID(parsedEntityID)
+			modelNotification.RelatedEntityID = &sqlEntityID
+		}
+	}
+
+	// Legacy support
 	if d.RelatedAssetID != nil && *d.RelatedAssetID != "" {
 		if parsedAssetID, err := ulid.Parse(*d.RelatedAssetID); err == nil {
 			modelULID := model.SQLULID(parsedAssetID)
@@ -102,10 +136,24 @@ func ToDomainNotification(m *model.Notification) domain.Notification {
 		ID:        m.ID.String(),
 		UserID:    m.UserID.String(),
 		Type:      m.Type,
+		Priority:  m.Priority,
 		IsRead:    m.IsRead,
+		ReadAt:    m.ReadAt,
+		ExpiresAt: m.ExpiresAt,
 		CreatedAt: m.CreatedAt,
 	}
 
+	// Related entity (polymorphic)
+	if m.RelatedEntityType != nil {
+		domainNotification.RelatedEntityType = m.RelatedEntityType
+	}
+
+	if m.RelatedEntityID != nil && !m.RelatedEntityID.IsZero() {
+		entityIDStr := m.RelatedEntityID.String()
+		domainNotification.RelatedEntityID = &entityIDStr
+	}
+
+	// Legacy support
 	if m.RelatedAssetID != nil && !m.RelatedAssetID.IsZero() {
 		assetIDStr := m.RelatedAssetID.String()
 		domainNotification.RelatedAssetID = &assetIDStr
@@ -142,13 +190,18 @@ func ToDomainNotifications(models []model.Notification) []domain.Notification {
 // *==================== Entity Response conversions ====================
 func NotificationToResponse(d *domain.Notification, langCode string) domain.NotificationResponse {
 	response := domain.NotificationResponse{
-		ID:             d.ID,
-		UserID:         d.UserID,
-		RelatedAssetID: d.RelatedAssetID,
-		Type:           d.Type,
-		IsRead:         d.IsRead,
-		CreatedAt:      d.CreatedAt,
-		Translations:   make([]domain.NotificationTranslationResponse, len(d.Translations)),
+		ID:                d.ID,
+		UserID:            d.UserID,
+		RelatedEntityType: d.RelatedEntityType,
+		RelatedEntityID:   d.RelatedEntityID,
+		RelatedAssetID:    d.RelatedAssetID,
+		Type:              d.Type,
+		Priority:          d.Priority,
+		IsRead:            d.IsRead,
+		ReadAt:            d.ReadAt,
+		ExpiresAt:         d.ExpiresAt,
+		CreatedAt:         d.CreatedAt,
+		Translations:      make([]domain.NotificationTranslationResponse, len(d.Translations)),
 	}
 
 	// Populate translations
@@ -188,12 +241,17 @@ func NotificationsToResponses(notifications []domain.Notification, langCode stri
 
 func NotificationToListResponse(d *domain.Notification, langCode string) domain.NotificationListResponse {
 	response := domain.NotificationListResponse{
-		ID:             d.ID,
-		UserID:         d.UserID,
-		RelatedAssetID: d.RelatedAssetID,
-		Type:           d.Type,
-		IsRead:         d.IsRead,
-		CreatedAt:      d.CreatedAt,
+		ID:                d.ID,
+		UserID:            d.UserID,
+		RelatedEntityType: d.RelatedEntityType,
+		RelatedEntityID:   d.RelatedEntityID,
+		RelatedAssetID:    d.RelatedAssetID,
+		Type:              d.Type,
+		Priority:          d.Priority,
+		IsRead:            d.IsRead,
+		ReadAt:            d.ReadAt,
+		ExpiresAt:         d.ExpiresAt,
+		CreatedAt:         d.CreatedAt,
 	}
 
 	// Find translation for the requested language
@@ -228,6 +286,20 @@ func ToModelNotificationUpdateMap(payload *domain.UpdateNotificationPayload) map
 
 	if payload.IsRead != nil {
 		updates["is_read"] = *payload.IsRead
+		if *payload.IsRead {
+			now := time.Now()
+			updates["read_at"] = now
+		} else {
+			updates["read_at"] = nil
+		}
+	}
+
+	if payload.Priority != nil {
+		updates["priority"] = *payload.Priority
+	}
+
+	if payload.ExpiresAt != nil {
+		updates["expires_at"] = *payload.ExpiresAt
 	}
 
 	return updates
@@ -241,11 +313,13 @@ func NotificationStatisticsToResponse(stats *domain.NotificationStatistics) doma
 			Count: stats.Total.Count,
 		},
 		ByType: domain.NotificationTypeStatisticsResponse{
-			Maintenance:  stats.ByType.Maintenance,
-			Warranty:     stats.ByType.Warranty,
-			StatusChange: stats.ByType.StatusChange,
-			Movement:     stats.ByType.Movement,
-			IssueReport:  stats.ByType.IssueReport,
+			Maintenance:    stats.ByType.Maintenance,
+			Warranty:       stats.ByType.Warranty,
+			Issue:          stats.ByType.Issue,
+			Movement:       stats.ByType.Movement,
+			StatusChange:   stats.ByType.StatusChange,
+			LocationChange: stats.ByType.LocationChange,
+			CategoryChange: stats.ByType.CategoryChange,
 		},
 		ByStatus: domain.NotificationStatusStatisticsResponse{
 			Read:   stats.ByStatus.Read,
@@ -278,6 +352,7 @@ func NotificationStatisticsToResponse(stats *domain.NotificationStatistics) doma
 func MapNotificationSortFieldToColumn(field domain.NotificationSortField) string {
 	columnMap := map[domain.NotificationSortField]string{
 		domain.NotificationSortByType:      "n.type",
+		domain.NotificationSortByPriority:  "n.priority",
 		domain.NotificationSortByTitle:     "nt.title",
 		domain.NotificationSortByMessage:   "nt.message",
 		domain.NotificationSortByIsRead:    "n.is_read",
