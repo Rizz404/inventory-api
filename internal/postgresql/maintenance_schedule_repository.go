@@ -27,34 +27,34 @@ func (r *MaintenanceScheduleRepository) applyScheduleFilters(db *gorm.DB, filter
 		return db
 	}
 	if filters.AssetID != nil && *filters.AssetID != "" {
-		db = db.Where("ms.asset_id = ?", filters.AssetID)
+		db = db.Where("maintenance_schedules.asset_id = ?", filters.AssetID)
 	}
 	if filters.MaintenanceType != nil && *filters.MaintenanceType != "" {
-		db = db.Where("ms.maintenance_type = ?", filters.MaintenanceType)
+		db = db.Where("maintenance_schedules.maintenance_type = ?", filters.MaintenanceType)
 	}
 	if filters.Status != nil && *filters.Status != "" {
-		db = db.Where("ms.status = ?", filters.Status)
+		db = db.Where("maintenance_schedules.status = ?", filters.Status)
 	}
 	if filters.CreatedBy != nil && *filters.CreatedBy != "" {
-		db = db.Where("ms.created_by = ?", filters.CreatedBy)
+		db = db.Where("maintenance_schedules.created_by = ?", filters.CreatedBy)
 	}
 	if filters.FromDate != nil && *filters.FromDate != "" {
-		db = db.Where("ms.scheduled_date >= ?", *filters.FromDate)
+		db = db.Where("maintenance_schedules.scheduled_date >= ?", *filters.FromDate)
 	}
 	if filters.ToDate != nil && *filters.ToDate != "" {
-		db = db.Where("ms.scheduled_date <= ?", *filters.ToDate)
+		db = db.Where("maintenance_schedules.scheduled_date <= ?", *filters.ToDate)
 	}
 	return db
 }
 
 func (r *MaintenanceScheduleRepository) applyScheduleSorts(db *gorm.DB, sort *domain.MaintenanceScheduleSortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
-		return db.Order("ms.created_at DESC")
+		return db.Order("maintenance_schedules.created_at DESC")
 	}
 
 	// Map camelCase sort field to snake_case database column
 	columnName := mapper.MapMaintenanceScheduleSortFieldToColumn(sort.Field)
-	orderClause := columnName
+	orderClause := "maintenance_schedules." + columnName
 
 	order := "DESC"
 	if sort.Order == domain.SortOrderAsc {
@@ -187,7 +187,6 @@ func (r *MaintenanceScheduleRepository) DeleteSchedule(ctx context.Context, sche
 func (r *MaintenanceScheduleRepository) GetSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceSchedule, error) {
 	var schedules []model.MaintenanceSchedule
 	db := r.db.WithContext(ctx).
-		Table("maintenance_schedules ms").
 		Preload("Translations").
 		Preload("Asset").
 		Preload("Asset.Category").
@@ -199,9 +198,9 @@ func (r *MaintenanceScheduleRepository) GetSchedulesPaginated(ctx context.Contex
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON ms.id = mst.schedule_id").
+		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON maintenance_schedules.id = mst.schedule_id").
 			Where("mst.title ILIKE ?", sq).
-			Distinct("ms.id, ms.created_at")
+			Group("maintenance_schedules.id")
 	}
 
 	// Apply filters, sorts, and pagination manually
@@ -225,7 +224,6 @@ func (r *MaintenanceScheduleRepository) GetSchedulesPaginated(ctx context.Contex
 func (r *MaintenanceScheduleRepository) GetSchedulesCursor(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceSchedule, error) {
 	var schedules []model.MaintenanceSchedule
 	db := r.db.WithContext(ctx).
-		Table("maintenance_schedules ms").
 		Preload("Translations").
 		Preload("Asset").
 		Preload("Asset.Category").
@@ -237,9 +235,9 @@ func (r *MaintenanceScheduleRepository) GetSchedulesCursor(ctx context.Context, 
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON ms.id = mst.schedule_id").
+		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON maintenance_schedules.id = mst.schedule_id").
 			Where("mst.title ILIKE ?", sq).
-			Distinct("ms.id, ms.created_at")
+			Group("maintenance_schedules.id")
 	}
 
 	// Apply filters, sorts, and cursor pagination manually
@@ -263,7 +261,6 @@ func (r *MaintenanceScheduleRepository) GetSchedulesCursor(ctx context.Context, 
 func (r *MaintenanceScheduleRepository) GetScheduleById(ctx context.Context, scheduleId string) (domain.MaintenanceSchedule, error) {
 	var m model.MaintenanceSchedule
 	err := r.db.WithContext(ctx).
-		Table("maintenance_schedules ms").
 		Preload("Translations").
 		Preload("Asset").
 		Preload("Asset.Category").
@@ -294,12 +291,12 @@ func (r *MaintenanceScheduleRepository) CheckScheduleExist(ctx context.Context, 
 
 func (r *MaintenanceScheduleRepository) CountSchedules(ctx context.Context, params domain.MaintenanceScheduleParams) (int64, error) {
 	var count int64
-	db := r.db.WithContext(ctx).Table("maintenance_schedules ms")
+	db := r.db.WithContext(ctx).Model(&model.MaintenanceSchedule{})
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON ms.id = mst.schedule_id").
+		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON maintenance_schedules.id = mst.schedule_id").
 			Where("mst.title ILIKE ?", sq).
-			Distinct("ms.id, ms.created_at")
+			Group("maintenance_schedules.id")
 	}
 	db = r.applyScheduleFilters(db, params.Filters)
 	if err := db.Count(&count).Error; err != nil {

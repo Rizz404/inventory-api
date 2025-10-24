@@ -27,34 +27,34 @@ func (r *MaintenanceRecordRepository) applyRecordFilters(db *gorm.DB, filters *d
 		return db
 	}
 	if filters.AssetID != nil && *filters.AssetID != "" {
-		db = db.Where("mr.asset_id = ?", filters.AssetID)
+		db = db.Where("maintenance_records.asset_id = ?", filters.AssetID)
 	}
 	if filters.ScheduleID != nil && *filters.ScheduleID != "" {
-		db = db.Where("mr.schedule_id = ?", filters.ScheduleID)
+		db = db.Where("maintenance_records.schedule_id = ?", filters.ScheduleID)
 	}
 	if filters.PerformedByUser != nil && *filters.PerformedByUser != "" {
-		db = db.Where("mr.performed_by_user = ?", filters.PerformedByUser)
+		db = db.Where("maintenance_records.performed_by_user = ?", filters.PerformedByUser)
 	}
 	if filters.VendorName != nil && *filters.VendorName != "" {
-		db = db.Where("mr.performed_by_vendor ILIKE ?", "%"+*filters.VendorName+"%")
+		db = db.Where("maintenance_records.performed_by_vendor ILIKE ?", "%"+*filters.VendorName+"%")
 	}
 	if filters.FromDate != nil && *filters.FromDate != "" {
-		db = db.Where("mr.maintenance_date >= ?", *filters.FromDate)
+		db = db.Where("maintenance_records.maintenance_date >= ?", *filters.FromDate)
 	}
 	if filters.ToDate != nil && *filters.ToDate != "" {
-		db = db.Where("mr.maintenance_date <= ?", *filters.ToDate)
+		db = db.Where("maintenance_records.maintenance_date <= ?", *filters.ToDate)
 	}
 	return db
 }
 
 func (r *MaintenanceRecordRepository) applyRecordSorts(db *gorm.DB, sort *domain.MaintenanceRecordSortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
-		return db.Order("mr.created_at DESC")
+		return db.Order("maintenance_records.created_at DESC")
 	}
 
 	// Map camelCase sort field to snake_case database column
 	columnName := mapper.MapMaintenanceRecordSortFieldToColumn(sort.Field)
-	orderClause := columnName
+	orderClause := "maintenance_records." + columnName
 
 	order := "DESC"
 	if sort.Order == domain.SortOrderAsc {
@@ -185,7 +185,6 @@ func (r *MaintenanceRecordRepository) DeleteRecord(ctx context.Context, recordId
 func (r *MaintenanceRecordRepository) GetRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecord, error) {
 	var records []model.MaintenanceRecord
 	db := r.db.WithContext(ctx).
-		Table("maintenance_records mr").
 		Preload("Translations").
 		Preload("Schedule").
 		Preload("Schedule.Translations").
@@ -199,9 +198,9 @@ func (r *MaintenanceRecordRepository) GetRecordsPaginated(ctx context.Context, p
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON mr.id = mrt.record_id").
+		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON maintenance_records.id = mrt.record_id").
 			Where("mrt.title ILIKE ?", sq).
-			Distinct("mr.id, mr.created_at")
+			Group("maintenance_records.id")
 	}
 
 	// Apply filters, sorts, and pagination manually
@@ -225,7 +224,6 @@ func (r *MaintenanceRecordRepository) GetRecordsPaginated(ctx context.Context, p
 func (r *MaintenanceRecordRepository) GetRecordsCursor(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecord, error) {
 	var records []model.MaintenanceRecord
 	db := r.db.WithContext(ctx).
-		Table("maintenance_records mr").
 		Preload("Translations").
 		Preload("Schedule").
 		Preload("Schedule.Translations").
@@ -239,9 +237,9 @@ func (r *MaintenanceRecordRepository) GetRecordsCursor(ctx context.Context, para
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON mr.id = mrt.record_id").
+		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON maintenance_records.id = mrt.record_id").
 			Where("mrt.title ILIKE ?", sq).
-			Distinct("mr.id, mr.created_at")
+			Group("maintenance_records.id")
 	}
 
 	// Apply filters, sorts, and cursor pagination manually
@@ -265,7 +263,6 @@ func (r *MaintenanceRecordRepository) GetRecordsCursor(ctx context.Context, para
 func (r *MaintenanceRecordRepository) GetRecordById(ctx context.Context, recordId string) (domain.MaintenanceRecord, error) {
 	var m model.MaintenanceRecord
 	err := r.db.WithContext(ctx).
-		Table("maintenance_records mr").
 		Preload("Translations").
 		Preload("Schedule").
 		Preload("Schedule.Translations").
@@ -298,12 +295,12 @@ func (r *MaintenanceRecordRepository) CheckRecordExist(ctx context.Context, reco
 
 func (r *MaintenanceRecordRepository) CountRecords(ctx context.Context, params domain.MaintenanceRecordParams) (int64, error) {
 	var count int64
-	db := r.db.WithContext(ctx).Table("maintenance_records mr")
+	db := r.db.WithContext(ctx).Model(&model.MaintenanceRecord{})
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON mr.id = mrt.record_id").
+		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON maintenance_records.id = mrt.record_id").
 			Where("mrt.title ILIKE ?", sq).
-			Distinct("mr.id, mr.created_at")
+			Group("maintenance_records.id")
 	}
 	db = r.applyRecordFilters(db, params.Filters)
 	if err := db.Count(&count).Error; err != nil {
