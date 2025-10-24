@@ -321,14 +321,14 @@ func (s *Service) sendCategoryUpdatedNotificationToAdmins(ctx context.Context, c
 
 	// Send notification to each admin
 	for _, admin := range admins {
-		s.sendCategoryUpdatedNotification(ctx, categoryName, admin.ID)
+		s.sendCategoryUpdatedNotification(ctx, category.ID, categoryName, admin.ID)
 	}
 
 	log.Printf("Successfully sent category updated notification to %d admin(s) for category ID: %s", len(admins), category.ID)
 }
 
 // sendCategoryUpdatedNotification sends notification for category update to a specific user
-func (s *Service) sendCategoryUpdatedNotification(ctx context.Context, categoryName, userID string) {
+func (s *Service) sendCategoryUpdatedNotification(ctx context.Context, categoryID, categoryName, userID string) {
 	titleKey, messageKey, params := messages.CategoryUpdatedNotification(categoryName)
 	utilTranslations := messages.GetCategoryNotificationTranslations(titleKey, messageKey, params)
 
@@ -343,9 +343,11 @@ func (s *Service) sendCategoryUpdatedNotification(ctx context.Context, categoryN
 	}
 
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:       userID,
-		Type:         domain.NotificationTypeCategoryChange,
-		Translations: translations,
+		UserID:            userID,
+		RelatedEntityType: stringPtr("category"),
+		RelatedEntityID:   stringPtr(categoryID),
+		Type:              domain.NotificationTypeCategoryChange,
+		Translations:      translations,
 	}
 
 	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
@@ -354,4 +356,9 @@ func (s *Service) sendCategoryUpdatedNotification(ctx context.Context, categoryN
 	} else {
 		log.Printf("Successfully created category updated notification for user ID: %s", userID)
 	}
+}
+
+// Helper function to create string pointer
+func stringPtr(s string) *string {
+	return &s
 }

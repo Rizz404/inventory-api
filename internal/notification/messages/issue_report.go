@@ -27,8 +27,8 @@ var issueReportNotificationTranslations = map[NotificationMessageKey]map[string]
 		"ja-JP": "新しい問題が報告されました",
 	},
 	NotifIssueReportedMessageKey: {
-		"en-US": "A new issue has been reported for asset \"{assetName}\" (\"{assetTag}\").",
-		"ja-JP": "資産 \"{assetName}\" (\"{assetTag}\") に対して新しい問題が報告されました。",
+		"en-US": "A new issue has been reported for asset \"{assetName}\".",
+		"ja-JP": "資産 \"{assetName}\" に対して新しい問題が報告されました。",
 	},
 
 	// ==================== ISSUE REPORT UPDATED ====================

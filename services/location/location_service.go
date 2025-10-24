@@ -282,14 +282,14 @@ func (s *Service) sendLocationUpdatedNotificationToAdmins(ctx context.Context, l
 
 	// Send notification to each admin
 	for _, admin := range admins {
-		s.sendLocationUpdatedNotification(ctx, locationName, admin.ID)
+		s.sendLocationUpdatedNotification(ctx, location.ID, locationName, admin.ID)
 	}
 
 	log.Printf("Successfully sent location updated notification to %d admin(s) for location ID: %s", len(admins), location.ID)
 }
 
 // sendLocationUpdatedNotification sends notification for location update to a specific user
-func (s *Service) sendLocationUpdatedNotification(ctx context.Context, locationName, userID string) {
+func (s *Service) sendLocationUpdatedNotification(ctx context.Context, locationID, locationName, userID string) {
 	titleKey, messageKey, params := messages.LocationUpdatedNotification(locationName)
 	utilTranslations := messages.GetLocationNotificationTranslations(titleKey, messageKey, params)
 
@@ -304,10 +304,12 @@ func (s *Service) sendLocationUpdatedNotification(ctx context.Context, locationN
 	}
 
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:       userID,
-		Type:         domain.NotificationTypeLocationChange,
-		Priority:     domain.NotificationPriorityLow, // Location change = low priority
-		Translations: translations,
+		UserID:            userID,
+		RelatedEntityType: stringPtr("location"),
+		RelatedEntityID:   stringPtr(locationID),
+		Type:              domain.NotificationTypeLocationChange,
+		Priority:          domain.NotificationPriorityLow, // Location change = low priority
+		Translations:      translations,
 	}
 
 	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
@@ -316,4 +318,9 @@ func (s *Service) sendLocationUpdatedNotification(ctx context.Context, locationN
 	} else {
 		log.Printf("Successfully created location updated notification for user ID: %s", userID)
 	}
+}
+
+// Helper function to create string pointer
+func stringPtr(s string) *string {
+	return &s
 }

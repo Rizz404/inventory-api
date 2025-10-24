@@ -15,8 +15,8 @@ var assetMovementNotificationTranslations = map[NotificationMessageKey]map[strin
 		"ja-JP": "資産が移動されました",
 	},
 	NotifAssetMovedMessageKey: {
-		"en-US": "Asset \"{assetName}\" (\"{assetTag}\") has been moved from \"{oldLocation}\" to \"{newLocation}\".",
-		"ja-JP": "資産 \"{assetName}\" (\"{assetTag}\") が \"{oldLocation}\" から \"{newLocation}\" に移動されました。",
+		"en-US": "Asset \"{assetName}\" has been moved from \"{oldLocation}\" to \"{newLocation}\".",
+		"ja-JP": "資産 \"{assetName}\" が \"{oldLocation}\" から \"{newLocation}\" に移動されました。",
 	},
 }
 

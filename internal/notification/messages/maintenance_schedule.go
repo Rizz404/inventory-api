@@ -23,8 +23,8 @@ var maintenanceScheduleNotificationTranslations = map[NotificationMessageKey]map
 		"ja-JP": "メンテナンスがスケジュールされました",
 	},
 	NotifMaintenanceScheduledMessageKey: {
-		"en-US": "Maintenance for asset \"{assetName}\" (\"{assetTag}\") is scheduled on {scheduledDate}.",
-		"ja-JP": "資産 \"{assetName}\" (\"{assetTag}\") のメンテナンスが {scheduledDate} にスケジュールされました。",
+		"en-US": "Maintenance for asset \"{assetName}\" is scheduled on {scheduledDate}.",
+		"ja-JP": "資産 \"{assetName}\" のメンテナンスが {scheduledDate} にスケジュールされました。",
 	},
 
 	// ==================== MAINTENANCE DUE SOON ====================
@@ -33,8 +33,8 @@ var maintenanceScheduleNotificationTranslations = map[NotificationMessageKey]map
 		"ja-JP": "メンテナンス期限が近づいています",
 	},
 	NotifMaintenanceDueSoonMessageKey: {
-		"en-US": "Maintenance for asset \"{assetName}\" (\"{assetTag}\") is due on {scheduledDate}. Please prepare.",
-		"ja-JP": "資産 \"{assetName}\" (\"{assetTag}\") のメンテナンス期限が {scheduledDate} です。準備してください。",
+		"en-US": "Maintenance for asset \"{assetName}\" is due on {scheduledDate}. Please prepare.",
+		"ja-JP": "資産 \"{assetName}\" のメンテナンス期限が {scheduledDate} です。準備してください。",
 	},
 
 	// ==================== MAINTENANCE OVERDUE ====================
@@ -43,8 +43,8 @@ var maintenanceScheduleNotificationTranslations = map[NotificationMessageKey]map
 		"ja-JP": "メンテナンスが期限切れです",
 	},
 	NotifMaintenanceOverdueMessageKey: {
-		"en-US": "Maintenance for asset \"{assetName}\" (\"{assetTag}\") is overdue. Scheduled date was {scheduledDate}.",
-		"ja-JP": "資産 \"{assetName}\" (\"{assetTag}\") のメンテナンスが期限切れです。スケジュールされた日付は {scheduledDate} でした。",
+		"en-US": "Maintenance for asset \"{assetName}\" is overdue. Scheduled date was {scheduledDate}.",
+		"ja-JP": "資産 \"{assetName}\" のメンテナンスが期限切れです。スケジュールされた日付は {scheduledDate} でした。",
 	},
 }
 

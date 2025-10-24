@@ -19,8 +19,8 @@ var maintenanceRecordNotificationTranslations = map[NotificationMessageKey]map[s
 		"ja-JP": "メンテナンスが完了しました",
 	},
 	NotifMaintenanceCompletedMessageKey: {
-		"en-US": "Maintenance for asset \"{assetName}\" (\"{assetTag}\") has been completed. Notes: \"{notes}\".",
-		"ja-JP": "資産 \"{assetName}\" (\"{assetTag}\") のメンテナンスが完了しました。メモ: \"{notes}\"。",
+		"en-US": "Maintenance for asset \"{assetName}\" has been completed. Notes: \"{notes}\".",
+		"ja-JP": "資産 \"{assetName}\" のメンテナンスが完了しました。メモ: \"{notes}\"。",
 	},
 
 	// ==================== MAINTENANCE FAILED ====================
@@ -29,8 +29,8 @@ var maintenanceRecordNotificationTranslations = map[NotificationMessageKey]map[s
 		"ja-JP": "メンテナンスが失敗しました",
 	},
 	NotifMaintenanceFailedMessageKey: {
-		"en-US": "Maintenance for asset \"{assetName}\" (\"{assetTag}\") could not be completed. Reason: \"{failureReason}\".",
-		"ja-JP": "資産 \"{assetName}\" (\"{assetTag}\") のメンテナンスが完了できませんでした。理由: \"{failureReason}\"。",
+		"en-US": "Maintenance for asset \"{assetName}\" could not be completed. Reason: \"{failureReason}\".",
+		"ja-JP": "資産 \"{assetName}\" のメンテナンスが完了できませんでした。理由: \"{failureReason}\"。",
 	},
 }
 
