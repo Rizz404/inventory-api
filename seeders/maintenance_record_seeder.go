@@ -60,9 +60,9 @@ func (mrs *MaintenanceRecordSeeder) generateMaintenanceRecordPayload(assetIDs []
 	// Select random asset
 	assetID := assetIDs[rand.Intn(len(assetIDs))]
 
-	// 70% chance to be linked to a schedule
+	// ! Only 30% chance to be linked to a schedule (since schedules might be empty initially)
 	var scheduleID *string
-	if len(scheduleIDs) > 0 && rand.Intn(10) < 7 {
+	if len(scheduleIDs) > 0 && rand.Intn(10) < 3 {
 		schedule := scheduleIDs[rand.Intn(len(scheduleIDs))]
 		scheduleID = &schedule
 	}
@@ -70,27 +70,27 @@ func (mrs *MaintenanceRecordSeeder) generateMaintenanceRecordPayload(assetIDs []
 	// Random maintenance date in the past 2 years
 	maintenanceDate := gofakeit.DateRange(time.Now().AddDate(-2, 0, 0), time.Now())
 
-	// Determine if performed by user or vendor (60% user, 40% vendor)
+	// ! Always assign a user (80% user, 20% vendor)
 	var performedByUser *string
 	var performedByVendor *string
 
-	if rand.Intn(10) < 6 {
+	if rand.Intn(10) < 8 {
 		// Performed by internal user
 		user := userIDs[rand.Intn(len(userIDs))]
 		performedByUser = &user
 	} else {
 		// Performed by external vendor
 		vendors := []string{
-			"TechCorp Maintenance Services",
-			"Professional IT Solutions",
-			"Industrial Equipment Services",
-			"ABC Technical Support",
-			"Prime Maintenance Group",
-			"Expert Systems Repair",
-			"Global Service Partners",
-			"Reliable Tech Services",
-			"Advanced Equipment Care",
-			"Precision Maintenance Co.",
+			"TechCorp Maintenance",
+			"Pro IT Solutions",
+			"Industrial Services",
+			"ABC Tech Support",
+			"Prime Maintenance",
+			"Expert Systems",
+			"Global Partners",
+			"Reliable Tech",
+			"Advanced Care",
+			"Precision Co.",
 		}
 		vendor := vendors[rand.Intn(len(vendors))]
 		performedByVendor = &vendor

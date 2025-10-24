@@ -96,7 +96,7 @@ func (cs *CategorySeeder) createParentCategories(ctx context.Context, count int)
 			},
 		},
 		{
-			code: "OFFICE_SUPPLIES",
+			code: "OFFICE-SUPPLIES",
 			names: map[string]string{
 				"en-US": "Office Supplies",
 				// "id-ID": "Perlengkapan Kantor",
@@ -179,7 +179,7 @@ func (cs *CategorySeeder) createParentCategories(ctx context.Context, count int)
 
 		// Ensure unique code with timestamp
 		timestamp := time.Now().UnixNano() % 100000
-		categoryCode = fmt.Sprintf("%s_%d_%d", categoryCode, i, timestamp)
+		categoryCode = fmt.Sprintf("%s-%d-%d", categoryCode, i, timestamp)
 
 		translations := []domain.CreateCategoryTranslationPayload{
 			{
@@ -307,7 +307,7 @@ func (cs *CategorySeeder) createChildrenForParent(ctx context.Context, parentID,
 
 			payload := &domain.CreateCategoryPayload{
 				ParentID:     &parentID,
-				CategoryCode: fmt.Sprintf("%s_%s", parentCode, template.code),
+				CategoryCode: fmt.Sprintf("%s-%s", parentCode, template.code),
 				Translations: translations,
 			}
 
@@ -342,9 +342,13 @@ func (cs *CategorySeeder) createChildrenForParent(ctx context.Context, parentID,
 func (cs *CategorySeeder) createRandomChild(ctx context.Context, parentID, parentCode string, index int) int {
 	productName := gofakeit.ProductName()
 	childCode := strings.ToUpper(strings.ReplaceAll(productName, " ", "-"))
-	// Add timestamp for uniqueness
-	timestamp := time.Now().UnixNano() % 10000
-	childCode = fmt.Sprintf("%s_%s_%d_%d", parentCode, childCode, index, timestamp)
+
+	// ! Limit category code to 20 chars max
+	maxCodeLength := 20
+	if len(childCode) > maxCodeLength-3 {
+		childCode = childCode[:maxCodeLength-3]
+	}
+	childCode = fmt.Sprintf("%s-%d", childCode, index)
 
 	translations := []domain.CreateCategoryTranslationPayload{
 		{

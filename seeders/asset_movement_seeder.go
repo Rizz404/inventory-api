@@ -39,6 +39,11 @@ func (ams *AssetMovementSeeder) Seed(ctx context.Context, count int, assetIDs []
 
 	successCount := 0
 	for i := 0; i < count; i++ {
+		// ! Add small delay to avoid rapid-fire requests
+		if i > 0 {
+			time.Sleep(50 * time.Millisecond)
+		}
+
 		movementPayload := ams.generateAssetMovementPayload(assetIDs, locationIDs, userIDs)
 
 		_, err := ams.assetMovementService.CreateAssetMovement(ctx, movementPayload, "en-US")

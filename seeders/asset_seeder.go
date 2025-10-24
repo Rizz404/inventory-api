@@ -8,18 +8,23 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/services/asset"
+	"github.com/Rizz404/inventory-api/services/category"
 	"github.com/brianvoe/gofakeit/v6"
 )
 
 // AssetSeeder handles asset data seeding
 type AssetSeeder struct {
-	assetService asset.AssetService
+	assetService       asset.AssetService
+	categoryService    category.CategoryService
+	categoryIncrements map[string]int // track increment per category ID
 }
 
 // NewAssetSeeder creates a new asset seeder
-func NewAssetSeeder(assetService asset.AssetService) *AssetSeeder {
+func NewAssetSeeder(assetService asset.AssetService, categoryService category.CategoryService) *AssetSeeder {
 	return &AssetSeeder{
-		assetService: assetService,
+		assetService:       assetService,
+		categoryService:    categoryService,
+		categoryIncrements: make(map[string]int),
 	}
 }
 
@@ -37,7 +42,7 @@ func (as *AssetSeeder) Seed(ctx context.Context, count int, categoryIDs []string
 
 	successCount := 0
 	for i := 0; i < count; i++ {
-		assetPayload := as.generateAssetPayload(categoryIDs, locationIDs, userIDs, i)
+		assetPayload := as.generateAssetPayload(ctx, categoryIDs, locationIDs, userIDs, i)
 
 		_, err := as.assetService.CreateAsset(ctx, assetPayload, nil, "en-US")
 		if err != nil {
@@ -56,7 +61,7 @@ func (as *AssetSeeder) Seed(ctx context.Context, count int, categoryIDs []string
 }
 
 // generateAssetPayload generates fake asset data
-func (as *AssetSeeder) generateAssetPayload(categoryIDs []string, locationIDs []string, userIDs []string, index int) *domain.CreateAssetPayload {
+func (as *AssetSeeder) generateAssetPayload(ctx context.Context, categoryIDs []string, locationIDs []string, userIDs []string, index int) *domain.CreateAssetPayload {
 	// Asset types and names
 	assetTypes := []string{
 		"Laptop", "Desktop Computer", "Monitor", "Printer", "Scanner", "Projector",
@@ -73,8 +78,22 @@ func (as *AssetSeeder) generateAssetPayload(categoryIDs []string, locationIDs []
 	assetType := assetTypes[rand.Intn(len(assetTypes))]
 	brand := brands[rand.Intn(len(brands))]
 
-	// Generate asset tag with prefix and number
-	assetTag := fmt.Sprintf("AST-%06d", index+1)
+	// Select random category
+	categoryID := categoryIDs[rand.Intn(len(categoryIDs))]
+
+	// Get category to retrieve CategoryCode
+	category, err := as.categoryService.GetCategoryById(ctx, categoryID, "en-US")
+	categoryCode := "UNK"
+	if err == nil {
+		categoryCode = category.CategoryCode
+	}
+
+	// Get increment for this category
+	increment := as.categoryIncrements[categoryID] + 1
+	as.categoryIncrements[categoryID] = increment
+
+	// Generate asset tag like GenerateAssetTagSuggestion
+	assetTag := fmt.Sprintf("%s-%05d", categoryCode, increment)
 
 	// Generate purchase data
 	purchaseDate := gofakeit.DateRange(time.Now().AddDate(-5, 0, 0), time.Now().AddDate(-1, 0, 0))

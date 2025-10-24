@@ -71,7 +71,7 @@ func (ls *LocationSeeder) createLocation(ctx context.Context, locationData *doma
 func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPayload {
 	return []*domain.CreateLocationPayload{
 		{
-			LocationCode: "HQ_LOBBY",
+			LocationCode: "HQ-LOBBY",
 			Building:     stringPtr("Headquarters"),
 			Floor:        stringPtr("Ground Floor"),
 			Latitude:     float64Ptr(-6.2088),
@@ -83,7 +83,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			},
 		},
 		{
-			LocationCode: "HQ_IT_ROOM",
+			LocationCode: "HQ-IT-ROOM",
 			Building:     stringPtr("Headquarters"),
 			Floor:        stringPtr("2nd Floor"),
 			Latitude:     float64Ptr(-6.2088),
@@ -95,7 +95,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			},
 		},
 		{
-			LocationCode: "HQ_MEETING_A",
+			LocationCode: "HQ-MEETING-A",
 			Building:     stringPtr("Headquarters"),
 			Floor:        stringPtr("3rd Floor"),
 			Latitude:     float64Ptr(-6.2088),
@@ -107,7 +107,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			},
 		},
 		{
-			LocationCode: "HQ_MEETING_B",
+			LocationCode: "HQ-MEETING-B",
 			Building:     stringPtr("Headquarters"),
 			Floor:        stringPtr("3rd Floor"),
 			Latitude:     float64Ptr(-6.2088),
@@ -119,7 +119,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			},
 		},
 		{
-			LocationCode: "WAREHOUSE_A",
+			LocationCode: "WAREHOUSE-A",
 			Building:     stringPtr("Warehouse Complex"),
 			Floor:        stringPtr("Ground Floor"),
 			Latitude:     float64Ptr(-6.2297),
@@ -131,7 +131,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			},
 		},
 		{
-			LocationCode: "WAREHOUSE_B",
+			LocationCode: "WAREHOUSE-B",
 			Building:     stringPtr("Warehouse Complex"),
 			Floor:        stringPtr("Ground Floor"),
 			Latitude:     float64Ptr(-6.2297),
@@ -143,7 +143,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			},
 		},
 		{
-			LocationCode: "OFFICE_FL1",
+			LocationCode: "OFFICE-FL1",
 			Building:     stringPtr("Main Office"),
 			Floor:        stringPtr("1st Floor"),
 			Latitude:     float64Ptr(-6.2115),
@@ -155,7 +155,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			},
 		},
 		{
-			LocationCode: "OFFICE_FL2",
+			LocationCode: "OFFICE-FL2",
 			Building:     stringPtr("Main Office"),
 			Floor:        stringPtr("2nd Floor"),
 			Latitude:     float64Ptr(-6.2115),
@@ -167,7 +167,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			},
 		},
 		{
-			LocationCode: "PARKING_A",
+			LocationCode: "PARKING-A",
 			Building:     stringPtr("Parking Building"),
 			Floor:        stringPtr("Level 1"),
 			Latitude:     float64Ptr(-6.2090),
@@ -215,8 +215,8 @@ func (ls *LocationSeeder) generateRandomLocation(index int) *domain.CreateLocati
 	floorName := floorNames[floorIndex]
 
 	// Generate short location code (max 20 chars)
-	// Format: TYPE_BUILDING_FLOOR_INDEX (e.g., OFF_A_1F_001)
-	locationCode := fmt.Sprintf("%s_%s_%s_%03d", locationType, building, floor, index%1000)
+	// Format: TYPE-BUILDING-FLOOR-INDEX (e.g., OFF-A-1F-001)
+	locationCode := fmt.Sprintf("%s-%s-%s-%03d", locationType, building, floor, index%1000)
 
 	// Generate coordinates around Jakarta area
 	baseLat := -6.2088

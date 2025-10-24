@@ -42,7 +42,7 @@ func NewSeederManager(
 		userSeeder:                NewUserSeeder(userService),
 		categorySeeder:            NewCategorySeeder(categoryService),
 		locationSeeder:            NewLocationSeeder(locationService),
-		assetSeeder:               NewAssetSeeder(assetService),
+		assetSeeder:               NewAssetSeeder(assetService, categoryService),
 		assetMovementSeeder:       NewAssetMovementSeeder(assetMovementService),
 		issueReportSeeder:         NewIssueReportSeeder(issueReportService),
 		maintenanceScheduleSeeder: NewMaintenanceScheduleSeeder(maintenanceScheduleService),

@@ -37,9 +37,12 @@ func (mss *MaintenanceScheduleSeeder) Seed(ctx context.Context, count int, asset
 
 	successCount := 0
 	for i := 0; i < count; i++ {
-		schedulePayload := mss.generateMaintenanceSchedulePayload(assetIDs, userIDs)
+		// ! Select random creator user
+		createdBy := userIDs[rand.Intn(len(userIDs))]
 
-		_, err := mss.maintenanceScheduleService.CreateMaintenanceSchedule(ctx, schedulePayload, "en-US")
+		schedulePayload := mss.generateMaintenanceSchedulePayload(assetIDs)
+
+		_, err := mss.maintenanceScheduleService.CreateMaintenanceSchedule(ctx, schedulePayload, createdBy)
 		if err != nil {
 			fmt.Printf("   ⚠️ Failed to create maintenance schedule %d: %v\n", i+1, err)
 			continue
@@ -56,7 +59,7 @@ func (mss *MaintenanceScheduleSeeder) Seed(ctx context.Context, count int, asset
 }
 
 // generateMaintenanceSchedulePayload generates fake maintenance schedule data
-func (mss *MaintenanceScheduleSeeder) generateMaintenanceSchedulePayload(assetIDs []string, userIDs []string) *domain.CreateMaintenanceSchedulePayload {
+func (mss *MaintenanceScheduleSeeder) generateMaintenanceSchedulePayload(assetIDs []string) *domain.CreateMaintenanceSchedulePayload {
 	// Select random asset
 	assetID := assetIDs[rand.Intn(len(assetIDs))]
 

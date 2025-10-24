@@ -37,9 +37,12 @@ func (irs *IssueReportSeeder) Seed(ctx context.Context, count int, assetIDs []st
 
 	successCount := 0
 	for i := 0; i < count; i++ {
-		issuePayload := irs.generateIssueReportPayload(assetIDs, userIDs)
+		// ! Select random reporter user
+		reportedBy := userIDs[rand.Intn(len(userIDs))]
 
-		_, err := irs.issueReportService.CreateIssueReport(ctx, issuePayload, "en-US")
+		issuePayload := irs.generateIssueReportPayload(assetIDs)
+
+		_, err := irs.issueReportService.CreateIssueReport(ctx, issuePayload, reportedBy)
 		if err != nil {
 			fmt.Printf("   ⚠️ Failed to create issue report %d: %v\n", i+1, err)
 			continue
@@ -56,7 +59,7 @@ func (irs *IssueReportSeeder) Seed(ctx context.Context, count int, assetIDs []st
 }
 
 // generateIssueReportPayload generates fake issue report data
-func (irs *IssueReportSeeder) generateIssueReportPayload(assetIDs []string, userIDs []string) *domain.CreateIssueReportPayload {
+func (irs *IssueReportSeeder) generateIssueReportPayload(assetIDs []string) *domain.CreateIssueReportPayload {
 	// Select random asset
 	assetID := assetIDs[rand.Intn(len(assetIDs))]
 
