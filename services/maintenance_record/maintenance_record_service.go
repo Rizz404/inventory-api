@@ -103,13 +103,26 @@ func (s *Service) CreateMaintenanceRecord(ctx context.Context, payload *domain.C
 		return domain.MaintenanceRecordResponse{}, domain.ErrBadRequestWithKey(utils.ErrMaintenanceRecordDateRequiredKey)
 	}
 
+	// Parse completion date if provided
+	var completionDate *time.Time
+	if payload.CompletionDate != nil && *payload.CompletionDate != "" {
+		parsed, err := time.Parse("2006-01-02", *payload.CompletionDate)
+		if err != nil {
+			return domain.MaintenanceRecordResponse{}, domain.ErrBadRequest("invalid completion date format")
+		}
+		completionDate = &parsed
+	}
+
 	// Build domain entity
 	record := domain.MaintenanceRecord{
 		ScheduleID:        payload.ScheduleID,
 		AssetID:           payload.AssetID,
 		MaintenanceDate:   maintenanceDate,
+		CompletionDate:    completionDate,
+		DurationMinutes:   payload.DurationMinutes,
 		PerformedByUser:   performerPtr,
 		PerformedByVendor: payload.PerformedByVendor,
+		Result:            payload.Result,
 		ActualCost:        payload.ActualCost,
 		Translations:      make([]domain.MaintenanceRecordTranslation, len(payload.Translations)),
 	}

@@ -1,11 +1,16 @@
 -- +goose Up
+CREATE TYPE maintenance_result AS ENUM ('Success', 'Partial', 'Failed', 'Rescheduled');
+
 CREATE TABLE maintenance_records (
   id VARCHAR(26) PRIMARY KEY,
   schedule_id VARCHAR(26) NULL,
   asset_id VARCHAR(26) NOT NULL,
-  maintenance_date DATE NOT NULL,
+  maintenance_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  completion_date TIMESTAMP WITH TIME ZONE NULL,
+  duration_minutes INT NULL,
   performed_by_user VARCHAR(26) NULL,
   performed_by_vendor VARCHAR(150) NULL,
+  result maintenance_result DEFAULT 'Success',
   actual_cost DECIMAL(12, 2) NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -15,6 +20,8 @@ CREATE TABLE maintenance_records (
     FOREIGN KEY (performed_by_user) REFERENCES users(id) ON DELETE
   SET NULL
 );
+
+CREATE INDEX idx_maintenance_records_schedule_id ON maintenance_records(schedule_id);
 
 CREATE INDEX idx_maintenance_records_asset_id ON maintenance_records(asset_id);
 
@@ -41,4 +48,8 @@ DROP INDEX IF EXISTS idx_maintenance_records_date;
 
 DROP INDEX IF EXISTS idx_maintenance_records_asset_id;
 
+DROP INDEX IF EXISTS idx_maintenance_records_schedule_id;
+
 DROP TABLE IF EXISTS maintenance_records;
+
+DROP TYPE IF EXISTS maintenance_result;

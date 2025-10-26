@@ -29,6 +29,8 @@ type Repository interface {
 	// Cron-related queries
 	GetSchedulesDueSoon(ctx context.Context, daysFromNow int) ([]domain.MaintenanceSchedule, error)
 	GetOverdueSchedules(ctx context.Context) ([]domain.MaintenanceSchedule, error)
+	GetRecurringSchedulesToUpdate(ctx context.Context) ([]domain.MaintenanceSchedule, error)
+	UpdateLastExecutedDate(ctx context.Context, scheduleId string, lastExecutedDate *time.Time) error
 }
 
 // AssetService for existence checks and populating asset info
@@ -90,21 +92,42 @@ func (s *Service) CreateMaintenanceSchedule(ctx context.Context, payload *domain
 		return domain.MaintenanceScheduleResponse{}, domain.ErrNotFoundWithKey(utils.ErrAssetNotFoundKey)
 	}
 
-	// Parse scheduled date
-	scheduledDate, err := time.Parse("2006-01-02", payload.ScheduledDate)
+	// Parse next scheduled date
+	nextScheduledDate, err := time.Parse("2006-01-02", payload.NextScheduledDate)
 	if err != nil {
 		return domain.MaintenanceScheduleResponse{}, domain.ErrBadRequestWithKey(utils.ErrMaintenanceScheduleDateRequiredKey)
 	}
 
+	// Set defaults
+	isRecurring := false
+	if payload.IsRecurring != nil {
+		isRecurring = *payload.IsRecurring
+	}
+
+	autoComplete := false
+	if payload.AutoComplete != nil {
+		autoComplete = *payload.AutoComplete
+	}
+
+	// Validate: if recurring, must have interval
+	if isRecurring && (payload.IntervalValue == nil || payload.IntervalUnit == nil) {
+		return domain.MaintenanceScheduleResponse{}, domain.ErrBadRequest("recurring schedule must have interval_value and interval_unit")
+	}
+
 	// Build domain entity
 	schedule := domain.MaintenanceSchedule{
-		AssetID:         payload.AssetID,
-		MaintenanceType: payload.MaintenanceType,
-		ScheduledDate:   scheduledDate,
-		FrequencyMonths: payload.FrequencyMonths,
-		Status:          domain.StatusScheduled,
-		CreatedBy:       createdBy,
-		Translations:    make([]domain.MaintenanceScheduleTranslation, len(payload.Translations)),
+		AssetID:           payload.AssetID,
+		MaintenanceType:   payload.MaintenanceType,
+		IsRecurring:       isRecurring,
+		IntervalValue:     payload.IntervalValue,
+		IntervalUnit:      payload.IntervalUnit,
+		ScheduledTime:     payload.ScheduledTime,
+		NextScheduledDate: nextScheduledDate,
+		State:             domain.StateActive,
+		AutoComplete:      autoComplete,
+		EstimatedCost:     payload.EstimatedCost,
+		CreatedBy:         createdBy,
+		Translations:      make([]domain.MaintenanceScheduleTranslation, len(payload.Translations)),
 	}
 	for i, t := range payload.Translations {
 		schedule.Translations[i] = domain.MaintenanceScheduleTranslation{

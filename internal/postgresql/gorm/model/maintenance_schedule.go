@@ -10,17 +10,24 @@ import (
 )
 
 type MaintenanceSchedule struct {
-	ID              SQLULID                        `gorm:"primaryKey;type:varchar(26)"`
-	AssetID         SQLULID                        `gorm:"type:varchar(26);not null"`
-	MaintenanceType domain.MaintenanceScheduleType `gorm:"type:maintenance_schedule_type;not null"`
-	ScheduledDate   time.Time                      `gorm:"type:date;not null"`
-	FrequencyMonths *int
-	Status          domain.ScheduleStatus `gorm:"type:schedule_status;default:'Scheduled'"`
-	CreatedBy       SQLULID               `gorm:"type:varchar(26);not null"`
-	CreatedAt       time.Time
-	Asset           Asset                            `gorm:"foreignKey:AssetID"`
-	CreatedByUser   User                             `gorm:"foreignKey:CreatedBy"`
-	Translations    []MaintenanceScheduleTranslation `gorm:"foreignKey:ScheduleID"`
+	ID                SQLULID                        `gorm:"primaryKey;type:varchar(26)"`
+	AssetID           SQLULID                        `gorm:"type:varchar(26);not null"`
+	MaintenanceType   domain.MaintenanceScheduleType `gorm:"type:maintenance_type;not null"`
+	IsRecurring       bool                           `gorm:"default:false"`
+	IntervalValue     *int                           `gorm:"type:int"`
+	IntervalUnit      *domain.IntervalUnit           `gorm:"type:interval_unit"`
+	ScheduledTime     *string                        `gorm:"type:time"`
+	NextScheduledDate time.Time                      `gorm:"type:timestamp with time zone;not null"`
+	LastExecutedDate  *time.Time                     `gorm:"type:timestamp with time zone"`
+	State             domain.ScheduleState           `gorm:"type:schedule_state;default:'Active'"`
+	AutoComplete      bool                           `gorm:"default:false"`
+	EstimatedCost     *float64                       `gorm:"type:decimal(12,2)"`
+	CreatedBy         SQLULID                        `gorm:"type:varchar(26);not null"`
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Asset             Asset                            `gorm:"foreignKey:AssetID"`
+	CreatedByUser     User                             `gorm:"foreignKey:CreatedBy"`
+	Translations      []MaintenanceScheduleTranslation `gorm:"foreignKey:ScheduleID"`
 }
 
 func (MaintenanceSchedule) TableName() string {

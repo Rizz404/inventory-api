@@ -12,10 +12,16 @@ import (
 
 func ToModelMaintenanceSchedule(d *domain.MaintenanceSchedule) model.MaintenanceSchedule {
 	modelSchedule := model.MaintenanceSchedule{
-		MaintenanceType: d.MaintenanceType,
-		ScheduledDate:   d.ScheduledDate,
-		FrequencyMonths: d.FrequencyMonths,
-		Status:          d.Status,
+		MaintenanceType:   d.MaintenanceType,
+		IsRecurring:       d.IsRecurring,
+		IntervalValue:     d.IntervalValue,
+		IntervalUnit:      d.IntervalUnit,
+		ScheduledTime:     d.ScheduledTime,
+		NextScheduledDate: d.NextScheduledDate,
+		LastExecutedDate:  d.LastExecutedDate,
+		State:             d.State,
+		AutoComplete:      d.AutoComplete,
+		EstimatedCost:     d.EstimatedCost,
 	}
 
 	if d.ID != "" {
@@ -41,10 +47,16 @@ func ToModelMaintenanceSchedule(d *domain.MaintenanceSchedule) model.Maintenance
 
 func ToModelMaintenanceScheduleForCreate(d *domain.MaintenanceSchedule) model.MaintenanceSchedule {
 	modelSchedule := model.MaintenanceSchedule{
-		MaintenanceType: d.MaintenanceType,
-		ScheduledDate:   d.ScheduledDate,
-		FrequencyMonths: d.FrequencyMonths,
-		Status:          d.Status,
+		MaintenanceType:   d.MaintenanceType,
+		IsRecurring:       d.IsRecurring,
+		IntervalValue:     d.IntervalValue,
+		IntervalUnit:      d.IntervalUnit,
+		ScheduledTime:     d.ScheduledTime,
+		NextScheduledDate: d.NextScheduledDate,
+		LastExecutedDate:  d.LastExecutedDate,
+		State:             d.State,
+		AutoComplete:      d.AutoComplete,
+		EstimatedCost:     d.EstimatedCost,
 	}
 
 	if d.AssetID != "" {
@@ -102,14 +114,21 @@ func ToModelMaintenanceScheduleTranslationForCreate(scheduleID string, d *domain
 
 func ToDomainMaintenanceSchedule(m *model.MaintenanceSchedule) domain.MaintenanceSchedule {
 	domainSchedule := domain.MaintenanceSchedule{
-		ID:              m.ID.String(),
-		AssetID:         m.AssetID.String(),
-		MaintenanceType: m.MaintenanceType,
-		ScheduledDate:   m.ScheduledDate,
-		FrequencyMonths: m.FrequencyMonths,
-		Status:          m.Status,
-		CreatedBy:       m.CreatedBy.String(),
-		CreatedAt:       m.CreatedAt,
+		ID:                m.ID.String(),
+		AssetID:           m.AssetID.String(),
+		MaintenanceType:   m.MaintenanceType,
+		IsRecurring:       m.IsRecurring,
+		IntervalValue:     m.IntervalValue,
+		IntervalUnit:      m.IntervalUnit,
+		ScheduledTime:     m.ScheduledTime,
+		NextScheduledDate: m.NextScheduledDate,
+		LastExecutedDate:  m.LastExecutedDate,
+		State:             m.State,
+		AutoComplete:      m.AutoComplete,
+		EstimatedCost:     m.EstimatedCost,
+		CreatedBy:         m.CreatedBy.String(),
+		CreatedAt:         m.CreatedAt,
+		UpdatedAt:         m.UpdatedAt,
 	}
 
 	if len(m.Translations) > 0 {
@@ -154,15 +173,22 @@ func ToDomainMaintenanceSchedules(models []model.MaintenanceSchedule) []domain.M
 // *==================== Entity Response conversions ====================
 func MaintenanceScheduleToResponse(d *domain.MaintenanceSchedule, langCode string) domain.MaintenanceScheduleResponse {
 	response := domain.MaintenanceScheduleResponse{
-		ID:              d.ID,
-		AssetID:         d.AssetID,
-		MaintenanceType: d.MaintenanceType,
-		ScheduledDate:   d.ScheduledDate,
-		FrequencyMonths: d.FrequencyMonths,
-		Status:          d.Status,
-		CreatedByID:     d.CreatedBy,
-		CreatedAt:       d.CreatedAt,
-		Translations:    make([]domain.MaintenanceScheduleTranslationResponse, len(d.Translations)),
+		ID:                d.ID,
+		AssetID:           d.AssetID,
+		MaintenanceType:   d.MaintenanceType,
+		IsRecurring:       d.IsRecurring,
+		IntervalValue:     d.IntervalValue,
+		IntervalUnit:      d.IntervalUnit,
+		ScheduledTime:     d.ScheduledTime,
+		NextScheduledDate: d.NextScheduledDate,
+		LastExecutedDate:  d.LastExecutedDate,
+		State:             d.State,
+		AutoComplete:      d.AutoComplete,
+		EstimatedCost:     domain.NewNullableDecimal2(d.EstimatedCost),
+		CreatedByID:       d.CreatedBy,
+		CreatedAt:         d.CreatedAt,
+		UpdatedAt:         d.UpdatedAt,
+		Translations:      make([]domain.MaintenanceScheduleTranslationResponse, len(d.Translations)),
 	}
 
 	// Populate Asset if available
@@ -204,14 +230,21 @@ func MaintenanceScheduleToResponse(d *domain.MaintenanceSchedule, langCode strin
 
 func MaintenanceScheduleToListResponse(d *domain.MaintenanceSchedule, langCode string) domain.MaintenanceScheduleListResponse {
 	response := domain.MaintenanceScheduleListResponse{
-		ID:              d.ID,
-		AssetID:         d.AssetID,
-		MaintenanceType: d.MaintenanceType,
-		ScheduledDate:   d.ScheduledDate,
-		FrequencyMonths: d.FrequencyMonths,
-		Status:          d.Status,
-		CreatedByID:     d.CreatedBy,
-		CreatedAt:       d.CreatedAt,
+		ID:                d.ID,
+		AssetID:           d.AssetID,
+		MaintenanceType:   d.MaintenanceType,
+		IsRecurring:       d.IsRecurring,
+		IntervalValue:     d.IntervalValue,
+		IntervalUnit:      d.IntervalUnit,
+		ScheduledTime:     d.ScheduledTime,
+		NextScheduledDate: d.NextScheduledDate,
+		LastExecutedDate:  d.LastExecutedDate,
+		State:             d.State,
+		AutoComplete:      d.AutoComplete,
+		EstimatedCost:     domain.NewNullableDecimal2(d.EstimatedCost),
+		CreatedByID:       d.CreatedBy,
+		CreatedAt:         d.CreatedAt,
+		UpdatedAt:         d.UpdatedAt,
 	}
 
 	// Populate Asset if available
@@ -264,21 +297,27 @@ func MaintenanceScheduleStatisticsToResponse(stats *domain.MaintenanceScheduleSt
 	resp := domain.MaintenanceScheduleStatisticsResponse{
 		Total: domain.MaintenanceScheduleCountStatisticsResponse{Count: stats.Total.Count},
 		ByType: domain.MaintenanceTypeStatisticsResponse{
-			Preventive: stats.ByType.Preventive,
-			Corrective: stats.ByType.Corrective,
+			Preventive:  stats.ByType.Preventive,
+			Corrective:  stats.ByType.Corrective,
+			Inspection:  stats.ByType.Inspection,
+			Calibration: stats.ByType.Calibration,
 		},
 		ByStatus: domain.MaintenanceScheduleStatusStatisticsResponse{
-			Scheduled: stats.ByStatus.Scheduled,
+			Active:    stats.ByStatus.Active,
+			Paused:    stats.ByStatus.Paused,
+			Stopped:   stats.ByStatus.Stopped,
 			Completed: stats.ByStatus.Completed,
-			Cancelled: stats.ByStatus.Cancelled,
 		},
 		Summary: domain.MaintenanceScheduleSummaryStatisticsResponse{
 			TotalSchedules:                    stats.Summary.TotalSchedules,
-			ScheduledMaintenancePercentage:    domain.NewDecimal2(stats.Summary.ScheduledMaintenancePercentage),
+			ActiveMaintenancePercentage:       domain.NewDecimal2(stats.Summary.ActiveMaintenancePercentage),
 			CompletedMaintenancePercentage:    domain.NewDecimal2(stats.Summary.CompletedMaintenancePercentage),
-			CancelledMaintenancePercentage:    domain.NewDecimal2(stats.Summary.CancelledMaintenancePercentage),
+			PausedMaintenancePercentage:       domain.NewDecimal2(stats.Summary.PausedMaintenancePercentage),
+			StoppedMaintenancePercentage:      domain.NewDecimal2(stats.Summary.StoppedMaintenancePercentage),
 			PreventiveMaintenancePercentage:   domain.NewDecimal2(stats.Summary.PreventiveMaintenancePercentage),
 			CorrectiveMaintenancePercentage:   domain.NewDecimal2(stats.Summary.CorrectiveMaintenancePercentage),
+			InspectionMaintenancePercentage:   domain.NewDecimal2(stats.Summary.InspectionMaintenancePercentage),
+			CalibrationMaintenancePercentage:  domain.NewDecimal2(stats.Summary.CalibrationMaintenancePercentage),
 			AverageScheduleFrequency:          domain.NewDecimal2(stats.Summary.AverageScheduleFrequency),
 			UpcomingMaintenanceCount:          stats.Summary.UpcomingMaintenanceCount,
 			OverdueMaintenanceCount:           stats.Summary.OverdueMaintenanceCount,
@@ -318,30 +357,30 @@ func MaintenanceScheduleStatisticsToResponse(stats *domain.MaintenanceScheduleSt
 	resp.UpcomingSchedule = make([]domain.UpcomingMaintenanceScheduleResponse, len(stats.UpcomingSchedule))
 	for i, up := range stats.UpcomingSchedule {
 		resp.UpcomingSchedule[i] = domain.UpcomingMaintenanceScheduleResponse{
-			ID:              up.ID,
-			AssetID:         up.AssetID,
-			AssetName:       up.AssetName,
-			AssetTag:        up.AssetTag,
-			MaintenanceType: up.MaintenanceType,
-			ScheduledDate:   up.ScheduledDate,
-			DaysUntilDue:    up.DaysUntilDue,
-			Title:           up.Title,
-			Description:     up.Description,
+			ID:                up.ID,
+			AssetID:           up.AssetID,
+			AssetName:         up.AssetName,
+			AssetTag:          up.AssetTag,
+			MaintenanceType:   up.MaintenanceType,
+			NextScheduledDate: up.NextScheduledDate,
+			DaysUntilDue:      up.DaysUntilDue,
+			Title:             up.Title,
+			Description:       up.Description,
 		}
 	}
 
 	resp.OverdueSchedule = make([]domain.OverdueMaintenanceScheduleResponse, len(stats.OverdueSchedule))
 	for i, od := range stats.OverdueSchedule {
 		resp.OverdueSchedule[i] = domain.OverdueMaintenanceScheduleResponse{
-			ID:              od.ID,
-			AssetID:         od.AssetID,
-			AssetName:       od.AssetName,
-			AssetTag:        od.AssetTag,
-			MaintenanceType: od.MaintenanceType,
-			ScheduledDate:   od.ScheduledDate,
-			DaysOverdue:     od.DaysOverdue,
-			Title:           od.Title,
-			Description:     od.Description,
+			ID:                od.ID,
+			AssetID:           od.AssetID,
+			AssetName:         od.AssetName,
+			AssetTag:          od.AssetTag,
+			MaintenanceType:   od.MaintenanceType,
+			NextScheduledDate: od.NextScheduledDate,
+			DaysOverdue:       od.DaysOverdue,
+			Title:             od.Title,
+			Description:       od.Description,
 		}
 	}
 
@@ -356,17 +395,17 @@ func MaintenanceScheduleStatisticsToResponse(stats *domain.MaintenanceScheduleSt
 
 func MapMaintenanceScheduleSortFieldToColumn(field domain.MaintenanceScheduleSortField) string {
 	columnMap := map[domain.MaintenanceScheduleSortField]string{
-		domain.MaintenanceScheduleSortByScheduledDate:   "ms.scheduled_date",
-		domain.MaintenanceScheduleSortByMaintenanceType: "ms.maintenance_type",
-		domain.MaintenanceScheduleSortByStatus:          "ms.status",
-		domain.MaintenanceScheduleSortByCreatedAt:       "ms.created_at",
-		domain.MaintenanceScheduleSortByUpdatedAt:       "ms.updated_at",
+		domain.MaintenanceScheduleSortByNextScheduledDate: "ms.next_scheduled_date",
+		domain.MaintenanceScheduleSortByMaintenanceType:   "ms.maintenance_type",
+		domain.MaintenanceScheduleSortByState:             "ms.state",
+		domain.MaintenanceScheduleSortByCreatedAt:         "ms.created_at",
+		domain.MaintenanceScheduleSortByUpdatedAt:         "ms.updated_at",
 	}
 
 	if column, exists := columnMap[field]; exists {
 		return column
 	}
-	return "ms.scheduled_date"
+	return "ms.next_scheduled_date"
 }
 
 // *==================== Update Map conversions (Harus snake case karena untuk database) ====================
@@ -380,17 +419,35 @@ func ToModelMaintenanceScheduleUpdateMap(payload *domain.UpdateMaintenanceSchedu
 			updates["maintenance_type"] = *payload.MaintenanceType
 		}
 	}
-	if payload.ScheduledDate != nil {
-		if *payload.ScheduledDate == "" {
-			updates["scheduled_date"] = nil
+	if payload.IsRecurring != nil {
+		updates["is_recurring"] = *payload.IsRecurring
+	}
+	if payload.IntervalValue != nil {
+		updates["interval_value"] = *payload.IntervalValue
+	}
+	if payload.IntervalUnit != nil {
+		updates["interval_unit"] = *payload.IntervalUnit
+	}
+	if payload.ScheduledTime != nil {
+		updates["scheduled_time"] = *payload.ScheduledTime
+	}
+	if payload.NextScheduledDate != nil {
+		if *payload.NextScheduledDate == "" {
+			updates["next_scheduled_date"] = nil
 		} else {
-			if parsedDate, err := time.Parse("2006-01-02", *payload.ScheduledDate); err == nil {
-				updates["scheduled_date"] = parsedDate
+			if parsedDate, err := time.Parse("2006-01-02", *payload.NextScheduledDate); err == nil {
+				updates["next_scheduled_date"] = parsedDate
 			}
 		}
 	}
-	if payload.FrequencyMonths != nil {
-		updates["frequency_months"] = *payload.FrequencyMonths
+	if payload.State != nil {
+		updates["state"] = *payload.State
+	}
+	if payload.AutoComplete != nil {
+		updates["auto_complete"] = *payload.AutoComplete
+	}
+	if payload.EstimatedCost != nil {
+		updates["estimated_cost"] = *payload.EstimatedCost
 	}
 
 	return updates

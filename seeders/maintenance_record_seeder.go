@@ -70,6 +70,21 @@ func (mrs *MaintenanceRecordSeeder) generateMaintenanceRecordPayload(assetIDs []
 	// Random maintenance date in the past 2 years
 	maintenanceDate := gofakeit.DateRange(time.Now().AddDate(-2, 0, 0), time.Now())
 
+	// Completion date (80% completed, 20% ongoing)
+	var completionDate *string
+	var durationMinutes *int
+	if rand.Float32() < 0.8 {
+		// Completed maintenance - add 1-48 hours to maintenance date
+		hoursToComplete := rand.Intn(48) + 1
+		completed := maintenanceDate.Add(time.Duration(hoursToComplete) * time.Hour)
+		completedStr := completed.Format("2006-01-02")
+		completionDate = &completedStr
+
+		// Duration in minutes
+		duration := rand.Intn(360) + 30 // 30 minutes to 6.5 hours
+		durationMinutes = &duration
+	}
+
 	// ! Always assign a user (80% user, 20% vendor)
 	var performedByUser *string
 	var performedByVendor *string
@@ -95,6 +110,15 @@ func (mrs *MaintenanceRecordSeeder) generateMaintenanceRecordPayload(assetIDs []
 		vendor := vendors[rand.Intn(len(vendors))]
 		performedByVendor = &vendor
 	}
+
+	// Maintenance result - weighted distribution
+	results := []domain.MaintenanceResult{
+		domain.ResultSuccess, domain.ResultSuccess, domain.ResultSuccess, domain.ResultSuccess, // 70% success
+		domain.ResultPartial,     // 10% partial
+		domain.ResultFailed,      // 10% failed
+		domain.ResultRescheduled, // 10% rescheduled
+	}
+	result := results[rand.Intn(len(results))]
 
 	// Generate cost based on maintenance type
 	var actualCost *float64
@@ -181,8 +205,11 @@ func (mrs *MaintenanceRecordSeeder) generateMaintenanceRecordPayload(assetIDs []
 		ScheduleID:        scheduleID,
 		AssetID:           assetID,
 		MaintenanceDate:   maintenanceDateStr,
+		CompletionDate:    completionDate,
+		DurationMinutes:   durationMinutes,
 		PerformedByUser:   performedByUser,
 		PerformedByVendor: performedByVendor,
+		Result:            result,
 		ActualCost:        actualCost,
 		Translations:      translations,
 	}

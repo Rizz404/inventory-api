@@ -13,7 +13,10 @@ import (
 func ToModelMaintenanceRecord(d *domain.MaintenanceRecord) model.MaintenanceRecord {
 	modelRecord := model.MaintenanceRecord{
 		MaintenanceDate:   d.MaintenanceDate,
+		CompletionDate:    d.CompletionDate,
+		DurationMinutes:   d.DurationMinutes,
 		PerformedByVendor: d.PerformedByVendor,
+		Result:            d.Result,
 		ActualCost:        d.ActualCost,
 	}
 
@@ -49,7 +52,10 @@ func ToModelMaintenanceRecord(d *domain.MaintenanceRecord) model.MaintenanceReco
 func ToModelMaintenanceRecordForCreate(d *domain.MaintenanceRecord) model.MaintenanceRecord {
 	modelRecord := model.MaintenanceRecord{
 		MaintenanceDate:   d.MaintenanceDate,
+		CompletionDate:    d.CompletionDate,
+		DurationMinutes:   d.DurationMinutes,
 		PerformedByVendor: d.PerformedByVendor,
+		Result:            d.Result,
 		ActualCost:        d.ActualCost,
 	}
 
@@ -119,7 +125,10 @@ func ToDomainMaintenanceRecord(m *model.MaintenanceRecord) domain.MaintenanceRec
 		ID:                m.ID.String(),
 		AssetID:           m.AssetID.String(),
 		MaintenanceDate:   m.MaintenanceDate,
+		CompletionDate:    m.CompletionDate,
+		DurationMinutes:   m.DurationMinutes,
 		PerformedByVendor: m.PerformedByVendor,
+		Result:            m.Result,
 		ActualCost:        m.ActualCost,
 		CreatedAt:         m.CreatedAt,
 		UpdatedAt:         m.UpdatedAt,
@@ -188,8 +197,11 @@ func MaintenanceRecordToResponse(d *domain.MaintenanceRecord, langCode string) d
 		ScheduleID:        d.ScheduleID,
 		AssetID:           d.AssetID,
 		MaintenanceDate:   d.MaintenanceDate,
+		CompletionDate:    d.CompletionDate,
+		DurationMinutes:   d.DurationMinutes,
 		PerformedByUserID: d.PerformedByUser,
 		PerformedByVendor: d.PerformedByVendor,
+		Result:            d.Result,
 		ActualCost:        domain.NewNullableDecimal2(d.ActualCost), // Convert to NullableDecimal2 for 2 decimal places
 		CreatedAt:         d.CreatedAt,
 		UpdatedAt:         d.UpdatedAt,
@@ -246,8 +258,11 @@ func MaintenanceRecordToListResponse(d *domain.MaintenanceRecord, langCode strin
 		ScheduleID:        d.ScheduleID,
 		AssetID:           d.AssetID,
 		MaintenanceDate:   d.MaintenanceDate,
+		CompletionDate:    d.CompletionDate,
+		DurationMinutes:   d.DurationMinutes,
 		PerformedByUserID: d.PerformedByUser,
 		PerformedByVendor: d.PerformedByVendor,
+		Result:            d.Result,
 		ActualCost:        domain.NewNullableDecimal2(d.ActualCost), // Convert to NullableDecimal2 for 2 decimal places
 		CreatedAt:         d.CreatedAt,
 		UpdatedAt:         d.UpdatedAt,
@@ -424,6 +439,18 @@ func ToModelMaintenanceRecordUpdateMap(payload *domain.UpdateMaintenanceRecordPa
 			}
 		}
 	}
+	if payload.CompletionDate != nil {
+		if payload.CompletionDate == nil {
+			updates["completion_date"] = nil
+		} else {
+			if parsedDate, err := time.Parse("2006-01-02", *payload.CompletionDate); err == nil {
+				updates["completion_date"] = parsedDate
+			}
+		}
+	}
+	if payload.DurationMinutes != nil {
+		updates["duration_minutes"] = *payload.DurationMinutes
+	}
 	if payload.PerformedByUser != nil {
 		if *payload.PerformedByUser == "" {
 			updates["performed_by_user"] = nil
@@ -433,6 +460,9 @@ func ToModelMaintenanceRecordUpdateMap(payload *domain.UpdateMaintenanceRecordPa
 	}
 	if payload.PerformedByVendor != nil {
 		updates["performed_by_vendor"] = *payload.PerformedByVendor
+	}
+	if payload.Result != nil {
+		updates["result"] = *payload.Result
 	}
 	if payload.ActualCost != nil {
 		updates["actual_cost"] = *payload.ActualCost

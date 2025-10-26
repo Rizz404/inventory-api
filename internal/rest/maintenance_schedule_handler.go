@@ -68,9 +68,9 @@ func (h *MaintenanceScheduleHandler) parseFiltersAndSort(c *fiber.Ctx) (domain.M
 		t := domain.MaintenanceScheduleType(mtype)
 		filters.MaintenanceType = &t
 	}
-	if status := c.Query("status"); status != "" {
-		st := domain.ScheduleStatus(status)
-		filters.Status = &st
+	if state := c.Query("state"); state != "" {
+		st := domain.ScheduleState(state)
+		filters.State = &st
 	}
 	if createdBy := c.Query("createdBy"); createdBy != "" {
 		filters.CreatedBy = &createdBy

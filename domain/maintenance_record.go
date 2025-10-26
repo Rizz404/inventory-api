@@ -13,13 +13,25 @@ const (
 	MaintenanceRecordSortByUpdatedAt       MaintenanceRecordSortField = "updatedAt"
 )
 
+type MaintenanceResult string
+
+const (
+	ResultSuccess     MaintenanceResult = "Success"
+	ResultPartial     MaintenanceResult = "Partial"
+	ResultFailed      MaintenanceResult = "Failed"
+	ResultRescheduled MaintenanceResult = "Rescheduled"
+)
+
 type MaintenanceRecord struct {
 	ID                string                         `json:"id"`
 	ScheduleID        *string                        `json:"scheduleId"`
 	AssetID           string                         `json:"assetId"`
 	MaintenanceDate   time.Time                      `json:"maintenanceDate"`
+	CompletionDate    *time.Time                     `json:"completionDate"`
+	DurationMinutes   *int                           `json:"durationMinutes"`
 	PerformedByUser   *string                        `json:"performedByUser"`
 	PerformedByVendor *string                        `json:"performedByVendor"`
+	Result            MaintenanceResult              `json:"result"`
 	ActualCost        *float64                       `json:"actualCost"`
 	CreatedAt         time.Time                      `json:"createdAt"`
 	UpdatedAt         time.Time                      `json:"updatedAt"`
@@ -49,8 +61,11 @@ type MaintenanceRecordResponse struct {
 	ScheduleID        *string                                `json:"scheduleId"`
 	AssetID           string                                 `json:"assetId"`
 	MaintenanceDate   time.Time                              `json:"maintenanceDate"`
+	CompletionDate    *time.Time                             `json:"completionDate"`
+	DurationMinutes   *int                                   `json:"durationMinutes"`
 	PerformedByUserID *string                                `json:"performedByUserId"`
 	PerformedByVendor *string                                `json:"performedByVendor"`
+	Result            MaintenanceResult                      `json:"result"`
 	ActualCost        *NullableDecimal2                      `json:"actualCost"` // Custom type to ensure 2 decimal places as number
 	Title             string                                 `json:"title"`
 	Notes             *string                                `json:"notes"`
@@ -68,8 +83,11 @@ type MaintenanceRecordListResponse struct {
 	ScheduleID        *string           `json:"scheduleId"`
 	AssetID           string            `json:"assetId"`
 	MaintenanceDate   time.Time         `json:"maintenanceDate"`
+	CompletionDate    *time.Time        `json:"completionDate"`
+	DurationMinutes   *int              `json:"durationMinutes"`
 	PerformedByUserID *string           `json:"performedByUserId"`
 	PerformedByVendor *string           `json:"performedByVendor"`
+	Result            MaintenanceResult `json:"result"`
 	ActualCost        *NullableDecimal2 `json:"actualCost"` // Custom type to ensure 2 decimal places as number
 	Title             string            `json:"title"`
 	Notes             *string           `json:"notes"`
@@ -97,8 +115,11 @@ type CreateMaintenanceRecordPayload struct {
 	ScheduleID        *string                                     `json:"scheduleId,omitempty"`
 	AssetID           string                                      `json:"assetId" validate:"required"`
 	MaintenanceDate   string                                      `json:"maintenanceDate" validate:"required,datetime=2006-01-02"`
+	CompletionDate    *string                                     `json:"completionDate,omitempty" validate:"omitempty,datetime=2006-01-02"`
+	DurationMinutes   *int                                        `json:"durationMinutes,omitempty" validate:"omitempty,gt=0"`
 	PerformedByUser   *string                                     `json:"performedByUser,omitempty" validate:"omitempty"`
 	PerformedByVendor *string                                     `json:"performedByVendor,omitempty" validate:"omitempty,max=150"`
+	Result            MaintenanceResult                           `json:"result" validate:"required,oneof=Success Partial Failed Rescheduled"`
 	ActualCost        *float64                                    `json:"actualCost,omitempty" validate:"omitempty,gt=0"`
 	Translations      []CreateMaintenanceRecordTranslationPayload `json:"translations" validate:"required,min=1,dive"`
 }
@@ -112,8 +133,11 @@ type CreateMaintenanceRecordTranslationPayload struct {
 type UpdateMaintenanceRecordPayload struct {
 	ScheduleID        *string                                     `json:"scheduleId,omitempty"`
 	MaintenanceDate   *string                                     `json:"maintenanceDate,omitempty" validate:"omitempty,datetime=2006-01-02"`
+	CompletionDate    *string                                     `json:"completionDate,omitempty" validate:"omitempty,datetime=2006-01-02"`
+	DurationMinutes   *int                                        `json:"durationMinutes,omitempty" validate:"omitempty,gt=0"`
 	PerformedByUser   *string                                     `json:"performedByUser,omitempty" validate:"omitempty"`
 	PerformedByVendor *string                                     `json:"performedByVendor,omitempty" validate:"omitempty,max=150"`
+	Result            *MaintenanceResult                          `json:"result,omitempty" validate:"omitempty,oneof=Success Partial Failed Rescheduled"`
 	ActualCost        *float64                                    `json:"actualCost,omitempty" validate:"omitempty,gt=0"`
 	Translations      []UpdateMaintenanceRecordTranslationPayload `json:"translations,omitempty" validate:"omitempty,dive"`
 }

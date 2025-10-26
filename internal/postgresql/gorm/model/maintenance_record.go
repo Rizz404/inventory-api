@@ -4,18 +4,22 @@ import (
 	"log"
 	"time"
 
+	"github.com/Rizz404/inventory-api/domain"
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
 )
 
 type MaintenanceRecord struct {
-	ID                SQLULID   `gorm:"primaryKey;type:varchar(26)"`
-	ScheduleID        *SQLULID  `gorm:"type:varchar(26)"`
-	AssetID           SQLULID   `gorm:"type:varchar(26);not null"`
-	MaintenanceDate   time.Time `gorm:"type:date;not null"`
-	PerformedByUser   *SQLULID  `gorm:"type:varchar(26)"`
-	PerformedByVendor *string   `gorm:"type:varchar(150)"`
-	ActualCost        *float64  `gorm:"type:decimal(12,2)"`
+	ID                SQLULID                  `gorm:"primaryKey;type:varchar(26)"`
+	ScheduleID        *SQLULID                 `gorm:"type:varchar(26)"`
+	AssetID           SQLULID                  `gorm:"type:varchar(26);not null"`
+	MaintenanceDate   time.Time                `gorm:"type:timestamp with time zone;not null"`
+	CompletionDate    *time.Time               `gorm:"type:timestamp with time zone"`
+	DurationMinutes   *int                     `gorm:"type:int"`
+	PerformedByUser   *SQLULID                 `gorm:"type:varchar(26)"`
+	PerformedByVendor *string                  `gorm:"type:varchar(150)"`
+	Result            domain.MaintenanceResult `gorm:"type:maintenance_result;default:'Success'"`
+	ActualCost        *float64                 `gorm:"type:decimal(12,2)"`
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 	Schedule          *MaintenanceSchedule           `gorm:"foreignKey:ScheduleID"`

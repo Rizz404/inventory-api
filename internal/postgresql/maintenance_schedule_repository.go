@@ -32,17 +32,17 @@ func (r *MaintenanceScheduleRepository) applyScheduleFilters(db *gorm.DB, filter
 	if filters.MaintenanceType != nil && *filters.MaintenanceType != "" {
 		db = db.Where("maintenance_schedules.maintenance_type = ?", filters.MaintenanceType)
 	}
-	if filters.Status != nil && *filters.Status != "" {
-		db = db.Where("maintenance_schedules.status = ?", filters.Status)
+	if filters.State != nil && *filters.State != "" {
+		db = db.Where("maintenance_schedules.state = ?", filters.State)
 	}
 	if filters.CreatedBy != nil && *filters.CreatedBy != "" {
 		db = db.Where("maintenance_schedules.created_by = ?", filters.CreatedBy)
 	}
 	if filters.FromDate != nil && *filters.FromDate != "" {
-		db = db.Where("maintenance_schedules.scheduled_date >= ?", *filters.FromDate)
+		db = db.Where("maintenance_schedules.next_scheduled_date >= ?", *filters.FromDate)
 	}
 	if filters.ToDate != nil && *filters.ToDate != "" {
-		db = db.Where("maintenance_schedules.scheduled_date <= ?", *filters.ToDate)
+		db = db.Where("maintenance_schedules.next_scheduled_date <= ?", *filters.ToDate)
 	}
 	return db
 }
@@ -328,23 +328,39 @@ func (r *MaintenanceScheduleRepository) GetMaintenanceScheduleStatistics(ctx con
 		Where("maintenance_type = ?", domain.ScheduleTypeCorrective).Count(&correctiveCount).Error; err != nil {
 		return stats, domain.ErrInternal(err)
 	}
+	var inspectionCount int64
+	if err := r.db.WithContext(ctx).Model(&model.MaintenanceSchedule{}).
+		Where("maintenance_type = ?", domain.ScheduleTypeInspection).Count(&inspectionCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	var calibrationCount int64
+	if err := r.db.WithContext(ctx).Model(&model.MaintenanceSchedule{}).
+		Where("maintenance_type = ?", domain.ScheduleTypeCalibration).Count(&calibrationCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
 	stats.ByType.Preventive = int(preventiveCount)
 	stats.ByType.Corrective = int(correctiveCount)
+	stats.ByType.Inspection = int(inspectionCount)
+	stats.ByType.Calibration = int(calibrationCount)
 
 	// By status
-	var scheduledCount, completedCount, cancelledCount int64
-	if err := r.db.WithContext(ctx).Model(&model.MaintenanceSchedule{}).Where("status = ?", domain.StatusScheduled).Count(&scheduledCount).Error; err != nil {
+	var activeCount, pausedCount, stoppedCount, completedCount int64
+	if err := r.db.WithContext(ctx).Model(&model.MaintenanceSchedule{}).Where("state = ?", domain.StateActive).Count(&activeCount).Error; err != nil {
 		return stats, domain.ErrInternal(err)
 	}
-	if err := r.db.WithContext(ctx).Model(&model.MaintenanceSchedule{}).Where("status = ?", domain.StatusCompleted).Count(&completedCount).Error; err != nil {
+	if err := r.db.WithContext(ctx).Model(&model.MaintenanceSchedule{}).Where("state = ?", domain.StatePaused).Count(&pausedCount).Error; err != nil {
 		return stats, domain.ErrInternal(err)
 	}
-	if err := r.db.WithContext(ctx).Model(&model.MaintenanceSchedule{}).Where("status = ?", domain.StatusCancelled).Count(&cancelledCount).Error; err != nil {
+	if err := r.db.WithContext(ctx).Model(&model.MaintenanceSchedule{}).Where("state = ?", domain.StateStopped).Count(&stoppedCount).Error; err != nil {
 		return stats, domain.ErrInternal(err)
 	}
-	stats.ByStatus.Scheduled = int(scheduledCount)
+	if err := r.db.WithContext(ctx).Model(&model.MaintenanceSchedule{}).Where("state = ?", domain.StateCompleted).Count(&completedCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	stats.ByStatus.Active = int(activeCount)
+	stats.ByStatus.Paused = int(pausedCount)
+	stats.ByStatus.Stopped = int(stoppedCount)
 	stats.ByStatus.Completed = int(completedCount)
-	stats.ByStatus.Cancelled = int(cancelledCount)
 
 	// By asset
 	var byAssetResults []struct {
@@ -357,7 +373,7 @@ func (r *MaintenanceScheduleRepository) GetMaintenanceScheduleStatistics(ctx con
 	if err := r.db.WithContext(ctx).
 		Table("maintenance_schedules ms").
 		Select("a.id as asset_id, a.asset_name, a.asset_tag, COUNT(*) as schedule_count, " +
-			"MIN(CASE WHEN ms.scheduled_date > NOW() AND ms.status = 'Scheduled' THEN ms.scheduled_date::text ELSE NULL END) as next_maintenance").
+			"MIN(CASE WHEN ms.next_scheduled_date > NOW() AND ms.state = 'Active' THEN ms.next_scheduled_date::text ELSE NULL END) as next_maintenance").
 		Joins("LEFT JOIN assets a ON ms.asset_id = a.id").
 		Group("a.id, a.asset_name, a.asset_tag").
 		Scan(&byAssetResults).Error; err != nil {
@@ -399,78 +415,78 @@ func (r *MaintenanceScheduleRepository) GetMaintenanceScheduleStatistics(ctx con
 
 	// Upcoming schedules
 	var upcomingResults []struct {
-		ID              string
-		AssetID         string
-		AssetName       string
-		AssetTag        string
-		MaintenanceType domain.MaintenanceScheduleType
-		ScheduledDate   string
-		DaysUntilDue    int
-		Title           string
-		Description     *string
+		ID                string
+		AssetID           string
+		AssetName         string
+		AssetTag          string
+		MaintenanceType   domain.MaintenanceScheduleType
+		NextScheduledDate string
+		DaysUntilDue      int
+		Title             string
+		Description       *string
 	}
 	if err := r.db.WithContext(ctx).
 		Table("maintenance_schedules ms").
 		Select("ms.id, a.id as asset_id, a.asset_name, a.asset_tag, ms.maintenance_type, " +
-			"ms.scheduled_date::text, EXTRACT(DAY FROM ms.scheduled_date - NOW()) as days_until_due, " +
+			"ms.next_scheduled_date::text, EXTRACT(DAY FROM ms.next_scheduled_date - NOW()) as days_until_due, " +
 			"mst.title, mst.description").
 		Joins("LEFT JOIN assets a ON ms.asset_id = a.id").
 		Joins("LEFT JOIN maintenance_schedule_translations mst ON ms.id = mst.schedule_id").
-		Where("ms.scheduled_date > NOW() AND ms.status = 'Scheduled'").
-		Order("ms.scheduled_date ASC").
+		Where("ms.next_scheduled_date > NOW() AND ms.state = 'Active'").
+		Order("ms.next_scheduled_date ASC").
 		Limit(10).
 		Scan(&upcomingResults).Error; err != nil {
 		return stats, domain.ErrInternal(err)
 	}
 	for _, result := range upcomingResults {
 		stats.UpcomingSchedule = append(stats.UpcomingSchedule, domain.UpcomingMaintenanceSchedule{
-			ID:              result.ID,
-			AssetID:         result.AssetID,
-			AssetName:       result.AssetName,
-			AssetTag:        result.AssetTag,
-			MaintenanceType: result.MaintenanceType,
-			ScheduledDate:   result.ScheduledDate,
-			DaysUntilDue:    result.DaysUntilDue,
-			Title:           result.Title,
-			Description:     result.Description,
+			ID:                result.ID,
+			AssetID:           result.AssetID,
+			AssetName:         result.AssetName,
+			AssetTag:          result.AssetTag,
+			MaintenanceType:   result.MaintenanceType,
+			NextScheduledDate: result.NextScheduledDate,
+			DaysUntilDue:      result.DaysUntilDue,
+			Title:             result.Title,
+			Description:       result.Description,
 		})
 	}
 
 	// Overdue schedules
 	var overdueResults []struct {
-		ID              string
-		AssetID         string
-		AssetName       string
-		AssetTag        string
-		MaintenanceType domain.MaintenanceScheduleType
-		ScheduledDate   string
-		DaysOverdue     int
-		Title           string
-		Description     *string
+		ID                string
+		AssetID           string
+		AssetName         string
+		AssetTag          string
+		MaintenanceType   domain.MaintenanceScheduleType
+		NextScheduledDate string
+		DaysOverdue       int
+		Title             string
+		Description       *string
 	}
 	if err := r.db.WithContext(ctx).
 		Table("maintenance_schedules ms").
 		Select("ms.id, a.id as asset_id, a.asset_name, a.asset_tag, ms.maintenance_type, " +
-			"ms.scheduled_date::text, EXTRACT(DAY FROM NOW() - ms.scheduled_date) as days_overdue, " +
+			"ms.next_scheduled_date::text, EXTRACT(DAY FROM NOW() - ms.next_scheduled_date) as days_overdue, " +
 			"mst.title, mst.description").
 		Joins("LEFT JOIN assets a ON ms.asset_id = a.id").
 		Joins("LEFT JOIN maintenance_schedule_translations mst ON ms.id = mst.schedule_id").
-		Where("ms.scheduled_date < NOW() AND ms.status = 'Scheduled'").
-		Order("ms.scheduled_date ASC").
+		Where("ms.next_scheduled_date < NOW() AND ms.state = 'Active'").
+		Order("ms.next_scheduled_date ASC").
 		Scan(&overdueResults).Error; err != nil {
 		return stats, domain.ErrInternal(err)
 	}
 	for _, result := range overdueResults {
 		stats.OverdueSchedule = append(stats.OverdueSchedule, domain.OverdueMaintenanceSchedule{
-			ID:              result.ID,
-			AssetID:         result.AssetID,
-			AssetName:       result.AssetName,
-			AssetTag:        result.AssetTag,
-			MaintenanceType: result.MaintenanceType,
-			ScheduledDate:   result.ScheduledDate,
-			DaysOverdue:     result.DaysOverdue,
-			Title:           result.Title,
-			Description:     result.Description,
+			ID:                result.ID,
+			AssetID:           result.AssetID,
+			AssetName:         result.AssetName,
+			AssetTag:          result.AssetTag,
+			MaintenanceType:   result.MaintenanceType,
+			NextScheduledDate: result.NextScheduledDate,
+			DaysOverdue:       result.DaysOverdue,
+			Title:             result.Title,
+			Description:       result.Description,
 		})
 	}
 
@@ -481,9 +497,9 @@ func (r *MaintenanceScheduleRepository) GetMaintenanceScheduleStatistics(ctx con
 	}
 	if err := r.db.WithContext(ctx).
 		Table("maintenance_schedules").
-		Select("frequency_months, COUNT(*) as count").
-		Where("frequency_months IS NOT NULL").
-		Group("frequency_months").
+		Select("CASE WHEN interval_unit = 'Months' THEN interval_value ELSE interval_value * 12 END as frequency_months, COUNT(*) as count").
+		Where("interval_value IS NOT NULL AND interval_unit IS NOT NULL").
+		Group("CASE WHEN interval_unit = 'Months' THEN interval_value ELSE interval_value * 12 END").
 		Order("frequency_months ASC").
 		Scan(&frequencyResults).Error; err != nil {
 		return stats, domain.ErrInternal(err)
@@ -498,11 +514,14 @@ func (r *MaintenanceScheduleRepository) GetMaintenanceScheduleStatistics(ctx con
 	// Summary statistics
 	stats.Summary.TotalSchedules = int(total)
 	if total > 0 {
-		stats.Summary.ScheduledMaintenancePercentage = float64(scheduledCount) / float64(total) * 100
+		stats.Summary.ActiveMaintenancePercentage = float64(activeCount) / float64(total) * 100
 		stats.Summary.CompletedMaintenancePercentage = float64(completedCount) / float64(total) * 100
-		stats.Summary.CancelledMaintenancePercentage = float64(cancelledCount) / float64(total) * 100
+		stats.Summary.PausedMaintenancePercentage = float64(pausedCount) / float64(total) * 100
+		stats.Summary.StoppedMaintenancePercentage = float64(stoppedCount) / float64(total) * 100
 		stats.Summary.PreventiveMaintenancePercentage = float64(preventiveCount) / float64(total) * 100
 		stats.Summary.CorrectiveMaintenancePercentage = float64(correctiveCount) / float64(total) * 100
+		stats.Summary.InspectionMaintenancePercentage = float64(inspectionCount) / float64(total) * 100
+		stats.Summary.CalibrationMaintenancePercentage = float64(calibrationCount) / float64(total) * 100
 	}
 
 	// Average schedule frequency
@@ -563,8 +582,10 @@ func (r *MaintenanceScheduleRepository) GetSchedulesDueSoon(ctx context.Context,
 
 	err := r.db.WithContext(ctx).
 		Preload("Translations").
-		Where("scheduled_date >= ? AND scheduled_date <= ? AND status = ?",
-			now, futureDate, domain.StatusScheduled).
+		Preload("Asset").
+		Preload("Asset.User").
+		Where("next_scheduled_date >= ? AND next_scheduled_date <= ? AND state = ?",
+			now, futureDate, domain.StateActive).
 		Find(&models).Error
 
 	if err != nil {
@@ -579,14 +600,16 @@ func (r *MaintenanceScheduleRepository) GetSchedulesDueSoon(ctx context.Context,
 	return schedules, nil
 }
 
-// GetOverdueSchedules retrieves maintenance schedules that are overdue (past scheduled date and still scheduled)
+// GetOverdueSchedules retrieves maintenance schedules that are overdue (past scheduled date and still active)
 func (r *MaintenanceScheduleRepository) GetOverdueSchedules(ctx context.Context) ([]domain.MaintenanceSchedule, error) {
 	var models []model.MaintenanceSchedule
 	now := time.Now()
 
 	err := r.db.WithContext(ctx).
 		Preload("Translations").
-		Where("scheduled_date < ? AND status = ?", now, domain.StatusScheduled).
+		Preload("Asset").
+		Preload("Asset.User").
+		Where("next_scheduled_date < ? AND state = ?", now, domain.StateActive).
 		Find(&models).Error
 
 	if err != nil {
@@ -599,4 +622,46 @@ func (r *MaintenanceScheduleRepository) GetOverdueSchedules(ctx context.Context)
 	}
 
 	return schedules, nil
+}
+
+// GetRecurringSchedulesToUpdate retrieves recurring schedules that need next_scheduled_date update
+func (r *MaintenanceScheduleRepository) GetRecurringSchedulesToUpdate(ctx context.Context) ([]domain.MaintenanceSchedule, error) {
+	var models []model.MaintenanceSchedule
+	now := time.Now()
+
+	err := r.db.WithContext(ctx).
+		Preload("Translations").
+		Preload("Asset").
+		Where("is_recurring = ? AND next_scheduled_date < ? AND state = ?",
+			true, now, domain.StateActive).
+		Find(&models).Error
+
+	if err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	schedules := make([]domain.MaintenanceSchedule, len(models))
+	for i, m := range models {
+		schedules[i] = mapper.ToDomainMaintenanceSchedule(&m)
+	}
+
+	return schedules, nil
+}
+
+// UpdateLastExecutedDate updates the last_executed_date field for a schedule
+func (r *MaintenanceScheduleRepository) UpdateLastExecutedDate(ctx context.Context, scheduleId string, lastExecutedDate *time.Time) error {
+	result := r.db.WithContext(ctx).
+		Model(&model.MaintenanceSchedule{}).
+		Where("id = ?", scheduleId).
+		Update("last_executed_date", lastExecutedDate)
+
+	if result.Error != nil {
+		return domain.ErrInternal(result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return domain.ErrNotFound("maintenance schedule not found")
+	}
+
+	return nil
 }

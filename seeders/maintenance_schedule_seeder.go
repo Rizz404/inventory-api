@@ -70,25 +70,52 @@ func (mss *MaintenanceScheduleSeeder) generateMaintenanceSchedulePayload(assetID
 	}
 	maintenanceType := maintenanceTypes[rand.Intn(len(maintenanceTypes))]
 
-	// Generate scheduled date
-	var scheduledDate time.Time
+	// Generate next scheduled date
+	var nextScheduledDate time.Time
 	if maintenanceType == domain.ScheduleTypePreventive {
 		// Preventive maintenance scheduled in the future (next 6 months)
-		scheduledDate = gofakeit.DateRange(time.Now().AddDate(0, 1, 0), time.Now().AddDate(0, 6, 0))
+		nextScheduledDate = gofakeit.DateRange(time.Now().AddDate(0, 1, 0), time.Now().AddDate(0, 6, 0))
 	} else {
 		// Corrective maintenance can be in past or near future
-		scheduledDate = gofakeit.DateRange(time.Now().AddDate(0, -1, 0), time.Now().AddDate(0, 2, 0))
+		nextScheduledDate = gofakeit.DateRange(time.Now().AddDate(0, -1, 0), time.Now().AddDate(0, 2, 0))
 	}
 
-	// Frequency for preventive maintenance (in months)
-	var frequencyMonths *int
-	if maintenanceType == domain.ScheduleTypePreventive {
-		frequencies := []int{1, 3, 6, 12} // monthly, quarterly, semi-annual, annual
-		frequency := frequencies[rand.Intn(len(frequencies))]
-		frequencyMonths = &frequency
+	// Recurring settings
+	isRecurring := false
+	var intervalValue *int
+	var intervalUnit *domain.IntervalUnit
+
+	if maintenanceType == domain.ScheduleTypePreventive && rand.Float32() > 0.3 { // 70% of preventive are recurring
+		isRecurring = true
+		// Common intervals
+		intervals := []struct {
+			value int
+			unit  domain.IntervalUnit
+		}{
+			{7, domain.IntervalDays},   // weekly
+			{14, domain.IntervalDays},  // bi-weekly
+			{1, domain.IntervalMonths}, // monthly
+			{3, domain.IntervalMonths}, // quarterly
+			{6, domain.IntervalMonths}, // semi-annual
+			{1, domain.IntervalYears},  // annual
+		}
+		interval := intervals[rand.Intn(len(intervals))]
+		intervalValue = &interval.value
+		intervalUnit = &interval.unit
 	}
 
-	// Note: Status is managed through separate operations after creation
+	// Auto-complete for one-time maintenance
+	autoComplete := false
+	if !isRecurring && rand.Float32() > 0.5 {
+		autoComplete = true
+	}
+
+	// Estimated cost
+	var estimatedCost *float64
+	if rand.Float32() > 0.2 { // 80% have estimated cost
+		cost := float64(rand.Intn(500) + 50) // $50 - $550
+		estimatedCost = &cost
+	}
 
 	// Generate maintenance titles and descriptions based on type
 	var title, description string
@@ -138,21 +165,20 @@ func (mss *MaintenanceScheduleSeeder) generateMaintenanceSchedulePayload(assetID
 			Title:       title,
 			Description: &description,
 		},
-		// {
-		// 	LangCode:    "id-ID",
-		// 	Title:       title,
-		// 	Description: &description,
-		// },
 	}
 
-	// Format scheduled date
-	scheduledDateStr := scheduledDate.Format("2006-01-02")
+	// Format next scheduled date
+	nextScheduledDateStr := nextScheduledDate.Format("2006-01-02")
 
 	return &domain.CreateMaintenanceSchedulePayload{
-		AssetID:         assetID,
-		MaintenanceType: maintenanceType,
-		ScheduledDate:   scheduledDateStr,
-		FrequencyMonths: frequencyMonths,
-		Translations:    translations,
+		AssetID:           assetID,
+		MaintenanceType:   maintenanceType,
+		IsRecurring:       &isRecurring,
+		IntervalValue:     intervalValue,
+		IntervalUnit:      intervalUnit,
+		NextScheduledDate: nextScheduledDateStr,
+		AutoComplete:      &autoComplete,
+		EstimatedCost:     estimatedCost,
+		Translations:      translations,
 	}
 }

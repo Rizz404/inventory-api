@@ -3,6 +3,7 @@ package maintenance_schedule
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/notification/messages"
@@ -40,6 +41,12 @@ func (cs *CronService) Start() error {
 
 	// Check overdue maintenance daily at 9:30 AM
 	_, err = cs.cron.AddFunc("0 30 9 * * *", cs.checkOverdueMaintenance)
+	if err != nil {
+		return err
+	}
+
+	// Update recurring schedules daily at 10:00 AM
+	_, err = cs.cron.AddFunc("0 0 10 * * *", cs.updateRecurringSchedules)
 	if err != nil {
 		return err
 	}
@@ -116,7 +123,7 @@ func (cs *CronService) sendMaintenanceDueSoonNotification(ctx context.Context, s
 		return
 	}
 
-	scheduledDate := schedule.ScheduledDate.Format("2006-01-02")
+	scheduledDate := schedule.NextScheduledDate.Format("2006-01-02")
 
 	titleKey, messageKey, params := messages.MaintenanceDueSoonNotification(asset.AssetName, asset.AssetTag, scheduledDate)
 	utilTranslations := messages.GetMaintenanceScheduleNotificationTranslations(titleKey, messageKey, params)
@@ -172,7 +179,7 @@ func (cs *CronService) sendMaintenanceOverdueNotification(ctx context.Context, s
 		return
 	}
 
-	scheduledDate := schedule.ScheduledDate.Format("2006-01-02")
+	scheduledDate := schedule.NextScheduledDate.Format("2006-01-02")
 
 	titleKey, messageKey, params := messages.MaintenanceOverdueNotification(asset.AssetName, asset.AssetTag, scheduledDate)
 	utilTranslations := messages.GetMaintenanceScheduleNotificationTranslations(titleKey, messageKey, params)
@@ -203,4 +210,89 @@ func (cs *CronService) sendMaintenanceOverdueNotification(ctx context.Context, s
 	} else {
 		log.Printf("Successfully created overdue maintenance notification for schedule ID: %s, user ID: %s", schedule.ID, *asset.AssignedToID)
 	}
+}
+
+// updateRecurringSchedules updates next_scheduled_date for completed/passed recurring schedules
+func (cs *CronService) updateRecurringSchedules() {
+	ctx := context.Background()
+	log.Println("Running recurring schedules update...")
+
+	// Get recurring schedules that need updating (past next_scheduled_date and is_recurring = true)
+	schedules, err := cs.repo.GetRecurringSchedulesToUpdate(ctx)
+	if err != nil {
+		log.Printf("Failed to fetch recurring schedules for update: %v", err)
+		return
+	}
+
+	updated := 0
+	for _, schedule := range schedules {
+		if schedule.IntervalValue == nil || schedule.IntervalUnit == nil {
+			log.Printf("Schedule ID %s is recurring but missing interval, skipping", schedule.ID)
+			continue
+		}
+
+		// Calculate next scheduled date based on interval
+		nextDate := calculateNextScheduledDate(schedule.NextScheduledDate, *schedule.IntervalValue, *schedule.IntervalUnit)
+
+		// Update the schedule
+		updatePayload := &domain.UpdateMaintenanceSchedulePayload{
+			NextScheduledDate: stringPtr(nextDate.Format("2006-01-02")),
+		}
+
+		// Reset last_executed_date to current next_scheduled_date
+		lastExecuted := schedule.NextScheduledDate
+		updatePayload.NextScheduledDate = stringPtr(nextDate.Format("2006-01-02"))
+
+		_, err := cs.repo.UpdateSchedule(ctx, schedule.ID, updatePayload)
+		if err != nil {
+			log.Printf("Failed to update recurring schedule ID %s: %v", schedule.ID, err)
+			continue
+		}
+
+		// Update last_executed_date using raw update
+		if err := cs.repo.UpdateLastExecutedDate(ctx, schedule.ID, &lastExecuted); err != nil {
+			log.Printf("Failed to update last_executed_date for schedule ID %s: %v", schedule.ID, err)
+		}
+
+		updated++
+		log.Printf("Updated recurring schedule ID %s: next date %s -> %s", schedule.ID, schedule.NextScheduledDate.Format("2006-01-02"), nextDate.Format("2006-01-02"))
+
+		// Check if auto-complete is enabled for non-recurring after first execution
+		if schedule.AutoComplete && !schedule.IsRecurring {
+			completePayload := &domain.UpdateMaintenanceSchedulePayload{
+				State: statePtr(domain.StateCompleted),
+			}
+			if _, err := cs.repo.UpdateSchedule(ctx, schedule.ID, completePayload); err != nil {
+				log.Printf("Failed to auto-complete schedule ID %s: %v", schedule.ID, err)
+			}
+		}
+	}
+
+	log.Printf("Recurring schedules update completed. Updated %d schedules", updated)
+}
+
+// calculateNextScheduledDate calculates the next scheduled date based on interval
+func calculateNextScheduledDate(currentDate time.Time, intervalValue int, intervalUnit domain.IntervalUnit) time.Time {
+	switch intervalUnit {
+	case domain.IntervalMinutes:
+		return currentDate.Add(time.Duration(intervalValue) * time.Minute)
+	case domain.IntervalHours:
+		return currentDate.Add(time.Duration(intervalValue) * time.Hour)
+	case domain.IntervalDays:
+		return currentDate.AddDate(0, 0, intervalValue)
+	case domain.IntervalWeeks:
+		return currentDate.AddDate(0, 0, intervalValue*7)
+	case domain.IntervalMonths:
+		return currentDate.AddDate(0, intervalValue, 0)
+	case domain.IntervalYears:
+		return currentDate.AddDate(intervalValue, 0, 0)
+	default:
+		// Default to days if unknown
+		return currentDate.AddDate(0, 0, intervalValue)
+	}
+}
+
+// statePtr returns pointer to ScheduleState
+func statePtr(s domain.ScheduleState) *domain.ScheduleState {
+	return &s
 }
