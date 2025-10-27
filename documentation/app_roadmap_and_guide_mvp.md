@@ -1,4 +1,4 @@
-# Alur Detail Aplikasi Inventaris (Dengan Lokalisasi, Optimalisasi DB, Data Matrix & Google Maps)
+# Alur Detail Aplikasi Inventaris (Dengan Lokalisasi, Optimalisasi DB & Data Matrix)
 
 ## 1. ALUR LOGIN (Semua Role)
 
@@ -7,7 +7,7 @@
 - **Login Screen**:
   - Input field untuk name.
   - Input field untuk password.
-  - Pilihan Bahasa (Dropdown/Icon): Indonesia (Default), English, 日本語.
+  - Pilihan Bahasa (Dropdown/Icon): English, 日本語.
   - Tombol "Login".
 
 ### Proses Backend:
@@ -28,7 +28,7 @@
 - Ikon notifikasi dengan badge merah.
 
 ### Alur 1: Mengelola Master Data (Dengan Lokalisasi)
-**Cerita:** Pak Ahmad sebagai Admin perlu menyiapkan data dasar seperti kategori dan lokasi dalam tiga bahasa.
+**Cerita:** Pak Ahmad sebagai Admin perlu menyiapkan data dasar seperti kategori dan lokasi dalam dua bahasa (EN & JA).
 
 **Langkah-langkah:**
 1. **Kelola Kategori Aset (Dengan Hierarki & Terjemahan)**
@@ -40,13 +40,11 @@
        - **Data Utama**:
          - `category_code`: "ELK"
          - `parent_id`: (Dikosongkan)
-       - **Terjemahan**:
-         - `category_name` (ID): "Elektronik"
-         - `description` (ID): "Semua aset yang berhubungan dengan elektronik."
-         - `category_name` (EN): "Electronics"
-         - `description` (EN): "All assets related to electronics."
-         - `category_name` (JA): "電子機器"
-         - `description` (JA): "電子機器に関連するすべての資産。"
+      - **Terjemahan**:
+        - `category_name` (EN): "Electronics"
+        - `description` (EN): "All assets related to electronics."
+        - `category_name` (JA): "電子機器"
+        - `description` (JA): "電子機器に関連するすべての資産。"
      - Simpan. Data baru masuk ke tabel `categories` dan `category_translations`.
    - **Langkah 2: Menambah Kategori Anak**
      - Tap tombol "+".
@@ -55,8 +53,6 @@
          - `category_code`: "LPT"
          - `parent_id`: Pilih "Elektronik" dari daftar.
        - **Terjemahan**:
-         - `category_name` (ID): "Laptop"
-         - `description` (ID): "Komputer portabel untuk karyawan."
          - `category_name` (EN): "Laptop"
          - `description` (EN): "Portable computers for employees."
          - `category_name` (JA): "ラップトップ"
@@ -74,7 +70,6 @@
        - **Koordinat GPS**: Otomatis diambil dari GPS device atau input manual
          - `latitude`: -6.3734, `longitude`: 106.8284 (Jakarta)
      - **Terjemahan**:
-       - `location_name` (ID): "Ruang Marketing Lantai 3"
        - `location_name` (EN): "Marketing Room 3rd Floor"
        - `location_name` (JA): "マーケティングルーム3階"
    - Simpan. Data baru masuk ke tabel `locations` dan `location_translations`.
@@ -97,8 +92,6 @@
        - `estimated_cost`: 500000
        - `created_by`: ID user yang membuat (auto-filled dari session)
      - **Terjemahan**:
-       - `title` (ID): "Perawatan Rutin Laptop"
-       - `description` (ID): "Pembersihan dan update sistem operasi setiap 15 hari."
        - `title` (EN): "Routine Laptop Maintenance"
        - `description` (EN): "Cleaning and operating system update every 15 days."
        - `title` (JA): "ラップトップの定期メンテナンス"
@@ -115,7 +108,7 @@
      - `full_name`: "Budi Santoso"
      - `role`: "Staff"
      - `employee_id`: "EMP-2025-001"
-     - `preferred_lang`: "id-ID"
+  - `preferred_lang`: "en-US"
      - `is_active`: TRUE
      - `avatar_url`: NULL (optional)
      - `fcm_token`: (untuk push notification, diisi saat user login dari device)
@@ -190,25 +183,25 @@
      - Most problematic assets (berdasarkan jumlah issue reports)
      - Issue trends over time
 
-### Alur 4: Pelacakan Aset via Google Maps
+### Alur 4: Pelacakan Aset (internal viewer)
 **Langkah-langkah:**
-1. **Peta Lokasi Aset**
-   - Menu "Maps" → "Asset Locations".
-   - Google Maps menampilkan marker untuk setiap lokasi dengan koordinat dari tabel `locations`.
-   - Klik marker menampilkan detail lokasi dan jumlah aset di lokasi tersebut.
-   - Filter berdasarkan kategori atau status aset.
+1. **Peta Lokasi Aset (internal viewer)**
+  - Menu "Maps" → "Asset Locations".
+  - Aplikasi menampilkan penanda untuk setiap lokasi menggunakan koordinat dari tabel `locations`.
+  - Klik penanda menampilkan detail lokasi dan jumlah aset di lokasi tersebut.
+  - Filter berdasarkan kategori atau status aset.
 
 2. **Riwayat Pergerakan Aset**
-   - Pilih aset tertentu → "Movement History".
-   - Google Maps menampilkan jalur pergerakan aset berdasarkan:
-     - Data formal di `asset_movements` (perpindahan resmi)
-     - Koordinat scan dari `scan_logs` (tracking real-time)
-   - Timeline menampilkan kapan dan dimana aset pernah di-scan.
-   - Menampilkan user yang melakukan scan dan movement.
+  - Pilih aset tertentu → "Movement History".
+  - Viewer menampilkan jalur pergerakan aset berdasarkan:
+    - Data formal di `asset_movements` (perpindahan resmi)
+    - Koordinat scan dari `scan_logs` (scan history)
+  - Timeline menampilkan kapan dan dimana aset pernah di-scan.
+  - Menampilkan user yang melakukan scan dan movement.
 
-3. **Heatmap Scan Activity**
-   - Visualisasi area mana yang paling sering dilakukan scan.
-   - Berguna untuk analisis aktivitas stock opname.
+3. **Heatmap Scan Activity (internal)**
+  - Visualisasi area mana yang paling sering dilakukan scan (dibangun dari scan_logs koordinat).
+  - Berguna untuk analisis aktivitas stock opname.
 
 ### Alur 5: Mengelola Notifikasi
 **Langkah-langkah:**
@@ -223,8 +216,6 @@
      - `related_asset_id`: ID aset (legacy support)
      - `expires_at`: "2025-12-31" (jika ada expiration)
      - **Terjemahan**:
-       - `title` (ID): "Perawatan Terjadwal"
-       - `message` (ID): "Laptop Anda akan menjalani perawatan rutin besok."
        - `title` (EN): "Scheduled Maintenance"
        - `message` (EN): "Your laptop will undergo routine maintenance tomorrow."
        - `title` (JA): "定期メンテナンス"
@@ -266,10 +257,10 @@
 
 ## 3. ALUR STAFF (Role: 'Staff')
 
-### Dashboard Staff (Contoh Bahasa Indonesia)
-- Header: "Halo, Siti Aminah".
+### Dashboard Staff (Example in English)
+- Header: "Hello, Siti Aminah".
 - Tombol besar "Scan Aset".
-- Daftar: "Jadwal Perawatan Mendatang: Perawatan Rutin Laptop (3 hari lagi)".
+- Daftar: "Upcoming Maintenance: Routine Laptop Maintenance (3 days)".
 - Statistik personal: jumlah scan hari ini, maintenance completed, issue resolved.
 
 ### Alur 1: Pemeriksaan Fisik Aset (Stock Opname)
@@ -285,12 +276,12 @@
      - `asset_id`: ID aset yang berhasil ditemukan
      - `scanned_value`: "LPT-2025-001"
      - `scan_method`: "DATA_MATRIX"
-     - `scanned_by`: ID Bu Siti
-     - `scan_timestamp`: timestamp saat scan
-     - `scan_location_lat`: -6.3734 (dari GPS device)
-     - `scan_location_lng`: 106.8284 (dari GPS device)
+  - `scanned_by`: ID of the scanning user
+  - `scan_timestamp`: timestamp saat scan
+  - `scan_location_lat`: -6.3734 (from device)
+  - `scan_location_lng`: 106.8284 (from device)
      - `scan_result`: "Success" (pilihan: Success, Invalid ID, Asset Not Found)
-   - Halaman detail aset ditampilkan dengan nama kategori dan lokasi sesuai bahasa Bu Siti.
+  - Halaman detail aset ditampilkan dengan nama kategori dan lokasi sesuai preferensi bahasa user.
 
 2. **Scan dengan Input Manual**
    - Jika kamera tidak tersedia atau Data Matrix rusak.
@@ -315,10 +306,9 @@
      - `to_user_id`: Pilih "Budi Santoso"
      - `movement_date`: "2025-08-08 10:00:00" (auto-filled dengan current timestamp)
      - `moved_by`: ID Bu Siti (auto-filled dari session)
-     - **Terjemahan Notes**:
-       - `notes` (ID): "Penyerahan untuk karyawan baru Budi Santoso"
-       - `notes` (EN): "Handover to new employee Budi Santoso"
-       - `notes` (JA): "新入社員ブディ・サントソへの引き継ぎ"
+  - **Terjemahan Notes**:
+   - `notes` (EN): "Handover to new employee Budi Santoso"
+   - `notes` (JA): "新入社員ブディ・サントソへの引き継ぎ"
    - Simpan. Data masuk ke `asset_movements` dan `asset_movement_translations`.
    - Sistem otomatis update `location_id` dan `assigned_to` di tabel `assets`.
    - Sistem otomatis membuat notifikasi tipe "MOVEMENT" ke:
@@ -353,8 +343,6 @@
        - `result`: "Success" (pilihan: Success, Partial, Failed, Rescheduled)
        - `actual_cost`: 500000
      - **Terjemahan**:
-       - `title` (ID): "Pembersihan dan Pengecekan Hardware"
-       - `notes` (ID): "Membersihkan keyboard, layar, dan mengecek kondisi baterai."
        - `title` (EN): "Hardware Cleaning and Check"
        - `notes` (EN): "Cleaned keyboard, screen, and checked battery condition."
        - `title` (JA): "ハードウェアクリーニングとチェック"
@@ -383,10 +371,9 @@
    - Update `status`:
      - "Open" → "In Progress" (saat mulai menangani)
      - "In Progress" → "Resolved" (saat selesai)
-   - Isi `resolution_notes` di `issue_report_translations` (wajib saat resolved):
-     - `resolution_notes` (ID): "Keyboard sudah diganti dengan yang baru."
-     - `resolution_notes` (EN): "Keyboard has been replaced with a new one."
-     - `resolution_notes` (JA): "キーボードを新しいものに交換しました。"
+  - Isi `resolution_notes` di `issue_report_translations` (wajib saat resolved):
+   - `resolution_notes` (EN): "Keyboard has been replaced with a new one."
+   - `resolution_notes` (JA): "キーボードを新しいものに交換しました。"
    - Isi `resolved_date` dan `resolved_by` (auto-filled).
    - Sistem otomatis membuat notifikasi tipe "ISSUE" ke reporter.
 
@@ -399,14 +386,14 @@
 ## 4. ALUR EMPLOYEE (Role: 'Employee')
 
 ### Dashboard Employee
-- Header: "Halo, Budi Santoso".
+- Header: "Hello, Budi Santoso".
 - Daftar "Aset Saya".
 - Notifikasi yang belum dibaca.
 - Quick action: "Laporkan Masalah", "Lihat Lokasi Aset".
 
 ### Alur 1: Melihat Aset yang Digunakan
 **Langkah-langkah:**
-1. Budi login (misal dengan bahasa Indonesia).
+1. Budi login (misal dengan bahasa English or 日本語).
 2. Dashboard menampilkan: "Laptop Dell Latitude 5430" yang berada di lokasi "Ruang Marketing Lantai 3".
 3. Budi tap dan melihat detail aset, dengan nama kategori "Laptop".
 4. Detail yang ditampilkan:
@@ -416,7 +403,7 @@
    - Kategori (dari `category_translations`)
    - `warranty_end` (jika ada)
    - Maintenance schedule berikutnya (jika ada)
-5. **Fitur Google Maps**: Budi dapat melihat lokasi aset di peta dengan koordinat yang tersimpan di tabel `locations`.
+5. **Map Viewer**: Budi dapat melihat lokasi aset di peta/internal viewer dengan koordinat yang tersimpan di tabel `locations`.
 6. Budi dapat melihat riwayat scan aset dari `scan_logs`.
 
 ### Alur 2: Melaporkan Masalah Aset
@@ -433,8 +420,6 @@
        - `priority`: "Medium" (pilihan: Low, Medium, High, Critical)
        - `status`: "Open" (default, pilihan: Open, In Progress, Resolved, Closed)
      - **Terjemahan**:
-       - `title` (ID): "Keyboard Tidak Responsif"
-       - `description` (ID): "Beberapa tombol keyboard tidak berfungsi dengan baik."
        - `title` (EN): "Keyboard Not Responsive"
        - `description` (EN): "Several keyboard keys are not working properly."
        - `title` (JA): "キーボードが反応しない"
@@ -483,7 +468,7 @@
 ## 5. FITUR BERSAMA (ADMIN, STAFF, EMPLOYEE)
 
 ### Pencarian Aset Multibahasa
-- User bisa mengetik "Latitude" (EN), "Dell" (brand), "ラップトップ" (JA), atau "Ruang Marketing" di search bar.
+- User bisa mengetik "Latitude" (EN), "Dell" (brand), atau "ラップトップ" (JA) di search bar.
 - Aplikasi akan mencari di:
   - `assets.asset_name`, `assets.brand`, `assets.model`, `assets.serial_number`, `assets.asset_tag`
   - `category_translations.category_name`, `category_translations.description`
@@ -498,18 +483,18 @@
 - Notifikasi dapat di-filter berdasarkan `type` dan `priority`.
 - Notifikasi expired otomatis tidak ditampilkan (berdasarkan `expires_at`).
 
-### Google Maps Integration
-- **Peta Real-time**: Menampilkan semua lokasi aset dengan marker di Google Maps menggunakan koordinat dari `locations`.
+### Maps & Location Features
+- **Peta Real-time (internal viewer)**: Menampilkan semua lokasi aset dengan penanda menggunakan koordinat dari `locations`.
 - **Riwayat Pergerakan**: Tracking pergerakan aset berdasarkan:
   - Data di `asset_movements` (perpindahan formal)
-  - Data di `scan_logs` dengan koordinat GPS (scan history)
+  - Data di `scan_logs` dengan koordinat (scan history)
 - **Heatmap**: Visualisasi konsentrasi aset di berbagai lokasi.
 - **Geofencing** (opsional): Notifikasi jika aset keluar dari area yang ditentukan.
 
 ### Ubah Bahasa Interface
 - User dapat mengubah `preferred_lang` kapan saja dari menu Settings.
 - Perubahan bahasa langsung terlihat di seluruh aplikasi tanpa perlu logout.
-- Bahasa yang didukung: id-ID (Indonesia), en-US (English), ja-JP (日本語).
+-- Bahasa yang didukung: en-US (English), ja-JP (日本語).
 
 ---
 
@@ -528,7 +513,7 @@ CREATE TABLE users (
   full_name VARCHAR(100) NOT NULL,
   role user_role NOT NULL,
   employee_id VARCHAR(20) UNIQUE NULL,
-  preferred_lang VARCHAR(5) DEFAULT 'id-ID',
+  preferred_lang VARCHAR(5) DEFAULT 'en-US',
   is_active BOOLEAN DEFAULT TRUE,
   avatar_url VARCHAR(255) NULL,
   fcm_token TEXT NULL,
@@ -978,321 +963,3 @@ DROP TYPE IF EXISTS notification_type;
 
 ---
 
-## 7. BACKGROUND JOBS & AUTOMATION
-
-### Cron Job 1: Update Next Scheduled Maintenance
-**Frekuensi**: Setiap hari pukul 00:00
-**Fungsi**:
-- Cek semua `maintenance_schedules` dengan `state` = 'Active' dan `is_recurring` = TRUE.
-- Jika `next_scheduled_date` sudah lewat dan belum ada maintenance record untuk tanggal tersebut, buat notifikasi reminder.
-- Jika ada maintenance record yang baru dibuat, update `next_scheduled_date` berdasarkan `interval_value` dan `interval_unit`.
-
-### Cron Job 2: Warranty Expiration Reminder
-**Frekuensi**: Setiap hari pukul 08:00
-**Fungsi**:
-- Query semua assets dengan `warranty_end` dalam 30 hari ke depan.
-- Buat notifikasi tipe "WARRANTY" untuk Admin dan user yang assigned ke aset tersebut.
-- Notifikasi dalam semua bahasa sesuai `preferred_lang` user.
-
-### Cron Job 3: Maintenance Schedule Reminder
-**Frekuensi**: Setiap hari pukul 08:00
-**Fungsi**:
-- Query semua `maintenance_schedules` dengan `next_scheduled_date` dalam 3 hari ke depan dan `state` = 'Active'.
-- Buat notifikasi tipe "MAINTENANCE" untuk Staff dan Admin.
-- Notifikasi dalam semua bahasa.
-
-### Cron Job 4: Clean Expired Notifications
-**Frekuensi**: Setiap hari pukul 01:00
-**Fungsi**:
-- Hapus atau archive notifikasi dengan `expires_at` < NOW dan `is_read` = TRUE.
-- Keep audit trail untuk analytics.
-
----
-
-## 8. MOBILE APP FEATURES
-
-### Offline Mode
-- Cache master data (categories, locations) untuk offline access.
-- Queue scan logs saat offline, sync saat online kembali.
-- Show indicator "Offline Mode" di header.
-
-### Camera & Scanning
-- Support Data Matrix scanning menggunakan device camera.
-- Auto-focus dan flash toggle untuk low-light conditions.
-- Fallback ke manual input jika scanning gagal.
-- Show scan history untuk quick re-scan.
-
-### GPS & Location Services
-- Auto-capture GPS coordinates saat scanning.
-- Request location permission saat pertama kali membuka app.
-- Show current location di map view.
-- Support geofencing untuk area monitoring.
-
-### Push Notifications
-- Integrate dengan Firebase Cloud Messaging (FCM).
-- Support notification channels berdasarkan type:
-  - Maintenance (High priority)
-  - Warranty (Normal priority)
-  - Issues (High/Urgent priority)
-  - Movements (Normal priority)
-- Rich notifications dengan action buttons.
-- Deep linking ke halaman detail saat tap notification.
-
-### Biometric Authentication
-- Support fingerprint/Face ID untuk quick login.
-- Secure storage untuk credentials.
-- Fallback ke password jika biometric gagal.
-
-### Export & Share
-- Export reports ke PDF/Excel.
-- Share via email, WhatsApp, atau file sharing.
-- QR Code sharing untuk asset details.
-
----
-
-## 9. SECURITY & PERMISSIONS
-
-### Role-Based Access Control (RBAC)
-
-#### Admin
-- **Full access** ke semua fitur dan data.
-- Dapat mengelola users, categories, locations.
-- Dapat create, read, update, delete semua aset.
-- Dapat melihat dan mengelola semua maintenance schedules dan records.
-- Dapat melihat dan resolve semua issue reports.
-- Dapat melihat scan logs semua user.
-- Dapat generate semua reports.
-
-#### Staff
-- Dapat **read** semua aset.
-- Dapat **create/update** aset (tidak bisa delete).
-- Dapat **create/update/read** asset movements.
-- Dapat **create/update/read** maintenance schedules dan records.
-- Dapat **read/update** issue reports (resolve issues).
-- Dapat **scan** aset dan melihat scan logs milik sendiri.
-- Dapat generate reports (terbatas).
-- **Tidak dapat** mengelola users, categories, locations.
-
-#### Employee
-- Dapat **read** aset yang assigned ke dirinya.
-- Dapat **create** issue reports untuk aset miliknya.
-- Dapat **read** issue reports yang dibuat oleh dirinya.
-- Dapat **scan** aset miliknya untuk verifikasi.
-- Dapat **read** notifications miliknya.
-- **Tidak dapat** mengelola aset, maintenance, atau master data.
-
-### Data Encryption
-- Password di-hash menggunakan bcrypt dengan salt.
-- JWT tokens dengan expiration time (1 hour).
-- Refresh tokens dengan expiration time (7 days).
-- HTTPS untuk semua API communications.
-- Encrypt sensitive data at rest (jika diperlukan).
-
-### Audit Trail
-- Log semua aktivitas penting:
-  - User login/logout
-  - Asset creation/update/deletion
-  - Movement transactions
-  - Maintenance records
-  - Issue reports creation/resolution
-  - Status changes
-- Simpan `created_by`, `updated_by`, `created_at`, `updated_at` untuk semua records.
-- Scan logs sebagai audit trail untuk physical verification.
-
----
-
-## 10. INTEGRATION POINTS
-
-### Google Maps API
-- **Geocoding**: Convert address ke coordinates.
-- **Reverse Geocoding**: Convert coordinates ke address.
-- **Directions API**: Route planning untuk asset movement.
-- **Distance Matrix**: Calculate distance between locations.
-- **Places API**: Suggest locations saat input.
-
-### Firebase Cloud Messaging (FCM)
-- Push notifications untuk mobile apps.
-- Topic-based messaging untuk group notifications.
-- Device group messaging untuk multi-device users.
-
-### File Storage (Cloud Storage)
-- Upload dan store Data Matrix images.
-- Upload user avatars.
-- Store exported reports (PDF/Excel).
-- CDN untuk fast delivery.
-
-### Email Service
-- Email notifications untuk critical alerts.
-- Password reset emails.
-- Weekly/Monthly reports via email.
-
----
-
-## 11. ERROR HANDLING & EDGE CASES
-
-### Scan Errors
-- **Data Matrix tidak terbaca**: Fallback ke manual input, log sebagai "MANUAL_INPUT".
-- **Asset tidak ditemukan**: Log scan dengan `scan_result` = "Asset Not Found", `asset_id` = NULL.
-- **Invalid format**: Log scan dengan `scan_result` = "Invalid ID", `asset_id` = NULL.
-- Semua scan attempts di-log untuk audit trail.
-
-### Movement Errors
-- **Asset sudah di lokasi tujuan**: Validate sebelum save, tampilkan warning.
-- **Asset sudah assigned ke user**: Tampilkan current assignment, konfirmasi sebelum reassign.
-- **Location tidak ada**: Validate location_id exists sebelum save.
-
-### Maintenance Errors
-- **Schedule conflict**: Check jika sudah ada schedule aktif untuk aset di tanggal yang sama.
-- **Invalid interval**: Validate interval_value > 0 dan interval_unit tidak NULL jika recurring.
-- **Past date**: Validate next_scheduled_date tidak di masa lalu.
-
-### Issue Report Errors
-- **Duplicate report**: Check jika sudah ada open issue untuk aset yang sama dengan title serupa.
-- **Asset not found**: Validate asset_id exists.
-- **Unauthorized**: Employee hanya bisa report issue untuk aset yang assigned ke dirinya.
-
-### Translation Errors
-- **Missing translation**: Fallback ke bahasa default (id-ID) jika translation tidak ada.
-- **Invalid lang_code**: Validate lang_code ada di list supported languages.
-
-### Notification Errors
-- **Expired notification**: Tidak tampilkan notification dengan `expires_at` < NOW.
-- **Invalid user**: Validate user_id exists sebelum create notification.
-- **FCM token expired**: Handle FCM token expiration, request new token.
-
----
-
-## 12. PERFORMANCE OPTIMIZATION
-
-### Database Optimization
-- **Indexes**: Sudah dibuat indexes untuk semua foreign keys dan frequently queried columns.
-- **Composite indexes**: Untuk query yang sering filter by multiple columns (e.g., `status` + `location_id`).
-- **Pagination**: Implement pagination untuk list endpoints (limit 20-50 per page).
-- **Eager loading**: Load translations sekaligus dengan main entity untuk menghindari N+1 queries.
-
-### Caching Strategy
-- **Master data**: Cache categories dan locations (TTL: 1 hour).
-- **User preferences**: Cache `preferred_lang` dan `role` di client side.
-- **Dashboard statistics**: Cache statistics (TTL: 5 minutes).
-- **Translation lookups**: Cache translations per language (TTL: 1 hour).
-
-### API Response Optimization
-- **Select only needed fields**: Tidak select semua columns jika tidak diperlukan.
-- **Compress responses**: Gzip compression untuk large responses.
-- **GraphQL (optional)**: Untuk complex queries dengan multiple relations.
-
-### Mobile App Optimization
-- **Lazy loading**: Load data on demand, tidak load semua data sekaligus.
-- **Image optimization**: Compress Data Matrix images sebelum upload.
-- **Offline caching**: Cache frequently accessed data.
-- **Background sync**: Sync data saat app di background.
-
----
-
-## 13. TESTING STRATEGY
-
-### Unit Tests
-- Test business logic functions:
-  - Password hashing dan verification
-  - JWT token generation dan validation
-  - Interval calculation untuk recurring schedules
-  - Translation fallback logic
-  - Permission checks per role
-
-### Integration Tests
-- Test API endpoints:
-  - Authentication flow (login, logout, refresh)
-  - CRUD operations untuk semua entities
-  - Foreign key constraints
-  - Cascade deletes
-  - Transaction rollback on errors
-
-### E2E Tests (Mobile App)
-- Test user flows:
-  - Login → Dashboard → Scan Asset → View Detail
-  - Login → Report Issue → Track Status
-  - Login → View Notifications → Mark as Read
-  - Login → Create Movement → Update Asset Location
-
-### Load Testing
-- Simulate concurrent users (100-1000 users).
-- Test database connection pooling.
-- Test API rate limiting.
-- Test notification delivery performance.
-
----
-
-## 14. DEPLOYMENT & MONITORING
-
-### Backend Deployment
-- **Containerization**: Docker untuk backend services.
-- **Orchestration**: Kubernetes untuk scaling dan high availability.
-- **Database**: PostgreSQL dengan replication untuk backup.
-- **Load Balancer**: Nginx atau cloud-based load balancer.
-
-### Mobile App Deployment
-- **iOS**: Deploy via TestFlight untuk beta testing, App Store untuk production.
-- **Android**: Deploy via Google Play Console (Internal Testing → Beta → Production).
-- **OTA Updates**: Code Push untuk minor updates tanpa app store review.
-
-### Monitoring & Logging
-- **Application monitoring**: New Relic, Datadog, atau Sentry untuk error tracking.
-- **Database monitoring**: Monitor query performance, slow queries, connection pool.
-- **API monitoring**: Track response times, error rates, throughput.
-- **Log aggregation**: ELK Stack (Elasticsearch, Logstash, Kibana) untuk centralized logging.
-
-### Alerts
-- **Critical alerts**:
-  - Database connection failure
-  - API downtime
-  - High error rate (> 5%)
-  - Disk space low (< 10%)
-- **Warning alerts**:
-  - Slow query performance (> 1 second)
-  - High memory usage (> 80%)
-  - Failed notification delivery
-
----
-
-## 15. GLOSSARY
-
-### Terms
-- **Asset Tag**: Unique identifier untuk aset (e.g., "LPT-2025-001").
-- **Data Matrix**: 2D barcode yang dapat menyimpan lebih banyak data dari QR Code.
-- **ULID**: Universally Unique Lexicographically Sortable Identifier (26 characters).
-- **Localization**: Proses menerjemahkan UI dan data ke multiple languages.
-- **Stock Opname**: Physical verification/audit dari aset.
-- **Geofencing**: Virtual perimeter untuk real-world geographic area.
-
-### Database Types
-- **ENUM**: Predefined list of values.
-- **VARCHAR**: Variable-length string.
-- **TEXT**: Variable-length string tanpa limit.
-- **DECIMAL**: Fixed-point number untuk currency.
-- **TIMESTAMP WITH TIME ZONE**: Timestamp dengan timezone information.
-
-### User Roles
-- **Admin**: Full system access, manages users dan master data.
-- **Staff**: Manages assets, maintenance, dan operations.
-- **Employee**: End users yang menggunakan aset.
-
----
-
-## CONCLUSION
-
-Roadmap ini mencakup **seluruh fitur** aplikasi inventaris dengan:
-- ✅ Multi-language support (ID, EN, JP)
-- ✅ Role-based access control (Admin, Staff, Employee)
-- ✅ Data Matrix scanning dengan GPS tracking
-- ✅ Google Maps integration untuk visualisasi lokasi
-- ✅ Flexible maintenance scheduling dengan recurring intervals
-- ✅ Comprehensive issue reporting dan resolution
-- ✅ Real-time notifications dengan FCM
-- ✅ Complete audit trail via scan logs
-- ✅ Automated background jobs untuk reminders
-- ✅ RESTful API dengan proper error handling
-- ✅ Security best practices
-- ✅ Performance optimization strategies
-- ✅ Deployment dan monitoring guidelines
-
-**Database schema 100% sesuai dengan migration files** yang Anda berikan. Semua foreign keys, indexes, dan constraints sudah sesuai.
