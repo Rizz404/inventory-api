@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -10,20 +11,25 @@ import (
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
-	"github.com/go-echarts/go-echarts/v2/charts"
-	"github.com/go-echarts/go-echarts/v2/opts"
-	"github.com/johnfercher/maroto/v2"
-	"github.com/johnfercher/maroto/v2/pkg/components/col"
-	"github.com/johnfercher/maroto/v2/pkg/components/image"
-	"github.com/johnfercher/maroto/v2/pkg/components/row"
-	"github.com/johnfercher/maroto/v2/pkg/components/text"
-	"github.com/johnfercher/maroto/v2/pkg/config"
-	"github.com/johnfercher/maroto/v2/pkg/consts/align"
-	"github.com/johnfercher/maroto/v2/pkg/consts/fontstyle"
-	"github.com/johnfercher/maroto/v2/pkg/consts/orientation"
-	"github.com/johnfercher/maroto/v2/pkg/consts/pagesize"
-	"github.com/johnfercher/maroto/v2/pkg/props"
+
+	// ! Old Maroto chart imports - commented for reference
+	// "github.com/go-echarts/go-echarts/v2/charts"
+	// "github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/signintech/gopdf"
 	"github.com/xuri/excelize/v2"
+	// Maroto v2 - commented out, kept for reference if needed later
+	// "github.com/johnfercher/maroto/v2"
+	// "github.com/johnfercher/maroto/v2/pkg/components/col"
+	// "github.com/johnfercher/maroto/v2/pkg/components/image"
+	// "github.com/johnfercher/maroto/v2/pkg/components/row"
+	// "github.com/johnfercher/maroto/v2/pkg/components/text"
+	// "github.com/johnfercher/maroto/v2/pkg/config"
+	// "github.com/johnfercher/maroto/v2/pkg/consts/align"
+	// "github.com/johnfercher/maroto/v2/pkg/consts/fontstyle"
+	// "github.com/johnfercher/maroto/v2/pkg/consts/orientation"
+	// "github.com/johnfercher/maroto/v2/pkg/consts/pagesize"
+	// "github.com/johnfercher/maroto/v2/pkg/core/entity"
+	// "github.com/johnfercher/maroto/v2/pkg/props"
 )
 
 // ExportAssetList exports asset list to PDF or Excel format
@@ -50,38 +56,49 @@ func (s *Service) ExportAssetList(ctx context.Context, payload *domain.ExportAss
 		if err != nil {
 			return nil, "", domain.ErrInternal(err)
 		}
-		return data, "asset_list.pdf", nil
+		timestamp := time.Now().Format("2006-01-02_15-04-05")
+		filename := fmt.Sprintf("asset_list_%s.pdf", timestamp)
+		return data, filename, nil
 
 	case domain.ExportFormatExcel:
 		data, err := s.exportAssetListToExcel(assetResponses)
 		if err != nil {
 			return nil, "", domain.ErrInternal(err)
 		}
-		return data, "asset_list.xlsx", nil
+		timestamp := time.Now().Format("2006-01-02_15-04-05")
+		filename := fmt.Sprintf("asset_list_%s.xlsx", timestamp)
+		return data, filename, nil
 
 	default:
 		return nil, "", domain.ErrBadRequest("Invalid export format")
 	}
 }
 
-// exportAssetListToPDF generates PDF file for asset list
+// exportAssetListToPDF generates PDF file for asset list using gopdf (supports Unicode/CJK)
 func (s *Service) exportAssetListToPDF(assets []domain.AssetResponse, includeDataMatrix bool, langCode string) ([]byte, error) {
-	// Get absolute path for assets
+	// Get absolute path for fonts and logo
 	workDir, _ := os.Getwd()
+	fontRegularPath := filepath.Join(workDir, "assets", "fonts", "NotoSansJP-Regular.ttf")
+	fontBoldPath := filepath.Join(workDir, "assets", "fonts", "NotoSansJP-Bold.ttf")
 	logoPath := filepath.Join(workDir, "assets", "images", "company-logo.png")
 
-	// Configure PDF - use default fonts for now
-	// TODO: Custom Japanese fonts need proper Maroto v2 configuration
-	cfgBuilder := config.NewBuilder().
-		WithPageSize(pagesize.A4).
-		WithOrientation(orientation.Horizontal).
-		WithLeftMargin(10).
-		WithTopMargin(15).
-		WithRightMargin(10).
-		WithBottomMargin(15)
+	// Initialize gopdf
+	pdf := gopdf.GoPdf{}
+	pdf.Start(gopdf.Config{
+		PageSize: *gopdf.PageSizeA4Landscape, // A4 Landscape: 842 x 595
+		Unit:     gopdf.Unit_PT,
+	})
+	pdf.AddPage()
 
-	cfg := cfgBuilder.Build()
-	mrt := maroto.New(cfg)
+	// Load fonts - Always use Noto Sans for Unicode support (works for all languages)
+	if err := pdf.AddTTFFont("noto-regular", fontRegularPath); err != nil {
+		return nil, fmt.Errorf("failed to load regular font: %w", err)
+	}
+	if err := pdf.AddTTFFont("noto-bold", fontBoldPath); err != nil {
+		return nil, fmt.Errorf("failed to load bold font: %w", err)
+	}
+
+	pdf.SetFont("noto-regular", "", 10)
 
 	// Get localized text
 	reportTitle := utils.GetLocalizedMessage(utils.PDFAssetListReportKey, langCode)
@@ -96,272 +113,304 @@ func (s *Service) exportAssetListToPDF(assets []domain.AssetResponse, includeDat
 	conditionText := utils.GetLocalizedMessage(utils.PDFConditionKey, langCode)
 	locationText := utils.GetLocalizedMessage(utils.PDFLocationKey, langCode)
 
-	// Color definitions
-	headerBgColor := &props.Color{Red: 68, Green: 114, Blue: 196}    // Professional blue
-	headerTextColor := &props.Color{Red: 255, Green: 255, Blue: 255} // White
-	zebraColor := &props.Color{Red: 242, Green: 242, Blue: 242}      // Light gray
+	// Page setup (A4 Landscape: 842 x 595 points)
+	marginLeft := 30.0
+	marginTop := 50.0
+	pageWidth := 842.0
+	pageHeight := 595.0
+	contentWidth := pageWidth - (marginLeft * 2)
 
-	// Add header with logo and title
-	headerRow := row.New(12)
-
-	// Add logo if exists
+	// Add company logo if exists
+	currentY := marginTop
 	if _, err := os.Stat(logoPath); err == nil {
-		headerRow.Add(
-			col.New(3).Add(
-				image.NewFromFile(logoPath, props.Rect{
-					Left:    0,
-					Top:     0,
-					Percent: 80,
-					Center:  false,
-				}),
-			),
-		)
-		headerRow.Add(
-			col.New(9).Add(
-				text.New(reportTitle, props.Text{
-					Size:  14,
-					Style: fontstyle.Bold,
-					Align: align.Right,
-					Top:   4,
-				}),
-			),
-		)
+		// Logo dimensions: 60x60 with proper Rect
+		rect := &gopdf.Rect{W: 60, H: 60}
+		pdf.Image(logoPath, marginLeft, currentY-10, rect)
+
+		// Title next to logo
+		pdf.SetFont("noto-bold", "", 16)
+		pdf.SetX(marginLeft + 70)
+		pdf.SetY(currentY + 15)
+		pdf.Cell(nil, reportTitle)
+
+		currentY += 50
 	} else {
-		// No logo, just centered title
-		headerRow.Add(
-			col.New(12).Add(
-				text.New(reportTitle, props.Text{
-					Size:  14,
-					Style: fontstyle.Bold,
-					Align: align.Center,
-					Top:   4,
-				}),
-			),
-		)
+		// No logo, centered title
+		pdf.SetFont("noto-bold", "", 16)
+		titleWidth, _ := pdf.MeasureTextWidth(reportTitle)
+		pdf.SetX((pageWidth - titleWidth) / 2)
+		pdf.SetY(currentY)
+		pdf.Cell(nil, reportTitle)
+
+		currentY += 30
 	}
 
-	mrt.AddRows(headerRow)
+	// Subtitle with date
+	pdf.SetFont("noto-regular", "", 10)
+	dateText := fmt.Sprintf("%s: %s", generatedOnText, time.Now().Format("2006-01-02 15:04:05"))
+	dateWidth, _ := pdf.MeasureTextWidth(dateText)
+	pdf.SetX((pageWidth - dateWidth) / 2)
+	pdf.SetY(currentY)
+	pdf.Cell(nil, dateText)
 
-	// Add subtitle with generation date
-	mrt.AddRows(
-		row.New(8).Add(
-			col.New(12).Add(
-				text.New(fmt.Sprintf("%s: %s", generatedOnText, time.Now().Format("2006-01-02 15:04:05")), props.Text{
-					Size:  9,
-					Align: align.Center,
-				}),
-			),
-		),
-	)
+	currentY += 25
 
-	// Add spacing
-	mrt.AddRows(row.New(3))
+	// Table setup
+	startY := currentY
 
-	// Add table header with professional styling
-	tableHeaderRow := row.New(10)
-	tableHeaderRow.Add(
-		col.New(2).Add(text.New(assetTagText, props.Text{
-			Style: fontstyle.Bold,
-			Size:  9,
-			Align: align.Center,
-			Color: headerTextColor,
-		})).WithStyle(&props.Cell{BackgroundColor: headerBgColor}),
-	)
-	tableHeaderRow.Add(
-		col.New(3).Add(text.New(assetNameText, props.Text{
-			Style: fontstyle.Bold,
-			Size:  9,
-			Align: align.Center,
-			Color: headerTextColor,
-		})).WithStyle(&props.Cell{BackgroundColor: headerBgColor}),
-	)
-	tableHeaderRow.Add(
-		col.New(2).Add(text.New(categoryText, props.Text{
-			Style: fontstyle.Bold,
-			Size:  9,
-			Align: align.Center,
-			Color: headerTextColor,
-		})).WithStyle(&props.Cell{BackgroundColor: headerBgColor}),
-	)
-	tableHeaderRow.Add(
-		col.New(1).Add(text.New(brandText, props.Text{
-			Style: fontstyle.Bold,
-			Size:  9,
-			Align: align.Center,
-			Color: headerTextColor,
-		})).WithStyle(&props.Cell{BackgroundColor: headerBgColor}),
-	)
-	tableHeaderRow.Add(
-		col.New(1).Add(text.New(modelText, props.Text{
-			Style: fontstyle.Bold,
-			Size:  9,
-			Align: align.Center,
-			Color: headerTextColor,
-		})).WithStyle(&props.Cell{BackgroundColor: headerBgColor}),
-	)
-	tableHeaderRow.Add(
-		col.New(1).Add(text.New(statusText, props.Text{
-			Style: fontstyle.Bold,
-			Size:  9,
-			Align: align.Center,
-			Color: headerTextColor,
-		})).WithStyle(&props.Cell{BackgroundColor: headerBgColor}),
-	)
-	tableHeaderRow.Add(
-		col.New(1).Add(text.New(conditionText, props.Text{
-			Style: fontstyle.Bold,
-			Size:  9,
-			Align: align.Center,
-			Color: headerTextColor,
-		})).WithStyle(&props.Cell{BackgroundColor: headerBgColor}),
-	)
-	tableHeaderRow.Add(
-		col.New(1).Add(text.New(locationText, props.Text{
-			Style: fontstyle.Bold,
-			Size:  9,
-			Align: align.Center,
-			Color: headerTextColor,
-		})).WithStyle(&props.Cell{BackgroundColor: headerBgColor}),
-	)
-	mrt.AddRows(tableHeaderRow)
+	// Column widths (optimized for A4 landscape: 782 total usable width)
+	colWidths := []float64{70, 140, 100, 80, 80, 80, 80, 100} // Total: 730
+	headers := []string{assetTagText, assetNameText, categoryText, brandText, modelText, statusText, conditionText, locationText}
 
-	// Add asset data rows with zebra striping and conditional formatting
+	// Draw table header with proper background
+	pdf.SetFillColor(68, 114, 196) // Blue background
+	pdf.RectFromUpperLeftWithStyle(marginLeft, startY, contentWidth, 25, "F")
+
+	pdf.SetTextColor(255, 255, 255) // White text
+	pdf.SetFont("noto-bold", "", 10)
+
+	x := marginLeft
+	y := startY
+	for i, header := range headers {
+		pdf.SetX(x + 3)
+		pdf.SetY(y + 8)
+		pdf.Cell(nil, header)
+		x += colWidths[i]
+	}
+
+	// Reset for data rows
+	pdf.SetTextColor(0, 0, 0)
+	pdf.SetFont("noto-regular", "", 9)
+	y += 25
+
+	// Helper function to wrap text if needed
+	wrapText := func(text string, maxWidth float64) []string {
+		words := []string{}
+		currentLine := ""
+
+		for _, char := range text {
+			testLine := currentLine + string(char)
+			width, _ := pdf.MeasureTextWidth(testLine)
+
+			if width > maxWidth-10 { // -10 for padding
+				if currentLine != "" {
+					words = append(words, currentLine)
+				}
+				currentLine = string(char)
+			} else {
+				currentLine = testLine
+			}
+		}
+		if currentLine != "" {
+			words = append(words, currentLine)
+		}
+
+		if len(words) == 0 {
+			return []string{text}
+		}
+		return words
+	}
+
 	for i, asset := range assets {
-		dataRow := row.New(8)
+		// Calculate row height based on content (check for multi-line text)
+		maxLines := 1
 
+		// Check Asset Name
+		pdf.SetFont("noto-regular", "", 9)
+		nameLines := wrapText(asset.AssetName, colWidths[1])
+		if len(nameLines) > maxLines {
+			maxLines = len(nameLines)
+		}
+
+		// Check Category
+		if asset.Category != nil {
+			catLines := wrapText(asset.Category.CategoryName, colWidths[2])
+			if len(catLines) > maxLines {
+				maxLines = len(catLines)
+			}
+		}
+
+		rowHeight := float64(maxLines) * 14.0
+		if rowHeight < 20 {
+			rowHeight = 20
+		}
+
+		// Check if need new page
+		if y+rowHeight > pageHeight-40 {
+			pdf.AddPage()
+
+			// Redraw header on new page
+			y = marginTop
+			pdf.SetFillColor(68, 114, 196)
+			pdf.RectFromUpperLeftWithStyle(marginLeft, y, contentWidth, 25, "F")
+			pdf.SetTextColor(255, 255, 255)
+			pdf.SetFont("noto-bold", "", 10)
+
+			x = marginLeft
+			for j, header := range headers {
+				pdf.SetX(x + 3)
+				pdf.SetY(y + 8)
+				pdf.Cell(nil, header)
+				x += colWidths[j]
+			}
+
+			y += 25
+			pdf.SetTextColor(0, 0, 0)
+			pdf.SetFont("noto-regular", "", 9)
+		}
+
+		// Zebra striping
+		if i%2 == 1 {
+			pdf.SetFillColor(242, 242, 242)
+			pdf.RectFromUpperLeftWithStyle(marginLeft, y, contentWidth, rowHeight, "F")
+		}
+
+		x = marginLeft
+		cellY := y + 6
+
+		// Asset Tag
+		pdf.SetX(x + 3)
+		pdf.SetY(cellY)
+		pdf.Cell(nil, asset.AssetTag)
+		x += colWidths[0]
+
+		// Asset Name (multi-line support)
+		for lineIdx, line := range nameLines {
+			pdf.SetX(x + 3)
+			pdf.SetY(cellY + float64(lineIdx)*12)
+			pdf.Cell(nil, line)
+		}
+		x += colWidths[1]
+
+		// Category (multi-line support)
 		categoryName := ""
 		if asset.Category != nil {
 			categoryName = asset.Category.CategoryName
+			catLines := wrapText(categoryName, colWidths[2])
+			for lineIdx, line := range catLines {
+				pdf.SetX(x + 3)
+				pdf.SetY(cellY + float64(lineIdx)*12)
+				pdf.Cell(nil, line)
+			}
 		}
+		x += colWidths[2]
 
-		locationName := ""
-		if asset.Location != nil {
-			locationName = asset.Location.LocationName
-		}
-
+		// Brand
 		brand := ""
 		if asset.Brand != nil {
 			brand = *asset.Brand
 		}
+		pdf.SetX(x + 3)
+		pdf.SetY(cellY)
+		pdf.Cell(nil, brand)
+		x += colWidths[3]
 
+		// Model
 		model := ""
 		if asset.Model != nil {
 			model = *asset.Model
 		}
+		pdf.SetX(x + 3)
+		pdf.SetY(cellY)
+		pdf.Cell(nil, model)
+		x += colWidths[4]
 
-		// Zebra striping: alternate row background color
-		var rowBgColor *props.Color
-		if i%2 == 1 {
-			rowBgColor = zebraColor
+		// Status (with color)
+		switch asset.Status {
+		case domain.StatusActive:
+			pdf.SetTextColor(34, 139, 34) // Forest green
+		case domain.StatusMaintenance:
+			pdf.SetTextColor(255, 140, 0) // Dark orange
+		case domain.StatusDisposed:
+			pdf.SetTextColor(128, 128, 128) // Gray
+		case domain.StatusLost:
+			pdf.SetTextColor(220, 20, 60) // Crimson red
 		}
+		pdf.SetX(x + 3)
+		pdf.SetY(cellY)
+		pdf.Cell(nil, string(asset.Status))
+		pdf.SetTextColor(0, 0, 0) // Reset color
+		x += colWidths[5]
 
-		// Conditional formatting for status and condition
-		statusColor := getStatusColor(asset.Status)
-		conditionColor := getConditionColor(asset.Condition)
+		// Condition (with color)
+		switch asset.Condition {
+		case domain.ConditionGood:
+			pdf.SetTextColor(34, 139, 34) // Forest green
+		case domain.ConditionFair:
+			pdf.SetTextColor(255, 215, 0) // Gold
+		case domain.ConditionPoor:
+			pdf.SetTextColor(255, 140, 0) // Dark orange
+		case domain.ConditionDamaged:
+			pdf.SetTextColor(220, 20, 60) // Crimson red
+		}
+		pdf.SetX(x + 3)
+		pdf.SetY(cellY)
+		pdf.Cell(nil, string(asset.Condition))
+		pdf.SetTextColor(0, 0, 0) // Reset color
+		x += colWidths[6]
 
-		dataRow.Add(
-			col.New(2).Add(text.New(asset.AssetTag, props.Text{
-				Size: 8,
-			})).WithStyle(&props.Cell{BackgroundColor: rowBgColor}),
-		)
-		dataRow.Add(
-			col.New(3).Add(text.New(asset.AssetName, props.Text{
-				Size: 8,
-			})).WithStyle(&props.Cell{BackgroundColor: rowBgColor}),
-		)
-		dataRow.Add(
-			col.New(2).Add(text.New(categoryName, props.Text{
-				Size: 8,
-			})).WithStyle(&props.Cell{BackgroundColor: rowBgColor}),
-		)
-		dataRow.Add(
-			col.New(1).Add(text.New(brand, props.Text{
-				Size: 8,
-			})).WithStyle(&props.Cell{BackgroundColor: rowBgColor}),
-		)
-		dataRow.Add(
-			col.New(1).Add(text.New(model, props.Text{
-				Size: 8,
-			})).WithStyle(&props.Cell{BackgroundColor: rowBgColor}),
-		)
-		dataRow.Add(
-			col.New(1).Add(text.New(string(asset.Status), props.Text{
-				Size:  8,
-				Color: statusColor,
-				Style: fontstyle.Bold,
-			})).WithStyle(&props.Cell{BackgroundColor: rowBgColor}),
-		)
-		dataRow.Add(
-			col.New(1).Add(text.New(string(asset.Condition), props.Text{
-				Size:  8,
-				Color: conditionColor,
-				Style: fontstyle.Bold,
-			})).WithStyle(&props.Cell{BackgroundColor: rowBgColor}),
-		)
-		dataRow.Add(
-			col.New(1).Add(text.New(locationName, props.Text{
-				Size: 8,
-			})).WithStyle(&props.Cell{BackgroundColor: rowBgColor}),
-		)
-		mrt.AddRows(dataRow)
+		// Location
+		locationName := ""
+		if asset.Location != nil {
+			locationName = asset.Location.LocationName
+		}
+		pdf.SetX(x + 3)
+		pdf.SetY(cellY)
+		pdf.Cell(nil, locationName)
+
+		y += rowHeight
 	}
 
-	// Add spacing
-	mrt.AddRows(row.New(3))
+	// Footer - Total count
+	y += 15
+	if y > pageHeight-40 {
+		pdf.AddPage()
+		y = marginTop
+	}
+	pdf.SetFont("noto-bold", "", 11)
+	pdf.SetX(marginLeft)
+	pdf.SetY(y)
+	pdf.Cell(nil, fmt.Sprintf("%s: %d", totalAssetsText, len(assets)))
 
-	// Add footer with total count
-	mrt.AddRows(
-		row.New(10).Add(
-			col.New(12).Add(
-				text.New(fmt.Sprintf("%s: %d", totalAssetsText, len(assets)), props.Text{
-					Size:  10,
-					Style: fontstyle.Bold,
-					Align: align.Right,
-				}),
-			),
-		),
-	)
-
-	// Generate PDF
-	document, err := mrt.Generate()
-	if err != nil {
+	// Get PDF bytes
+	var buf bytes.Buffer
+	if err := pdf.Write(&buf); err != nil {
 		return nil, err
 	}
 
-	return document.GetBytes(), nil
+	return buf.Bytes(), nil
 }
 
-// getStatusColor returns color based on asset status
-func getStatusColor(status domain.AssetStatus) *props.Color {
-	switch status {
-	case domain.StatusActive:
-		return &props.Color{Red: 34, Green: 139, Blue: 34} // Forest green
-	case domain.StatusMaintenance:
-		return &props.Color{Red: 255, Green: 140, Blue: 0} // Dark orange
-	case domain.StatusDisposed:
-		return &props.Color{Red: 128, Green: 128, Blue: 128} // Gray
-	case domain.StatusLost:
-		return &props.Color{Red: 220, Green: 20, Blue: 60} // Crimson red
-	default:
-		return &props.Color{Red: 0, Green: 0, Blue: 0} // Black
-	}
-}
-
-// getConditionColor returns color based on asset condition
-func getConditionColor(condition domain.AssetCondition) *props.Color {
-	switch condition {
-	case domain.ConditionGood:
-		return &props.Color{Red: 34, Green: 139, Blue: 34} // Forest green
-	case domain.ConditionFair:
-		return &props.Color{Red: 255, Green: 215, Blue: 0} // Gold
-	case domain.ConditionPoor:
-		return &props.Color{Red: 255, Green: 140, Blue: 0} // Dark orange
-	case domain.ConditionDamaged:
-		return &props.Color{Red: 220, Green: 20, Blue: 60} // Crimson red
-	default:
-		return &props.Color{Red: 0, Green: 0, Blue: 0} // Black
-	}
-}
+// ! Old Maroto color helpers - commented for reference
+// func getStatusColor(status domain.AssetStatus) *props.Color {
+// 	switch status {
+// 	case domain.AssetStatusAvailable:
+// 		return &props.Color{Red: 34, Green: 139, Blue: 34} // Forest green
+// 	case domain.AssetStatusInUse:
+// 		return &props.Color{Red: 255, Green: 140, Blue: 0} // Dark orange
+// 	case domain.AssetStatusUnderMaintenance:
+// 		return &props.Color{Red: 128, Green: 128, Blue: 128} // Gray
+// 	case domain.AssetStatusRetired:
+// 		return &props.Color{Red: 220, Green: 20, Blue: 60} // Crimson red
+// 	default:
+// 		return &props.Color{Red: 0, Green: 0, Blue: 0} // Black
+// 	}
+// }
+//
+// func getConditionColor(condition domain.AssetCondition) *props.Color {
+// 	switch condition {
+// 	case domain.AssetConditionExcellent:
+// 		return &props.Color{Red: 34, Green: 139, Blue: 34} // Forest green
+// 	case domain.AssetConditionGood:
+// 		return &props.Color{Red: 255, Green: 215, Blue: 0} // Gold
+// 	case domain.AssetConditionFair:
+// 		return &props.Color{Red: 255, Green: 140, Blue: 0} // Dark orange
+// 	case domain.AssetConditionPoor:
+// 		return &props.Color{Red: 220, Green: 20, Blue: 60} // Crimson red
+// 	default:
+// 		return &props.Color{Red: 0, Green: 0, Blue: 0} // Black
+// 	}
+// }
 
 // exportAssetListToExcel generates Excel file for asset list
 func (s *Service) exportAssetListToExcel(assets []domain.AssetResponse) ([]byte, error) {
@@ -515,11 +564,21 @@ func (s *Service) ExportAssetStatistics(ctx context.Context, langCode string) ([
 		return nil, "", domain.ErrInternal(err)
 	}
 
-	return data, "asset_statistics.pdf", nil
+	timestamp := time.Now().Format("2006-01-02_15-04-05")
+	filename := fmt.Sprintf("asset_statistics_%s.pdf", timestamp)
+	return data, filename, nil
 }
 
+// ! Old Maroto implementation - Statistics PDF export - commented for reference
+// TODO: Implement statistics PDF using gopdf
 // exportAssetStatisticsToPDF generates PDF file with charts for statistics
 func (s *Service) exportAssetStatisticsToPDF(stats domain.AssetStatistics) ([]byte, error) {
+	return nil, fmt.Errorf("statistics PDF export not yet implemented with gopdf")
+}
+
+// ! OLD MAROTO CODE BELOW - commented for future reference
+/*
+func (s *Service) exportAssetStatisticsToPDF_OLD(stats domain.AssetStatistics) ([]byte, error) {
 	cfg := config.NewBuilder().
 		WithPageSize(pagesize.A4).
 		WithOrientation(orientation.Vertical).
@@ -753,3 +812,4 @@ func (s *Service) generateConditionChart(conditionStats domain.AssetConditionSta
 
 	return tmpFile.Name(), nil
 }
+*/

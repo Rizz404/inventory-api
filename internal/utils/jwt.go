@@ -29,11 +29,6 @@ type CreateJWTPayload struct {
 }
 
 func CreateAccessToken(payload *CreateJWTPayload) (string, error) {
-	fmt.Printf("=== DEBUG CREATE ACCESS TOKEN ===\n")
-	fmt.Printf("JWT_ACCESS_SECRET env: %s\n", os.Getenv("JWT_ACCESS_SECRET"))
-	fmt.Printf("accessTokenSecret bytes: %s\n", string(accessTokenSecret))
-	fmt.Printf("Payload: %+v\n", payload)
-
 	expirationTime := time.Now().Add(7 * 24 * time.Hour)
 
 	claims := &JWTClaims{
@@ -83,9 +78,6 @@ func CreateRefreshToken(idUser string) (string, error) {
 }
 
 func ValidateToken(tokenString string, secretKey []byte) (*JWTClaims, error) {
-	fmt.Printf("=== DEBUG VALIDATE TOKEN ===\n")
-	fmt.Printf("Secret key used: %s\n", string(secretKey))
-	fmt.Printf("Token to validate: %s...\n", tokenString[:min(len(tokenString), 50)])
 
 	claims := &JWTClaims{}
 
@@ -107,10 +99,6 @@ func ValidateToken(tokenString string, secretKey []byte) (*JWTClaims, error) {
 		fmt.Printf("============================\n")
 		return nil, fmt.Errorf("token is not valid")
 	}
-
-	fmt.Printf("Token validation SUCCESS\n")
-	fmt.Printf("Claims: %+v\n", claims)
-	fmt.Printf("============================\n")
 
 	return claims, nil
 }
