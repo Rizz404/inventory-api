@@ -182,6 +182,13 @@ type BulkDeleteMaintenanceSchedulesPayload struct {
 	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
+type ExportMaintenanceScheduleListPayload struct {
+	Format      ExportFormat                      `json:"format" validate:"required,oneof=pdf excel"`
+	SearchQuery *string                           `json:"searchQuery,omitempty"`
+	Filters     *MaintenanceScheduleFilterOptions `json:"filters,omitempty"`
+	Sort        *MaintenanceScheduleSortOptions   `json:"sort,omitempty"`
+}
+
 // --- Query Parameters ---
 
 type MaintenanceScheduleFilterOptions struct {

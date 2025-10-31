@@ -129,6 +129,13 @@ type BulkDeleteAssetMovementsPayload struct {
 	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
+type ExportAssetMovementListPayload struct {
+	Format      ExportFormat                `json:"format" validate:"required,oneof=pdf excel"`
+	SearchQuery *string                     `json:"searchQuery,omitempty"`
+	Filters     *AssetMovementFilterOptions `json:"filters,omitempty"`
+	Sort        *AssetMovementSortOptions   `json:"sort,omitempty"`
+}
+
 // --- Query Parameters ---
 
 type AssetMovementFilterOptions struct {

@@ -236,27 +236,144 @@ const (
 	SuccessFileDeletedKey           MessageKey = "success.file.deleted"
 	SuccessMultipleFilesUploadedKey MessageKey = "success.file.multiple_uploaded"
 
-	// * PDF Export labels
+	// * Asset PDF Export labels
 	PDFAssetListReportKey       MessageKey = "pdf.asset_list_report"
-	PDFGeneratedOnKey           MessageKey = "pdf.generated_on"
-	PDFTotalAssetsKey           MessageKey = "pdf.total_assets"
-	PDFAssetTagKey              MessageKey = "pdf.asset_tag"
-	PDFAssetNameKey             MessageKey = "pdf.asset_name"
-	PDFCategoryKey              MessageKey = "pdf.category"
-	PDFBrandKey                 MessageKey = "pdf.brand"
-	PDFModelKey                 MessageKey = "pdf.model"
-	PDFStatusKey                MessageKey = "pdf.status"
-	PDFConditionKey             MessageKey = "pdf.condition"
-	PDFLocationKey              MessageKey = "pdf.location"
-	PDFSerialNumberKey          MessageKey = "pdf.serial_number"
-	PDFPurchaseDateKey          MessageKey = "pdf.purchase_date"
-	PDFPurchasePriceKey         MessageKey = "pdf.purchase_price"
-	PDFVendorKey                MessageKey = "pdf.vendor"
-	PDFWarrantyEndKey           MessageKey = "pdf.warranty_end"
-	PDFAssignedToKey            MessageKey = "pdf.assigned_to"
-	PDFPageKey                  MessageKey = "pdf.page"
-	PDFOfKey                    MessageKey = "pdf.of"
+	PDFAssetGeneratedOnKey      MessageKey = "pdf.generated_on"
+	PDFAssetTotalAssetsKey      MessageKey = "pdf.total_assets"
+	PDFAssetAssetTagKey         MessageKey = "pdf.asset_tag"
+	PDFAssetAssetNameKey        MessageKey = "pdf.asset_name"
+	PDFAssetCategoryKey         MessageKey = "pdf.category"
+	PDFAssetBrandKey            MessageKey = "pdf.brand"
+	PDFAssetModelKey            MessageKey = "pdf.model"
+	PDFAssetStatusKey           MessageKey = "pdf.status"
+	PDFAssetConditionKey        MessageKey = "pdf.condition"
+	PDFAssetLocationKey         MessageKey = "pdf.location"
+	PDFAssetSerialNumberKey     MessageKey = "pdf.serial_number"
+	PDFAssetPurchaseDateKey     MessageKey = "pdf.purchase_date"
+	PDFAssetPurchasePriceKey    MessageKey = "pdf.purchase_price"
+	PDFAssetVendorKey           MessageKey = "pdf.vendor"
+	PDFAssetWarrantyEndKey      MessageKey = "pdf.warranty_end"
+	PDFAssetAssignedToKey       MessageKey = "pdf.assigned_to"
+	PDFAssetPageKey             MessageKey = "pdf.page"
+	PDFAssetOfKey               MessageKey = "pdf.of"
 	PDFAssetStatisticsReportKey MessageKey = "pdf.asset_statistics_report"
+
+	// * User PDF Export labels
+	PDFUserListReportKey    MessageKey = "pdf.user_list_report"
+	PDFUserIDKey            MessageKey = "pdf.user.id"
+	PDFUserNameKey          MessageKey = "pdf.user.name"
+	PDFUserEmailKey         MessageKey = "pdf.user.email"
+	PDFUserFullNameKey      MessageKey = "pdf.user.full_name"
+	PDFUserRoleKey          MessageKey = "pdf.user.role"
+	PDFUserEmployeeIDKey    MessageKey = "pdf.user.employee_id"
+	PDFUserPreferredLangKey MessageKey = "pdf.user.preferred_lang"
+	PDFUserIsActiveKey      MessageKey = "pdf.user.is_active"
+	PDFUserCreatedAtKey     MessageKey = "pdf.user.created_at"
+	PDFUserUpdatedAtKey     MessageKey = "pdf.user.updated_at"
+
+	PDFUserTotalUsersKey MessageKey = "pdf.total_users"
+	PDFUserPageKey       MessageKey = "pdf.page"
+	PDFUserOfKey         MessageKey = "pdf.of"
+
+	// * Scan Log PDF Export labels
+	PDFScanLogListReportKey      MessageKey = "pdf.scan_log_list_report"
+	PDFScanLogIDKey              MessageKey = "pdf.scan_log.id"
+	PDFScanLogAssetIDKey         MessageKey = "pdf.scan_log.asset_id"
+	PDFScanLogScannedValueKey    MessageKey = "pdf.scan_log.scanned_value"
+	PDFScanLogScanMethodKey      MessageKey = "pdf.scan_log.scan_method"
+	PDFScanLogScannedByIDKey     MessageKey = "pdf.scan_log.scanned_by_id"
+	PDFScanLogScanTimestampKey   MessageKey = "pdf.scan_log.scan_timestamp"
+	PDFScanLogScanLocationLatKey MessageKey = "pdf.scan_log.scan_location_lat"
+	PDFScanLogScanLocationLngKey MessageKey = "pdf.scan_log.scan_location_lng"
+	PDFScanLogScanResultKey      MessageKey = "pdf.scan_log.scan_result"
+
+	PDFScanLogTotalScanLogsKey MessageKey = "pdf.total_scan_logs"
+	PDFScanLogPageKey          MessageKey = "pdf.page"
+	PDFScanLogOfKey            MessageKey = "pdf.of"
+
+	// * Maintenance Schedule PDF Export labels
+	PDFMaintenanceScheduleListReportKey        MessageKey = "pdf.maintenance_schedule_list_report"
+	PDFMaintenanceScheduleIDKey                MessageKey = "pdf.maintenance_schedule.id"
+	PDFMaintenanceScheduleAssetIDKey           MessageKey = "pdf.maintenance_schedule.asset_id"
+	PDFMaintenanceScheduleMaintenanceTypeKey   MessageKey = "pdf.maintenance_schedule.maintenance_type"
+	PDFMaintenanceScheduleIsRecurringKey       MessageKey = "pdf.maintenance_schedule.is_recurring"
+	PDFMaintenanceScheduleIntervalValueKey     MessageKey = "pdf.maintenance_schedule.interval_value"
+	PDFMaintenanceScheduleIntervalUnitKey      MessageKey = "pdf.maintenance_schedule.interval_unit"
+	PDFMaintenanceScheduleScheduledTimeKey     MessageKey = "pdf.maintenance_schedule.scheduled_time"
+	PDFMaintenanceScheduleNextScheduledDateKey MessageKey = "pdf.maintenance_schedule.next_scheduled_date"
+	PDFMaintenanceScheduleLastExecutedDateKey  MessageKey = "pdf.maintenance_schedule.last_executed_date"
+	PDFMaintenanceScheduleStateKey             MessageKey = "pdf.maintenance_schedule.state"
+	PDFMaintenanceScheduleAutoCompleteKey      MessageKey = "pdf.maintenance_schedule.auto_complete"
+	PDFMaintenanceScheduleEstimatedCostKey     MessageKey = "pdf.maintenance_schedule.estimated_cost"
+	PDFMaintenanceScheduleCreatedByIDKey       MessageKey = "pdf.maintenance_schedule.created_by_id"
+	PDFMaintenanceScheduleCreatedAtKey         MessageKey = "pdf.maintenance_schedule.created_at"
+	PDFMaintenanceScheduleUpdatedAtKey         MessageKey = "pdf.maintenance_schedule.updated_at"
+	PDFMaintenanceScheduleTitleKey             MessageKey = "pdf.maintenance_schedule.title"
+	PDFMaintenanceScheduleDescriptionKey       MessageKey = "pdf.maintenance_schedule.description"
+
+	PDFMaintenanceScheduleTotalSchedulesKey MessageKey = "pdf.total_maintenance_schedules"
+	PDFMaintenanceSchedulePageKey           MessageKey = "pdf.page"
+	PDFMaintenanceScheduleOfKey             MessageKey = "pdf.of"
+
+	// * Maintenance Record PDF Export labels
+	PDFMaintenanceRecordListReportKey        MessageKey = "pdf.maintenance_record_list_report"
+	PDFMaintenanceRecordIDKey                MessageKey = "pdf.maintenance_record.id"
+	PDFMaintenanceRecordScheduleIDKey        MessageKey = "pdf.maintenance_record.schedule_id"
+	PDFMaintenanceRecordAssetIDKey           MessageKey = "pdf.maintenance_record.asset_id"
+	PDFMaintenanceRecordMaintenanceDateKey   MessageKey = "pdf.maintenance_record.maintenance_date"
+	PDFMaintenanceRecordCompletionDateKey    MessageKey = "pdf.maintenance_record.completion_date"
+	PDFMaintenanceRecordDurationMinutesKey   MessageKey = "pdf.maintenance_record.duration_minutes"
+	PDFMaintenanceRecordPerformedByUserIDKey MessageKey = "pdf.maintenance_record.performed_by_user_id"
+	PDFMaintenanceRecordPerformedByVendorKey MessageKey = "pdf.maintenance_record.performed_by_vendor"
+	PDFMaintenanceRecordResultKey            MessageKey = "pdf.maintenance_record.result"
+	PDFMaintenanceRecordActualCostKey        MessageKey = "pdf.maintenance_record.actual_cost"
+	PDFMaintenanceRecordTitleKey             MessageKey = "pdf.maintenance_record.title"
+	PDFMaintenanceRecordNotesKey             MessageKey = "pdf.maintenance_record.notes"
+	PDFMaintenanceRecordCreatedAtKey         MessageKey = "pdf.maintenance_record.created_at"
+	PDFMaintenanceRecordUpdatedAtKey         MessageKey = "pdf.maintenance_record.updated_at"
+
+	PDFMaintenanceRecordTotalRecordsKey MessageKey = "pdf.total_maintenance_records"
+	PDFMaintenanceRecordPageKey         MessageKey = "pdf.page"
+	PDFMaintenanceRecordOfKey           MessageKey = "pdf.of"
+
+	// * Issue Report PDF Export labels
+	PDFIssueReportListReportKey      MessageKey = "pdf.issue_report_list_report"
+	PDFIssueReportIDKey              MessageKey = "pdf.issue_report.id"
+	PDFIssueReportAssetIDKey         MessageKey = "pdf.issue_report.asset_id"
+	PDFIssueReportReportedByIDKey    MessageKey = "pdf.issue_report.reported_by_id"
+	PDFIssueReportReportedDateKey    MessageKey = "pdf.issue_report.reported_date"
+	PDFIssueReportIssueTypeKey       MessageKey = "pdf.issue_report.issue_type"
+	PDFIssueReportPriorityKey        MessageKey = "pdf.issue_report.priority"
+	PDFIssueReportStatusKey          MessageKey = "pdf.issue_report.status"
+	PDFIssueReportResolvedDateKey    MessageKey = "pdf.issue_report.resolved_date"
+	PDFIssueReportResolvedByIDKey    MessageKey = "pdf.issue_report.resolved_by_id"
+	PDFIssueReportTitleKey           MessageKey = "pdf.issue_report.title"
+	PDFIssueReportDescriptionKey     MessageKey = "pdf.issue_report.description"
+	PDFIssueReportResolutionNotesKey MessageKey = "pdf.issue_report.resolution_notes"
+	PDFIssueReportCreatedAtKey       MessageKey = "pdf.issue_report.created_at"
+	PDFIssueReportUpdatedAtKey       MessageKey = "pdf.issue_report.updated_at"
+
+	PDFIssueReportTotalReportsKey MessageKey = "pdf.total_issue_reports"
+	PDFIssueReportPageKey         MessageKey = "pdf.page"
+	PDFIssueReportOfKey           MessageKey = "pdf.of"
+
+	// * Asset Movement PDF Export labels
+	PDFAssetMovementListReportKey     MessageKey = "pdf.asset_movement_list_report"
+	PDFAssetMovementIDKey             MessageKey = "pdf.asset_movement.id"
+	PDFAssetMovementAssetIDKey        MessageKey = "pdf.asset_movement.asset_id"
+	PDFAssetMovementFromLocationIDKey MessageKey = "pdf.asset_movement.from_location_id"
+	PDFAssetMovementToLocationIDKey   MessageKey = "pdf.asset_movement.to_location_id"
+	PDFAssetMovementFromUserIDKey     MessageKey = "pdf.asset_movement.from_user_id"
+	PDFAssetMovementToUserIDKey       MessageKey = "pdf.asset_movement.to_user_id"
+	PDFAssetMovementMovedByIDKey      MessageKey = "pdf.asset_movement.moved_by_id"
+	PDFAssetMovementMovementDateKey   MessageKey = "pdf.asset_movement.movement_date"
+	PDFAssetMovementNotesKey          MessageKey = "pdf.asset_movement.notes"
+	PDFAssetMovementCreatedAtKey      MessageKey = "pdf.asset_movement.created_at"
+	PDFAssetMovementUpdatedAtKey      MessageKey = "pdf.asset_movement.updated_at"
+
+	PDFAssetMovementTotalMovementsKey MessageKey = "pdf.asset_movement.total_movements"
+	PDFAssetMovementPageKey           MessageKey = "pdf.page"
+	PDFAssetMovementOfKey             MessageKey = "pdf.of"
 )
 
 // * messageTranslations contains all message translations
@@ -833,81 +950,421 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Asset List Report",
 		"ja-JP": "資産一覧レポート",
 	},
-	PDFGeneratedOnKey: {
+	PDFAssetGeneratedOnKey: {
 		"en-US": "Generated on",
 		"ja-JP": "生成日時",
 	},
-	PDFTotalAssetsKey: {
+	PDFAssetTotalAssetsKey: {
 		"en-US": "Total Assets",
 		"ja-JP": "総資産数",
 	},
-	PDFAssetTagKey: {
+	PDFAssetAssetTagKey: {
 		"en-US": "Asset Tag",
 		"ja-JP": "資産タグ",
 	},
-	PDFAssetNameKey: {
+	PDFAssetAssetNameKey: {
 		"en-US": "Asset Name",
 		"ja-JP": "資産名",
 	},
-	PDFCategoryKey: {
+	PDFAssetCategoryKey: {
 		"en-US": "Category",
 		"ja-JP": "カテゴリ",
 	},
-	PDFBrandKey: {
+	PDFAssetBrandKey: {
 		"en-US": "Brand",
 		"ja-JP": "ブランド",
 	},
-	PDFModelKey: {
+	PDFAssetModelKey: {
 		"en-US": "Model",
 		"ja-JP": "モデル",
 	},
-	PDFStatusKey: {
+	PDFAssetStatusKey: {
 		"en-US": "Status",
 		"ja-JP": "ステータス",
 	},
-	PDFConditionKey: {
+	PDFAssetConditionKey: {
 		"en-US": "Condition",
 		"ja-JP": "状態",
 	},
-	PDFLocationKey: {
+	PDFAssetLocationKey: {
 		"en-US": "Location",
 		"ja-JP": "場所",
 	},
-	PDFSerialNumberKey: {
+	PDFAssetSerialNumberKey: {
 		"en-US": "Serial Number",
 		"ja-JP": "シリアル番号",
 	},
-	PDFPurchaseDateKey: {
+	PDFAssetPurchaseDateKey: {
 		"en-US": "Purchase Date",
 		"ja-JP": "購入日",
 	},
-	PDFPurchasePriceKey: {
+	PDFAssetPurchasePriceKey: {
 		"en-US": "Purchase Price",
 		"ja-JP": "購入価格",
 	},
-	PDFVendorKey: {
+	PDFAssetVendorKey: {
 		"en-US": "Vendor",
 		"ja-JP": "ベンダー",
 	},
-	PDFWarrantyEndKey: {
+	PDFAssetWarrantyEndKey: {
 		"en-US": "Warranty End",
 		"ja-JP": "保証終了日",
 	},
-	PDFAssignedToKey: {
+	PDFAssetAssignedToKey: {
 		"en-US": "Assigned To",
 		"ja-JP": "割り当て先",
 	},
-	PDFPageKey: {
+	PDFAssetPageKey: {
 		"en-US": "Page",
 		"ja-JP": "ページ",
 	},
-	PDFOfKey: {
+	PDFAssetOfKey: {
 		"en-US": "of",
 		"ja-JP": "/",
 	},
 	PDFAssetStatisticsReportKey: {
 		"en-US": "Asset Statistics Report",
 		"ja-JP": "資産統計レポート",
+	},
+
+	// * User PDF Export labels
+	PDFUserListReportKey: {
+		"en-US": "User List Report",
+		"ja-JP": "ユーザー一覧レポート",
+	},
+	PDFUserIDKey: {
+		"en-US": "ID",
+		"ja-JP": "ID",
+	},
+	PDFUserNameKey: {
+		"en-US": "Name",
+		"ja-JP": "名前",
+	},
+	PDFUserEmailKey: {
+		"en-US": "Email",
+		"ja-JP": "メール",
+	},
+	PDFUserFullNameKey: {
+		"en-US": "Full Name",
+		"ja-JP": "フルネーム",
+	},
+	PDFUserRoleKey: {
+		"en-US": "Role",
+		"ja-JP": "役割",
+	},
+	PDFUserEmployeeIDKey: {
+		"en-US": "Employee ID",
+		"ja-JP": "従業員ID",
+	},
+	PDFUserPreferredLangKey: {
+		"en-US": "Preferred Language",
+		"ja-JP": "優先言語",
+	},
+	PDFUserIsActiveKey: {
+		"en-US": "Is Active",
+		"ja-JP": "アクティブ",
+	},
+	PDFUserCreatedAtKey: {
+		"en-US": "Created At",
+		"ja-JP": "作成日時",
+	},
+	PDFUserUpdatedAtKey: {
+		"en-US": "Updated At",
+		"ja-JP": "更新日時",
+	},
+
+	// * Scan Log PDF Export labels
+	PDFScanLogListReportKey: {
+		"en-US": "Scan Log List Report",
+		"ja-JP": "スキャンログ一覧レポート",
+	},
+	PDFScanLogIDKey: {
+		"en-US": "ID",
+		"ja-JP": "ID",
+	},
+	PDFScanLogAssetIDKey: {
+		"en-US": "Asset ID",
+		"ja-JP": "資産ID",
+	},
+	PDFScanLogScannedValueKey: {
+		"en-US": "Scanned Value",
+		"ja-JP": "スキャン値",
+	},
+	PDFScanLogScanMethodKey: {
+		"en-US": "Scan Method",
+		"ja-JP": "スキャン方法",
+	},
+	PDFScanLogScannedByIDKey: {
+		"en-US": "Scanned By ID",
+		"ja-JP": "スキャン者ID",
+	},
+	PDFScanLogScanTimestampKey: {
+		"en-US": "Scan Timestamp",
+		"ja-JP": "スキャンタイムスタンプ",
+	},
+	PDFScanLogScanLocationLatKey: {
+		"en-US": "Scan Location Latitude",
+		"ja-JP": "スキャン位置緯度",
+	},
+	PDFScanLogScanLocationLngKey: {
+		"en-US": "Scan Location Longitude",
+		"ja-JP": "スキャン位置経度",
+	},
+	PDFScanLogScanResultKey: {
+		"en-US": "Scan Result",
+		"ja-JP": "スキャン結果",
+	},
+
+	// * Maintenance Schedule PDF Export labels
+	PDFMaintenanceScheduleListReportKey: {
+		"en-US": "Maintenance Schedule List Report",
+		"ja-JP": "保守スケジュール一覧レポート",
+	},
+	PDFMaintenanceScheduleIDKey: {
+		"en-US": "ID",
+		"ja-JP": "ID",
+	},
+	PDFMaintenanceScheduleAssetIDKey: {
+		"en-US": "Asset ID",
+		"ja-JP": "資産ID",
+	},
+	PDFMaintenanceScheduleMaintenanceTypeKey: {
+		"en-US": "Maintenance Type",
+		"ja-JP": "保守タイプ",
+	},
+	PDFMaintenanceScheduleIsRecurringKey: {
+		"en-US": "Is Recurring",
+		"ja-JP": "繰り返し",
+	},
+	PDFMaintenanceScheduleIntervalValueKey: {
+		"en-US": "Interval Value",
+		"ja-JP": "間隔値",
+	},
+	PDFMaintenanceScheduleIntervalUnitKey: {
+		"en-US": "Interval Unit",
+		"ja-JP": "間隔単位",
+	},
+	PDFMaintenanceScheduleScheduledTimeKey: {
+		"en-US": "Scheduled Time",
+		"ja-JP": "予定時間",
+	},
+	PDFMaintenanceScheduleNextScheduledDateKey: {
+		"en-US": "Next Scheduled Date",
+		"ja-JP": "次回予定日",
+	},
+	PDFMaintenanceScheduleLastExecutedDateKey: {
+		"en-US": "Last Executed Date",
+		"ja-JP": "最終実行日",
+	},
+	PDFMaintenanceScheduleStateKey: {
+		"en-US": "State",
+		"ja-JP": "状態",
+	},
+	PDFMaintenanceScheduleAutoCompleteKey: {
+		"en-US": "Auto Complete",
+		"ja-JP": "自動完了",
+	},
+	PDFMaintenanceScheduleEstimatedCostKey: {
+		"en-US": "Estimated Cost",
+		"ja-JP": "見積もりコスト",
+	},
+	PDFMaintenanceScheduleCreatedByIDKey: {
+		"en-US": "Created By ID",
+		"ja-JP": "作成者ID",
+	},
+	PDFMaintenanceScheduleCreatedAtKey: {
+		"en-US": "Created At",
+		"ja-JP": "作成日時",
+	},
+	PDFMaintenanceScheduleUpdatedAtKey: {
+		"en-US": "Updated At",
+		"ja-JP": "更新日時",
+	},
+	PDFMaintenanceScheduleTitleKey: {
+		"en-US": "Title",
+		"ja-JP": "タイトル",
+	},
+	PDFMaintenanceScheduleDescriptionKey: {
+		"en-US": "Description",
+		"ja-JP": "説明",
+	},
+
+	// * Maintenance Record PDF Export labels
+	PDFMaintenanceRecordListReportKey: {
+		"en-US": "Maintenance Record List Report",
+		"ja-JP": "保守レコード一覧レポート",
+	},
+	PDFMaintenanceRecordIDKey: {
+		"en-US": "ID",
+		"ja-JP": "ID",
+	},
+	PDFMaintenanceRecordScheduleIDKey: {
+		"en-US": "Schedule ID",
+		"ja-JP": "スケジュールID",
+	},
+	PDFMaintenanceRecordAssetIDKey: {
+		"en-US": "Asset ID",
+		"ja-JP": "資産ID",
+	},
+	PDFMaintenanceRecordMaintenanceDateKey: {
+		"en-US": "Maintenance Date",
+		"ja-JP": "保守日",
+	},
+	PDFMaintenanceRecordCompletionDateKey: {
+		"en-US": "Completion Date",
+		"ja-JP": "完了日",
+	},
+	PDFMaintenanceRecordDurationMinutesKey: {
+		"en-US": "Duration (Minutes)",
+		"ja-JP": "期間（分）",
+	},
+	PDFMaintenanceRecordPerformedByUserIDKey: {
+		"en-US": "Performed By User ID",
+		"ja-JP": "実行者ユーザーID",
+	},
+	PDFMaintenanceRecordPerformedByVendorKey: {
+		"en-US": "Performed By Vendor",
+		"ja-JP": "実行者ベンダー",
+	},
+	PDFMaintenanceRecordResultKey: {
+		"en-US": "Result",
+		"ja-JP": "結果",
+	},
+	PDFMaintenanceRecordActualCostKey: {
+		"en-US": "Actual Cost",
+		"ja-JP": "実際のコスト",
+	},
+	PDFMaintenanceRecordTitleKey: {
+		"en-US": "Title",
+		"ja-JP": "タイトル",
+	},
+	PDFMaintenanceRecordNotesKey: {
+		"en-US": "Notes",
+		"ja-JP": "メモ",
+	},
+	PDFMaintenanceRecordCreatedAtKey: {
+		"en-US": "Created At",
+		"ja-JP": "作成日時",
+	},
+	PDFMaintenanceRecordUpdatedAtKey: {
+		"en-US": "Updated At",
+		"ja-JP": "更新日時",
+	},
+
+	// * Issue Report PDF Export labels
+	PDFIssueReportListReportKey: {
+		"en-US": "Issue Report List Report",
+		"ja-JP": "問題レポート一覧レポート",
+	},
+	PDFIssueReportIDKey: {
+		"en-US": "ID",
+		"ja-JP": "ID",
+	},
+	PDFIssueReportAssetIDKey: {
+		"en-US": "Asset ID",
+		"ja-JP": "資産ID",
+	},
+	PDFIssueReportReportedByIDKey: {
+		"en-US": "Reported By ID",
+		"ja-JP": "報告者ID",
+	},
+	PDFIssueReportReportedDateKey: {
+		"en-US": "Reported Date",
+		"ja-JP": "報告日",
+	},
+	PDFIssueReportIssueTypeKey: {
+		"en-US": "Issue Type",
+		"ja-JP": "問題タイプ",
+	},
+	PDFIssueReportPriorityKey: {
+		"en-US": "Priority",
+		"ja-JP": "優先度",
+	},
+	PDFIssueReportStatusKey: {
+		"en-US": "Status",
+		"ja-JP": "ステータス",
+	},
+	PDFIssueReportResolvedDateKey: {
+		"en-US": "Resolved Date",
+		"ja-JP": "解決日",
+	},
+	PDFIssueReportResolvedByIDKey: {
+		"en-US": "Resolved By ID",
+		"ja-JP": "解決者ID",
+	},
+	PDFIssueReportTitleKey: {
+		"en-US": "Title",
+		"ja-JP": "タイトル",
+	},
+	PDFIssueReportDescriptionKey: {
+		"en-US": "Description",
+		"ja-JP": "説明",
+	},
+	PDFIssueReportResolutionNotesKey: {
+		"en-US": "Resolution Notes",
+		"ja-JP": "解決メモ",
+	},
+	PDFIssueReportCreatedAtKey: {
+		"en-US": "Created At",
+		"ja-JP": "作成日時",
+	},
+	PDFIssueReportUpdatedAtKey: {
+		"en-US": "Updated At",
+		"ja-JP": "更新日時",
+	},
+
+	// * Asset Movement PDF Export labels
+	PDFAssetMovementListReportKey: {
+		"en-US": "Asset Movement List Report",
+		"ja-JP": "資産移動一覧レポート",
+	},
+	PDFAssetMovementIDKey: {
+		"en-US": "ID",
+		"ja-JP": "ID",
+	},
+	PDFAssetMovementAssetIDKey: {
+		"en-US": "Asset ID",
+		"ja-JP": "資産ID",
+	},
+	PDFAssetMovementFromLocationIDKey: {
+		"en-US": "From Location ID",
+		"ja-JP": "移動元場所ID",
+	},
+	PDFAssetMovementToLocationIDKey: {
+		"en-US": "To Location ID",
+		"ja-JP": "移動先場所ID",
+	},
+	PDFAssetMovementFromUserIDKey: {
+		"en-US": "From User ID",
+		"ja-JP": "移動元ユーザーID",
+	},
+	PDFAssetMovementToUserIDKey: {
+		"en-US": "To User ID",
+		"ja-JP": "移動先ユーザーID",
+	},
+	PDFAssetMovementMovedByIDKey: {
+		"en-US": "Moved By ID",
+		"ja-JP": "移動者ID",
+	},
+	PDFAssetMovementMovementDateKey: {
+		"en-US": "Movement Date",
+		"ja-JP": "移動日",
+	},
+	PDFAssetMovementNotesKey: {
+		"en-US": "Notes",
+		"ja-JP": "メモ",
+	},
+	PDFAssetMovementCreatedAtKey: {
+		"en-US": "Created At",
+		"ja-JP": "作成日時",
+	},
+	PDFAssetMovementUpdatedAtKey: {
+		"en-US": "Updated At",
+		"ja-JP": "更新日時",
+	},
+	PDFAssetMovementTotalMovementsKey: {
+		"en-US": "Total Asset Movements",
+		"ja-JP": "総資産移動数",
 	},
 
 	// * Notification error messages

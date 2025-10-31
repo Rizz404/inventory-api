@@ -97,6 +97,13 @@ type BulkDeleteScanLogsPayload struct {
 	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
+type ExportScanLogListPayload struct {
+	Format      ExportFormat          `json:"format" validate:"required,oneof=pdf excel"`
+	SearchQuery *string               `json:"searchQuery,omitempty"`
+	Filters     *ScanLogFilterOptions `json:"filters,omitempty"`
+	Sort        *ScanLogSortOptions   `json:"sort,omitempty"`
+}
+
 // --- Query Parameters ---
 
 type ScanLogFilterOptions struct {

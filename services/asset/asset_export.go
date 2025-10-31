@@ -102,16 +102,16 @@ func (s *Service) exportAssetListToPDF(assets []domain.AssetResponse, includeDat
 
 	// Get localized text
 	reportTitle := utils.GetLocalizedMessage(utils.PDFAssetListReportKey, langCode)
-	generatedOnText := utils.GetLocalizedMessage(utils.PDFGeneratedOnKey, langCode)
-	totalAssetsText := utils.GetLocalizedMessage(utils.PDFTotalAssetsKey, langCode)
-	assetTagText := utils.GetLocalizedMessage(utils.PDFAssetTagKey, langCode)
-	assetNameText := utils.GetLocalizedMessage(utils.PDFAssetNameKey, langCode)
-	categoryText := utils.GetLocalizedMessage(utils.PDFCategoryKey, langCode)
-	brandText := utils.GetLocalizedMessage(utils.PDFBrandKey, langCode)
-	modelText := utils.GetLocalizedMessage(utils.PDFModelKey, langCode)
-	statusText := utils.GetLocalizedMessage(utils.PDFStatusKey, langCode)
-	conditionText := utils.GetLocalizedMessage(utils.PDFConditionKey, langCode)
-	locationText := utils.GetLocalizedMessage(utils.PDFLocationKey, langCode)
+	generatedOnText := utils.GetLocalizedMessage(utils.PDFAssetGeneratedOnKey, langCode)
+	totalAssetsText := utils.GetLocalizedMessage(utils.PDFAssetTotalAssetsKey, langCode)
+	assetTagText := utils.GetLocalizedMessage(utils.PDFAssetAssetTagKey, langCode)
+	assetNameText := utils.GetLocalizedMessage(utils.PDFAssetAssetNameKey, langCode)
+	categoryText := utils.GetLocalizedMessage(utils.PDFAssetCategoryKey, langCode)
+	brandText := utils.GetLocalizedMessage(utils.PDFAssetBrandKey, langCode)
+	modelText := utils.GetLocalizedMessage(utils.PDFAssetModelKey, langCode)
+	statusText := utils.GetLocalizedMessage(utils.PDFAssetStatusKey, langCode)
+	conditionText := utils.GetLocalizedMessage(utils.PDFAssetConditionKey, langCode)
+	locationText := utils.GetLocalizedMessage(utils.PDFAssetLocationKey, langCode)
 
 	// Page setup (A4 Landscape: 842 x 595 points)
 	marginLeft := 30.0

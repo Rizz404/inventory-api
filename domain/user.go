@@ -144,6 +144,13 @@ type BulkDeleteUsersPayload struct {
 	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
+type ExportUserListPayload struct {
+	Format      ExportFormat       `json:"format" validate:"required,oneof=pdf excel"`
+	SearchQuery *string            `json:"searchQuery,omitempty"`
+	Filters     *UserFilterOptions `json:"filters,omitempty"`
+	Sort        *UserSortOptions   `json:"sort,omitempty"`
+}
+
 // --- Query Parameters ---
 
 type UserFilterOptions struct {
