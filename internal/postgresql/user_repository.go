@@ -386,3 +386,29 @@ func (r *UserRepository) GetUserStatistics(ctx context.Context) (domain.UserStat
 
 	return stats, nil
 }
+
+func (r *UserRepository) GetUsersForExport(ctx context.Context, params domain.UserParams) ([]domain.User, error) {
+	var users []model.User
+	db := r.db.WithContext(ctx).
+		Table("users u")
+
+	if params.SearchQuery != nil && *params.SearchQuery != "" {
+		searchPattern := "%" + *params.SearchQuery + "%"
+		db = db.Where("u.full_name ILIKE ? OR u.email ILIKE ? OR u.employee_id ILIKE ?",
+			searchPattern, searchPattern, searchPattern)
+	}
+
+	// Apply filters
+	db = r.applyUserFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyUserSorts(db, params.Sort)
+
+	// No pagination for export - get all matching users
+	if err := db.Find(&users).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	// Convert to domain users
+	return mapper.ToDomainUsers(users), nil
+}

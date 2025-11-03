@@ -34,6 +34,8 @@ type Repository interface {
 	GetUserStatistics(ctx context.Context) (domain.UserStatistics, error)
 	// Update password hash for a user
 	UpdatePassword(ctx context.Context, userId string, hashedPassword string) error
+	// Export
+	GetUsersForExport(ctx context.Context, params domain.UserParams) ([]domain.User, error)
 }
 
 // * UserService interface defines the contract for user business operations

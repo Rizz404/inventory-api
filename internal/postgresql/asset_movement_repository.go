@@ -747,3 +747,38 @@ func (r *AssetMovementRepository) GetAssetMovementStatistics(ctx context.Context
 
 	return stats, nil
 }
+
+func (r *AssetMovementRepository) GetAssetMovementsForExport(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovement, error) {
+	var movements []model.AssetMovement
+	db := r.db.WithContext(ctx).
+		Table("asset_movements am").
+		Preload("Translations").
+		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
+		Preload("FromLocation").
+		Preload("FromLocation.Translations").
+		Preload("ToLocation").
+		Preload("ToLocation.Translations").
+		Preload("FromUser").
+		Preload("ToUser").
+		Preload("MovedByUser")
+
+	if params.SearchQuery != nil && *params.SearchQuery != "" {
+		db = db.Joins("LEFT JOIN assets a ON am.asset_id = a.id").
+			Where("a.asset_tag ILIKE ? OR a.serial_number ILIKE ?",
+				"%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%")
+	}
+
+	db = r.applyAssetMovementFilters(db, params.Filters)
+	db = r.applyAssetMovementSorts(db, params.Sort)
+
+	if err := db.Find(&movements).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	return mapper.ToDomainAssetMovements(movements), nil
+}

@@ -24,6 +24,7 @@ type Repository interface {
 	GetRecordById(ctx context.Context, recordId string) (domain.MaintenanceRecord, error)
 	CountRecords(ctx context.Context, params domain.MaintenanceRecordParams) (int64, error)
 	CheckRecordExist(ctx context.Context, recordId string) (bool, error)
+	GetMaintenanceRecordsForExport(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecord, error)
 
 	// Statistics
 	GetMaintenanceRecordStatistics(ctx context.Context) (domain.MaintenanceRecordStatistics, error)
@@ -57,6 +58,7 @@ type MaintenanceRecordService interface {
 	CheckMaintenanceRecordExists(ctx context.Context, recordId string) (bool, error)
 	CountMaintenanceRecords(ctx context.Context, params domain.MaintenanceRecordParams) (int64, error)
 	GetMaintenanceRecordStatistics(ctx context.Context) (domain.MaintenanceRecordStatisticsResponse, error)
+	ExportMaintenanceRecordList(ctx context.Context, payload domain.ExportMaintenanceRecordListPayload, params domain.MaintenanceRecordParams, langCode string) ([]byte, string, error)
 }
 
 type Service struct {

@@ -548,3 +548,38 @@ func (r *MaintenanceRecordRepository) GetMaintenanceRecordStatistics(ctx context
 
 	return stats, nil
 }
+
+func (r *MaintenanceRecordRepository) GetMaintenanceRecordsForExport(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecord, error) {
+	var records []model.MaintenanceRecord
+	db := r.db.WithContext(ctx).
+		Preload("Translations").
+		Preload("Schedule").
+		Preload("Schedule.Translations").
+		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
+		Preload("User")
+
+	if params.SearchQuery != nil && *params.SearchQuery != "" {
+		sq := "%" + *params.SearchQuery + "%"
+		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON maintenance_records.id = mrt.record_id").
+			Where("mrt.title ILIKE ?", sq).
+			Group("maintenance_records.id")
+	}
+
+	// Apply filters
+	db = r.applyRecordFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyRecordSorts(db, params.Sort)
+
+	// No pagination for export - get all matching maintenance records
+	if err := db.Find(&records).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	return mapper.ToDomainMaintenanceRecords(records), nil
+}

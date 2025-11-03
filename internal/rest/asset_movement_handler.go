@@ -49,6 +49,13 @@ func NewAssetMovementHandler(app fiber.Router, s asset_movement.AssetMovementSer
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
 		handler.DeleteAssetMovement,
 	)
+
+	// * Export endpoints
+	movements.Post("/export/list",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! jangan lupa uncomment pas production
+		handler.ExportAssetMovementList,
+	)
 }
 
 func (h *AssetMovementHandler) parseAssetMovementFiltersAndSort(c *fiber.Ctx) (domain.AssetMovementParams, error) {
@@ -302,4 +309,31 @@ func (h *AssetMovementHandler) GetAssetMovementStatistics(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessAssetMovementStatisticsRetrievedKey, stats)
+}
+
+func (h *AssetMovementHandler) ExportAssetMovementList(c *fiber.Ctx) error {
+	var req domain.ExportAssetMovementListPayload
+	if err := c.BodyParser(&req); err != nil {
+		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+	}
+
+	params, err := h.parseAssetMovementFiltersAndSort(c)
+	if err != nil {
+		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+	}
+
+	langCode := web.GetLanguageFromContext(c)
+
+	fileBytes, fileName, err := h.Service.ExportAssetMovementList(c.Context(), req, params, langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	c.Set("Content-Disposition", "attachment; filename="+fileName)
+	if req.Format == "pdf" {
+		c.Set("Content-Type", "application/pdf")
+	} else {
+		c.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	}
+	return c.Send(fileBytes)
 }

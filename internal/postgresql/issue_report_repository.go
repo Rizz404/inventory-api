@@ -559,3 +559,39 @@ func (r *IssueReportRepository) GetIssueReportStatistics(ctx context.Context) (d
 
 	return stats, nil
 }
+
+func (r *IssueReportRepository) GetIssueReportsForExport(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReport, error) {
+	var issueReports []model.IssueReport
+	db := r.db.WithContext(ctx).
+		Table("issue_reports ir").
+		Preload("Translations").
+		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
+		Preload("ReportedByUser").
+		Preload("ResolvedByUser")
+
+	if params.SearchQuery != nil && *params.SearchQuery != "" {
+		searchPattern := "%" + *params.SearchQuery + "%"
+		db = db.Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id").
+			Where("ir.issue_type ILIKE ? OR irt.title ILIKE ? OR irt.description ILIKE ?", searchPattern, searchPattern, searchPattern).
+			Distinct("ir.id, ir.reported_date")
+	}
+
+	// Apply filters
+	db = r.applyIssueReportFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyIssueReportSorts(db, params.Sort)
+
+	// No pagination for export - get all matching issue reports
+	if err := db.Find(&issueReports).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	// Convert to domain issue reports
+	return mapper.ToDomainIssueReports(issueReports), nil
+}

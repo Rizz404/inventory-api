@@ -419,3 +419,28 @@ func (r *ScanLogRepository) GetScanLogStatistics(ctx context.Context) (domain.Sc
 
 	return stats, nil
 }
+
+func (r *ScanLogRepository) GetScanLogsForExport(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLog, error) {
+	var scanLogs []model.ScanLog
+	db := r.db.WithContext(ctx).
+		Table("scan_logs sl")
+
+	if params.SearchQuery != nil && *params.SearchQuery != "" {
+		searchPattern := "%" + *params.SearchQuery + "%"
+		db = db.Where("sl.scanned_value ILIKE ?", searchPattern)
+	}
+
+	// Apply filters
+	db = r.applyScanLogFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyScanLogSorts(db, params.Sort)
+
+	// No pagination for export - get all matching scan logs
+	if err := db.Find(&scanLogs).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	// Convert to domain scan logs
+	return mapper.ToDomainScanLogs(scanLogs), nil
+}

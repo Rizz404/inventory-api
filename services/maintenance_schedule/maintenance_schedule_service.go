@@ -26,6 +26,9 @@ type Repository interface {
 	// Statistics
 	GetMaintenanceScheduleStatistics(ctx context.Context) (domain.MaintenanceScheduleStatistics, error)
 
+	// Export
+	GetMaintenanceSchedulesForExport(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceSchedule, error)
+
 	// Cron-related queries
 	GetSchedulesDueSoon(ctx context.Context, daysFromNow int) ([]domain.MaintenanceSchedule, error)
 	GetOverdueSchedules(ctx context.Context) ([]domain.MaintenanceSchedule, error)

@@ -26,6 +26,7 @@ type Repository interface {
 	CheckAssetMovementExist(ctx context.Context, movementId string) (bool, error)
 	CountAssetMovements(ctx context.Context, params domain.AssetMovementParams) (int64, error)
 	GetAssetMovementStatistics(ctx context.Context) (domain.AssetMovementStatistics, error)
+	GetAssetMovementsForExport(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovement, error)
 }
 
 // * AssetService interface for checking asset existence
@@ -64,6 +65,9 @@ type AssetMovementService interface {
 	CheckAssetMovementExists(ctx context.Context, movementId string) (bool, error)
 	CountAssetMovements(ctx context.Context, params domain.AssetMovementParams) (int64, error)
 	GetAssetMovementStatistics(ctx context.Context) (domain.AssetMovementStatisticsResponse, error)
+
+	// * EXPORT
+	ExportAssetMovementList(ctx context.Context, payload domain.ExportAssetMovementListPayload, params domain.AssetMovementParams, langCode string) ([]byte, string, error)
 }
 
 type Service struct {

@@ -23,6 +23,7 @@ type Repository interface {
 	CheckScanLogExist(ctx context.Context, scanLogId string) (bool, error)
 	CountScanLogs(ctx context.Context, params domain.ScanLogParams) (int64, error)
 	GetScanLogStatistics(ctx context.Context) (domain.ScanLogStatistics, error)
+	GetScanLogsForExport(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLog, error)
 }
 
 // * ScanLogService interface defines the contract for scan log business operations
@@ -40,6 +41,7 @@ type ScanLogService interface {
 	CheckScanLogExists(ctx context.Context, scanLogId string) (bool, error)
 	CountScanLogs(ctx context.Context, params domain.ScanLogParams) (int64, error)
 	GetScanLogStatistics(ctx context.Context) (domain.ScanLogStatisticsResponse, error)
+	ExportScanLogList(ctx context.Context, payload domain.ExportScanLogListPayload, params domain.ScanLogParams, langCode string) ([]byte, string, error)
 }
 
 type Service struct {

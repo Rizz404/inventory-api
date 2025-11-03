@@ -665,3 +665,36 @@ func (r *MaintenanceScheduleRepository) UpdateLastExecutedDate(ctx context.Conte
 
 	return nil
 }
+
+func (r *MaintenanceScheduleRepository) GetMaintenanceSchedulesForExport(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceSchedule, error) {
+	var schedules []model.MaintenanceSchedule
+	db := r.db.WithContext(ctx).
+		Preload("Translations").
+		Preload("Asset").
+		Preload("Asset.Category").
+		Preload("Asset.Category.Translations").
+		Preload("Asset.Location").
+		Preload("Asset.Location.Translations").
+		Preload("Asset.User").
+		Preload("CreatedByUser")
+
+	if params.SearchQuery != nil && *params.SearchQuery != "" {
+		sq := "%" + *params.SearchQuery + "%"
+		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON maintenance_schedules.id = mst.schedule_id").
+			Where("mst.title ILIKE ? OR maintenance_schedules.maintenance_type ILIKE ?", sq, sq).
+			Group("maintenance_schedules.id")
+	}
+
+	// Apply filters
+	db = r.applyScheduleFilters(db, params.Filters)
+
+	// Apply sorting
+	db = r.applyScheduleSorts(db, params.Sort)
+
+	// No pagination for export - get all matching maintenance schedules
+	if err := db.Find(&schedules).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	return mapper.ToDomainMaintenanceSchedules(schedules), nil
+}

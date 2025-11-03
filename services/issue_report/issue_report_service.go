@@ -24,6 +24,7 @@ type Repository interface {
 	CheckIssueReportExist(ctx context.Context, issueReportId string) (bool, error)
 	CountIssueReports(ctx context.Context, params domain.IssueReportParams) (int64, error)
 	GetIssueReportStatistics(ctx context.Context) (domain.IssueReportStatistics, error)
+	GetIssueReportsForExport(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReport, error)
 }
 
 // * NotificationService interface for creating notifications
@@ -55,6 +56,7 @@ type IssueReportService interface {
 	CheckIssueReportExists(ctx context.Context, issueReportId string) (bool, error)
 	CountIssueReports(ctx context.Context, params domain.IssueReportParams) (int64, error)
 	GetIssueReportStatistics(ctx context.Context) (domain.IssueReportStatisticsResponse, error)
+	ExportIssueReportList(ctx context.Context, payload domain.ExportIssueReportListPayload, params domain.IssueReportParams, langCode string) ([]byte, string, error)
 }
 
 type Service struct {
