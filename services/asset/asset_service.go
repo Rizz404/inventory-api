@@ -63,6 +63,7 @@ type AssetService interface {
 	// * EXPORT
 	ExportAssetList(ctx context.Context, payload *domain.ExportAssetListPayload, langCode string) ([]byte, string, error)
 	ExportAssetStatistics(ctx context.Context, langCode string) ([]byte, string, error)
+	ExportAssetDataMatrix(ctx context.Context, payload *domain.ExportAssetDataMatrixPayload, langCode string) ([]byte, string, error)
 }
 
 // * NotificationService interface for creating notifications

@@ -257,6 +257,7 @@ const (
 	PDFAssetPageKey             MessageKey = "pdf.page"
 	PDFAssetOfKey               MessageKey = "pdf.of"
 	PDFAssetStatisticsReportKey MessageKey = "pdf.asset_statistics_report"
+	PDFAssetDataMatrixReportKey MessageKey = "pdf.asset_datamatrix_report"
 
 	// * Asset Movement PDF Export labels
 	PDFAssetMovementReportKey       MessageKey = "pdf.asset_movement_report"
@@ -1070,6 +1071,10 @@ var messageTranslations = map[MessageKey]map[string]string{
 	PDFAssetStatisticsReportKey: {
 		"en-US": "Asset Statistics Report",
 		"ja-JP": "資産統計レポート",
+	},
+	PDFAssetDataMatrixReportKey: {
+		"en-US": "Asset Data Matrix Codes",
+		"ja-JP": "資産データマトリックスコード",
 	},
 
 	// * Asset Movement PDF Export labels

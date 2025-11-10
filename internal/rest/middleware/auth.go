@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -23,8 +22,6 @@ func AuthMiddleware() fiber.Handler {
 		AuthScheme:  "Bearer",
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// Add debugging
-			fmt.Printf("JWT Error: %v\n", err)
-			fmt.Printf("Authorization Header: %s\n", c.Get("Authorization"))
 			return web.HandleError(c, domain.ErrUnauthorizedWithKey(utils.ErrTokenInvalidKey))
 		},
 		SuccessHandler: func(c *fiber.Ctx) error {

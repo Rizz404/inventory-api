@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"image"
+	"image/draw"
+	"image/png"
 	"os"
 	"path/filepath"
 	"time"
@@ -12,9 +15,8 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 
-	// ! Old Maroto chart imports - commented for reference
-	// "github.com/go-echarts/go-echarts/v2/charts"
-	// "github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/boombuler/barcode"
+	"github.com/boombuler/barcode/datamatrix"
 	"github.com/signintech/gopdf"
 	"github.com/xuri/excelize/v2"
 	// Maroto v2 - commented out, kept for reference if needed later
@@ -813,3 +815,221 @@ func (s *Service) generateConditionChart(conditionStats domain.AssetConditionSta
 	return tmpFile.Name(), nil
 }
 */
+
+// ExportAssetDataMatrix exports asset data matrix codes to PDF in grid layout
+func (s *Service) ExportAssetDataMatrix(ctx context.Context, payload *domain.ExportAssetDataMatrixPayload, langCode string) ([]byte, string, error) {
+	// Build params from payload
+	params := domain.AssetParams{
+		SearchQuery: payload.SearchQuery,
+		Filters:     payload.Filters,
+		Sort:        payload.Sort,
+	}
+
+	// Get assets without pagination
+	assets, err := s.Repo.GetAssetsForExport(ctx, params, langCode)
+	if err != nil {
+		return nil, "", domain.ErrInternal(err)
+	}
+
+	// Convert to responses
+	assetResponses := make([]domain.AssetResponse, 0, len(assets))
+	for _, asset := range assets {
+		assetResponses = append(assetResponses, mapper.AssetToResponse(&asset, langCode))
+	}
+
+	// Generate PDF with data matrix grid
+	data, err := s.exportAssetDataMatrixToPDF(assetResponses, langCode)
+	if err != nil {
+		return nil, "", domain.ErrInternal(err)
+	}
+
+	timestamp := time.Now().Format("2006-01-02_15-04-05")
+	filename := fmt.Sprintf("asset_datamatrix_%s.pdf", timestamp)
+	return data, filename, nil
+}
+
+// exportAssetDataMatrixToPDF generates PDF file with data matrix codes in grid layout
+func (s *Service) exportAssetDataMatrixToPDF(assets []domain.AssetResponse, langCode string) ([]byte, error) {
+	// Get absolute path for fonts
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	fontPath := filepath.Join(cwd, "assets", "fonts", "NotoSansJP-Regular.ttf")
+
+	// Initialize gopdf
+	pdf := gopdf.GoPdf{}
+	pdf.Start(gopdf.Config{
+		PageSize: *gopdf.PageSizeA4Landscape, // 842 x 595 points (Landscape)
+		Unit:     gopdf.Unit_PT,
+	})
+
+	// Load font
+	err = pdf.AddTTFFont("noto", fontPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get localized title
+	titleKey := utils.PDFAssetDataMatrixReportKey
+	title := utils.GetLocalizedMessage(titleKey, langCode)
+	if title == string(titleKey) {
+		title = "Asset Data Matrix Codes"
+	}
+
+	// Grid layout configuration (6 columns x 4 rows per page for landscape)
+	const (
+		cols           = 6
+		rows           = 4
+		pageWidth      = 842.0 // Landscape width
+		pageHeight     = 595.0 // Landscape height
+		margin         = 20.0
+		headerHeight   = 50.0
+		dataMatrixSize = 90.0 // Size of data matrix image
+		cellWidth      = (pageWidth - 2*margin) / cols
+		cellHeight     = (pageHeight - headerHeight - 2*margin) / rows
+		qrTopPadding   = 15.0
+		textTopMargin  = 8.0 // Space between data matrix and text
+		textFontSize   = 7.0
+	)
+
+	itemsPerPage := cols * rows
+	totalPages := (len(assets) + itemsPerPage - 1) / itemsPerPage
+
+	for pageNum := 0; pageNum < totalPages; pageNum++ {
+		pdf.AddPage()
+
+		// Header - Title centered
+		pdf.SetFont("noto", "", 16)
+		pdf.SetTextColor(33, 37, 41)
+		titleWidth, _ := pdf.MeasureTextWidth(title)
+		pdf.SetX((pageWidth - titleWidth) / 2)
+		pdf.SetY(margin)
+		pdf.Cell(nil, title)
+
+		// Subtitle with date and page number
+		pdf.SetFont("noto", "", 9)
+		pdf.SetTextColor(108, 117, 125)
+		subtitle := fmt.Sprintf("%s | Page %d of %d", time.Now().Format("2006-01-02 15:04:05"), pageNum+1, totalPages)
+		subtitleWidth, _ := pdf.MeasureTextWidth(subtitle)
+		pdf.SetX((pageWidth - subtitleWidth) / 2)
+		pdf.SetY(margin + 20)
+		pdf.Cell(nil, subtitle)
+
+		// Draw grid
+		startIdx := pageNum * itemsPerPage
+		endIdx := startIdx + itemsPerPage
+		if endIdx > len(assets) {
+			endIdx = len(assets)
+		}
+
+		for i := startIdx; i < endIdx; i++ {
+			asset := assets[i]
+			idx := i - startIdx
+			col := idx % cols
+			row := idx / cols
+
+			cellX := margin + float64(col)*cellWidth
+			cellY := headerHeight + margin + float64(row)*cellHeight
+
+			// Draw cutting guides (dashed lines)
+			pdf.SetLineWidth(0.5)
+			pdf.SetStrokeColor(200, 200, 200) // Light gray
+			pdf.SetLineType("dashed")
+
+			// Vertical line (left)
+			if col > 0 {
+				pdf.Line(cellX, cellY, cellX, cellY+cellHeight)
+			}
+			// Horizontal line (top)
+			if row > 0 {
+				pdf.Line(cellX, cellY, cellX+cellWidth, cellY)
+			}
+
+			// Reset line style
+			pdf.SetLineType("solid")
+			pdf.SetLineWidth(1)
+
+			// Generate data matrix barcode
+			qrCode, err := datamatrix.Encode(asset.AssetTag)
+			if err != nil {
+				continue // Skip if barcode generation fails
+			}
+
+			// Scale barcode to desired size
+			qrCode, err = barcode.Scale(qrCode, int(dataMatrixSize), int(dataMatrixSize))
+			if err != nil {
+				continue
+			}
+
+			// Convert to RGBA (8-bit) image to avoid 16-bit depth issue
+			bounds := qrCode.Bounds()
+			rgbaImg := image.NewRGBA(bounds)
+			draw.Draw(rgbaImg, bounds, qrCode, bounds.Min, draw.Src)
+
+			// Create temp file for barcode image
+			tmpFile, err := os.CreateTemp("", "datamatrix_*.png")
+			if err != nil {
+				continue
+			}
+			tmpFileName := tmpFile.Name()
+
+			// Write barcode as PNG (now 8-bit RGBA)
+			err = png.Encode(tmpFile, rgbaImg)
+			tmpFile.Close()
+			if err != nil {
+				os.Remove(tmpFileName)
+				continue
+			}
+
+			// Center QR code in cell
+			qrX := cellX + (cellWidth-dataMatrixSize)/2
+			qrY := cellY + qrTopPadding
+
+			// Draw data matrix image
+			err = pdf.Image(tmpFileName, qrX, qrY, &gopdf.Rect{
+				W: dataMatrixSize,
+				H: dataMatrixSize,
+			})
+			os.Remove(tmpFileName) // Clean up temp file
+
+			if err != nil {
+				continue
+			}
+
+			// Asset Name only (below data matrix, centered, truncated if needed)
+			pdf.SetFont("noto", "", textFontSize)
+			pdf.SetTextColor(0, 0, 0)
+			assetName := asset.AssetName
+
+			// Calculate max width for text (with padding)
+			maxTextWidth := cellWidth - 10
+
+			// Truncate if too long
+			for {
+				nameWidth, _ := pdf.MeasureTextWidth(assetName)
+				if nameWidth <= maxTextWidth {
+					break
+				}
+				if len(assetName) <= 4 {
+					break
+				}
+				assetName = assetName[:len(assetName)-4] + "..."
+			}
+
+			assetNameWidth, _ := pdf.MeasureTextWidth(assetName)
+			pdf.SetX(cellX + (cellWidth-assetNameWidth)/2)
+			pdf.SetY(qrY + dataMatrixSize + textTopMargin)
+			pdf.Cell(nil, assetName)
+		}
+	}
+
+	// Get PDF bytes
+	buffer := &bytes.Buffer{}
+	_, err = pdf.WriteTo(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer.Bytes(), nil
+}

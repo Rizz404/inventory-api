@@ -193,6 +193,12 @@ type ExportAssetStatisticsPayload struct {
 	// PDF only - statistics always exported as PDF with charts
 }
 
+type ExportAssetDataMatrixPayload struct {
+	SearchQuery *string             `json:"searchQuery,omitempty"`
+	Filters     *AssetFilterOptions `json:"filters,omitempty"`
+	Sort        *AssetSortOptions   `json:"sort,omitempty"`
+}
+
 // --- Responses ---
 
 type GenerateAssetTagResponse struct {

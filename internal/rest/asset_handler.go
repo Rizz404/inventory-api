@@ -64,6 +64,11 @@ func NewAssetHandler(app fiber.Router, s asset.AssetService) {
 		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleUser), // ! uncomment in production
 		handler.ExportAssetStatistics,
 	)
+	assets.Post("/export/datamatrix",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleUser), // ! uncomment in production
+		handler.ExportAssetDataMatrix,
+	)
 }
 
 func (h *AssetHandler) parseAssetFiltersAndSort(c *fiber.Ctx) (domain.AssetParams, error) {
@@ -427,6 +432,30 @@ func (h *AssetHandler) ExportAssetStatistics(c *fiber.Ctx) error {
 
 	// Export asset statistics
 	data, filename, err := h.Service.ExportAssetStatistics(c.Context(), langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// Set appropriate content type and headers for PDF
+	c.Set("Content-Type", "application/pdf")
+	c.Set("Content-Disposition", "attachment; filename="+filename)
+
+	return c.Send(data)
+}
+
+func (h *AssetHandler) ExportAssetDataMatrix(c *fiber.Ctx) error {
+	var payload domain.ExportAssetDataMatrixPayload
+	if err := c.BodyParser(&payload); err != nil {
+		langCode := web.GetLanguageFromContext(c)
+		message := utils.GetLocalizedMessage(utils.ErrValidationKey, langCode)
+		return web.Error(c, fiber.StatusBadRequest, message, err.Error())
+	}
+
+	// Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	// Export asset data matrix codes
+	data, filename, err := h.Service.ExportAssetDataMatrix(c.Context(), &payload, langCode)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
