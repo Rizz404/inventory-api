@@ -97,7 +97,7 @@ func (s *Service) CreateNotification(ctx context.Context, payload *domain.Create
 	}
 
 	// * Send FCM notification asynchronously (non-blocking)
-	go s.sendFCMNotification(ctx, &createdNotification)
+	go s.sendFCMNotification(context.Background(), &createdNotification)
 
 	// * Convert to NotificationResponse using mapper
 	return mapper.NotificationToResponse(&createdNotification, mapper.DefaultLangCode), nil

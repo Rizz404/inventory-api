@@ -106,13 +106,9 @@ func (s *Service) CreateAssetMovement(ctx context.Context, payload *domain.Creat
 		return domain.AssetMovementResponse{}, err
 	}
 
-	// * Validate destination (must have either ToLocationID or ToUserID, but not both)
+	// * Validate destination (must have at least one: ToLocationID or ToUserID)
 	if payload.ToLocationID == nil && payload.ToUserID == nil {
 		return domain.AssetMovementResponse{}, domain.ErrBadRequestWithKey(utils.ErrAssetMovementNoChangeKey)
-	}
-
-	if payload.ToLocationID != nil && payload.ToUserID != nil {
-		return domain.AssetMovementResponse{}, domain.ErrBadRequestWithKey(utils.ErrAssetMovementInvalidLocationKey)
 	}
 
 	// * Check if destination location exists
@@ -175,9 +171,18 @@ func (s *Service) CreateAssetMovement(ctx context.Context, payload *domain.Creat
 		return domain.AssetMovementResponse{}, err
 	}
 
-	// * Send notification asynchronously if asset is assigned to a user
-	if payload.ToUserID != nil && *payload.ToUserID != "" {
-		go s.sendAssetMovedNotification(context.Background(), &createdMovement, &asset)
+	// * Send notifications asynchronously based on what changed
+	locationChanged := payload.ToLocationID != nil && *payload.ToLocationID != "" &&
+		(asset.LocationID == nil || *asset.LocationID != *payload.ToLocationID)
+	userChanged := payload.ToUserID != nil && *payload.ToUserID != "" &&
+		(asset.AssignedToID == nil || *asset.AssignedToID != *payload.ToUserID)
+
+	if locationChanged {
+		go s.sendLocationChangeNotification(context.Background(), &createdMovement, &asset)
+	}
+
+	if userChanged {
+		go s.sendUserAssignmentNotification(context.Background(), &createdMovement, &asset)
 	}
 
 	// * Convert to AssetMovementResponse using mapper
@@ -189,11 +194,6 @@ func (s *Service) UpdateAssetMovement(ctx context.Context, movementId string, pa
 	_, err := s.Repo.GetAssetMovementById(ctx, movementId)
 	if err != nil {
 		return domain.AssetMovementResponse{}, err
-	}
-
-	// * Validate destination if being updated
-	if payload.ToLocationID != nil && payload.ToUserID != nil {
-		return domain.AssetMovementResponse{}, domain.ErrBadRequestWithKey(utils.ErrAssetMovementInvalidLocationKey)
 	}
 
 	// * Check if destination location exists if being updated
@@ -319,25 +319,19 @@ func (s *Service) GetAssetMovementStatistics(ctx context.Context) (domain.AssetM
 
 // *===========================HELPER METHODS===========================*
 
-// sendAssetMovedNotification sends notification when asset is moved
-func (s *Service) sendAssetMovedNotification(ctx context.Context, movement *domain.AssetMovement, asset *domain.AssetResponse) {
+// sendLocationChangeNotification sends notification when asset location changes
+func (s *Service) sendLocationChangeNotification(ctx context.Context, movement *domain.AssetMovement, asset *domain.AssetResponse) {
 	if s.NotificationService == nil {
-		log.Printf("Notification service not available, skipping asset moved notification for asset ID: %s", asset.ID)
+		log.Printf("Notification service not available, skipping location change notification for asset ID: %s", asset.ID)
 		return
 	}
 
 	// Get old location name
-	oldLocation := "Unknown"
+	oldLocation := "Unassigned"
 	if movement.FromLocationID != nil && *movement.FromLocationID != "" {
 		if loc, err := s.LocationService.GetLocationById(ctx, *movement.FromLocationID, "en-US"); err == nil {
 			oldLocation = loc.LocationName
 		}
-	} else if movement.FromUserID != nil && *movement.FromUserID != "" {
-		if user, err := s.UserService.GetUserById(ctx, *movement.FromUserID); err == nil {
-			oldLocation = user.Name
-		}
-	} else {
-		oldLocation = "Unassigned"
 	}
 
 	// Get new location name
@@ -346,12 +340,6 @@ func (s *Service) sendAssetMovedNotification(ctx context.Context, movement *doma
 		if loc, err := s.LocationService.GetLocationById(ctx, *movement.ToLocationID, "en-US"); err == nil {
 			newLocation = loc.LocationName
 		}
-	} else if movement.ToUserID != nil && *movement.ToUserID != "" {
-		if user, err := s.UserService.GetUserById(ctx, *movement.ToUserID); err == nil {
-			newLocation = user.Name
-		}
-	} else {
-		newLocation = "Unassigned"
 	}
 
 	titleKey, messageKey, params := messages.AssetMovedNotification(asset.AssetName, asset.AssetTag, oldLocation, newLocation)
@@ -370,8 +358,80 @@ func (s *Service) sendAssetMovedNotification(ctx context.Context, movement *doma
 	entityType := "asset_movement"
 	priority := domain.NotificationPriorityNormal
 
+	// Determine recipient: new user if assigned, old user if unassigning, or admins
+	var recipientUserID string
+	if movement.ToUserID != nil && *movement.ToUserID != "" {
+		recipientUserID = *movement.ToUserID
+	} else if movement.FromUserID != nil && *movement.FromUserID != "" {
+		recipientUserID = *movement.FromUserID
+	} else {
+		// Skip notification if no user is involved
+		log.Printf("No user involved in location change, skipping notification for asset ID: %s", asset.ID)
+		return
+	}
+
 	notificationPayload := &domain.CreateNotificationPayload{
-		UserID:            *asset.AssignedToID,
+		UserID:            recipientUserID,
+		RelatedEntityType: &entityType,
+		RelatedEntityID:   &movement.ID,
+		RelatedAssetID:    &asset.ID,
+		Type:              domain.NotificationTypeLocationChange,
+		Priority:          priority,
+		Translations:      translations,
+	}
+
+	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
+	if err != nil {
+		log.Printf("Failed to create location change notification for asset ID: %s: %v", asset.ID, err)
+	} else {
+		log.Printf("Successfully created location change notification for asset ID: %s, user ID: %s", asset.ID, recipientUserID)
+	}
+}
+
+// sendUserAssignmentNotification sends notification when asset is assigned to a user
+func (s *Service) sendUserAssignmentNotification(ctx context.Context, movement *domain.AssetMovement, asset *domain.AssetResponse) {
+	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping user assignment notification for asset ID: %s", asset.ID)
+		return
+	}
+
+	if movement.ToUserID == nil || *movement.ToUserID == "" {
+		log.Printf("No target user for assignment, skipping notification for asset ID: %s", asset.ID)
+		return
+	}
+
+	// Get old user name
+	oldUser := "Unassigned"
+	if movement.FromUserID != nil && *movement.FromUserID != "" {
+		if user, err := s.UserService.GetUserById(ctx, *movement.FromUserID); err == nil {
+			oldUser = user.Name
+		}
+	}
+
+	// Get new user name
+	newUserName := "Unknown"
+	if user, err := s.UserService.GetUserById(ctx, *movement.ToUserID); err == nil {
+		newUserName = user.Name
+	}
+
+	titleKey, messageKey, params := messages.AssetUserAssignedNotification(asset.AssetName, asset.AssetTag, oldUser, newUserName)
+	utilTranslations := messages.GetAssetMovementNotificationTranslations(titleKey, messageKey, params)
+
+	// Convert to domain translations
+	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
+	for i, t := range utilTranslations {
+		translations[i] = domain.CreateNotificationTranslationPayload{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Message:  t.Message,
+		}
+	}
+
+	entityType := "asset_movement"
+	priority := domain.NotificationPriorityNormal
+
+	notificationPayload := &domain.CreateNotificationPayload{
+		UserID:            *movement.ToUserID,
 		RelatedEntityType: &entityType,
 		RelatedEntityID:   &movement.ID,
 		RelatedAssetID:    &asset.ID,
@@ -382,8 +442,8 @@ func (s *Service) sendAssetMovedNotification(ctx context.Context, movement *doma
 
 	_, err := s.NotificationService.CreateNotification(ctx, notificationPayload)
 	if err != nil {
-		log.Printf("Failed to create asset moved notification for asset ID: %s: %v", asset.ID, err)
+		log.Printf("Failed to create user assignment notification for asset ID: %s: %v", asset.ID, err)
 	} else {
-		log.Printf("Successfully created asset moved notification for asset ID: %s, user ID: %s", asset.ID, *asset.AssignedToID)
+		log.Printf("Successfully created user assignment notification for asset ID: %s, user ID: %s", asset.ID, *movement.ToUserID)
 	}
 }

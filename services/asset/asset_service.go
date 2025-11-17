@@ -198,12 +198,12 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 
 	// * Send notification if asset is assigned to a user
 	if payload.AssignedTo != nil && *payload.AssignedTo != "" {
-		go s.sendAssetAssignmentNotification(ctx, &createdAsset, *payload.AssignedTo, true)
+		go s.sendAssetAssignmentNotification(context.Background(), &createdAsset, *payload.AssignedTo, true)
 	}
 
 	// * Send notification if asset is high-value
 	if payload.PurchasePrice != nil && *payload.PurchasePrice > 10000 {
-		go s.sendHighValueAssetNotificationToAdmins(ctx, &createdAsset)
+		go s.sendHighValueAssetNotificationToAdmins(context.Background(), &createdAsset)
 	}
 
 	// * Update data matrix image public ID with actual asset ID if file was uploaded
@@ -309,7 +309,7 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 	}
 
 	// * Send notifications for changes
-	go s.sendUpdateNotifications(ctx, &existingAsset, &updatedAsset, payload)
+	go s.sendUpdateNotifications(context.Background(), &existingAsset, &updatedAsset, payload)
 
 	return mapper.AssetToResponse(&updatedAsset, langCode), nil
 }
