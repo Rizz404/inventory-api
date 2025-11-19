@@ -164,7 +164,7 @@ type BulkDeleteNotificationsPayload struct {
 }
 
 type MarkNotificationsPayload struct {
-	NotificationIDs []string `json:"notificationIds" validate:"required,min=1,dive,uuid4"`
+	NotificationIDs []string `json:"notificationIds" validate:"required,min=1,dive"`
 }
 
 // --- Query Parameters ---
