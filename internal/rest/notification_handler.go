@@ -180,14 +180,9 @@ func (h *NotificationHandler) DeleteNotification(c *fiber.Ctx) error {
 }
 
 func (h *NotificationHandler) MarkNotificationsAsRead(c *fiber.Ctx) error {
-	userID := c.Locals("userID")
-	if userID == nil {
-		return web.HandleError(c, domain.ErrUnauthorized("user ID not found"))
-	}
-
-	userIDStr, ok := userID.(string)
+	id, ok := web.GetUserIDFromContext(c)
 	if !ok {
-		return web.HandleError(c, domain.ErrUnauthorized("invalid user ID"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
 	}
 
 	var payload domain.MarkNotificationsPayload
@@ -195,7 +190,7 @@ func (h *NotificationHandler) MarkNotificationsAsRead(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	err := h.Service.MarkNotifications(c.Context(), userIDStr, payload.NotificationIDs, true)
+	err := h.Service.MarkNotifications(c.Context(), id, payload.NotificationIDs, true)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
@@ -204,14 +199,9 @@ func (h *NotificationHandler) MarkNotificationsAsRead(c *fiber.Ctx) error {
 }
 
 func (h *NotificationHandler) MarkNotificationsAsUnread(c *fiber.Ctx) error {
-	userID := c.Locals("userID")
-	if userID == nil {
-		return web.HandleError(c, domain.ErrUnauthorized("user ID not found"))
-	}
-
-	userIDStr, ok := userID.(string)
+	id, ok := web.GetUserIDFromContext(c)
 	if !ok {
-		return web.HandleError(c, domain.ErrUnauthorized("invalid user ID"))
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
 	}
 
 	var payload domain.MarkNotificationsPayload
@@ -219,7 +209,7 @@ func (h *NotificationHandler) MarkNotificationsAsUnread(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	err := h.Service.MarkNotifications(c.Context(), userIDStr, payload.NotificationIDs, false)
+	err := h.Service.MarkNotifications(c.Context(), id, payload.NotificationIDs, false)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
