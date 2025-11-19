@@ -15,8 +15,7 @@ type Repository interface {
 	CreateNotification(ctx context.Context, payload *domain.Notification) (domain.Notification, error)
 	UpdateNotification(ctx context.Context, notificationId string, payload *domain.UpdateNotificationPayload) (domain.Notification, error)
 	DeleteNotification(ctx context.Context, notificationId string) error
-	MarkNotificationAsRead(ctx context.Context, notificationId string, isRead bool) error
-	MarkAllNotificationsAsRead(ctx context.Context, userId string) error
+	MarkNotifications(ctx context.Context, userId string, notificationIds []string, isRead bool) error
 
 	// * QUERY
 	GetNotificationsPaginated(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.Notification, error)
@@ -38,8 +37,7 @@ type NotificationService interface {
 	CreateNotification(ctx context.Context, payload *domain.CreateNotificationPayload) (domain.NotificationResponse, error)
 	UpdateNotification(ctx context.Context, notificationId string, payload *domain.UpdateNotificationPayload) (domain.NotificationResponse, error)
 	DeleteNotification(ctx context.Context, notificationId string) error
-	MarkNotificationAsRead(ctx context.Context, notificationId string, isRead bool) error
-	MarkAllNotificationsAsRead(ctx context.Context, userId string) error
+	MarkNotifications(ctx context.Context, userId string, notificationIds []string, isRead bool) error
 
 	// * QUERY
 	GetNotificationsPaginated(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationListResponse, int64, error)
@@ -127,22 +125,8 @@ func (s *Service) DeleteNotification(ctx context.Context, notificationId string)
 	return nil
 }
 
-func (s *Service) MarkNotificationAsRead(ctx context.Context, notificationId string, isRead bool) error {
-	// * Check if notification exists
-	_, err := s.Repo.GetNotificationById(ctx, notificationId)
-	if err != nil {
-		return err
-	}
-
-	err = s.Repo.MarkNotificationAsRead(ctx, notificationId, isRead)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *Service) MarkAllNotificationsAsRead(ctx context.Context, userId string) error {
-	err := s.Repo.MarkAllNotificationsAsRead(ctx, userId)
+func (s *Service) MarkNotifications(ctx context.Context, userId string, notificationIds []string, isRead bool) error {
+	err := s.Repo.MarkNotifications(ctx, userId, notificationIds, isRead)
 	if err != nil {
 		return err
 	}

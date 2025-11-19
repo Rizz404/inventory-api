@@ -163,6 +163,10 @@ type BulkDeleteNotificationsPayload struct {
 	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }
 
+type MarkNotificationsPayload struct {
+	NotificationIDs []string `json:"notificationIds" validate:"required,min=1,dive,uuid4"`
+}
+
 // --- Query Parameters ---
 
 type NotificationFilterOptions struct {

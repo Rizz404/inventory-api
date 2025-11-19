@@ -47,18 +47,14 @@ func NewNotificationHandler(app fiber.Router, s notification.NotificationService
 	notifications.Get("/check/:id", handler.CheckNotificationExists)
 	notifications.Get("/:id", handler.GetNotificationById)
 
-	// * Mark operations
-	notifications.Patch("/:id/read",
+	// * Mark operations (batch update)
+	notifications.Patch("/mark-read",
 		middleware.AuthMiddleware(),
-		handler.MarkNotificationAsRead,
+		handler.MarkNotificationsAsRead,
 	)
-	notifications.Patch("/:id/unread",
+	notifications.Patch("/mark-unread",
 		middleware.AuthMiddleware(),
-		handler.MarkNotificationAsUnread,
-	)
-	notifications.Patch("/mark-all-read",
-		middleware.AuthMiddleware(),
-		handler.MarkAllNotificationsAsRead,
+		handler.MarkNotificationsAsUnread,
 	)
 
 	notifications.Patch("/:id",
@@ -183,36 +179,7 @@ func (h *NotificationHandler) DeleteNotification(c *fiber.Ctx) error {
 	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationDeletedKey, nil)
 }
 
-func (h *NotificationHandler) MarkNotificationAsRead(c *fiber.Ctx) error {
-	id := c.Params("id")
-	if id == "" {
-		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrNotificationIDRequiredKey))
-	}
-
-	err := h.Service.MarkNotificationAsRead(c.Context(), id, true)
-	if err != nil {
-		return web.HandleError(c, err)
-	}
-
-	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationMarkedAsReadKey, nil)
-}
-
-func (h *NotificationHandler) MarkNotificationAsUnread(c *fiber.Ctx) error {
-	id := c.Params("id")
-	if id == "" {
-		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrNotificationIDRequiredKey))
-	}
-
-	err := h.Service.MarkNotificationAsRead(c.Context(), id, false)
-	if err != nil {
-		return web.HandleError(c, err)
-	}
-
-	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationMarkedAsUnreadKey, nil)
-}
-
-func (h *NotificationHandler) MarkAllNotificationsAsRead(c *fiber.Ctx) error {
-	// Get user ID from context (set by auth middleware)
+func (h *NotificationHandler) MarkNotificationsAsRead(c *fiber.Ctx) error {
 	userID := c.Locals("userID")
 	if userID == nil {
 		return web.HandleError(c, domain.ErrUnauthorized("user ID not found"))
@@ -223,12 +190,41 @@ func (h *NotificationHandler) MarkAllNotificationsAsRead(c *fiber.Ctx) error {
 		return web.HandleError(c, domain.ErrUnauthorized("invalid user ID"))
 	}
 
-	err := h.Service.MarkAllNotificationsAsRead(c.Context(), userIDStr)
+	var payload domain.MarkNotificationsPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	err := h.Service.MarkNotifications(c.Context(), userIDStr, payload.NotificationIDs, true)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationMarkedAsReadKey, nil)
+}
+
+func (h *NotificationHandler) MarkNotificationsAsUnread(c *fiber.Ctx) error {
+	userID := c.Locals("userID")
+	if userID == nil {
+		return web.HandleError(c, domain.ErrUnauthorized("user ID not found"))
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		return web.HandleError(c, domain.ErrUnauthorized("invalid user ID"))
+	}
+
+	var payload domain.MarkNotificationsPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	err := h.Service.MarkNotifications(c.Context(), userIDStr, payload.NotificationIDs, false)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationMarkedAsUnreadKey, nil)
 }
 
 // *===========================QUERY===========================*

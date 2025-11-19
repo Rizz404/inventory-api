@@ -488,8 +488,12 @@ func (r *NotificationRepository) GetNotificationStatistics(ctx context.Context) 
 	return stats, nil
 }
 
-// Mark notification as read/unread
-func (r *NotificationRepository) MarkNotificationAsRead(ctx context.Context, notificationId string, isRead bool) error {
+// Mark notifications as read/unread (batch update)
+func (r *NotificationRepository) MarkNotifications(ctx context.Context, userId string, notificationIds []string, isRead bool) error {
+	if len(notificationIds) == 0 {
+		return nil
+	}
+
 	updates := map[string]interface{}{
 		"is_read": isRead,
 	}
@@ -501,23 +505,7 @@ func (r *NotificationRepository) MarkNotificationAsRead(ctx context.Context, not
 	}
 
 	err := r.db.WithContext(ctx).Model(&model.Notification{}).
-		Where("id = ?", notificationId).
-		Updates(updates).Error
-	if err != nil {
-		return domain.ErrInternal(err)
-	}
-	return nil
-}
-
-// Mark all notifications for a user as read
-func (r *NotificationRepository) MarkAllNotificationsAsRead(ctx context.Context, userId string) error {
-	updates := map[string]interface{}{
-		"is_read": true,
-		"read_at": time.Now(),
-	}
-
-	err := r.db.WithContext(ctx).Model(&model.Notification{}).
-		Where("user_id = ? AND is_read = ?", userId, false).
+		Where("user_id = ? AND id IN ?", userId, notificationIds).
 		Updates(updates).Error
 	if err != nil {
 		return domain.ErrInternal(err)
