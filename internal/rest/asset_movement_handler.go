@@ -311,10 +311,11 @@ func (h *AssetMovementHandler) GetAssetMovementStatistics(c *fiber.Ctx) error {
 	return web.Success(c, fiber.StatusOK, utils.SuccessAssetMovementStatisticsRetrievedKey, stats)
 }
 
+// *===========================EXPORT===========================*
 func (h *AssetMovementHandler) ExportAssetMovementList(c *fiber.Ctx) error {
-	var req domain.ExportAssetMovementListPayload
-	if err := c.BodyParser(&req); err != nil {
-		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+	var payload domain.ExportAssetMovementListPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
 	}
 
 	params, err := h.parseAssetMovementFiltersAndSort(c)
@@ -324,16 +325,22 @@ func (h *AssetMovementHandler) ExportAssetMovementList(c *fiber.Ctx) error {
 
 	langCode := web.GetLanguageFromContext(c)
 
-	fileBytes, fileName, err := h.Service.ExportAssetMovementList(c.Context(), req, params, langCode)
+	fileBytes, filename, err := h.Service.ExportAssetMovementList(c.Context(), payload, params, langCode)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
 
-	c.Set("Content-Disposition", "attachment; filename="+fileName)
-	if req.Format == "pdf" {
-		c.Set("Content-Type", "application/pdf")
-	} else {
-		c.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	// Set appropriate content type and headers
+	var contentType string
+	switch payload.Format {
+	case domain.ExportFormatPDF:
+		contentType = "application/pdf"
+	case domain.ExportFormatExcel:
+		contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 	}
+
+	c.Set("Content-Type", contentType)
+	c.Set("Content-Disposition", "attachment; filename="+filename)
+
 	return c.Send(fileBytes)
 }

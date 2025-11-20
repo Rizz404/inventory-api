@@ -27,6 +27,10 @@ func NewUserHandler(app fiber.Router, s user.UserService) {
 	users := app.Group("/users")
 
 	// * Create
+	users.Post("/export/list",
+		middleware.AuthMiddleware(),
+		handler.ExportUserList,
+	)
 	users.Post("/",
 		middleware.AuthMiddleware(),
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
@@ -433,4 +437,39 @@ func (h *UserHandler) GetUserStatistics(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessUserStatisticsRetrievedKey, stats)
+}
+
+// *===========================EXPORT===========================*
+func (h *UserHandler) ExportUserList(c *fiber.Ctx) error {
+	var payload domain.ExportUserListPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	params, err := h.parseUserFiltersAndSort(c)
+	if err != nil {
+		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+	}
+
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	fileBytes, filename, err := h.Service.ExportUserList(c.Context(), payload, params, langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// Set appropriate content type and headers
+	var contentType string
+	switch payload.Format {
+	case domain.ExportFormatPDF:
+		contentType = "application/pdf"
+	case domain.ExportFormatExcel:
+		contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	}
+
+	c.Set("Content-Type", contentType)
+	c.Set("Content-Disposition", "attachment; filename="+filename)
+
+	return c.Send(fileBytes)
 }

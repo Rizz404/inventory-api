@@ -26,6 +26,10 @@ func NewScanLogHandler(app fiber.Router, s scan_log.ScanLogService) {
 	scanLogs := app.Group("/scan-logs")
 
 	// * Create
+	scanLogs.Post("/export/list",
+		middleware.AuthMiddleware(),
+		handler.ExportScanLogList,
+	)
 	scanLogs.Post("/",
 		middleware.AuthMiddleware(),
 		handler.CreateScanLog,
@@ -290,4 +294,39 @@ func (h *ScanLogHandler) GetScanLogStatistics(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessScanLogStatisticsRetrievedKey, stats)
+}
+
+// *===========================EXPORT===========================*
+func (h *ScanLogHandler) ExportScanLogList(c *fiber.Ctx) error {
+	var payload domain.ExportScanLogListPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	params, err := h.parseScanLogFiltersAndSort(c)
+	if err != nil {
+		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+	}
+
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	fileBytes, filename, err := h.Service.ExportScanLogList(c.Context(), payload, params, langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// Set appropriate content type and headers
+	var contentType string
+	switch payload.Format {
+	case domain.ExportFormatPDF:
+		contentType = "application/pdf"
+	case domain.ExportFormatExcel:
+		contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	}
+
+	c.Set("Content-Type", contentType)
+	c.Set("Content-Disposition", "attachment; filename="+filename)
+
+	return c.Send(fileBytes)
 }

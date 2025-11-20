@@ -64,6 +64,7 @@ type MaintenanceScheduleService interface {
 	CheckMaintenanceScheduleExists(ctx context.Context, scheduleId string) (bool, error)
 	CountMaintenanceSchedules(ctx context.Context, params domain.MaintenanceScheduleParams) (int64, error)
 	GetMaintenanceScheduleStatistics(ctx context.Context) (domain.MaintenanceScheduleStatisticsResponse, error)
+	ExportMaintenanceScheduleList(ctx context.Context, payload domain.ExportMaintenanceScheduleListPayload, params domain.MaintenanceScheduleParams, langCode string) ([]byte, string, error)
 }
 
 type Service struct {

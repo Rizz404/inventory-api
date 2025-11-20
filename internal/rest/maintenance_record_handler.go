@@ -19,6 +19,10 @@ func NewMaintenanceRecordHandler(app fiber.Router, s maintenance_record.Maintena
 	handler := &MaintenanceRecordHandler{Service: s}
 
 	records := app.Group("/maintenance/records")
+	records.Post("/export/list",
+		middleware.AuthMiddleware(),
+		handler.ExportMaintenanceRecordList,
+	)
 	records.Post("/",
 		middleware.AuthMiddleware(),
 		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! uncomment in production
@@ -86,7 +90,7 @@ func (h *MaintenanceRecordHandler) parseFiltersAndSort(c *fiber.Ctx) (domain.Mai
 	return params, nil
 }
 
-// ============== RECORDS: MUTATION ==============
+// *===========================MUTATION===========================*
 func (h *MaintenanceRecordHandler) CreateMaintenanceRecord(c *fiber.Ctx) error {
 	var payload domain.CreateMaintenanceRecordPayload
 	if err := web.ParseAndValidate(c, &payload); err != nil {
@@ -132,7 +136,7 @@ func (h *MaintenanceRecordHandler) DeleteMaintenanceRecord(c *fiber.Ctx) error {
 	return web.Success(c, fiber.StatusOK, utils.SuccessMaintenanceRecordDeletedKey, nil)
 }
 
-// ============== RECORDS: QUERY ==============
+// *===========================QUERY===========================*
 func (h *MaintenanceRecordHandler) GetMaintenanceRecordsPaginated(c *fiber.Ctx) error {
 	params, err := h.parseFiltersAndSort(c)
 	if err != nil {
@@ -216,4 +220,37 @@ func (h *MaintenanceRecordHandler) GetMaintenanceRecordStatistics(c *fiber.Ctx) 
 		return web.HandleError(c, err)
 	}
 	return web.Success(c, fiber.StatusOK, utils.SuccessMaintenanceRecordStatisticsRetrievedKey, stats)
+}
+
+// *===========================EXPORT===========================*
+func (h *MaintenanceRecordHandler) ExportMaintenanceRecordList(c *fiber.Ctx) error {
+	var payload domain.ExportMaintenanceRecordListPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	params, err := h.parseFiltersAndSort(c)
+	if err != nil {
+		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+	}
+
+	langCode := web.GetLanguageFromContext(c)
+	fileBytes, filename, err := h.Service.ExportMaintenanceRecordList(c.Context(), payload, params, langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// Set appropriate content type and headers
+	var contentType string
+	switch payload.Format {
+	case domain.ExportFormatPDF:
+		contentType = "application/pdf"
+	case domain.ExportFormatExcel:
+		contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	}
+
+	c.Set("Content-Type", contentType)
+	c.Set("Content-Disposition", "attachment; filename="+filename)
+
+	return c.Send(fileBytes)
 }

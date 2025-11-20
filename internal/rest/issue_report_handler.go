@@ -31,6 +31,12 @@ func NewIssueReportHandler(app fiber.Router, s issue_report.IssueReportService) 
 		handler.CreateIssueReport,
 	)
 
+	// * Export
+	issueReports.Post("/export/list",
+		middleware.AuthMiddleware(),
+		handler.ExportIssueReportList,
+	)
+
 	issueReports.Get("/",
 		middleware.OptionalAuth(), // Optional auth to filter by reporter
 		handler.GetIssueReportsPaginated,
@@ -298,4 +304,39 @@ func (h *IssueReportHandler) GetIssueReportStatistics(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessIssueReportStatisticsRetrievedKey, stats)
+}
+
+// *===========================EXPORT===========================*
+func (h *IssueReportHandler) ExportIssueReportList(c *fiber.Ctx) error {
+	var payload domain.ExportIssueReportListPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	params, err := h.parseIssueReportFiltersAndSort(c)
+	if err != nil {
+		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+	}
+
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	fileBytes, filename, err := h.Service.ExportIssueReportList(c.Context(), payload, params, langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// Set appropriate content type and headers
+	var contentType string
+	switch payload.Format {
+	case domain.ExportFormatPDF:
+		contentType = "application/pdf"
+	case domain.ExportFormatExcel:
+		contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	}
+
+	c.Set("Content-Type", contentType)
+	c.Set("Content-Disposition", "attachment; filename="+filename)
+
+	return c.Send(fileBytes)
 }

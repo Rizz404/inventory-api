@@ -19,6 +19,10 @@ func NewMaintenanceScheduleHandler(app fiber.Router, s maintenance_schedule.Main
 	handler := &MaintenanceScheduleHandler{Service: s}
 
 	schedules := app.Group("/maintenance/schedules")
+	schedules.Post("/export/list",
+		middleware.AuthMiddleware(),
+		handler.ExportMaintenanceScheduleList,
+	)
 	schedules.Post("/",
 		middleware.AuthMiddleware(),
 		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! uncomment in production
@@ -88,7 +92,7 @@ func (h *MaintenanceScheduleHandler) parseFiltersAndSort(c *fiber.Ctx) (domain.M
 	return params, nil
 }
 
-// ============== SCHEDULES: MUTATION ==============
+// *===========================MUTATION===========================*
 func (h *MaintenanceScheduleHandler) CreateMaintenanceSchedule(c *fiber.Ctx) error {
 	var payload domain.CreateMaintenanceSchedulePayload
 	if err := web.ParseAndValidate(c, &payload); err != nil {
@@ -138,7 +142,7 @@ func (h *MaintenanceScheduleHandler) DeleteMaintenanceSchedule(c *fiber.Ctx) err
 	return web.Success(c, fiber.StatusOK, utils.SuccessMaintenanceScheduleDeletedKey, nil)
 }
 
-// ============== SCHEDULES: QUERY ==============
+// *===========================QUERY===========================*
 func (h *MaintenanceScheduleHandler) GetMaintenanceSchedulesPaginated(c *fiber.Ctx) error {
 	params, err := h.parseFiltersAndSort(c)
 	if err != nil {
@@ -222,4 +226,37 @@ func (h *MaintenanceScheduleHandler) GetMaintenanceScheduleStatistics(c *fiber.C
 		return web.HandleError(c, err)
 	}
 	return web.Success(c, fiber.StatusOK, utils.SuccessMaintenanceScheduleStatisticsRetrievedKey, stats)
+}
+
+// *===========================EXPORT===========================*
+func (h *MaintenanceScheduleHandler) ExportMaintenanceScheduleList(c *fiber.Ctx) error {
+	var payload domain.ExportMaintenanceScheduleListPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	params, err := h.parseFiltersAndSort(c)
+	if err != nil {
+		return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+	}
+
+	langCode := web.GetLanguageFromContext(c)
+	fileBytes, filename, err := h.Service.ExportMaintenanceScheduleList(c.Context(), payload, params, langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// Set appropriate content type and headers
+	var contentType string
+	switch payload.Format {
+	case domain.ExportFormatPDF:
+		contentType = "application/pdf"
+	case domain.ExportFormatExcel:
+		contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	}
+
+	c.Set("Content-Type", contentType)
+	c.Set("Content-Disposition", "attachment; filename="+filename)
+
+	return c.Send(fileBytes)
 }

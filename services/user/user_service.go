@@ -18,6 +18,7 @@ type Repository interface {
 	CreateUser(ctx context.Context, payload *domain.User) (domain.User, error)
 	UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.User, error)
 	DeleteUser(ctx context.Context, userId string) error
+	UpdatePassword(ctx context.Context, userId string, hashedPassword string) error
 
 	// * QUERY
 	GetUsersPaginated(ctx context.Context, params domain.UserParams) ([]domain.User, error)
@@ -32,9 +33,8 @@ type Repository interface {
 	CheckEmailExistsExcluding(ctx context.Context, email string, excludeUserId string) (bool, error)
 	CountUsers(ctx context.Context, params domain.UserParams) (int64, error)
 	GetUserStatistics(ctx context.Context) (domain.UserStatistics, error)
-	// Update password hash for a user
-	UpdatePassword(ctx context.Context, userId string, hashedPassword string) error
-	// Export
+
+	// * Export
 	GetUsersForExport(ctx context.Context, params domain.UserParams) ([]domain.User, error)
 }
 
@@ -44,6 +44,8 @@ type UserService interface {
 	CreateUser(ctx context.Context, payload *domain.CreateUserPayload, avatarFile *multipart.FileHeader) (domain.UserResponse, error)
 	UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload, avatarFile *multipart.FileHeader) (domain.UserResponse, error)
 	DeleteUser(ctx context.Context, userId string) error
+	ChangePassword(ctx context.Context, userId string, payload *domain.ChangePasswordPayload) error
+	ChangeCurrentUserPassword(ctx context.Context, currentUserId string, payload *domain.ChangePasswordPayload) error
 
 	// * QUERY
 	GetUsersPaginated(ctx context.Context, params domain.UserParams) ([]domain.UserResponse, int64, error)
@@ -57,9 +59,8 @@ type UserService interface {
 	CountUsers(ctx context.Context, params domain.UserParams) (int64, error)
 	GetUserStatistics(ctx context.Context) (domain.UserStatisticsResponse, error)
 
-	// Password changes
-	ChangePassword(ctx context.Context, userId string, payload *domain.ChangePasswordPayload) error
-	ChangeCurrentUserPassword(ctx context.Context, currentUserId string, payload *domain.ChangePasswordPayload) error
+	// * Export
+	ExportUserList(ctx context.Context, payload domain.ExportUserListPayload, params domain.UserParams, langCode string) ([]byte, string, error)
 }
 
 type Service struct {
