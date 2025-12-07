@@ -37,7 +37,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/common-nighthawk/go-figure"
 	"github.com/Rizz404/inventory-api/config"
 	_ "github.com/Rizz404/inventory-api/docs"
 	"github.com/Rizz404/inventory-api/internal/postgresql"
@@ -53,6 +52,7 @@ import (
 	"github.com/Rizz404/inventory-api/services/notification"
 	scanLog "github.com/Rizz404/inventory-api/services/scan_log"
 	"github.com/Rizz404/inventory-api/services/user"
+	"github.com/common-nighthawk/go-figure"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"

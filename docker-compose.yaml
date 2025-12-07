@@ -3,9 +3,9 @@ version: "3.8"
 services:
   app:
     container_name: sigma-track-backend
-    build: .
+    image: rizz404/inventory-api:latest
     ports:
-      - "5000:5000"
+      - "80:5000"
     depends_on:
       - db
     env_file:
