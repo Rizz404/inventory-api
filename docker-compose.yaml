@@ -49,6 +49,24 @@ services:
     # Optimasi RAM biar kuat di t3.micro (Free Tier)
     command: postgres -c 'shared_buffers=128MB' -c 'max_connections=50'
 
+  migrate:
+    image: rizz404/inventory-api:latest
+    container_name: migration-job
+
+    # Service ini TIDAK AKAN JALAN kecuali dipanggil manual
+    profiles: ["tools"]
+
+    # Perintah: goose up
+    command: goose -dir db/migrations postgres "user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} host=db sslmode=disable" up
+
+    depends_on:
+      - db
+    env_file:
+      - .env
+    networks:
+      - app-network
+    restart: "no"
+
 volumes:
   postgres_data:
   caddy_data: # Volume baru buat simpan SSL

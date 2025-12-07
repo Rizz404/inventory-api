@@ -1,5 +1,8 @@
 # Stage 1: Build the application
 FROM golang:1.25-alpine AS builder
+
+RUN go install github.com/pressly/goose/v3/cmd/goose@latest
+
 WORKDIR /app
 
 COPY go.mod go.sum ./
@@ -17,6 +20,12 @@ WORKDIR /root/
 
 # Set timezone ke WIB (Jakarta)
 ENV TZ=Asia/Jakarta
+
+# 2. Copy Binary Goose dari builder ke final image
+COPY --from=builder /go/bin/goose /usr/local/bin/goose
+
+# 3. Copy Folder Migrasi kamu ke dalam image
+COPY --from=builder /app/db/migrations ./db/migrations
 
 COPY --from=builder /app/main .
 COPY --from=builder /app/assets ./assets
