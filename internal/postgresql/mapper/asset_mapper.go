@@ -144,9 +144,12 @@ func ToDomainAsset(m *model.Asset) domain.Asset {
 }
 
 func ToDomainAssets(models []model.Asset) []domain.Asset {
+	if len(models) == 0 {
+		return []domain.Asset{}
+	}
 	assets := make([]domain.Asset, len(models))
-	for i, model := range models {
-		assets[i] = ToDomainAsset(&model)
+	for i, m := range models {
+		assets[i] = ToDomainAsset(&m)
 	}
 	return assets
 }
@@ -194,6 +197,9 @@ func AssetToResponse(d *domain.Asset, langCode string) domain.AssetResponse {
 }
 
 func AssetsToResponses(assets []domain.Asset, langCode string) []domain.AssetResponse {
+	if len(assets) == 0 {
+		return []domain.AssetResponse{}
+	}
 	responses := make([]domain.AssetResponse, len(assets))
 	for i, asset := range assets {
 		responses[i] = AssetToResponse(&asset, langCode)

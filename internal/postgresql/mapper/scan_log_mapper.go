@@ -88,6 +88,9 @@ func ToDomainScanLog(m *model.ScanLog) domain.ScanLog {
 }
 
 func ToDomainScanLogs(models []model.ScanLog) []domain.ScanLog {
+	if len(models) == 0 {
+		return []domain.ScanLog{}
+	}
 	scanLogs := make([]domain.ScanLog, len(models))
 	for i, m := range models {
 		scanLogs[i] = ToDomainScanLog(&m)
@@ -111,6 +114,9 @@ func ScanLogToResponse(d *domain.ScanLog) domain.ScanLogResponse {
 }
 
 func ScanLogsToResponses(scanLogs []domain.ScanLog) []domain.ScanLogResponse {
+	if len(scanLogs) == 0 {
+		return []domain.ScanLogResponse{}
+	}
 	responses := make([]domain.ScanLogResponse, len(scanLogs))
 	for i, scanLog := range scanLogs {
 		responses[i] = ScanLogToResponse(&scanLog)
@@ -133,6 +139,9 @@ func ScanLogToListResponse(d *domain.ScanLog) domain.ScanLogListResponse {
 }
 
 func ScanLogsToListResponses(scanLogs []domain.ScanLog) []domain.ScanLogListResponse {
+	if len(scanLogs) == 0 {
+		return []domain.ScanLogListResponse{}
+	}
 	responses := make([]domain.ScanLogListResponse, len(scanLogs))
 	for i, scanLog := range scanLogs {
 		responses[i] = ScanLogToListResponse(&scanLog)

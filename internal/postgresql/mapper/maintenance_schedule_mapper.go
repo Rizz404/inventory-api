@@ -163,6 +163,9 @@ func ToDomainMaintenanceScheduleTranslation(m *model.MaintenanceScheduleTranslat
 }
 
 func ToDomainMaintenanceSchedules(models []model.MaintenanceSchedule) []domain.MaintenanceSchedule {
+	if len(models) == 0 {
+		return []domain.MaintenanceSchedule{}
+	}
 	schedules := make([]domain.MaintenanceSchedule, len(models))
 	for i, m := range models {
 		schedules[i] = ToDomainMaintenanceSchedule(&m)
@@ -276,6 +279,9 @@ func MaintenanceScheduleToListResponse(d *domain.MaintenanceSchedule, langCode s
 }
 
 func MaintenanceSchedulesToResponses(schedules []domain.MaintenanceSchedule, langCode string) []domain.MaintenanceScheduleResponse {
+	if len(schedules) == 0 {
+		return []domain.MaintenanceScheduleResponse{}
+	}
 	responses := make([]domain.MaintenanceScheduleResponse, len(schedules))
 	for i, schedule := range schedules {
 		responses[i] = MaintenanceScheduleToResponse(&schedule, langCode)
@@ -284,6 +290,9 @@ func MaintenanceSchedulesToResponses(schedules []domain.MaintenanceSchedule, lan
 }
 
 func MaintenanceSchedulesToListResponses(schedules []domain.MaintenanceSchedule, langCode string) []domain.MaintenanceScheduleListResponse {
+	if len(schedules) == 0 {
+		return []domain.MaintenanceScheduleListResponse{}
+	}
 	responses := make([]domain.MaintenanceScheduleListResponse, len(schedules))
 	for i, schedule := range schedules {
 		responses[i] = MaintenanceScheduleToListResponse(&schedule, langCode)

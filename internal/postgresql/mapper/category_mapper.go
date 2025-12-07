@@ -111,6 +111,9 @@ func ToDomainCategory(m *model.Category) domain.Category {
 }
 
 func ToDomainCategories(models []model.Category) []domain.Category {
+	if len(models) == 0 {
+		return []domain.Category{}
+	}
 	categories := make([]domain.Category, len(models))
 	for i, m := range models {
 		categories[i] = ToDomainCategory(&m)
@@ -173,6 +176,9 @@ func CategoryToResponse(d *domain.Category, langCode string) domain.CategoryResp
 }
 
 func CategoriesToResponses(categories []domain.Category, langCode string) []domain.CategoryResponse {
+	if len(categories) == 0 {
+		return []domain.CategoryResponse{}
+	}
 	responses := make([]domain.CategoryResponse, len(categories))
 	for i, category := range categories {
 		responses[i] = CategoryToResponse(&category, langCode)
@@ -214,6 +220,9 @@ func CategoryToListResponse(d *domain.Category, langCode string) domain.Category
 }
 
 func CategoriesToListResponses(categories []domain.Category, langCode string) []domain.CategoryListResponse {
+	if len(categories) == 0 {
+		return []domain.CategoryListResponse{}
+	}
 	responses := make([]domain.CategoryListResponse, len(categories))
 	for i, category := range categories {
 		responses[i] = CategoryToListResponse(&category, langCode)

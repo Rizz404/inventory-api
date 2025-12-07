@@ -97,6 +97,9 @@ func ToDomainLocation(m *model.Location) domain.Location {
 }
 
 func ToDomainLocations(models []model.Location) []domain.Location {
+	if len(models) == 0 {
+		return []domain.Location{}
+	}
 	locations := make([]domain.Location, len(models))
 	for i, m := range models {
 		locations[i] = ToDomainLocation(&m)
@@ -188,6 +191,9 @@ func LocationToListResponse(d *domain.Location, langCode string) domain.Location
 }
 
 func LocationsToListResponses(locations []domain.Location, langCode string) []domain.LocationListResponse {
+	if len(locations) == 0 {
+		return []domain.LocationListResponse{}
+	}
 	responses := make([]domain.LocationListResponse, len(locations))
 	for i, location := range locations {
 		responses[i] = LocationToListResponse(&location, langCode)

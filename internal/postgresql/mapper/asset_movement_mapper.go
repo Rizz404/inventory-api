@@ -247,6 +247,9 @@ func ToDomainAssetMovement(m *model.AssetMovement) domain.AssetMovement {
 }
 
 func ToDomainAssetMovements(models []model.AssetMovement) []domain.AssetMovement {
+	if len(models) == 0 {
+		return []domain.AssetMovement{}
+	}
 	movements := make([]domain.AssetMovement, len(models))
 	for i, m := range models {
 		movements[i] = ToDomainAssetMovement(&m)
@@ -338,6 +341,9 @@ func AssetMovementToResponse(d *domain.AssetMovement, langCode string) domain.As
 }
 
 func AssetMovementsToResponses(movements []domain.AssetMovement, langCode string) []domain.AssetMovementResponse {
+	if len(movements) == 0 {
+		return []domain.AssetMovementResponse{}
+	}
 	responses := make([]domain.AssetMovementResponse, len(movements))
 	for i, movement := range movements {
 		responses[i] = AssetMovementToResponse(&movement, langCode)
@@ -410,6 +416,9 @@ func AssetMovementToListResponse(d *domain.AssetMovement, langCode string) domai
 }
 
 func AssetMovementsToListResponses(movements []domain.AssetMovement, langCode string) []domain.AssetMovementListResponse {
+	if len(movements) == 0 {
+		return []domain.AssetMovementListResponse{}
+	}
 	responses := make([]domain.AssetMovementListResponse, len(movements))
 	for i, movement := range movements {
 		responses[i] = AssetMovementToListResponse(&movement, langCode)

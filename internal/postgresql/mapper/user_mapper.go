@@ -56,6 +56,9 @@ func ToDomainUser(m *model.User) domain.User {
 }
 
 func ToDomainUsers(models []model.User) []domain.User {
+	if len(models) == 0 {
+		return []domain.User{}
+	}
 	users := make([]domain.User, len(models))
 	for i, m := range models {
 		users[i] = ToDomainUser(&m)
@@ -82,6 +85,9 @@ func UserToResponse(u *domain.User) domain.UserResponse {
 }
 
 func UsersToResponses(users []domain.User) []domain.UserResponse {
+	if len(users) == 0 {
+		return []domain.UserResponse{}
+	}
 	responses := make([]domain.UserResponse, len(users))
 	for i, user := range users {
 		responses[i] = UserToResponse(&user)
@@ -106,6 +112,9 @@ func UserToListResponse(u *domain.User) domain.UserListResponse {
 }
 
 func UsersToListResponses(users []domain.User) []domain.UserListResponse {
+	if len(users) == 0 {
+		return []domain.UserListResponse{}
+	}
 	responses := make([]domain.UserListResponse, len(users))
 	for i, user := range users {
 		responses[i] = UserToListResponse(&user)

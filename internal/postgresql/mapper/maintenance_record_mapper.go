@@ -183,6 +183,9 @@ func ToDomainMaintenanceRecordTranslation(m *model.MaintenanceRecordTranslation)
 }
 
 func ToDomainMaintenanceRecords(models []model.MaintenanceRecord) []domain.MaintenanceRecord {
+	if len(models) == 0 {
+		return []domain.MaintenanceRecord{}
+	}
 	records := make([]domain.MaintenanceRecord, len(models))
 	for i, m := range models {
 		records[i] = ToDomainMaintenanceRecord(&m)
@@ -304,6 +307,9 @@ func MaintenanceRecordToListResponse(d *domain.MaintenanceRecord, langCode strin
 }
 
 func MaintenanceRecordsToResponses(records []domain.MaintenanceRecord, langCode string) []domain.MaintenanceRecordResponse {
+	if len(records) == 0 {
+		return []domain.MaintenanceRecordResponse{}
+	}
 	responses := make([]domain.MaintenanceRecordResponse, len(records))
 	for i, record := range records {
 		responses[i] = MaintenanceRecordToResponse(&record, langCode)
@@ -312,6 +318,9 @@ func MaintenanceRecordsToResponses(records []domain.MaintenanceRecord, langCode 
 }
 
 func MaintenanceRecordsToListResponses(records []domain.MaintenanceRecord, langCode string) []domain.MaintenanceRecordListResponse {
+	if len(records) == 0 {
+		return []domain.MaintenanceRecordListResponse{}
+	}
 	responses := make([]domain.MaintenanceRecordListResponse, len(records))
 	for i, record := range records {
 		responses[i] = MaintenanceRecordToListResponse(&record, langCode)

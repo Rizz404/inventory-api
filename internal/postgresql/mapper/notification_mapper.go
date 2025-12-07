@@ -180,6 +180,9 @@ func ToDomainNotificationTranslation(m *model.NotificationTranslation) domain.No
 }
 
 func ToDomainNotifications(models []model.Notification) []domain.Notification {
+	if len(models) == 0 {
+		return []domain.Notification{}
+	}
 	notifications := make([]domain.Notification, len(models))
 	for i, m := range models {
 		notifications[i] = ToDomainNotification(&m)
@@ -232,6 +235,9 @@ func NotificationToResponse(d *domain.Notification, langCode string) domain.Noti
 }
 
 func NotificationsToResponses(notifications []domain.Notification, langCode string) []domain.NotificationResponse {
+	if len(notifications) == 0 {
+		return []domain.NotificationResponse{}
+	}
 	responses := make([]domain.NotificationResponse, len(notifications))
 	for i, notification := range notifications {
 		responses[i] = NotificationToResponse(&notification, langCode)
@@ -273,6 +279,9 @@ func NotificationToListResponse(d *domain.Notification, langCode string) domain.
 }
 
 func NotificationsToListResponses(notifications []domain.Notification, langCode string) []domain.NotificationListResponse {
+	if len(notifications) == 0 {
+		return []domain.NotificationListResponse{}
+	}
 	responses := make([]domain.NotificationListResponse, len(notifications))
 	for i, notification := range notifications {
 		responses[i] = NotificationToListResponse(&notification, langCode)

@@ -172,6 +172,9 @@ func ToDomainIssueReportTranslation(m *model.IssueReportTranslation) domain.Issu
 }
 
 func ToDomainIssueReports(models []model.IssueReport) []domain.IssueReport {
+	if len(models) == 0 {
+		return []domain.IssueReport{}
+	}
 	reports := make([]domain.IssueReport, len(models))
 	for i, m := range models {
 		reports[i] = ToDomainIssueReport(&m)
@@ -243,6 +246,9 @@ func IssueReportToResponse(d *domain.IssueReport, langCode string) domain.IssueR
 }
 
 func IssueReportsToResponses(reports []domain.IssueReport, langCode string) []domain.IssueReportResponse {
+	if len(reports) == 0 {
+		return []domain.IssueReportResponse{}
+	}
 	responses := make([]domain.IssueReportResponse, len(reports))
 	for i, report := range reports {
 		responses[i] = IssueReportToResponse(&report, langCode)
@@ -302,6 +308,9 @@ func IssueReportToListResponse(d *domain.IssueReport, langCode string) domain.Is
 }
 
 func IssueReportsToListResponses(reports []domain.IssueReport, langCode string) []domain.IssueReportListResponse {
+	if len(reports) == 0 {
+		return []domain.IssueReportListResponse{}
+	}
 	responses := make([]domain.IssueReportListResponse, len(reports))
 	for i, report := range reports {
 		responses[i] = IssueReportToListResponse(&report, langCode)
