@@ -1,0 +1,5 @@
+# Ganti dengan domain DuckDNS kamu
+sigma-track.duckdns.org {
+    # Kirim request ke container 'app' port 5000
+    reverse_proxy app:5000
+}

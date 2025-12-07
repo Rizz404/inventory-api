@@ -151,7 +151,47 @@ func main() {
 	app.Get("/", func(c *fiber.Ctx) error {
 		banner := figure.NewFigure("Inventory API", "", true).String()
 		message := "Welcome to the Inventory Management API.\nDocs: /docs/index.html\nUse /api/v1/* endpoints such as /api/v1/auth/login, /api/v1/users, /api/v1/assets."
-		html := "<pre style=\"font-family: monospace; white-space: pre-wrap;\">" + banner + "\n" + message + "</pre>"
+		html := `<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Inventory API</title>
+	<style>
+		body {
+			background-color: #0d1117;
+			color: #c9d1d9;
+			font-family: 'Courier New', monospace;
+			padding: 20px;
+			margin: 0;
+		}
+		pre {
+			color: #58a6ff;
+			font-size: 14px;
+			line-height: 1.5;
+			white-space: pre;
+			margin: 0;
+		}
+		.message {
+			color: #8b949e;
+			margin-top: 20px;
+			line-height: 1.8;
+		}
+		.message a {
+			color: #58a6ff;
+			text-decoration: none;
+		}
+		.message a:hover {
+			text-decoration: underline;
+		}
+	</style>
+</head>
+<body>
+	<pre>` + banner + `</pre>
+	<div class="message">` + message + `</div>
+</body>
+</html>`
+		c.Set("Content-Type", "text/html; charset=utf-8")
 		return c.SendString(html)
 	})
 

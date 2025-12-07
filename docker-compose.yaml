@@ -1,11 +1,25 @@
 version: "3.8"
 
 services:
+  # Service baru: Caddy (Satpam Depan)
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy-server
+    restart: always
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile # Config kita tadi
+      - caddy_data:/data # Simpan sertifikat SSL biar gak request ulang terus
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - app-network
   app:
     container_name: sigma-track-backend
     image: rizz404/inventory-api:latest
-    ports:
-      - "80:5000"
     depends_on:
       - db
     env_file:
@@ -37,6 +51,8 @@ services:
 
 volumes:
   postgres_data:
+  caddy_data: # Volume baru buat simpan SSL
+  caddy_config: # Volume baru buat config
 
 networks:
   app-network:
