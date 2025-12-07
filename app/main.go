@@ -37,6 +37,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/common-nighthawk/go-figure"
 	"github.com/Rizz404/inventory-api/config"
 	_ "github.com/Rizz404/inventory-api/docs"
 	"github.com/Rizz404/inventory-api/internal/postgresql"
@@ -147,11 +148,33 @@ func main() {
 	// *===================================ROUTES===================================*
 	app.Get("/metrics", monitor.New())
 
+	app.Get("/", func(c *fiber.Ctx) error {
+		banner := figure.NewFigure("Inventory API", "", true).String()
+		message := "Welcome to the Inventory Management API.\nDocs: /docs/index.html\nUse /api/v1/* endpoints such as /api/v1/auth/login, /api/v1/users, /api/v1/assets."
+		return c.Type("text/plain").SendString(banner + "\n" + message + "\n")
+	})
+
+	app.Get("/api", func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"message":  "You are at /api. Jump into versioned routes under /api/v1/*.",
+			"examples": []string{"/api/v1/auth/login", "/api/v1/users", "/api/v1/assets", "/api/v1/categories"},
+			"docs":     "/docs/index.html",
+		})
+	})
+
 	// Swagger documentation route
 	app.Get("/docs/*", swagger.New(swagger.Config{}))
 
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
+
+	v1.Get("/", func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"message":   "You are at /api/v1. Use the resource endpoints below.",
+			"resources": []string{"/api/v1/auth/login", "/api/v1/users", "/api/v1/categories", "/api/v1/locations", "/api/v1/assets", "/api/v1/notifications", "/api/v1/issue-reports", "/api/v1/asset-movements", "/api/v1/maintenance-schedules", "/api/v1/maintenance-records", "/api/v1/scan-logs"},
+			"docs":      "/docs/index.html",
+		})
+	})
 
 	rest.NewAuthHandler(v1, authService)
 	rest.NewUserHandler(v1, userService)
