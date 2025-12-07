@@ -36,3 +36,9 @@ dist/
 build/
 coverage.out
 coverage.html
+
+# Security keys
+*.pem
+*.key
+id_rsa
+id_rsa.pub
