@@ -41,6 +41,7 @@ import (
 	_ "github.com/Rizz404/inventory-api/docs"
 	"github.com/Rizz404/inventory-api/internal/postgresql"
 	"github.com/Rizz404/inventory-api/internal/rest"
+	"github.com/Rizz404/inventory-api/internal/rest/middleware"
 	"github.com/Rizz404/inventory-api/services/asset"
 	assetMovement "github.com/Rizz404/inventory-api/services/asset_movement"
 	"github.com/Rizz404/inventory-api/services/auth"
@@ -207,7 +208,7 @@ func main() {
 	app.Get("/docs/*", swagger.New(swagger.Config{}))
 
 	api := app.Group("/api")
-	v1 := api.Group("/v1")
+	v1 := api.Group("/v1", middleware.APIKeyMiddleware())
 
 	v1.Get("/", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{

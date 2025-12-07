@@ -99,6 +99,8 @@ const (
 	ErrInvalidCredentialsKey MessageKey = "error.auth.invalid_credentials"
 	ErrTokenExpiredKey       MessageKey = "error.auth.token_expired"
 	ErrTokenInvalidKey       MessageKey = "error.auth.token_invalid"
+	ErrAPIKeyMissingKey      MessageKey = "error.auth.api_key_missing"
+	ErrAPIKeyInvalidKey      MessageKey = "error.auth.api_key_invalid"
 
 	// * File upload error keys
 	ErrFileRequiredKey       MessageKey = "error.file.required"
@@ -621,6 +623,16 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Invalid token",
 		// "id-ID": "Token tidak valid",
 		"ja-JP": "無効なトークン",
+	},
+	ErrAPIKeyMissingKey: {
+		"en-US": "API key is required",
+		// "id-ID": "API key diperlukan",
+		"ja-JP": "APIキーが必要です",
+	},
+	ErrAPIKeyInvalidKey: {
+		"en-US": "Invalid API key",
+		// "id-ID": "API key tidak valid",
+		"ja-JP": "無効なAPIキー",
 	},
 
 	// * File upload error messages
