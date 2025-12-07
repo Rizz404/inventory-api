@@ -57,7 +57,7 @@ services:
     profiles: ["tools"]
 
     # Perintah: goose up
-    command: goose -dir db/migrations postgres "user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} host=db sslmode=disable" up
+    command: goose -dir db/migrations up
 
     depends_on:
       - db
