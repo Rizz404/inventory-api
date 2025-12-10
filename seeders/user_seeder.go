@@ -51,11 +51,11 @@ func (us *UserSeeder) Seed(ctx context.Context, count int) error {
 func (us *UserSeeder) createAdminUser(ctx context.Context) error {
 	adminPayload := &domain.CreateUserPayload{
 		Name:          "admin",
-		Email:         "admin@inventory.com",
-		Password:      "admin123456",
+		Email:         "admin@gmail.com",
+		Password:      "admin123",
 		FullName:      "System Administrator",
 		Role:          domain.RoleAdmin,
-		EmployeeID:    stringPtr("ADM001"),
+		EmployeeID:    nil,
 		PreferredLang: stringPtr("en-US"),
 		IsActive:      true,
 		AvatarURL:     stringPtr("https://via.placeholder.com/150/007bff/ffffff?text=AD"),
@@ -102,7 +102,7 @@ func (us *UserSeeder) createRandomUsers(ctx context.Context, count int) error {
 			Password:      "password123",
 			FullName:      fmt.Sprintf("%s %s", firstName, lastName),
 			Role:          role,
-			EmployeeID:    stringPtr(generateUniqueEmployeeID(role)),
+			EmployeeID:    nil,
 			PreferredLang: stringPtr(languages[rand.Intn(len(languages))]),
 			IsActive:      rand.Intn(100) < 90, // 90% active
 			AvatarURL:     stringPtr(generateAvatarURL(firstName, lastName)),

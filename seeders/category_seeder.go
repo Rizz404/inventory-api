@@ -3,13 +3,9 @@ package seeders
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"strings"
-	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/services/category"
-	"github.com/brianvoe/gofakeit/v6"
 )
 
 // CategorySeeder handles category data seeding
@@ -24,132 +20,165 @@ func NewCategorySeeder(categoryService category.CategoryService) *CategorySeeder
 	}
 }
 
-// Seed creates fake categories with parent-child hierarchy
+// Seed creates categories with parent-child hierarchy from predefined data
 func (cs *CategorySeeder) Seed(ctx context.Context, parentCount, childrenCount int) error {
-	// Seed random generator
-	rand.Seed(time.Now().UnixNano())
-
-	// First, create parent categories
-	parentIDs, err := cs.createParentCategories(ctx, parentCount)
-	if err != nil {
-		return fmt.Errorf("failed to create parent categories: %v", err)
-	}
-
-	// Then, create children categories
-	if childrenCount > 0 && len(parentIDs) > 0 {
-		if err := cs.createChildCategories(ctx, parentIDs, childrenCount); err != nil {
-			return fmt.Errorf("failed to create child categories: %v", err)
+	// Use predefined category data
+	categoryData := []struct {
+		Code         string
+		Translations map[string]map[string]string
+		Children     []struct {
+			Code          string
+			ItemsIncluded []string
+			Translations  map[string]map[string]string
 		}
-	}
-
-	totalCreated := len(parentIDs) + childrenCount
-	fmt.Printf("✅ Successfully created %d categories (%d parents + %d children)\n",
-		totalCreated, len(parentIDs), childrenCount)
-	return nil
-}
-
-// createParentCategories creates parent (root) categories
-func (cs *CategorySeeder) createParentCategories(ctx context.Context, count int) ([]string, error) {
-	// Predefined parent categories for more realistic data
-	parentCategories := []struct {
-		code         string
-		names        map[string]string
-		descriptions map[string]string
 	}{
 		{
-			code: "ELECTRONICS",
-			names: map[string]string{
-				"en-US": "Electronics",
-				// "id-ID": "Elektronik",
-				"ja-JP": "電子機器",
+			Code: "FURN",
+			Translations: map[string]map[string]string{
+				"en-US": {"name": "Office Furniture", "desc": "General office furniture and fixtures"},
+				// "id-ID": {"name": "Perabotan Kantor", "desc": "Perabotan kantor umum dan perlengkapan"},
+				"ja-JP": {"name": "オフィス家具", "desc": "一般的なオフィス家具と備品"},
 			},
-			descriptions: map[string]string{
-				"en-US": "Electronic devices and components",
-				// "id-ID": "Perangkat dan komponen elektronik",
-				"ja-JP": "電子機器とコンポーネント",
-			},
-		},
-		{
-			code: "FURNITURE",
-			names: map[string]string{
-				"en-US": "Furniture",
-				// "id-ID": "Perabotan",
-				"ja-JP": "家具",
-			},
-			descriptions: map[string]string{
-				"en-US": "Office and workplace furniture",
-				// "id-ID": "Perabotan kantor dan tempat kerja",
-				"ja-JP": "オフィスと職場の家具",
-			},
-		},
-		{
-			code: "VEHICLES",
-			names: map[string]string{
-				"en-US": "Vehicles",
-				// "id-ID": "Kendaraan",
-				"ja-JP": "車両",
-			},
-			descriptions: map[string]string{
-				"en-US": "Transportation vehicles and equipment",
-				// "id-ID": "Kendaraan transportasi dan peralatan",
-				"ja-JP": "輸送車両と設備",
-			},
-		},
-		{
-			code: "OFFICE-SUPPLIES",
-			names: map[string]string{
-				"en-US": "Office Supplies",
-				// "id-ID": "Perlengkapan Kantor",
-				"ja-JP": "事務用品",
-			},
-			descriptions: map[string]string{
-				"en-US": "Office supplies and stationery",
-				// "id-ID": "Perlengkapan kantor dan alat tulis",
-				"ja-JP": "事務用品と文房具",
+			Children: []struct {
+				Code          string
+				ItemsIncluded []string
+				Translations  map[string]map[string]string
+			}{
+				{
+					Code:          "DESK",
+					ItemsIncluded: []string{"Meja"},
+					Translations: map[string]map[string]string{
+						"en-US": {"name": "Desks & Tables", "desc": "Workstations, meeting tables, and desks"},
+						// "id-ID": {"name": "Meja & Meja Kerja", "desc": "Stasiun kerja, meja rapat, dan meja"},
+						"ja-JP": {"name": "机・テーブル", "desc": "ワークステーション、会議用テーブル、机"},
+					},
+				},
+				{
+					Code:          "SEAT",
+					ItemsIncluded: []string{"Kursi"},
+					Translations: map[string]map[string]string{
+						"en-US": {"name": "Chairs & Seating", "desc": "Office chairs, sofas, and stools"},
+						// "id-ID": {"name": "Kursi & Tempat Duduk", "desc": "Kursi kantor, sofa, dan bangku"},
+						"ja-JP": {"name": "椅子・座席", "desc": "オフィスチェア、ソファ、スツール"},
+					},
+				},
+				{
+					Code:          "STRG",
+					ItemsIncluded: []string{"Rak Nasi"},
+					Translations: map[string]map[string]string{
+						"en-US": {"name": "Shelves & Storage", "desc": "Cabinets, racks, and shelving units"},
+						// "id-ID": {"name": "Rak & Penyimpanan", "desc": "Lemari, rak, dan unit rak"},
+						"ja-JP": {"name": "棚・収納", "desc": "キャビネット、ラック、棚ユニット"},
+					},
+				},
 			},
 		},
 		{
-			code: "TOOLS",
-			names: map[string]string{
-				"en-US": "Tools & Equipment",
-				// "id-ID": "Alat & Peralatan",
-				"ja-JP": "工具・設備",
+			Code: "IT",
+			Translations: map[string]map[string]string{
+				"en-US": {"name": "IT Equipment", "desc": "Information technology hardware and devices"},
+				// "id-ID": {"name": "Peralatan IT", "desc": "Perangkat keras dan perangkat teknologi informasi"},
+				"ja-JP": {"name": "IT機器", "desc": "情報技術ハードウェアおよびデバイス"},
 			},
-			descriptions: map[string]string{
-				"en-US": "Tools and maintenance equipment",
-				// "id-ID": "Alat dan peralatan pemeliharaan",
-				"ja-JP": "工具とメンテナンス機器",
+			Children: []struct {
+				Code          string
+				ItemsIncluded []string
+				Translations  map[string]map[string]string
+			}{
+				{
+					Code:          "COMP",
+					ItemsIncluded: []string{"PC"},
+					Translations: map[string]map[string]string{
+						"en-US": {"name": "Computers", "desc": "Desktops, laptops, and servers"},
+						// "id-ID": {"name": "Komputer", "desc": "Desktop, laptop, dan server"},
+						"ja-JP": {"name": "コンピュータ", "desc": "デスクトップ、ラップトップ、サーバー"},
+					},
+				},
+				{
+					Code:          "PERI",
+					ItemsIncluded: []string{"Keyboard", "Mouse"},
+					Translations: map[string]map[string]string{
+						"en-US": {"name": "Peripherals", "desc": "Input devices like keyboards, mice, and webcams"},
+						// "id-ID": {"name": "Periferal", "desc": "Perangkat input seperti keyboard, mouse, dan webcam"},
+						"ja-JP": {"name": "周辺機器", "desc": "キーボード、マウス、ウェブカメラなどの入力デバイス"},
+					},
+				},
+				{
+					Code:          "NET",
+					ItemsIncluded: []string{"Router"},
+					Translations: map[string]map[string]string{
+						"en-US": {"name": "Networking", "desc": "Routers, switches, and modems"},
+						// "id-ID": {"name": "Jaringan", "desc": "Router, switch, dan modem"},
+						"ja-JP": {"name": "ネットワーク", "desc": "ルーター、スイッチ、モデム"},
+					},
+				},
 			},
 		},
 		{
-			code: "SAFETY",
-			names: map[string]string{
-				"en-US": "Safety Equipment",
-				// "id-ID": "Peralatan Keselamatan",
-				"ja-JP": "安全機器",
+			Code: "ELEC",
+			Translations: map[string]map[string]string{
+				"en-US": {"name": "Electronics & Appliances", "desc": "General electronics and pantry appliances"},
+				// "id-ID": {"name": "Elektronik & Peralatan", "desc": "Elektronik umum dan peralatan pantry"},
+				"ja-JP": {"name": "家電・電子機器", "desc": "一般電子機器およびパントリー家電"},
 			},
-			descriptions: map[string]string{
-				"en-US": "Safety and security equipment",
-				// "id-ID": "Peralatan keselamatan dan keamanan",
-				"ja-JP": "安全・保安機器",
+			Children: []struct {
+				Code          string
+				ItemsIncluded []string
+				Translations  map[string]map[string]string
+			}{
+				{
+					Code:          "PWR",
+					ItemsIncluded: []string{"Colokan"},
+					Translations: map[string]map[string]string{
+						"en-US": {"name": "Power Management", "desc": "Power strips, extension cords, and UPS"},
+						// "id-ID": {"name": "Manajemen Daya", "desc": "Strip power, kabel ekstensi, dan UPS"},
+						"ja-JP": {"name": "電源管理", "desc": "電源タップ、延長コード、UPS"},
+					},
+				},
+				{
+					Code:          "KITCH",
+					ItemsIncluded: []string{"Dispenser", "Teko Air Panas"},
+					Translations: map[string]map[string]string{
+						"en-US": {"name": "Kitchen Appliances", "desc": "Dispensers, kettles, and coffee makers"},
+						// "id-ID": {"name": "Peralatan Dapur", "desc": "Dispenser, teko, dan mesin kopi"},
+						"ja-JP": {"name": "キッチン家電", "desc": "ディスペンサー、ケトル、コーヒーメーカー"},
+					},
+				},
+			},
+		},
+		{
+			Code: "HK",
+			Translations: map[string]map[string]string{
+				"en-US": {"name": "Housekeeping", "desc": "Cleaning supplies and maintenance tools"},
+				// "id-ID": {"name": "Kebersihan Rumah", "desc": "Persediaan pembersihan dan alat pemeliharaan"},
+				"ja-JP": {"name": "清掃用品", "desc": "清掃用品およびメンテナンスツール"},
+			},
+			Children: []struct {
+				Code          string
+				ItemsIncluded []string
+				Translations  map[string]map[string]string
+			}{
+				{
+					Code:          "CLEAN",
+					ItemsIncluded: []string{"Sapu", "Kain Pel", "Kemoceng", "Ember"},
+					Translations: map[string]map[string]string{
+						"en-US": {"name": "Cleaning Tools", "desc": "Brooms, mops, buckets, and dusters"},
+						// "id-ID": {"name": "Alat Pembersih", "desc": "Sapu, kain pel, kemoceng, dan ember"},
+						"ja-JP": {"name": "掃除用具", "desc": "ほうき、モップ、バケツ、ダスター"},
+					},
+				},
 			},
 		},
 	}
 
-	var createdIDs []string
-
-	// Create predefined categories first
-	predefinedCount := len(parentCategories)
-	if count > predefinedCount {
-		predefinedCount = count
-	}
-
-	for i := 0; i < predefinedCount && i < len(parentCategories); i++ {
-		cat := parentCategories[i]
-
+	// Create categories from data
+	var createdParentIDs []string
+	for _, catData := range categoryData {
+		// Create parent category
 		translations := []domain.CreateCategoryTranslationPayload{}
-		for langCode, name := range cat.names {
-			desc := cat.descriptions[langCode]
+		for langCode, trans := range catData.Translations {
+			name := trans["name"]
+			desc := trans["desc"]
 			translations = append(translations, domain.CreateCategoryTranslationPayload{
 				LangCode:     langCode,
 				CategoryName: name,
@@ -158,228 +187,49 @@ func (cs *CategorySeeder) createParentCategories(ctx context.Context, count int)
 		}
 
 		payload := &domain.CreateCategoryPayload{
-			CategoryCode: cat.code,
+			CategoryCode: catData.Code,
 			Translations: translations,
 		}
 
 		created, err := cs.categoryService.CreateCategory(ctx, payload)
 		if err != nil {
-			fmt.Printf("   ⚠️  Failed to create parent category %s: %v\n", cat.code, err)
+			fmt.Printf("   ⚠️  Failed to create parent category %s: %v\n", catData.Code, err)
 			continue
 		}
 
-		createdIDs = append(createdIDs, created.ID)
-		fmt.Printf("   ✅ Created parent category: %s (%s)\n", cat.code, cat.names["en-US"])
-	}
+		createdParentIDs = append(createdParentIDs, created.ID)
+		fmt.Printf("   ✅ Created parent category: %s (%s)\n", catData.Code, catData.Translations["en-US"]["name"])
 
-	// Create additional random parent categories if needed
-	for i := len(parentCategories); i < count; i++ {
-		categoryName := gofakeit.ProductCategory()
-		categoryCode := strings.ToUpper(strings.ReplaceAll(categoryName, " ", "-"))
-
-		// Ensure unique code with timestamp
-		timestamp := time.Now().UnixNano() % 100000
-		categoryCode = fmt.Sprintf("%s-%d-%d", categoryCode, i, timestamp)
-
-		translations := []domain.CreateCategoryTranslationPayload{
-			{
-				LangCode:     "en-US",
-				CategoryName: categoryName,
-				Description:  stringPtr(fmt.Sprintf("%s category for inventory management", categoryName)),
-			},
-			// {
-			// 	LangCode:     "id-ID",
-			// 	CategoryName: fmt.Sprintf("Kategori %s", categoryName),
-			// 	Description:  stringPtr(fmt.Sprintf("Kategori %s untuk manajemen inventori", categoryName)),
-			// },
-			{
-				LangCode:     "ja-JP",
-				CategoryName: fmt.Sprintf("%sカテゴリ", categoryName),
-				Description:  stringPtr(fmt.Sprintf("%sの在庫管理カテゴリ", categoryName)),
-			},
-		}
-
-		payload := &domain.CreateCategoryPayload{
-			CategoryCode: categoryCode,
-			Translations: translations,
-		}
-
-		created, err := cs.categoryService.CreateCategory(ctx, payload)
-		if err != nil {
-			fmt.Printf("   ⚠️  Failed to create parent category %s: %v\n", categoryCode, err)
-			continue
-		}
-
-		createdIDs = append(createdIDs, created.ID)
-		fmt.Printf("   ✅ Created parent category: %s (%s)\n", categoryCode, categoryName)
-	}
-
-	return createdIDs, nil
-}
-
-// createChildCategories creates child categories under existing parents
-func (cs *CategorySeeder) createChildCategories(ctx context.Context, parentIDs []string, totalChildren int) error {
-	if len(parentIDs) == 0 {
-		return fmt.Errorf("no parent categories available")
-	}
-
-	// Predefined child categories for common parents
-	childTemplates := map[string][]struct {
-		code         string
-		names        map[string]string
-		descriptions map[string]string
-	}{
-		"ELECTRONICS": {
-			{code: "COMPUTERS", names: map[string]string{"en-US": "Computers" /*"id-ID": "Komputer",*/, "ja-JP": "コンピューター"}, descriptions: map[string]string{"en-US": "Desktop and laptop computers" /*"id-ID": "Komputer desktop dan laptop",*/, "ja-JP": "デスクトップとノートパソコン"}},
-			{code: "PHONES", names: map[string]string{"en-US": "Phones" /*"id-ID": "Telepon",*/, "ja-JP": "電話"}, descriptions: map[string]string{"en-US": "Mobile phones and landlines" /*"id-ID": "Telepon seluler dan telepon rumah",*/, "ja-JP": "携帯電話と固定電話"}},
-			{code: "PRINTERS", names: map[string]string{"en-US": "Printers" /*"id-ID": "Printer",*/, "ja-JP": "プリンター"}, descriptions: map[string]string{"en-US": "Printing devices and scanners" /*"id-ID": "Perangkat cetak dan scanner",*/, "ja-JP": "印刷機器とスキャナー"}},
-		},
-		"FURNITURE": {
-			{code: "CHAIRS", names: map[string]string{"en-US": "Chairs" /*"id-ID": "Kursi",*/, "ja-JP": "椅子"}, descriptions: map[string]string{"en-US": "Office chairs and seating" /*"id-ID": "Kursi kantor dan tempat duduk",*/, "ja-JP": "オフィスチェアと座席"}},
-			{code: "DESKS", names: map[string]string{"en-US": "Desks" /*"id-ID": "Meja",*/, "ja-JP": "机"}, descriptions: map[string]string{"en-US": "Office desks and tables" /*"id-ID": "Meja kantor dan meja kerja",*/, "ja-JP": "オフィスデスクとテーブル"}},
-			{code: "STORAGE", names: map[string]string{"en-US": "Storage" /*"id-ID": "Penyimpanan",*/, "ja-JP": "収納"}, descriptions: map[string]string{"en-US": "Cabinets and storage furniture" /*"id-ID": "Lemari dan perabotan penyimpanan",*/, "ja-JP": "キャビネットと収納家具"}},
-		},
-		"VEHICLES": {
-			{code: "CARS", names: map[string]string{"en-US": "Cars" /*"id-ID": "Mobil",*/, "ja-JP": "自動車"}, descriptions: map[string]string{"en-US": "Company cars and vehicles" /*"id-ID": "Mobil dan kendaraan perusahaan",*/, "ja-JP": "会社の車両"}},
-			{code: "MOTORCYCLES", names: map[string]string{"en-US": "Motorcycles" /*"id-ID": "Motor",*/, "ja-JP": "オートバイ"}, descriptions: map[string]string{"en-US": "Motorcycles and scooters" /*"id-ID": "Sepeda motor dan skuter",*/, "ja-JP": "オートバイとスクーター"}},
-		},
-	}
-
-	childrenPerParent := totalChildren / len(parentIDs)
-	if childrenPerParent == 0 {
-		childrenPerParent = 1
-	}
-
-	createdCount := 0
-	for i, parentID := range parentIDs {
-		// Get parent category to determine predefined children
-		parentCategory, err := cs.categoryService.GetCategoryById(ctx, parentID, "en-US")
-		if err != nil {
-			fmt.Printf("   ⚠️  Failed to get parent category %s: %v\n", parentID, err)
-			continue
-		}
-
-		// Determine how many children to create for this parent
-		remainingChildren := totalChildren - createdCount
-		currentChildrenCount := childrenPerParent
-		if i == len(parentIDs)-1 { // Last parent gets all remaining children
-			currentChildrenCount = remainingChildren
-		}
-		if currentChildrenCount > remainingChildren {
-			currentChildrenCount = remainingChildren
-		}
-
-		// Create children for this parent
-		childrenCreated := cs.createChildrenForParent(ctx, parentID, parentCategory.CategoryCode, currentChildrenCount, childTemplates)
-		createdCount += childrenCreated
-
-		if createdCount >= totalChildren {
-			break
-		}
-	}
-
-	return nil
-}
-
-// createChildrenForParent creates children for a specific parent
-func (cs *CategorySeeder) createChildrenForParent(ctx context.Context, parentID, parentCode string, count int, childTemplates map[string][]struct {
-	code         string
-	names        map[string]string
-	descriptions map[string]string
-}) int {
-
-	var createdCount int
-
-	// Try to use predefined children first
-	if templates, exists := childTemplates[parentCode]; exists {
-		for i := 0; i < count && i < len(templates); i++ {
-			template := templates[i]
-
-			translations := []domain.CreateCategoryTranslationPayload{}
-			for langCode, name := range template.names {
-				desc := template.descriptions[langCode]
-				translations = append(translations, domain.CreateCategoryTranslationPayload{
+		// Create children
+		for _, childData := range catData.Children {
+			childTranslations := []domain.CreateCategoryTranslationPayload{}
+			for langCode, trans := range childData.Translations {
+				name := trans["name"]
+				desc := trans["desc"]
+				childTranslations = append(childTranslations, domain.CreateCategoryTranslationPayload{
 					LangCode:     langCode,
 					CategoryName: name,
 					Description:  &desc,
 				})
 			}
 
-			payload := &domain.CreateCategoryPayload{
-				ParentID:     &parentID,
-				CategoryCode: fmt.Sprintf("%s-%s", parentCode, template.code),
-				Translations: translations,
+			childPayload := &domain.CreateCategoryPayload{
+				ParentID:     &created.ID,
+				CategoryCode: fmt.Sprintf("%s-%s", catData.Code, childData.Code),
+				Translations: childTranslations,
 			}
 
-			_, err := cs.categoryService.CreateCategory(ctx, payload)
+			_, err := cs.categoryService.CreateCategory(ctx, childPayload)
 			if err != nil {
-				fmt.Printf("   ⚠️  Failed to create child category %s: %v\n", template.code, err)
+				fmt.Printf("   ⚠️  Failed to create child category %s: %v\n", childData.Code, err)
 				continue
 			}
 
-			createdCount++
-			fmt.Printf("   ✅ Created child category: %s under %s\n", template.names["en-US"], parentCode)
-		}
-
-		// Create additional random children if needed
-		for i := len(templates); i < count; i++ {
-			if createdCount >= count {
-				break
-			}
-			createdCount += cs.createRandomChild(ctx, parentID, parentCode, i)
-		}
-	} else {
-		// Create all random children
-		for i := 0; i < count; i++ {
-			createdCount += cs.createRandomChild(ctx, parentID, parentCode, i)
+			fmt.Printf("   ✅ Created child category: %s under %s\n", childData.Translations["en-US"]["name"], catData.Code)
 		}
 	}
 
-	return createdCount
-}
-
-// createRandomChild creates a random child category
-func (cs *CategorySeeder) createRandomChild(ctx context.Context, parentID, parentCode string, index int) int {
-	productName := gofakeit.ProductName()
-	childCode := strings.ToUpper(strings.ReplaceAll(productName, " ", "-"))
-
-	// ! Limit category code to 20 chars max
-	maxCodeLength := 20
-	if len(childCode) > maxCodeLength-3 {
-		childCode = childCode[:maxCodeLength-3]
-	}
-	childCode = fmt.Sprintf("%s-%d", childCode, index)
-
-	translations := []domain.CreateCategoryTranslationPayload{
-		{
-			LangCode:     "en-US",
-			CategoryName: productName,
-			Description:  stringPtr(fmt.Sprintf("%s subcategory", productName)),
-		},
-		// {
-		// 	LangCode:     "id-ID",
-		// 	CategoryName: fmt.Sprintf("Subkategori %s", productName),
-		// 	Description:  stringPtr(fmt.Sprintf("Subkategori %s", productName)),
-		// },
-		{
-			LangCode:     "ja-JP",
-			CategoryName: fmt.Sprintf("%sサブカテゴリ", productName),
-			Description:  stringPtr(fmt.Sprintf("%sのサブカテゴリ", productName)),
-		},
-	}
-
-	payload := &domain.CreateCategoryPayload{
-		ParentID:     &parentID,
-		CategoryCode: childCode,
-		Translations: translations,
-	}
-
-	_, err := cs.categoryService.CreateCategory(ctx, payload)
-	if err != nil {
-		fmt.Printf("   ⚠️  Failed to create child category %s: %v\n", childCode, err)
-		return 0
-	}
-
-	fmt.Printf("   ✅ Created child category: %s under %s\n", productName, parentCode)
-	return 1
+	totalCreated := len(createdParentIDs) + len(categoryData)*len(categoryData[0].Children) // Approximate
+	fmt.Printf("✅ Successfully created %d categories\n", totalCreated)
+	return nil
 }
