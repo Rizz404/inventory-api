@@ -63,9 +63,13 @@ services:
       - db
     env_file:
       - .env
+    environment:
+      - GOOSE_DRIVER=postgres
+      - GOOSE_DBSTRING=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
     networks:
       - app-network
     restart: "no"
+
   seed:
     image: rizz404/inventory-api:latest # Pakai image yang sama
     container_name: execution-seeder
@@ -74,7 +78,7 @@ services:
     profiles: ["tools"]
 
     # Perintah: Jalankan binary seeder
-    command: ./seeder
+    command: ./seeder -type=all -count=10
 
     # Konek ke DB & Baca Config
     depends_on:
