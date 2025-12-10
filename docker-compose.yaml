@@ -66,6 +66,26 @@ services:
     networks:
       - app-network
     restart: "no"
+  seed:
+    image: rizz404/inventory-api:latest # Pakai image yang sama
+    container_name: execution-seeder
+
+    # MAGIC: Service ini cuma jalan kalau dipanggil manual
+    profiles: ["tools"]
+
+    # Perintah: Jalankan binary seeder
+    command: ./seeder
+
+    # Konek ke DB & Baca Config
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - DSN=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+    networks:
+      - app-network
+    restart: "no"
 
 volumes:
   postgres_data:

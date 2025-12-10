@@ -12,6 +12,9 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -tags netgo -ldflags '-s -w' -o /app/main ./app/main.go
 
+# Buat seednya
+RUN CGO_ENABLED=0 GOOS=linux go build -tags netgo -ldflags '-s -w' -o /app/seeder ./cmd/seed/main.go
+
 # Stage 2: Create the final, small image
 FROM alpine:latest
 # Install ca-certificates & tzdata (PENTING untuk API calls & Timezone Indonesia)
@@ -28,6 +31,8 @@ COPY --from=builder /go/bin/goose /usr/local/bin/goose
 COPY --from=builder /app/db/migrations ./db/migrations
 
 COPY --from=builder /app/main .
+# Buat seeder
+COPY --from=builder /app/seeder .
 COPY --from=builder /app/assets ./assets
 
 EXPOSE 5000
