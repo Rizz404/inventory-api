@@ -102,6 +102,32 @@ func (sm *SeederManager) SeedMaintenanceRecords(ctx context.Context, count int, 
 	return sm.maintenanceRecordSeeder.Seed(ctx, count, assetIDs, scheduleIDs, userIDs)
 }
 
+// SeedPrimary seeds only primary data (users, categories, locations)
+func (sm *SeederManager) SeedPrimary(ctx context.Context, count int) error {
+	fmt.Println("🌱 Starting primary data seeding...")
+
+	// 1. Seed users first (they might be referenced by other entities)
+	fmt.Printf("\n1️⃣ Seeding users (count: %d)...\n", count)
+	if err := sm.SeedUsers(ctx, count); err != nil {
+		return fmt.Errorf("failed to seed users: %v", err)
+	}
+
+	// 2. Seed categories
+	fmt.Printf("\n2️⃣ Seeding categories (total: %d)...\n", count)
+	if err := sm.SeedCategories(ctx, count); err != nil {
+		return fmt.Errorf("failed to seed categories: %v", err)
+	}
+
+	// 3. Seed locations
+	fmt.Printf("\n3️⃣ Seeding locations (count: %d)...\n", count)
+	if err := sm.SeedLocations(ctx, count); err != nil {
+		return fmt.Errorf("failed to seed locations: %v", err)
+	}
+
+	fmt.Println("✅ Primary data seeded successfully!")
+	return nil
+}
+
 // SeedAll seeds all data in the correct order with proper dependencies
 func (sm *SeederManager) SeedAll(ctx context.Context, count int) error {
 	fmt.Println("🌱 Starting comprehensive seeding...")

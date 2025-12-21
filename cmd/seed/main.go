@@ -44,7 +44,7 @@ func main() {
 	}
 
 	// Validate seed type
-	validTypes := []string{"users", "categories", "locations", "assets", "movements", "issues", "schedules", "records", "all"}
+	validTypes := []string{"users", "categories", "locations", "assets", "movements", "issues", "schedules", "records", "primary", "all"}
 	if !contains(validTypes, *seedType) {
 		fmt.Printf("Invalid seed type: %s\n", *seedType)
 		fmt.Printf("Valid types: %s\n", strings.Join(validTypes, ", "))
@@ -123,6 +123,13 @@ func main() {
 	case "records":
 		fmt.Println("⚠️ Maintenance records seeding requires existing assets, users, and optionally schedules.")
 		fmt.Println("Please make sure you have run other seeders first.")
+
+	case "primary":
+		fmt.Printf("Seeding primary data (users, categories, locations) with count: %d...\n", *count)
+		if err := seederManager.SeedPrimary(ctx, *count); err != nil {
+			log.Fatalf("Failed to seed primary data: %v", err)
+		}
+		fmt.Println("✅ Primary data seeded successfully!")
 
 	case "all":
 		fmt.Printf("Seeding all data (count: %d)...\n", *count)
@@ -266,7 +273,8 @@ func showHelp() {
 	fmt.Println("        - issues: Seed issue reports (requires assets, users)")
 	fmt.Println("        - schedules: Seed maintenance schedules (requires assets, users)")
 	fmt.Println("        - records: Seed maintenance records (requires assets, users, schedules)")
-	fmt.Println("        - all: Seed basic data (users, categories, locations only)")
+	fmt.Println("        - primary: Seed primary data (users, categories, locations)")
+	fmt.Println("        - all: Seed all data in correct order")
 	fmt.Println("        (default: all)")
 	fmt.Println("  -count int")
 	fmt.Println("        Number of records to create (default: 20)")
