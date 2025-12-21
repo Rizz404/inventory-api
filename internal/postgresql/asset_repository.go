@@ -10,6 +10,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type AssetRepository struct {
@@ -78,6 +79,49 @@ func (r *AssetRepository) CreateAsset(ctx context.Context, payload *domain.Asset
 	}
 
 	return mapper.ToDomainAsset(&modelAsset), nil
+}
+
+func (r *AssetRepository) BulkCreateAssets(ctx context.Context, assets []domain.Asset) ([]domain.Asset, error) {
+	if len(assets) == 0 {
+		return []domain.Asset{}, nil
+	}
+
+	// Use pointer slice to reduce memory copies for large structs
+	models := make([]*model.Asset, len(assets))
+	for i := range assets {
+		m := mapper.ToModelAssetForCreate(&assets[i])
+		models[i] = &m
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Skip associations and use batch size to optimize bulk insert
+	if err := tx.
+		Omit(clause.Associations).
+		Session(&gorm.Session{CreateBatchSize: 500}).
+		Create(&models).Error; err != nil {
+		tx.Rollback()
+		return nil, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	created := make([]domain.Asset, len(models))
+	for i := range models {
+		created[i] = mapper.ToDomainAsset(models[i])
+	}
+
+	return created, nil
 }
 
 func (r *AssetRepository) UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload) (domain.Asset, error) {

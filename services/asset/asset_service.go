@@ -20,6 +20,7 @@ import (
 type Repository interface {
 	// * MUTATION
 	CreateAsset(ctx context.Context, payload *domain.Asset) (domain.Asset, error)
+	BulkCreateAssets(ctx context.Context, assets []domain.Asset) ([]domain.Asset, error)
 	UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload) (domain.Asset, error)
 	DeleteAsset(ctx context.Context, assetId string) error
 	BulkDeleteAssets(ctx context.Context, assetIds []string) (domain.BulkDeleteAssets, error)
@@ -46,6 +47,7 @@ type Repository interface {
 type AssetService interface {
 	// * MUTATION
 	CreateAsset(ctx context.Context, payload *domain.CreateAssetPayload, dataMatrixImageFile *multipart.FileHeader, langCode string) (domain.AssetResponse, error)
+	BulkCreateAssets(ctx context.Context, payload *domain.BulkCreateAssetsPayload, langCode string) (domain.BulkCreateAssetsResponse, error)
 	UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload, dataMatrixImageFile *multipart.FileHeader, langCode string) (domain.AssetResponse, error)
 	DeleteAsset(ctx context.Context, assetId string) error
 	BulkDeleteAssets(ctx context.Context, payload *domain.BulkDeleteAssetsPayload) (domain.BulkDeleteAssetsResponse, error)
@@ -228,6 +230,119 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 
 	// * Convert to AssetResponse using mapper
 	return mapper.AssetToResponse(&createdAsset, langCode), nil
+}
+
+func (s *Service) BulkCreateAssets(ctx context.Context, payload *domain.BulkCreateAssetsPayload, langCode string) (domain.BulkCreateAssetsResponse, error) {
+	if payload == nil || len(payload.Assets) == 0 {
+		return domain.BulkCreateAssetsResponse{}, domain.ErrBadRequest("assets payload is required")
+	}
+
+	assetTagSeen := make(map[string]struct{})
+	serialSeen := make(map[string]struct{})
+	for _, assetPayload := range payload.Assets {
+		if _, exists := assetTagSeen[assetPayload.AssetTag]; exists {
+			return domain.BulkCreateAssetsResponse{}, domain.ErrConflictWithKey(utils.ErrAssetTagExistsKey)
+		}
+		assetTagSeen[assetPayload.AssetTag] = struct{}{}
+
+		if assetPayload.SerialNumber != nil && *assetPayload.SerialNumber != "" {
+			if _, exists := serialSeen[*assetPayload.SerialNumber]; exists {
+				return domain.BulkCreateAssetsResponse{}, domain.ErrConflictWithKey(utils.ErrAssetSerialNumberExistsKey)
+			}
+			serialSeen[*assetPayload.SerialNumber] = struct{}{}
+		}
+	}
+
+	for tag := range assetTagSeen {
+		exists, err := s.Repo.CheckAssetTagExists(ctx, tag)
+		if err != nil {
+			return domain.BulkCreateAssetsResponse{}, err
+		}
+		if exists {
+			return domain.BulkCreateAssetsResponse{}, domain.ErrConflictWithKey(utils.ErrAssetTagExistsKey)
+		}
+	}
+
+	for serial := range serialSeen {
+		exists, err := s.Repo.CheckSerialNumberExists(ctx, serial)
+		if err != nil {
+			return domain.BulkCreateAssetsResponse{}, err
+		}
+		if exists {
+			return domain.BulkCreateAssetsResponse{}, domain.ErrConflictWithKey(utils.ErrAssetSerialNumberExistsKey)
+		}
+	}
+
+	assets := make([]domain.Asset, len(payload.Assets))
+	for i, assetPayload := range payload.Assets {
+		status := domain.StatusActive
+		if assetPayload.Status != "" {
+			status = assetPayload.Status
+		}
+
+		condition := domain.ConditionGood
+		if assetPayload.Condition != "" {
+			condition = assetPayload.Condition
+		}
+
+		var purchaseDate *time.Time
+		if assetPayload.PurchaseDate != nil && *assetPayload.PurchaseDate != "" {
+			if parsedDate, err := time.Parse("2006-01-02", *assetPayload.PurchaseDate); err == nil {
+				purchaseDate = &parsedDate
+			}
+		}
+
+		var warrantyEnd *time.Time
+		if assetPayload.WarrantyEnd != nil && *assetPayload.WarrantyEnd != "" {
+			if parsedDate, err := time.Parse("2006-01-02", *assetPayload.WarrantyEnd); err == nil {
+				warrantyEnd = &parsedDate
+			}
+		}
+
+		dataMatrixImageURL := ""
+		if assetPayload.DataMatrixImageUrl != nil {
+			dataMatrixImageURL = *assetPayload.DataMatrixImageUrl
+		}
+
+		assets[i] = domain.Asset{
+			AssetTag:           assetPayload.AssetTag,
+			DataMatrixImageUrl: dataMatrixImageURL,
+			AssetName:          assetPayload.AssetName,
+			CategoryID:         assetPayload.CategoryID,
+			Brand:              assetPayload.Brand,
+			Model:              assetPayload.Model,
+			SerialNumber:       assetPayload.SerialNumber,
+			PurchaseDate:       purchaseDate,
+			PurchasePrice:      assetPayload.PurchasePrice,
+			VendorName:         assetPayload.VendorName,
+			WarrantyEnd:        warrantyEnd,
+			Status:             status,
+			Condition:          condition,
+			LocationID:         assetPayload.LocationID,
+			AssignedTo:         assetPayload.AssignedTo,
+		}
+	}
+
+	createdAssets, err := s.Repo.BulkCreateAssets(ctx, assets)
+	if err != nil {
+		return domain.BulkCreateAssetsResponse{}, err
+	}
+
+	for i := range createdAssets {
+		if payload.Assets[i].AssignedTo != nil && *payload.Assets[i].AssignedTo != "" {
+			go s.sendAssetAssignmentNotification(context.Background(), &createdAssets[i], *payload.Assets[i].AssignedTo, true)
+		}
+
+		if payload.Assets[i].PurchasePrice != nil && *payload.Assets[i].PurchasePrice > 10000 {
+			go s.sendHighValueAssetNotificationToAdmins(context.Background(), &createdAssets[i])
+		}
+	}
+
+	response := domain.BulkCreateAssetsResponse{
+		Assets: mapper.AssetsToResponses(createdAssets, langCode),
+	}
+
+	return response, nil
 }
 
 func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload, dataMatrixImageFile *multipart.FileHeader, langCode string) (domain.AssetResponse, error) {

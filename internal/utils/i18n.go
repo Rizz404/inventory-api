@@ -162,6 +162,7 @@ const (
 
 	// * Asset-specific success keys
 	SuccessAssetCreatedKey                      MessageKey = "success.asset.created"
+	SuccessAssetsBulkCreatedKey                 MessageKey = "success.assets.bulk_created"
 	SuccessAssetUpdatedKey                      MessageKey = "success.asset.updated"
 	SuccessAssetDeletedKey                      MessageKey = "success.asset.deleted"
 	SuccessAssetsBulkDeletedKey                 MessageKey = "success.assets.bulk_deleted"
@@ -874,6 +875,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Asset created successfully",
 		// "id-ID": "Aset berhasil dibuat",
 		"ja-JP": "アセットが正常に作成されました",
+	},
+	SuccessAssetsBulkCreatedKey: {
+		"en-US": "Assets created successfully",
+		// "id-ID": "Aset berhasil dibuat secara massal",
+		"ja-JP": "複数のアセットが正常に作成されました",
 	},
 	SuccessAssetUpdatedKey: {
 		"en-US": "Asset updated successfully",

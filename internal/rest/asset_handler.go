@@ -31,6 +31,11 @@ func NewAssetHandler(app fiber.Router, s asset.AssetService) {
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
 		handler.CreateAsset,
 	)
+	assets.Post("/bulk",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
+		handler.BulkCreateAssets,
+	)
 
 	assets.Get("/", handler.GetAssetsPaginated)
 	assets.Get("/statistics", handler.GetAssetStatistics)
@@ -177,6 +182,23 @@ func (h *AssetHandler) CreateAsset(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusCreated, utils.SuccessAssetCreatedKey, asset)
+}
+
+func (h *AssetHandler) BulkCreateAssets(c *fiber.Ctx) error {
+	var payload domain.BulkCreateAssetsPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	langCode := web.GetLanguageFromContext(c)
+
+	assets, err := h.Service.BulkCreateAssets(c.Context(), &payload, langCode)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusCreated, utils.SuccessAssetsBulkCreatedKey, assets)
 }
 
 func (h *AssetHandler) UpdateAsset(c *fiber.Ctx) error {

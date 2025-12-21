@@ -135,6 +135,14 @@ type BulkDeleteAssetsResponse struct {
 	DeletedIDS   []string `json:"deletedIds"`
 }
 
+type BulkCreateAssetsPayload struct {
+	Assets []CreateAssetPayload `json:"assets" validate:"required,min=1,max=100,dive"`
+}
+
+type BulkCreateAssetsResponse struct {
+	Assets []AssetResponse `json:"assets"`
+}
+
 // --- Payloads ---
 
 type CreateAssetPayload struct {
