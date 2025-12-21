@@ -14,6 +14,7 @@ import (
 type Repository interface {
 	// * MUTATION
 	CreateCategory(ctx context.Context, payload *domain.Category) (domain.Category, error)
+	BulkCreateCategories(ctx context.Context, categories []domain.Category) ([]domain.Category, error)
 	UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.Category, error)
 	DeleteCategory(ctx context.Context, categoryId string) error
 	BulkDeleteCategories(ctx context.Context, categoryIds []string) (domain.BulkDeleteCategories, error)
@@ -34,6 +35,7 @@ type Repository interface {
 type CategoryService interface {
 	// * MUTATION
 	CreateCategory(ctx context.Context, payload *domain.CreateCategoryPayload) (domain.CategoryResponse, error)
+	BulkCreateCategories(ctx context.Context, payload *domain.BulkCreateCategoriesPayload) (domain.BulkCreateCategoriesResponse, error)
 	UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.CategoryResponse, error)
 	DeleteCategory(ctx context.Context, categoryId string) error
 	BulkDeleteCategories(ctx context.Context, payload *domain.BulkDeleteCategoriesPayload) (domain.BulkDeleteCategoriesResponse, error)
@@ -120,6 +122,74 @@ func (s *Service) CreateCategory(ctx context.Context, payload *domain.CreateCate
 
 	// * Convert to CategoryResponse using mapper
 	return mapper.CategoryToResponse(&createdCategory, mapper.DefaultLangCode), nil
+}
+
+func (s *Service) BulkCreateCategories(ctx context.Context, payload *domain.BulkCreateCategoriesPayload) (domain.BulkCreateCategoriesResponse, error) {
+	if payload == nil || len(payload.Categories) == 0 {
+		return domain.BulkCreateCategoriesResponse{}, domain.ErrBadRequest("categories payload is required")
+	}
+
+	codeSeen := make(map[string]struct{})
+	for _, catPayload := range payload.Categories {
+		if _, exists := codeSeen[catPayload.CategoryCode]; exists {
+			return domain.BulkCreateCategoriesResponse{}, domain.ErrBadRequest("duplicate category code: " + catPayload.CategoryCode)
+		}
+		codeSeen[catPayload.CategoryCode] = struct{}{}
+
+		// Check parent if provided
+		if catPayload.ParentID != nil && *catPayload.ParentID != "" {
+			if parentExists, err := s.Repo.CheckCategoryExist(ctx, *catPayload.ParentID); err != nil {
+				return domain.BulkCreateCategoriesResponse{}, err
+			} else if !parentExists {
+				return domain.BulkCreateCategoriesResponse{}, domain.ErrNotFoundWithKey(utils.ErrCategoryNotFoundKey)
+			}
+		}
+	}
+
+	// Check all codes against database
+	for code := range codeSeen {
+		exists, err := s.Repo.CheckCategoryCodeExist(ctx, code)
+		if err != nil {
+			return domain.BulkCreateCategoriesResponse{}, err
+		}
+		if exists {
+			return domain.BulkCreateCategoriesResponse{}, domain.ErrConflictWithKey(utils.ErrCategoryCodeExistsKey)
+		}
+	}
+
+	categories := make([]domain.Category, len(payload.Categories))
+	for i, catPayload := range payload.Categories {
+		cat := domain.Category{
+			ParentID:     catPayload.ParentID,
+			CategoryCode: catPayload.CategoryCode,
+			Translations: make([]domain.CategoryTranslation, len(catPayload.Translations)),
+		}
+
+		for j, transPayload := range catPayload.Translations {
+			cat.Translations[j] = domain.CategoryTranslation{
+				LangCode:     transPayload.LangCode,
+				CategoryName: transPayload.CategoryName,
+				Description:  transPayload.Description,
+			}
+		}
+		categories[i] = cat
+	}
+
+	createdCategories, err := s.Repo.BulkCreateCategories(ctx, categories)
+	if err != nil {
+		return domain.BulkCreateCategoriesResponse{}, err
+	}
+
+	// Send notifications for all created categories
+	for i := range createdCategories {
+		s.sendCategoryUpdatedNotificationToAdmins(ctx, &createdCategories[i])
+	}
+
+	response := domain.BulkCreateCategoriesResponse{
+		Categories: mapper.CategoriesToResponses(createdCategories, mapper.DefaultLangCode),
+	}
+
+	return response, nil
 }
 
 func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.CategoryResponse, error) {

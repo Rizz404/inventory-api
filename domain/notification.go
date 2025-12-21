@@ -131,6 +131,16 @@ type BulkDeleteNotificationsResponse struct {
 	DeletedIDS   []string `json:"deletedIds"`
 }
 
+// --- Bulk Create ---
+
+type BulkCreateNotificationsPayload struct {
+	Notifications []CreateNotificationPayload `json:"notifications" validate:"required,min=1,max=100,dive"`
+}
+
+type BulkCreateNotificationsResponse struct {
+	Notifications []NotificationResponse `json:"notifications"`
+}
+
 // --- Payloads ---
 
 // Notifications are typically created by the system, not directly by users.

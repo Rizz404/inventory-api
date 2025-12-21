@@ -11,6 +11,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type IssueReportRepository struct {
@@ -122,6 +123,68 @@ func (r *IssueReportRepository) CreateIssueReport(ctx context.Context, payload *
 		})
 	}
 	return domainIssueReport, nil
+}
+
+func (r *IssueReportRepository) BulkCreateIssueReports(ctx context.Context, reports []domain.IssueReport) ([]domain.IssueReport, error) {
+	if len(reports) == 0 {
+		return []domain.IssueReport{}, nil
+	}
+
+	models := make([]*model.IssueReport, len(reports))
+	for i := range reports {
+		m := mapper.ToModelIssueReportForCreate(&reports[i])
+		models[i] = &m
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.
+		Omit(clause.Associations).
+		Session(&gorm.Session{CreateBatchSize: 500}).
+		Create(&models).Error; err != nil {
+		tx.Rollback()
+		return nil, domain.ErrInternal(err)
+	}
+
+	var translations []model.IssueReportTranslation
+	for i := range models {
+		rep := reports[i]
+		for _, t := range rep.Translations {
+			mt := mapper.ToModelIssueReportTranslationForCreate(models[i].ID.String(), &t)
+			translations = append(translations, mt)
+		}
+	}
+	if len(translations) > 0 {
+		if err := tx.Session(&gorm.Session{CreateBatchSize: 500}).Create(&translations).Error; err != nil {
+			tx.Rollback()
+			return nil, domain.ErrInternal(err)
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	created := make([]domain.IssueReport, len(models))
+	for i := range models {
+		created[i] = mapper.ToDomainIssueReport(models[i])
+		for _, t := range reports[i].Translations {
+			created[i].Translations = append(created[i].Translations, domain.IssueReportTranslation{
+				LangCode:    t.LangCode,
+				Title:       t.Title,
+				Description: t.Description,
+			})
+		}
+	}
+	return created, nil
 }
 
 func (r *IssueReportRepository) UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload) (domain.IssueReport, error) {

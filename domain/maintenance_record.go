@@ -109,6 +109,16 @@ type BulkDeleteMaintenanceRecordsResponse struct {
 	DeletedIDS   []string `json:"deletedIds"`
 }
 
+// --- Bulk Create ---
+
+type BulkCreateMaintenanceRecordsPayload struct {
+	MaintenanceRecords []CreateMaintenanceRecordPayload `json:"maintenanceRecords" validate:"required,min=1,max=100,dive"`
+}
+
+type BulkCreateMaintenanceRecordsResponse struct {
+	MaintenanceRecords []MaintenanceRecordResponse `json:"maintenanceRecords"`
+}
+
 // --- Payloads ---
 
 type CreateMaintenanceRecordPayload struct {

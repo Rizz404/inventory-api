@@ -94,6 +94,16 @@ type BulkDeleteUsersResponse struct {
 	DeletedIDS   []string `json:"deletedIds"`
 }
 
+// --- Bulk Create ---
+
+type BulkCreateUsersPayload struct {
+	Users []CreateUserPayload `json:"users" validate:"required,min=1,max=100,dive"`
+}
+
+type BulkCreateUsersResponse struct {
+	Users []UserResponse `json:"users"`
+}
+
 // --- Payloads ---
 
 type LoginPayload struct {

@@ -10,6 +10,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type MaintenanceRecordRepository struct {
@@ -104,6 +105,69 @@ func (r *MaintenanceRecordRepository) CreateRecord(ctx context.Context, payload 
 		})
 	}
 	return domainRecord, nil
+}
+
+func (r *MaintenanceRecordRepository) BulkCreateMaintenanceRecords(ctx context.Context, records []domain.MaintenanceRecord) ([]domain.MaintenanceRecord, error) {
+	if len(records) == 0 {
+		return []domain.MaintenanceRecord{}, nil
+	}
+
+	models := make([]*model.MaintenanceRecord, len(records))
+	for i := range records {
+		m := mapper.ToModelMaintenanceRecordForCreate(&records[i])
+		models[i] = &m
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.
+		Omit(clause.Associations).
+		Session(&gorm.Session{CreateBatchSize: 500}).
+		Create(&models).Error; err != nil {
+		tx.Rollback()
+		return nil, domain.ErrInternal(err)
+	}
+
+	// Insert translations in batch
+	var translations []model.MaintenanceRecordTranslation
+	for i := range models {
+		rItem := records[i]
+		for _, t := range rItem.Translations {
+			mt := mapper.ToModelMaintenanceRecordTranslationForCreate(models[i].ID.String(), &t)
+			translations = append(translations, mt)
+		}
+	}
+	if len(translations) > 0 {
+		if err := tx.Session(&gorm.Session{CreateBatchSize: 500}).Create(&translations).Error; err != nil {
+			tx.Rollback()
+			return nil, domain.ErrInternal(err)
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	created := make([]domain.MaintenanceRecord, len(models))
+	for i := range models {
+		created[i] = mapper.ToDomainMaintenanceRecord(models[i])
+		for _, t := range records[i].Translations {
+			created[i].Translations = append(created[i].Translations, domain.MaintenanceRecordTranslation{
+				LangCode: t.LangCode,
+				Title:    t.Title,
+				Notes:    t.Notes,
+			})
+		}
+	}
+	return created, nil
 }
 
 func (r *MaintenanceRecordRepository) UpdateRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload) (domain.MaintenanceRecord, error) {

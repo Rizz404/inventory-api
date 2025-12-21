@@ -17,6 +17,7 @@ type Repository interface {
 	CreateAssetMovement(ctx context.Context, payload *domain.AssetMovement) (domain.AssetMovement, error)
 	UpdateAssetMovement(ctx context.Context, movementId string, payload *domain.UpdateAssetMovementPayload) (domain.AssetMovement, error)
 	DeleteAssetMovement(ctx context.Context, movementId string) error
+	BulkCreateAssetMovements(ctx context.Context, movements []domain.AssetMovement) ([]domain.AssetMovement, error)
 	BulkDeleteAssetMovements(ctx context.Context, movementIds []string) (domain.BulkDeleteAssetMovements, error)
 
 	// * QUERY
@@ -57,6 +58,7 @@ type AssetMovementService interface {
 	CreateAssetMovement(ctx context.Context, payload *domain.CreateAssetMovementPayload, movedBy string) (domain.AssetMovementResponse, error)
 	UpdateAssetMovement(ctx context.Context, movementId string, payload *domain.UpdateAssetMovementPayload) (domain.AssetMovementResponse, error)
 	DeleteAssetMovement(ctx context.Context, movementId string) error
+	BulkCreateAssetMovements(ctx context.Context, payload *domain.BulkCreateAssetMovementsPayload, movedBy string) (domain.BulkCreateAssetMovementsResponse, error)
 	BulkDeleteAssetMovements(ctx context.Context, payload *domain.BulkDeleteAssetMovementsPayload) (domain.BulkDeleteAssetMovementsResponse, error)
 
 	// * QUERY
@@ -231,6 +233,121 @@ func (s *Service) DeleteAssetMovement(ctx context.Context, movementId string) er
 		return err
 	}
 	return nil
+}
+
+func (s *Service) BulkCreateAssetMovements(ctx context.Context, payload *domain.BulkCreateAssetMovementsPayload, movedBy string) (domain.BulkCreateAssetMovementsResponse, error) {
+	if payload == nil || len(payload.AssetMovements) == 0 {
+		return domain.BulkCreateAssetMovementsResponse{}, domain.ErrBadRequest("asset movements payload is required")
+	}
+
+	// * Check if moved by user exists
+	if movedByExists, err := s.UserService.CheckUserExists(ctx, movedBy); err != nil {
+		return domain.BulkCreateAssetMovementsResponse{}, err
+	} else if !movedByExists {
+		return domain.BulkCreateAssetMovementsResponse{}, domain.ErrNotFoundWithKey(utils.ErrUserNotFoundKey)
+	}
+
+	// * Validate no duplicates in payload (by asset ID)
+	seenAssets := make(map[string]struct{})
+	for _, item := range payload.AssetMovements {
+		if _, exists := seenAssets[item.AssetID]; exists {
+			return domain.BulkCreateAssetMovementsResponse{}, domain.ErrBadRequest("duplicate asset ID: " + item.AssetID)
+		}
+		seenAssets[item.AssetID] = struct{}{}
+	}
+
+	// * Validate all assets exist and get their current state
+	assetMap := make(map[string]*domain.AssetResponse)
+	for assetID := range seenAssets {
+		asset, err := s.AssetService.GetAssetById(ctx, assetID, mapper.DefaultLangCode)
+		if err != nil {
+			return domain.BulkCreateAssetMovementsResponse{}, domain.ErrNotFound("asset")
+		}
+		assetMap[assetID] = &asset
+	}
+
+	// * Validate all locations exist if provided
+	locationMap := make(map[string]struct{})
+	for _, item := range payload.AssetMovements {
+		if item.ToLocationID != nil && *item.ToLocationID != "" {
+			if _, exists := locationMap[*item.ToLocationID]; !exists {
+				locationMap[*item.ToLocationID] = struct{}{}
+				if locationExists, err := s.LocationService.CheckLocationExists(ctx, *item.ToLocationID); err != nil {
+					return domain.BulkCreateAssetMovementsResponse{}, err
+				} else if !locationExists {
+					return domain.BulkCreateAssetMovementsResponse{}, domain.ErrNotFoundWithKey(utils.ErrLocationNotFoundKey)
+				}
+			}
+		}
+	}
+
+	// * Validate all users exist if provided
+	userMap := make(map[string]struct{})
+	for _, item := range payload.AssetMovements {
+		if item.ToUserID != nil && *item.ToUserID != "" {
+			if _, exists := userMap[*item.ToUserID]; !exists {
+				userMap[*item.ToUserID] = struct{}{}
+				if userExists, err := s.UserService.CheckUserExists(ctx, *item.ToUserID); err != nil {
+					return domain.BulkCreateAssetMovementsResponse{}, err
+				} else if !userExists {
+					return domain.BulkCreateAssetMovementsResponse{}, domain.ErrNotFoundWithKey(utils.ErrUserNotFoundKey)
+				}
+			}
+		}
+	}
+
+	// * Build domain movements
+	movements := make([]domain.AssetMovement, len(payload.AssetMovements))
+	for i, item := range payload.AssetMovements {
+		asset := assetMap[item.AssetID]
+
+		movements[i] = domain.AssetMovement{
+			AssetID:        item.AssetID,
+			FromLocationID: asset.LocationID,
+			ToLocationID:   item.ToLocationID,
+			FromUserID:     asset.AssignedToID,
+			ToUserID:       item.ToUserID,
+			MovementDate:   time.Now(),
+			MovedBy:        movedBy,
+			Translations:   make([]domain.AssetMovementTranslation, len(item.Translations)),
+		}
+
+		// * Convert translations
+		for j, translationPayload := range item.Translations {
+			movements[i].Translations[j] = domain.AssetMovementTranslation{
+				LangCode: translationPayload.LangCode,
+				Notes:    &translationPayload.Notes,
+			}
+		}
+	}
+
+	// * Call repository bulk create
+	created, err := s.Repo.BulkCreateAssetMovements(ctx, movements)
+	if err != nil {
+		return domain.BulkCreateAssetMovementsResponse{}, err
+	}
+
+	// * Send notifications asynchronously for each movement
+	for i := range created {
+		asset := assetMap[created[i].AssetID]
+		locationChanged := created[i].ToLocationID != nil && *created[i].ToLocationID != "" &&
+			(asset.LocationID == nil || *asset.LocationID != *created[i].ToLocationID)
+		userChanged := created[i].ToUserID != nil && *created[i].ToUserID != "" &&
+			(asset.AssignedToID == nil || *asset.AssignedToID != *created[i].ToUserID)
+
+		if locationChanged {
+			go s.sendLocationChangeNotification(context.Background(), &created[i], asset)
+		}
+		if userChanged {
+			go s.sendUserAssignmentNotification(context.Background(), &created[i], asset)
+		}
+	}
+
+	// * Convert to responses
+	response := domain.BulkCreateAssetMovementsResponse{
+		AssetMovements: mapper.AssetMovementsToResponses(created, mapper.DefaultLangCode),
+	}
+	return response, nil
 }
 
 func (s *Service) BulkDeleteAssetMovements(ctx context.Context, payload *domain.BulkDeleteAssetMovementsPayload) (domain.BulkDeleteAssetMovementsResponse, error) {

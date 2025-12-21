@@ -72,6 +72,16 @@ type BulkDeleteCategoriesResponse struct {
 	DeletedIDS   []string `json:"deletedIds"`
 }
 
+// --- Bulk Create ---
+
+type BulkCreateCategoriesPayload struct {
+	Categories []CreateCategoryPayload `json:"categories" validate:"required,min=1,max=100,dive"`
+}
+
+type BulkCreateCategoriesResponse struct {
+	Categories []CategoryResponse `json:"categories"`
+}
+
 // --- Payloads ---
 
 type CreateCategoryPayload struct {

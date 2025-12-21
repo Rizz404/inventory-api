@@ -14,6 +14,7 @@ import (
 type Repository interface {
 	// * MUTATION
 	CreateLocation(ctx context.Context, payload *domain.Location) (domain.Location, error)
+	BulkCreateLocations(ctx context.Context, locations []domain.Location) ([]domain.Location, error)
 	UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload) (domain.Location, error)
 	DeleteLocation(ctx context.Context, locationId string) error
 	BulkDeleteLocations(ctx context.Context, locationIds []string) (domain.BulkDeleteLocations, error)
@@ -34,6 +35,7 @@ type Repository interface {
 type LocationService interface {
 	// * MUTATION
 	CreateLocation(ctx context.Context, payload *domain.CreateLocationPayload) (domain.LocationResponse, error)
+	BulkCreateLocations(ctx context.Context, payload *domain.BulkCreateLocationsPayload) (domain.BulkCreateLocationsResponse, error)
 	UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload) (domain.LocationResponse, error)
 	DeleteLocation(ctx context.Context, locationId string) error
 	BulkDeleteLocations(ctx context.Context, payload *domain.BulkDeleteLocationsPayload) (domain.BulkDeleteLocationsResponse, error)
@@ -113,6 +115,67 @@ func (s *Service) CreateLocation(ctx context.Context, payload *domain.CreateLoca
 
 	// * Convert to LocationResponse using mapper
 	return mapper.LocationToResponse(&createdLocation, mapper.DefaultLangCode), nil
+}
+
+func (s *Service) BulkCreateLocations(ctx context.Context, payload *domain.BulkCreateLocationsPayload) (domain.BulkCreateLocationsResponse, error) {
+	if payload == nil || len(payload.Locations) == 0 {
+		return domain.BulkCreateLocationsResponse{}, domain.ErrBadRequest("locations payload is required")
+	}
+
+	codeSeen := make(map[string]struct{})
+	for _, locPayload := range payload.Locations {
+		if _, exists := codeSeen[locPayload.LocationCode]; exists {
+			return domain.BulkCreateLocationsResponse{}, domain.ErrBadRequest("duplicate location code: " + locPayload.LocationCode)
+		}
+		codeSeen[locPayload.LocationCode] = struct{}{}
+	}
+
+	// Check all codes against database
+	for code := range codeSeen {
+		exists, err := s.Repo.CheckLocationCodeExist(ctx, code)
+		if err != nil {
+			return domain.BulkCreateLocationsResponse{}, err
+		}
+		if exists {
+			return domain.BulkCreateLocationsResponse{}, domain.ErrConflictWithKey(utils.ErrLocationCodeExistsKey)
+		}
+	}
+
+	locations := make([]domain.Location, len(payload.Locations))
+	for i, locPayload := range payload.Locations {
+		loc := domain.Location{
+			LocationCode: locPayload.LocationCode,
+			Building:     locPayload.Building,
+			Floor:        locPayload.Floor,
+			Latitude:     locPayload.Latitude,
+			Longitude:    locPayload.Longitude,
+			Translations: make([]domain.LocationTranslation, len(locPayload.Translations)),
+		}
+
+		for j, transPayload := range locPayload.Translations {
+			loc.Translations[j] = domain.LocationTranslation{
+				LangCode:     transPayload.LangCode,
+				LocationName: transPayload.LocationName,
+			}
+		}
+		locations[i] = loc
+	}
+
+	createdLocations, err := s.Repo.BulkCreateLocations(ctx, locations)
+	if err != nil {
+		return domain.BulkCreateLocationsResponse{}, err
+	}
+
+	// Send notifications for all created locations
+	for i := range createdLocations {
+		s.sendLocationUpdatedNotificationToAdmins(ctx, &createdLocations[i])
+	}
+
+	response := domain.BulkCreateLocationsResponse{
+		Locations: mapper.LocationsToResponses(createdLocations, mapper.DefaultLangCode),
+	}
+
+	return response, nil
 }
 
 func (s *Service) UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload) (domain.LocationResponse, error) {

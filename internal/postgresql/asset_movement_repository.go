@@ -10,6 +10,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type AssetMovementRepository struct {
@@ -138,6 +139,85 @@ func (r *AssetMovementRepository) CreateAssetMovement(ctx context.Context, paylo
 		})
 	}
 	return domainMovement, nil
+}
+
+func (r *AssetMovementRepository) BulkCreateAssetMovements(ctx context.Context, movements []domain.AssetMovement) ([]domain.AssetMovement, error) {
+	if len(movements) == 0 {
+		return []domain.AssetMovement{}, nil
+	}
+
+	models := make([]*model.AssetMovement, len(movements))
+	for i := range movements {
+		m := mapper.ToModelAssetMovementForCreate(&movements[i])
+		models[i] = &m
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.
+		Omit(clause.Associations).
+		Session(&gorm.Session{CreateBatchSize: 500}).
+		Create(&models).Error; err != nil {
+		tx.Rollback()
+		return nil, domain.ErrInternal(err)
+	}
+
+	// Insert translations batch
+	var translations []model.AssetMovementTranslation
+	for i := range models {
+		mv := movements[i]
+		for _, t := range mv.Translations {
+			mt := mapper.ToModelAssetMovementTranslationForCreate(models[i].ID.String(), &t)
+			translations = append(translations, mt)
+		}
+	}
+	if len(translations) > 0 {
+		if err := tx.Session(&gorm.Session{CreateBatchSize: 500}).Create(&translations).Error; err != nil {
+			tx.Rollback()
+			return nil, domain.ErrInternal(err)
+		}
+	}
+
+	// Update related assets based on movement destinations
+	for i := range movements {
+		updates := make(map[string]interface{})
+		if movements[i].ToLocationID != nil {
+			updates["location_id"] = *movements[i].ToLocationID
+		}
+		if movements[i].ToUserID != nil {
+			updates["assigned_to"] = *movements[i].ToUserID
+		}
+		if len(updates) > 0 {
+			if err := tx.Table("assets").Where("id = ?", movements[i].AssetID).Updates(updates).Error; err != nil {
+				tx.Rollback()
+				return nil, domain.ErrInternal(err)
+			}
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	created := make([]domain.AssetMovement, len(models))
+	for i := range models {
+		created[i] = mapper.ToDomainAssetMovement(models[i])
+		for _, t := range movements[i].Translations {
+			created[i].Translations = append(created[i].Translations, domain.AssetMovementTranslation{
+				LangCode: t.LangCode,
+				Notes:    t.Notes,
+			})
+		}
+	}
+	return created, nil
 }
 
 func (r *AssetMovementRepository) UpdateAssetMovement(ctx context.Context, movementId string, payload *domain.UpdateAssetMovementPayload) (domain.AssetMovement, error) {

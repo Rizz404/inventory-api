@@ -30,6 +30,11 @@ func NewNotificationHandler(app fiber.Router, s notification.NotificationService
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
 		handler.CreateNotification,
 	)
+	notifications.Post("/bulk",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.BulkCreateNotifications,
+	)
 
 	notifications.Get("/",
 		middleware.OptionalAuth(), // Optional auth to filter by user
@@ -137,6 +142,21 @@ func (h *NotificationHandler) parseNotificationFiltersAndSort(c *fiber.Ctx) (dom
 }
 
 // *===========================MUTATION===========================*
+func (h *NotificationHandler) BulkCreateNotifications(c *fiber.Ctx) error {
+	var payload domain.BulkCreateNotificationsPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	notifications, err := h.Service.BulkCreateNotifications(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusCreated, utils.SuccessNotificationsBulkCreatedKey, notifications)
+}
+
 func (h *NotificationHandler) CreateNotification(c *fiber.Ctx) error {
 	var payload domain.CreateNotificationPayload
 	if err := web.ParseAndValidate(c, &payload); err != nil {

@@ -28,6 +28,11 @@ func NewMaintenanceRecordHandler(app fiber.Router, s maintenance_record.Maintena
 		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! uncomment in production
 		handler.CreateMaintenanceRecord,
 	)
+	records.Post("/bulk",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! uncomment in production
+		handler.BulkCreateMaintenanceRecords,
+	)
 	records.Get("/", handler.GetMaintenanceRecordsPaginated)
 	records.Get("/cursor", handler.GetMaintenanceRecordsCursor)
 	records.Get("/count", handler.CountMaintenanceRecords)
@@ -96,6 +101,22 @@ func (h *MaintenanceRecordHandler) parseFiltersAndSort(c *fiber.Ctx) (domain.Mai
 }
 
 // *===========================MUTATION===========================*
+func (h *MaintenanceRecordHandler) BulkCreateMaintenanceRecords(c *fiber.Ctx) error {
+	var payload domain.BulkCreateMaintenanceRecordsPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// User performing maintenance (if authenticated)
+	userID, _ := web.GetUserIDFromContext(c)
+	records, err := h.Service.BulkCreateMaintenanceRecords(c.Context(), &payload, userID)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+	return web.Success(c, fiber.StatusCreated, utils.SuccessMaintenanceRecordsBulkCreatedKey, records)
+}
+
 func (h *MaintenanceRecordHandler) CreateMaintenanceRecord(c *fiber.Ctx) error {
 	var payload domain.CreateMaintenanceRecordPayload
 	if err := web.ParseAndValidate(c, &payload); err != nil {

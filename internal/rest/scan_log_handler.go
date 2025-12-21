@@ -34,6 +34,10 @@ func NewScanLogHandler(app fiber.Router, s scan_log.ScanLogService) {
 		middleware.AuthMiddleware(),
 		handler.CreateScanLog,
 	)
+	scanLogs.Post("/bulk",
+		middleware.AuthMiddleware(),
+		handler.BulkCreateScanLogs,
+	)
 
 	scanLogs.Get("/", handler.GetScanLogsPaginated)
 	scanLogs.Get("/statistics", handler.GetScanLogStatistics)
@@ -125,6 +129,27 @@ func (h *ScanLogHandler) parseScanLogFiltersAndSort(c *fiber.Ctx) (domain.ScanLo
 }
 
 // *===========================MUTATION===========================*
+func (h *ScanLogHandler) BulkCreateScanLogs(c *fiber.Ctx) error {
+	var payload domain.BulkCreateScanLogsPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// * Get user ID from auth context
+	userId, ok := web.GetUserIDFromContext(c)
+	if !ok {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
+	}
+
+	scanLogs, err := h.Service.BulkCreateScanLogs(c.Context(), &payload, userId)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusCreated, utils.SuccessScanLogsBulkCreatedKey, scanLogs)
+}
+
 func (h *ScanLogHandler) CreateScanLog(c *fiber.Ctx) error {
 	var payload domain.CreateScanLogPayload
 	if err := web.ParseAndValidate(c, &payload); err != nil {

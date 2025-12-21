@@ -28,6 +28,11 @@ func NewMaintenanceScheduleHandler(app fiber.Router, s maintenance_schedule.Main
 		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! uncomment in production
 		handler.CreateMaintenanceSchedule,
 	)
+	schedules.Post("/bulk",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! uncomment in production
+		handler.BulkCreateMaintenanceSchedules,
+	)
 	schedules.Get("/", handler.GetMaintenanceSchedulesPaginated)
 	schedules.Get("/cursor", handler.GetMaintenanceSchedulesCursor)
 	schedules.Get("/count", handler.CountMaintenanceSchedules)
@@ -98,6 +103,26 @@ func (h *MaintenanceScheduleHandler) parseFiltersAndSort(c *fiber.Ctx) (domain.M
 }
 
 // *===========================MUTATION===========================*
+func (h *MaintenanceScheduleHandler) BulkCreateMaintenanceSchedules(c *fiber.Ctx) error {
+	var payload domain.BulkCreateMaintenanceSchedulesPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// CreatedBy from auth
+	userID, ok := web.GetUserIDFromContext(c)
+	if !ok {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
+	}
+
+	schedules, err := h.Service.BulkCreateMaintenanceSchedules(c.Context(), &payload, userID)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+	return web.Success(c, fiber.StatusCreated, utils.SuccessMaintenanceSchedulesBulkCreatedKey, schedules)
+}
+
 func (h *MaintenanceScheduleHandler) CreateMaintenanceSchedule(c *fiber.Ctx) error {
 	var payload domain.CreateMaintenanceSchedulePayload
 	if err := web.ParseAndValidate(c, &payload); err != nil {

@@ -30,6 +30,10 @@ func NewIssueReportHandler(app fiber.Router, s issue_report.IssueReportService) 
 		middleware.AuthMiddleware(),
 		handler.CreateIssueReport,
 	)
+	issueReports.Post("/bulk",
+		middleware.AuthMiddleware(),
+		handler.BulkCreateIssueReports,
+	)
 
 	// * Export
 	issueReports.Post("/export/list",
@@ -144,6 +148,25 @@ func (h *IssueReportHandler) parseIssueReportFiltersAndSort(c *fiber.Ctx) (domai
 }
 
 // *===========================MUTATION===========================*
+func (h *IssueReportHandler) BulkCreateIssueReports(c *fiber.Ctx) error {
+	reporterID, ok := web.GetUserIDFromContext(c)
+	if !ok {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
+	}
+
+	var payload domain.BulkCreateIssueReportsPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	issueReports, err := h.Service.BulkCreateIssueReports(c.Context(), &payload, reporterID)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusCreated, utils.SuccessIssueReportsBulkCreatedKey, issueReports)
+}
+
 func (h *IssueReportHandler) CreateIssueReport(c *fiber.Ctx) error {
 	reporterID, ok := web.GetUserIDFromContext(c)
 	if !ok {

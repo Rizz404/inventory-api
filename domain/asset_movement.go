@@ -100,6 +100,16 @@ type BulkDeleteAssetMovementsResponse struct {
 	DeletedIDS   []string `json:"deletedIds"`
 }
 
+// --- Bulk Create ---
+
+type BulkCreateAssetMovementsPayload struct {
+	AssetMovements []CreateAssetMovementPayload `json:"assetMovements" validate:"required,min=1,max=100,dive"`
+}
+
+type BulkCreateAssetMovementsResponse struct {
+	AssetMovements []AssetMovementResponse `json:"assetMovements"`
+}
+
 // --- Payloads ---
 
 type CreateAssetMovementPayload struct {

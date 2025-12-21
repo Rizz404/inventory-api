@@ -30,6 +30,11 @@ func NewLocationHandler(app fiber.Router, s location.LocationService) {
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
 		handler.CreateLocation,
 	)
+	locations.Post("/bulk",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.BulkCreateLocations,
+	)
 
 	locations.Get("/", handler.GetLocationsPaginated)
 	locations.Get("/statistics", handler.GetLocationStatistics)
@@ -84,6 +89,21 @@ func (h *LocationHandler) parseLocationFiltersAndSort(c *fiber.Ctx) (domain.Loca
 }
 
 // *===========================MUTATION===========================*
+func (h *LocationHandler) BulkCreateLocations(c *fiber.Ctx) error {
+	var payload domain.BulkCreateLocationsPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	locations, err := h.Service.BulkCreateLocations(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusCreated, utils.SuccessLocationsBulkCreatedKey, locations)
+}
+
 func (h *LocationHandler) CreateLocation(c *fiber.Ctx) error {
 	var payload domain.CreateLocationPayload
 	if err := web.ParseAndValidate(c, &payload); err != nil {

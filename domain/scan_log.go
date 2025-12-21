@@ -82,6 +82,16 @@ type BulkDeleteScanLogsResponse struct {
 	DeletedIDS   []string `json:"deletedIds"`
 }
 
+// --- Bulk Create ---
+
+type BulkCreateScanLogsPayload struct {
+	ScanLogs []CreateScanLogPayload `json:"scanLogs" validate:"required,min=1,max=100,dive"`
+}
+
+type BulkCreateScanLogsResponse struct {
+	ScanLogs []ScanLogResponse `json:"scanLogs"`
+}
+
 // --- Payloads ---
 
 type CreateScanLogPayload struct {

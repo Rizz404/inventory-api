@@ -120,6 +120,16 @@ type BulkDeleteIssueReportsResponse struct {
 	DeletedIDS   []string `json:"deletedIds"`
 }
 
+// --- Bulk Create ---
+
+type BulkCreateIssueReportsPayload struct {
+	IssueReports []CreateIssueReportPayload `json:"issueReports" validate:"required,min=1,max=100,dive"`
+}
+
+type BulkCreateIssueReportsResponse struct {
+	IssueReports []IssueReportResponse `json:"issueReports"`
+}
+
 // --- Payloads ---
 
 type CreateIssueReportPayload struct {

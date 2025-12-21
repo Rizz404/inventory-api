@@ -13,6 +13,7 @@ type Repository interface {
 	// * MUTATION
 	CreateScanLog(ctx context.Context, payload *domain.ScanLog) (domain.ScanLog, error)
 	DeleteScanLog(ctx context.Context, scanLogId string) error
+	BulkCreateScanLogs(ctx context.Context, scanLogs []domain.ScanLog) ([]domain.ScanLog, error)
 	BulkDeleteScanLogs(ctx context.Context, scanLogIds []string) (domain.BulkDeleteScanLogs, error)
 
 	// * QUERY
@@ -32,6 +33,7 @@ type ScanLogService interface {
 	// * MUTATION
 	CreateScanLog(ctx context.Context, payload *domain.CreateScanLogPayload, scannedBy string) (domain.ScanLogResponse, error)
 	DeleteScanLog(ctx context.Context, scanLogId string) error
+	BulkCreateScanLogs(ctx context.Context, payload *domain.BulkCreateScanLogsPayload, scannedBy string) (domain.BulkCreateScanLogsResponse, error)
 	BulkDeleteScanLogs(ctx context.Context, payload *domain.BulkDeleteScanLogsPayload) (domain.BulkDeleteScanLogsResponse, error)
 
 	// * QUERY
@@ -80,6 +82,39 @@ func (s *Service) CreateScanLog(ctx context.Context, payload *domain.CreateScanL
 
 	// * Convert to ScanLogResponse using mapper
 	return mapper.ScanLogToResponse(&createdScanLog), nil
+}
+
+func (s *Service) BulkCreateScanLogs(ctx context.Context, payload *domain.BulkCreateScanLogsPayload, scannedBy string) (domain.BulkCreateScanLogsResponse, error) {
+	if payload == nil || len(payload.ScanLogs) == 0 {
+		return domain.BulkCreateScanLogsResponse{}, domain.ErrBadRequest("scan logs payload is required")
+	}
+
+	// * Build domain scan logs
+	scanLogs := make([]domain.ScanLog, len(payload.ScanLogs))
+	for i, item := range payload.ScanLogs {
+		scanLogs[i] = domain.ScanLog{
+			AssetID:         item.AssetID,
+			ScannedValue:    item.ScannedValue,
+			ScanMethod:      item.ScanMethod,
+			ScannedBy:       scannedBy,
+			ScanTimestamp:   time.Now(),
+			ScanLocationLat: item.ScanLocationLat,
+			ScanLocationLng: item.ScanLocationLng,
+			ScanResult:      item.ScanResult,
+		}
+	}
+
+	// * Call repository bulk create
+	created, err := s.Repo.BulkCreateScanLogs(ctx, scanLogs)
+	if err != nil {
+		return domain.BulkCreateScanLogsResponse{}, err
+	}
+
+	// * Convert to responses
+	response := domain.BulkCreateScanLogsResponse{
+		ScanLogs: mapper.ScanLogsToResponses(created),
+	}
+	return response, nil
 }
 
 func (s *Service) DeleteScanLog(ctx context.Context, scanLogId string) error {

@@ -126,6 +126,7 @@ const (
 	SuccessUserCreatedKey               MessageKey = "success.user.created"
 	SuccessUserUpdatedKey               MessageKey = "success.user.updated"
 	SuccessUserDeletedKey               MessageKey = "success.user.deleted"
+	SuccessUsersBulkCreatedKey          MessageKey = "success.users.bulk_created"
 	SuccessUsersBulkDeletedKey          MessageKey = "success.users.bulk_deleted"
 	SuccessUserRetrievedKey             MessageKey = "success.user.retrieved"
 	SuccessUserRetrievedByNameKey       MessageKey = "success.user.retrieved_by_name"
@@ -140,6 +141,7 @@ const (
 	SuccessCategoryCreatedKey              MessageKey = "success.category.created"
 	SuccessCategoryUpdatedKey              MessageKey = "success.category.updated"
 	SuccessCategoryDeletedKey              MessageKey = "success.category.deleted"
+	SuccessCategoriesBulkCreatedKey        MessageKey = "success.categories.bulk_created"
 	SuccessCategoriesBulkDeletedKey        MessageKey = "success.categories.bulk_deleted"
 	SuccessCategoryRetrievedKey            MessageKey = "success.category.retrieved"
 	SuccessCategoryRetrievedByCodeKey      MessageKey = "success.category.retrieved_by_code"
@@ -152,6 +154,7 @@ const (
 	SuccessLocationCreatedKey              MessageKey = "success.location.created"
 	SuccessLocationUpdatedKey              MessageKey = "success.location.updated"
 	SuccessLocationDeletedKey              MessageKey = "success.location.deleted"
+	SuccessLocationsBulkCreatedKey         MessageKey = "success.locations.bulk_created"
 	SuccessLocationsBulkDeletedKey         MessageKey = "success.locations.bulk_deleted"
 	SuccessLocationRetrievedKey            MessageKey = "success.location.retrieved"
 	SuccessLocationRetrievedByCodeKey      MessageKey = "success.location.retrieved_by_code"
@@ -180,6 +183,7 @@ const (
 	// * Scan log-specific success keys
 	SuccessScanLogCreatedKey             MessageKey = "success.scan_log.created"
 	SuccessScanLogDeletedKey             MessageKey = "success.scan_log.deleted"
+	SuccessScanLogsBulkCreatedKey        MessageKey = "success.scan_logs.bulk_created"
 	SuccessScanLogsBulkDeletedKey        MessageKey = "success.scan_logs.bulk_deleted"
 	SuccessScanLogRetrievedKey           MessageKey = "success.scan_log.retrieved"
 	SuccessScanLogCountedKey             MessageKey = "success.scan_log.counted"
@@ -190,6 +194,7 @@ const (
 	SuccessNotificationCreatedKey             MessageKey = "success.notification.created"
 	SuccessNotificationUpdatedKey             MessageKey = "success.notification.updated"
 	SuccessNotificationDeletedKey             MessageKey = "success.notification.deleted"
+	SuccessNotificationsBulkCreatedKey        MessageKey = "success.notifications.bulk_created"
 	SuccessNotificationsBulkDeletedKey        MessageKey = "success.notifications.bulk_deleted"
 	SuccessNotificationRetrievedKey           MessageKey = "success.notification.retrieved"
 	SuccessNotificationCountedKey             MessageKey = "success.notification.counted"
@@ -202,6 +207,7 @@ const (
 	SuccessIssueReportCreatedKey             MessageKey = "success.issue_report.created"
 	SuccessIssueReportUpdatedKey             MessageKey = "success.issue_report.updated"
 	SuccessIssueReportDeletedKey             MessageKey = "success.issue_report.deleted"
+	SuccessIssueReportsBulkCreatedKey        MessageKey = "success.issue_reports.bulk_created"
 	SuccessIssueReportsBulkDeletedKey        MessageKey = "success.issue_reports.bulk_deleted"
 	SuccessIssueReportRetrievedKey           MessageKey = "success.issue_report.retrieved"
 	SuccessIssueReportCountedKey             MessageKey = "success.issue_report.counted"
@@ -214,6 +220,7 @@ const (
 	SuccessAssetMovementCreatedKey             MessageKey = "success.asset_movement.created"
 	SuccessAssetMovementUpdatedKey             MessageKey = "success.asset_movement.updated"
 	SuccessAssetMovementDeletedKey             MessageKey = "success.asset_movement.deleted"
+	SuccessAssetMovementsBulkCreatedKey        MessageKey = "success.asset_movements.bulk_created"
 	SuccessAssetMovementsBulkDeletedKey        MessageKey = "success.asset_movements.bulk_deleted"
 	SuccessAssetMovementRetrievedKey           MessageKey = "success.asset_movement.retrieved"
 	SuccessAssetMovementCountedKey             MessageKey = "success.asset_movement.counted"
@@ -224,6 +231,7 @@ const (
 	SuccessMaintenanceScheduleCreatedKey             MessageKey = "success.maintenance.schedule_created"
 	SuccessMaintenanceScheduleUpdatedKey             MessageKey = "success.maintenance.schedule_updated"
 	SuccessMaintenanceScheduleDeletedKey             MessageKey = "success.maintenance.schedule_deleted"
+	SuccessMaintenanceSchedulesBulkCreatedKey        MessageKey = "success.maintenance.schedules_bulk_created"
 	SuccessMaintenanceSchedulesBulkDeletedKey        MessageKey = "success.maintenance.schedules_bulk_deleted"
 	SuccessMaintenanceScheduleRetrievedKey           MessageKey = "success.maintenance.schedule_retrieved"
 	SuccessMaintenanceScheduleCountedKey             MessageKey = "success.maintenance.schedule_counted"
@@ -231,6 +239,7 @@ const (
 	SuccessMaintenanceRecordCreatedKey               MessageKey = "success.maintenance.record_created"
 	SuccessMaintenanceRecordUpdatedKey               MessageKey = "success.maintenance.record_updated"
 	SuccessMaintenanceRecordDeletedKey               MessageKey = "success.maintenance.record_deleted"
+	SuccessMaintenanceRecordsBulkCreatedKey          MessageKey = "success.maintenance.records_bulk_created"
 	SuccessMaintenanceRecordsBulkDeletedKey          MessageKey = "success.maintenance.records_bulk_deleted"
 	SuccessMaintenanceRecordRetrievedKey             MessageKey = "success.maintenance.record_retrieved"
 	SuccessMaintenanceRecordCountedKey               MessageKey = "success.maintenance.record_counted"
@@ -266,8 +275,6 @@ const (
 	PDFAssetVendorKey           MessageKey = "pdf.vendor"
 	PDFAssetWarrantyEndKey      MessageKey = "pdf.warranty_end"
 	PDFAssetAssignedToKey       MessageKey = "pdf.assigned_to"
-	PDFAssetPageKey             MessageKey = "pdf.page"
-	PDFAssetOfKey               MessageKey = "pdf.of"
 	PDFAssetStatisticsReportKey MessageKey = "pdf.asset_statistics_report"
 	PDFAssetDataMatrixReportKey MessageKey = "pdf.asset_datamatrix_report"
 
@@ -330,8 +337,6 @@ const (
 	PDFUserUpdatedAtKey     MessageKey = "pdf.user.updated_at"
 
 	PDFUserTotalUsersKey MessageKey = "pdf.total_users"
-	PDFUserPageKey       MessageKey = "pdf.page"
-	PDFUserOfKey         MessageKey = "pdf.of"
 
 	// * Scan Log PDF Export labels
 	PDFScanLogListReportKey      MessageKey = "pdf.scan_log_list_report"
@@ -730,6 +735,16 @@ var messageTranslations = map[MessageKey]map[string]string{
 		// "id-ID": "Pengguna berhasil dihapus",
 		"ja-JP": "ユーザーが正常に削除されました",
 	},
+	SuccessUsersBulkCreatedKey: {
+		"en-US": "Users created successfully",
+		// "id-ID": "Pengguna berhasil dibuat secara massal",
+		"ja-JP": "複数のユーザーが正常に作成されました",
+	},
+	SuccessUsersBulkDeletedKey: {
+		"en-US": "Users deleted successfully",
+		// "id-ID": "Pengguna berhasil dihapus secara massal",
+		"ja-JP": "複数のユーザーが正常に削除されました",
+	},
 	SuccessUserRetrievedKey: {
 		"en-US": "User retrieved successfully",
 		// "id-ID": "Pengguna berhasil diambil",
@@ -787,6 +802,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		// "id-ID": "Kategori berhasil dihapus",
 		"ja-JP": "カテゴリが正常に削除されました",
 	},
+	SuccessCategoriesBulkCreatedKey: {
+		"en-US": "Categories created successfully",
+		// "id-ID": "Kategori berhasil dibuat secara massal",
+		"ja-JP": "複数のカテゴリが正常に作成されました",
+	},
 	SuccessCategoriesBulkDeletedKey: {
 		"en-US": "Categories bulk deleted successfully",
 		// "id-ID": "Kategori berhasil dihapus secara massal",
@@ -839,6 +859,16 @@ var messageTranslations = map[MessageKey]map[string]string{
 		// "id-ID": "Lokasi berhasil dihapus",
 		"ja-JP": "ロケーションが正常に削除されました",
 	},
+	SuccessLocationsBulkCreatedKey: {
+		"en-US": "Locations created successfully",
+		// "id-ID": "Lokasi berhasil dibuat secara massal",
+		"ja-JP": "複数のロケーションが正常に作成されました",
+	},
+	SuccessLocationsBulkDeletedKey: {
+		"en-US": "Locations deleted successfully",
+		// "id-ID": "Lokasi berhasil dihapus secara massal",
+		"ja-JP": "複数のロケーションが正常に削除されました",
+	},
 	SuccessLocationRetrievedKey: {
 		"en-US": "Locations retrieved successfully",
 		// "id-ID": "Lokasi berhasil diambil",
@@ -890,6 +920,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Asset deleted successfully",
 		// "id-ID": "Aset berhasil dihapus",
 		"ja-JP": "アセットが正常に削除されました",
+	},
+	SuccessAssetsBulkDeletedKey: {
+		"en-US": "Assets deleted successfully",
+		// "id-ID": "Aset berhasil dihapus secara massal",
+		"ja-JP": "複数のアセットが正常に削除されました",
 	},
 	SuccessAssetRetrievedKey: {
 		"en-US": "Assets retrieved successfully",
@@ -952,6 +987,16 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Scan log deleted successfully",
 		// "id-ID": "Log scan berhasil dihapus",
 		"ja-JP": "スキャンログが正常に削除されました",
+	},
+	SuccessScanLogsBulkCreatedKey: {
+		"en-US": "Scan logs created successfully",
+		// "id-ID": "Log scan berhasil dibuat secara massal",
+		"ja-JP": "複数のスキャンログが正常に作成されました",
+	},
+	SuccessScanLogsBulkDeletedKey: {
+		"en-US": "Scan logs deleted successfully",
+		// "id-ID": "Log scan berhasil dihapus secara massal",
+		"ja-JP": "複数のスキャンログが正常に削除されました",
 	},
 	SuccessScanLogRetrievedKey: {
 		"en-US": "Scan logs retrieved successfully",
@@ -1021,368 +1066,457 @@ var messageTranslations = map[MessageKey]map[string]string{
 	// * PDF Export labels
 	PDFAssetListReportKey: {
 		"en-US": "Asset List Report",
+		// "id-ID": "Laporan Daftar Aset",
 		"ja-JP": "資産一覧レポート",
 	},
 	PDFAssetGeneratedOnKey: {
 		"en-US": "Generated on",
+		// "id-ID": "Dibuat pada",
 		"ja-JP": "生成日時",
 	},
 	PDFAssetTotalAssetsKey: {
 		"en-US": "Total Assets",
+		// "id-ID": "Total Aset",
 		"ja-JP": "総資産数",
 	},
 	PDFAssetAssetTagKey: {
 		"en-US": "Asset Tag",
+		// "id-ID": "Tag Aset",
 		"ja-JP": "資産タグ",
 	},
 	PDFAssetAssetNameKey: {
 		"en-US": "Asset Name",
+		// "id-ID": "Nama Aset",
 		"ja-JP": "資産名",
 	},
 	PDFAssetCategoryKey: {
 		"en-US": "Category",
+		// "id-ID": "Kategori",
 		"ja-JP": "カテゴリ",
 	},
 	PDFAssetBrandKey: {
 		"en-US": "Brand",
+		// "id-ID": "Merek",
 		"ja-JP": "ブランド",
 	},
 	PDFAssetModelKey: {
 		"en-US": "Model",
+		// "id-ID": "Model",
 		"ja-JP": "モデル",
 	},
 	PDFAssetStatusKey: {
 		"en-US": "Status",
+		// "id-ID": "Status",
 		"ja-JP": "ステータス",
 	},
 	PDFAssetConditionKey: {
 		"en-US": "Condition",
+		// "id-ID": "Kondisi",
 		"ja-JP": "状態",
 	},
 	PDFAssetLocationKey: {
 		"en-US": "Location",
+		// "id-ID": "Lokasi",
 		"ja-JP": "場所",
 	},
 	PDFAssetSerialNumberKey: {
 		"en-US": "Serial Number",
+		// "id-ID": "Nomor Seri",
 		"ja-JP": "シリアル番号",
 	},
 	PDFAssetPurchaseDateKey: {
 		"en-US": "Purchase Date",
+		// "id-ID": "Tanggal Pembelian",
 		"ja-JP": "購入日",
 	},
 	PDFAssetPurchasePriceKey: {
 		"en-US": "Purchase Price",
+		// "id-ID": "Harga Pembelian",
 		"ja-JP": "購入価格",
 	},
 	PDFAssetVendorKey: {
 		"en-US": "Vendor",
+		// "id-ID": "Vendor",
 		"ja-JP": "ベンダー",
 	},
 	PDFAssetWarrantyEndKey: {
 		"en-US": "Warranty End",
+		// "id-ID": "Akhir Garansi",
 		"ja-JP": "保証終了日",
 	},
 	PDFAssetAssignedToKey: {
 		"en-US": "Assigned To",
+		// "id-ID": "Ditugaskan Ke",
 		"ja-JP": "割り当て先",
-	},
-	PDFAssetPageKey: {
-		"en-US": "Page",
-		"ja-JP": "ページ",
-	},
-	PDFAssetOfKey: {
-		"en-US": "of",
-		"ja-JP": "/",
 	},
 	PDFAssetStatisticsReportKey: {
 		"en-US": "Asset Statistics Report",
+		// "id-ID": "Laporan Statistik Aset",
 		"ja-JP": "資産統計レポート",
 	},
 	PDFAssetDataMatrixReportKey: {
 		"en-US": "Asset Data Matrix Codes",
+		// "id-ID": "Kode Data Matrix Aset",
 		"ja-JP": "資産データマトリックスコード",
 	},
 
 	// * Asset Movement PDF Export labels
 	PDFAssetMovementReportKey: {
 		"en-US": "Asset Movement Report",
+		// "id-ID": "Laporan Pergerakan Aset",
 		"ja-JP": "資産移動レポート",
 	},
 	PDFAssetMovementTotalKey: {
 		"en-US": "Total Movements",
+		// "id-ID": "Total Pergerakan",
 		"ja-JP": "総移動数",
 	},
 	PDFAssetMovementFromLocationKey: {
 		"en-US": "From Location",
+		// "id-ID": "Dari Lokasi",
 		"ja-JP": "元の場所",
 	},
 	PDFAssetMovementToLocationKey: {
 		"en-US": "To Location",
+		// "id-ID": "Ke Lokasi",
 		"ja-JP": "移動先の場所",
 	},
 	PDFAssetMovementFromUserKey: {
 		"en-US": "From User",
+		// "id-ID": "Dari Pengguna",
 		"ja-JP": "元の担当者",
 	},
 	PDFAssetMovementToUserKey: {
 		"en-US": "To User",
+		// "id-ID": "Ke Pengguna",
 		"ja-JP": "移動先の担当者",
 	},
 	PDFAssetMovementMovedByKey: {
 		"en-US": "Moved By",
+		// "id-ID": "Dipindahkan Oleh",
 		"ja-JP": "移動者",
 	},
 	PDFAssetMovementDateKey: {
 		"en-US": "Movement Date",
+		// "id-ID": "Tanggal Pergerakan",
 		"ja-JP": "移動日",
 	},
 
 	// * Maintenance Record PDF Export labels
 	PDFMaintenanceRecordReportKey: {
 		"en-US": "Maintenance Record Report",
+		// "id-ID": "Laporan Catatan Pemeliharaan",
 		"ja-JP": "メンテナンス記録レポート",
 	},
 	PDFMaintenanceRecordTotalKey: {
 		"en-US": "Total Records",
+		// "id-ID": "Total Catatan",
 		"ja-JP": "総記録数",
 	},
 	PDFMaintenanceRecordDateKey: {
 		"en-US": "Maintenance Date",
+		// "id-ID": "Tanggal Pemeliharaan",
 		"ja-JP": "メンテナンス日",
 	},
 	PDFMaintenanceRecordCompletionKey: {
 		"en-US": "Completion Date",
+		// "id-ID": "Tanggal Penyelesaian",
 		"ja-JP": "完了日",
 	},
 	PDFMaintenanceRecordPerformerKey: {
 		"en-US": "Performer",
+		// "id-ID": "Pelaksana",
 		"ja-JP": "実施者",
 	},
 	PDFMaintenanceRecordCostKey: {
 		"en-US": "Cost",
+		// "id-ID": "Biaya",
 		"ja-JP": "費用",
 	},
 
 	// * Issue Report PDF Export labels
 	PDFIssueReportReportKey: {
 		"en-US": "Issue Report List",
+		// "id-ID": "Daftar Laporan Masalah",
 		"ja-JP": "問題報告一覧",
 	},
 	PDFIssueReportTotalKey: {
 		"en-US": "Total Reports",
+		// "id-ID": "Total Laporan",
 		"ja-JP": "総報告数",
 	},
 	PDFIssueReportTypeKey: {
 		"en-US": "Issue Type",
+		// "id-ID": "Jenis Masalah",
 		"ja-JP": "問題タイプ",
 	},
 	PDFIssueReportReportedByKey: {
 		"en-US": "Reported By",
+		// "id-ID": "Dilaporkan Oleh",
 		"ja-JP": "報告者",
 	},
 
 	// * Scan Log PDF Export labels
 	PDFScanLogReportKey: {
 		"en-US": "Scan Log Report",
+		// "id-ID": "Laporan Log Scan",
 		"ja-JP": "スキャンログレポート",
 	},
 	PDFScanLogTotalKey: {
 		"en-US": "Total Scans",
+		// "id-ID": "Total Scan",
 		"ja-JP": "総スキャン数",
 	},
 	PDFScanLogMethodKey: {
 		"en-US": "Scan Method",
+		// "id-ID": "Metode Scan",
 		"ja-JP": "スキャン方法",
 	},
 	PDFScanLogTimestampKey: {
 		"en-US": "Timestamp",
+		// "id-ID": "Stempel Waktu",
 		"ja-JP": "タイムスタンプ",
 	},
 	PDFScanLogResultKey: {
 		"en-US": "Result",
+		// "id-ID": "Hasil",
 		"ja-JP": "結果",
 	},
 	PDFScanLogScannedByKey: {
 		"en-US": "Scanned By",
+		// "id-ID": "Dipindai Oleh",
 		"ja-JP": "スキャン者",
 	},
 	PDFScanLogCoordinatesKey: {
 		"en-US": "Coordinates",
+		// "id-ID": "Koordinat",
 		"ja-JP": "座標",
 	},
 
 	// * Maintenance Schedule PDF Export labels
 	PDFMaintenanceScheduleReportKey: {
 		"en-US": "Maintenance Schedule Report",
+		// "id-ID": "Laporan Jadwal Pemeliharaan",
 		"ja-JP": "メンテナンススケジュールレポート",
 	},
 	PDFMaintenanceScheduleTotalKey: {
 		"en-US": "Total Schedules",
+		// "id-ID": "Total Jadwal",
 		"ja-JP": "総スケジュール数",
 	},
 	PDFMaintenanceScheduleTypeKey: {
 		"en-US": "Type",
+		// "id-ID": "Tipe",
 		"ja-JP": "種類",
 	},
 	PDFMaintenanceScheduleNextDateKey: {
 		"en-US": "Next Date",
+		// "id-ID": "Tanggal Berikutnya",
 		"ja-JP": "次回日",
 	},
 	PDFMaintenanceScheduleRecurringKey: {
 		"en-US": "Recurring",
+		// "id-ID": "Berulang",
 		"ja-JP": "繰り返し",
 	},
 	PDFMaintenanceScheduleCostKey: {
 		"en-US": "Estimated Cost",
+		// "id-ID": "Biaya Perkiraan",
 		"ja-JP": "予定費用",
 	},
 
 	// * User PDF Export labels
 	PDFUserReportKey: {
 		"en-US": "User List Report",
+		// "id-ID": "Laporan Daftar Pengguna",
 		"ja-JP": "ユーザー一覧レポート",
 	},
 	PDFUserTotalKey: {
 		"en-US": "Total Users",
+		// "id-ID": "Total Pengguna",
 		"ja-JP": "総ユーザー数",
 	},
 
 	// * User PDF Export labels (keep existing)
 	PDFUserListReportKey: {
 		"en-US": "User List Report",
+		// "id-ID": "Laporan Daftar Pengguna",
 		"ja-JP": "ユーザー一覧レポート",
 	},
 	PDFUserIDKey: {
 		"en-US": "ID",
+		// "id-ID": "ID",
 		"ja-JP": "ID",
 	},
 	PDFUserNameKey: {
 		"en-US": "Name",
+		// "id-ID": "Nama",
 		"ja-JP": "名前",
 	},
 	PDFUserEmailKey: {
 		"en-US": "Email",
+		// "id-ID": "Email",
 		"ja-JP": "メール",
 	},
 	PDFUserFullNameKey: {
 		"en-US": "Full Name",
+		// "id-ID": "Nama Lengkap",
 		"ja-JP": "フルネーム",
 	},
 	PDFUserRoleKey: {
 		"en-US": "Role",
+		// "id-ID": "Peran",
 		"ja-JP": "役割",
 	},
 	PDFUserEmployeeIDKey: {
 		"en-US": "Employee ID",
+		// "id-ID": "ID Karyawan",
 		"ja-JP": "従業員ID",
 	},
 	PDFUserPreferredLangKey: {
 		"en-US": "Preferred Language",
+		// "id-ID": "Bahasa Pilihan",
 		"ja-JP": "優先言語",
 	},
 	PDFUserIsActiveKey: {
 		"en-US": "Is Active",
+		// "id-ID": "Aktif",
 		"ja-JP": "アクティブ",
 	},
 	PDFUserCreatedAtKey: {
 		"en-US": "Created At",
+		// "id-ID": "Dibuat Pada",
 		"ja-JP": "作成日時",
 	},
 	PDFUserUpdatedAtKey: {
 		"en-US": "Updated At",
+		// "id-ID": "Diperbarui Pada",
 		"ja-JP": "更新日時",
+	},
+
+	PDFUserTotalUsersKey: {
+		"en-US": "Total Users",
+		// "id-ID": "Total Pengguna",
+		"ja-JP": "総ユーザー数",
 	},
 
 	// * Scan Log PDF Export labels
 	PDFScanLogListReportKey: {
 		"en-US": "Scan Log List Report",
+		// "id-ID": "Laporan Daftar Log Scan",
 		"ja-JP": "スキャンログ一覧レポート",
 	},
 	PDFScanLogIDKey: {
 		"en-US": "ID",
+		// "id-ID": "ID",
 		"ja-JP": "ID",
 	},
 	PDFScanLogAssetIDKey: {
 		"en-US": "Asset ID",
+		// "id-ID": "ID Aset",
 		"ja-JP": "資産ID",
 	},
 	PDFScanLogScannedValueKey: {
 		"en-US": "Scanned Value",
+		// "id-ID": "Nilai Scan",
 		"ja-JP": "スキャン値",
 	},
 	PDFScanLogScanMethodKey: {
 		"en-US": "Scan Method",
+		// "id-ID": "Metode Scan",
 		"ja-JP": "スキャン方法",
 	},
 	PDFScanLogScannedByIDKey: {
 		"en-US": "Scanned By ID",
+		// "id-ID": "ID Pemindai",
 		"ja-JP": "スキャン者ID",
 	},
 	PDFScanLogScanTimestampKey: {
 		"en-US": "Scan Timestamp",
+		// "id-ID": "Stempel Waktu Scan",
 		"ja-JP": "スキャンタイムスタンプ",
 	},
 	PDFScanLogScanLocationLatKey: {
 		"en-US": "Scan Location Latitude",
+		// "id-ID": "Lintang Lokasi Scan",
 		"ja-JP": "スキャン位置緯度",
 	},
 	PDFScanLogScanLocationLngKey: {
 		"en-US": "Scan Location Longitude",
+		// "id-ID": "Bujur Lokasi Scan",
 		"ja-JP": "スキャン位置経度",
 	},
 	PDFScanLogScanResultKey: {
 		"en-US": "Scan Result",
+		// "id-ID": "Hasil Scan",
 		"ja-JP": "スキャン結果",
+	},
+
+	PDFScanLogTotalScanLogsKey: {
+		"en-US": "Total Scan Logs",
+		// "id-ID": "Total Log Scan",
+		"ja-JP": "総スキャンログ数",
 	},
 
 	// * Maintenance Schedule PDF Export labels
 	PDFMaintenanceScheduleListReportKey: {
 		"en-US": "Maintenance Schedule List Report",
+		// "id-ID": "Laporan Daftar Jadwal Pemeliharaan",
 		"ja-JP": "保守スケジュール一覧レポート",
 	},
 	PDFMaintenanceScheduleIDKey: {
 		"en-US": "ID",
+		// "id-ID": "ID",
 		"ja-JP": "ID",
 	},
 	PDFMaintenanceScheduleAssetIDKey: {
 		"en-US": "Asset ID",
+		// "id-ID": "ID Aset",
 		"ja-JP": "資産ID",
 	},
 	PDFMaintenanceScheduleMaintenanceTypeKey: {
 		"en-US": "Maintenance Type",
+		// "id-ID": "Tipe Pemeliharaan",
 		"ja-JP": "保守タイプ",
 	},
 	PDFMaintenanceScheduleIsRecurringKey: {
 		"en-US": "Is Recurring",
+		// "id-ID": "Berulang",
 		"ja-JP": "繰り返し",
 	},
 	PDFMaintenanceScheduleIntervalValueKey: {
 		"en-US": "Interval Value",
+		// "id-ID": "Nilai Interval",
 		"ja-JP": "間隔値",
 	},
 	PDFMaintenanceScheduleIntervalUnitKey: {
 		"en-US": "Interval Unit",
+		// "id-ID": "Unit Interval",
 		"ja-JP": "間隔単位",
 	},
 	PDFMaintenanceScheduleScheduledTimeKey: {
 		"en-US": "Scheduled Time",
+		// "id-ID": "Waktu Terjadwal",
 		"ja-JP": "予定時間",
 	},
 	PDFMaintenanceScheduleNextScheduledDateKey: {
 		"en-US": "Next Scheduled Date",
+		// "id-ID": "Tanggal Terjadwal Berikutnya",
 		"ja-JP": "次回予定日",
 	},
 	PDFMaintenanceScheduleLastExecutedDateKey: {
 		"en-US": "Last Executed Date",
+		// "id-ID": "Tanggal Eksekusi Terakhir",
 		"ja-JP": "最終実行日",
 	},
 	PDFMaintenanceScheduleStateKey: {
 		"en-US": "State",
+		// "id-ID": "Negara",
 		"ja-JP": "状態",
 	},
 	PDFMaintenanceScheduleAutoCompleteKey: {
 		"en-US": "Auto Complete",
+		// "id-ID": "Penyelesaian Otomatis",
 		"ja-JP": "自動完了",
 	},
 	PDFMaintenanceScheduleEstimatedCostKey: {
@@ -1391,64 +1525,85 @@ var messageTranslations = map[MessageKey]map[string]string{
 	},
 	PDFMaintenanceScheduleCreatedByIDKey: {
 		"en-US": "Created By ID",
+		// "id-ID": "Dibuat Oleh ID",
 		"ja-JP": "作成者ID",
 	},
 	PDFMaintenanceScheduleCreatedAtKey: {
 		"en-US": "Created At",
+		// "id-ID": "Dibuat Pada",
 		"ja-JP": "作成日時",
 	},
 	PDFMaintenanceScheduleUpdatedAtKey: {
 		"en-US": "Updated At",
+		// "id-ID": "Diperbarui Pada",
 		"ja-JP": "更新日時",
 	},
 	PDFMaintenanceScheduleTitleKey: {
 		"en-US": "Title",
+		// "id-ID": "Judul",
 		"ja-JP": "タイトル",
 	},
 	PDFMaintenanceScheduleDescriptionKey: {
 		"en-US": "Description",
+		// "id-ID": "Deskripsi",
 		"ja-JP": "説明",
+	},
+
+	PDFMaintenanceScheduleTotalSchedulesKey: {
+		"en-US": "Total Maintenance Schedules",
+		// "id-ID": "Total Jadwal Pemeliharaan",
+		"ja-JP": "総保守スケジュール数",
 	},
 
 	// * Maintenance Record PDF Export labels
 	PDFMaintenanceRecordListReportKey: {
 		"en-US": "Maintenance Record List Report",
+		// "id-ID": "Laporan Daftar Catatan Pemeliharaan",
 		"ja-JP": "保守レコード一覧レポート",
 	},
 	PDFMaintenanceRecordIDKey: {
 		"en-US": "ID",
+		// "id-ID": "ID",
 		"ja-JP": "ID",
 	},
 	PDFMaintenanceRecordScheduleIDKey: {
 		"en-US": "Schedule ID",
+		// "id-ID": "ID Jadwal",
 		"ja-JP": "スケジュールID",
 	},
 	PDFMaintenanceRecordAssetIDKey: {
 		"en-US": "Asset ID",
+		// "id-ID": "ID Aset",
 		"ja-JP": "資産ID",
 	},
 	PDFMaintenanceRecordMaintenanceDateKey: {
 		"en-US": "Maintenance Date",
+		// "id-ID": "Tanggal Pemeliharaan",
 		"ja-JP": "保守日",
 	},
 	PDFMaintenanceRecordCompletionDateKey: {
 		"en-US": "Completion Date",
+		// "id-ID": "Tanggal Penyelesaian",
 		"ja-JP": "完了日",
 	},
 	PDFMaintenanceRecordDurationMinutesKey: {
 		"en-US": "Duration (Minutes)",
+		// "id-ID": "Durasi (Menit)",
 		"ja-JP": "期間（分）",
 	},
 	PDFMaintenanceRecordPerformedByUserIDKey: {
 		"en-US": "Performed By User ID",
+		// "id-ID": "Dilakukan Oleh ID Pengguna",
 		"ja-JP": "実行者ユーザーID",
 	},
 	PDFMaintenanceRecordPerformedByVendorKey: {
 		"en-US": "Performed By Vendor",
+		// "id-ID": "Dilakukan Oleh Vendor",
 		"ja-JP": "実行者ベンダー",
 	},
 	PDFMaintenanceRecordResultKey: {
 		"en-US": "Result",
+		// "id-ID": "Hasil",
 		"ja-JP": "結果",
 	},
 	PDFMaintenanceRecordActualCostKey: {
@@ -1457,19 +1612,39 @@ var messageTranslations = map[MessageKey]map[string]string{
 	},
 	PDFMaintenanceRecordTitleKey: {
 		"en-US": "Title",
+		// "id-ID": "Judul",
 		"ja-JP": "タイトル",
 	},
 	PDFMaintenanceRecordNotesKey: {
 		"en-US": "Notes",
+		// "id-ID": "Catatan",
 		"ja-JP": "メモ",
 	},
 	PDFMaintenanceRecordCreatedAtKey: {
 		"en-US": "Created At",
+		// "id-ID": "Dibuat Pada",
 		"ja-JP": "作成日時",
 	},
 	PDFMaintenanceRecordUpdatedAtKey: {
 		"en-US": "Updated At",
+		// "id-ID": "Diperbarui Pada",
 		"ja-JP": "更新日時",
+	},
+
+	PDFMaintenanceRecordTotalRecordsKey: {
+		"en-US": "Total Maintenance Records",
+		// "id-ID": "Total Catatan Pemeliharaan",
+		"ja-JP": "総保守レコード数",
+	},
+	PDFMaintenanceRecordPageKey: {
+		"en-US": "Page",
+		// "id-ID": "Halaman",
+		"ja-JP": "ページ",
+	},
+	PDFMaintenanceRecordOfKey: {
+		"en-US": "of",
+		// "id-ID": "dari",
+		"ja-JP": "/",
 	},
 
 	// * Issue Report PDF Export labels
@@ -1479,112 +1654,146 @@ var messageTranslations = map[MessageKey]map[string]string{
 	},
 	PDFIssueReportIDKey: {
 		"en-US": "ID",
+		// "id-ID": "ID",
 		"ja-JP": "ID",
 	},
 	PDFIssueReportAssetIDKey: {
 		"en-US": "Asset ID",
+		// "id-ID": "ID Aset",
 		"ja-JP": "資産ID",
 	},
 	PDFIssueReportReportedByIDKey: {
 		"en-US": "Reported By ID",
+		// "id-ID": "Dilaporkan Oleh ID",
 		"ja-JP": "報告者ID",
 	},
 	PDFIssueReportReportedDateKey: {
 		"en-US": "Reported Date",
+		// "id-ID": "Tanggal Dilaporkan",
 		"ja-JP": "報告日",
 	},
 	PDFIssueReportIssueTypeKey: {
 		"en-US": "Issue Type",
+		// "id-ID": "Jenis Masalah",
 		"ja-JP": "問題タイプ",
 	},
 	PDFIssueReportPriorityKey: {
 		"en-US": "Priority",
+		// "id-ID": "Prioritas",
 		"ja-JP": "優先度",
 	},
 	PDFIssueReportStatusKey: {
 		"en-US": "Status",
+		// "id-ID": "Status",
 		"ja-JP": "ステータス",
 	},
 	PDFIssueReportResolvedDateKey: {
 		"en-US": "Resolved Date",
+		// "id-ID": "Tanggal Diselesaikan",
 		"ja-JP": "解決日",
 	},
 	PDFIssueReportResolvedByIDKey: {
 		"en-US": "Resolved By ID",
+		// "id-ID": "Diselesaikan Oleh ID",
 		"ja-JP": "解決者ID",
 	},
 	PDFIssueReportTitleKey: {
 		"en-US": "Title",
+		// "id-ID": "Judul",
 		"ja-JP": "タイトル",
 	},
 	PDFIssueReportDescriptionKey: {
 		"en-US": "Description",
+		// "id-ID": "Deskripsi",
 		"ja-JP": "説明",
 	},
 	PDFIssueReportResolutionNotesKey: {
 		"en-US": "Resolution Notes",
+		// "id-ID": "Catatan Penyelesaian",
 		"ja-JP": "解決メモ",
 	},
 	PDFIssueReportCreatedAtKey: {
 		"en-US": "Created At",
+		// "id-ID": "Dibuat Pada",
 		"ja-JP": "作成日時",
 	},
 	PDFIssueReportUpdatedAtKey: {
 		"en-US": "Updated At",
+		// "id-ID": "Diperbarui Pada",
 		"ja-JP": "更新日時",
+	},
+
+	PDFIssueReportTotalReportsKey: {
+		"en-US": "Total Issue Reports",
+		// "id-ID": "Total Laporan Masalah",
+		"ja-JP": "総問題レポート数",
 	},
 
 	// * Asset Movement PDF Export labels
 	PDFAssetMovementListReportKey: {
 		"en-US": "Asset Movement List Report",
+		// "id-ID": "Laporan Daftar Pergerakan Aset",
 		"ja-JP": "資産移動一覧レポート",
 	},
 	PDFAssetMovementIDKey: {
 		"en-US": "ID",
+		// "id-ID": "ID",
 		"ja-JP": "ID",
 	},
 	PDFAssetMovementAssetIDKey: {
 		"en-US": "Asset ID",
+		// "id-ID": "ID Aset",
 		"ja-JP": "資産ID",
 	},
 	PDFAssetMovementFromLocationIDKey: {
 		"en-US": "From Location ID",
+		// "id-ID": "ID Lokasi Asal",
 		"ja-JP": "移動元場所ID",
 	},
 	PDFAssetMovementToLocationIDKey: {
 		"en-US": "To Location ID",
+		// "id-ID": "ID Lokasi Tujuan",
 		"ja-JP": "移動先場所ID",
 	},
 	PDFAssetMovementFromUserIDKey: {
 		"en-US": "From User ID",
+		// "id-ID": "ID Pengguna Asal",
 		"ja-JP": "移動元ユーザーID",
 	},
 	PDFAssetMovementToUserIDKey: {
 		"en-US": "To User ID",
+		// "id-ID": "ID Pengguna Tujuan",
 		"ja-JP": "移動先ユーザーID",
 	},
 	PDFAssetMovementMovedByIDKey: {
 		"en-US": "Moved By ID",
+		// "id-ID": "ID Pemindah",
 		"ja-JP": "移動者ID",
 	},
 	PDFAssetMovementMovementDateKey: {
 		"en-US": "Movement Date",
+		// "id-ID": "Tanggal Pergerakan",
 		"ja-JP": "移動日",
 	},
 	PDFAssetMovementNotesKey: {
 		"en-US": "Notes",
+		// "id-ID": "Catatan",
 		"ja-JP": "メモ",
 	},
 	PDFAssetMovementCreatedAtKey: {
 		"en-US": "Created At",
+		// "id-ID": "Dibuat Pada",
 		"ja-JP": "作成日時",
 	},
 	PDFAssetMovementUpdatedAtKey: {
 		"en-US": "Updated At",
+		// "id-ID": "Diperbarui Pada",
 		"ja-JP": "更新日時",
 	},
+
 	PDFAssetMovementTotalMovementsKey: {
 		"en-US": "Total Asset Movements",
+		// "id-ID": "Total Pergerakan Aset",
 		"ja-JP": "総資産移動数",
 	},
 
@@ -1640,6 +1849,16 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Notification deleted successfully",
 		// "id-ID": "Notifikasi berhasil dihapus",
 		"ja-JP": "通知が正常に削除されました",
+	},
+	SuccessNotificationsBulkCreatedKey: {
+		"en-US": "Notifications created successfully",
+		// "id-ID": "Notifikasi berhasil dibuat secara massal",
+		"ja-JP": "複数の通知が正常に作成されました",
+	},
+	SuccessNotificationsBulkDeletedKey: {
+		"en-US": "Notifications deleted successfully",
+		// "id-ID": "Notifikasi berhasil dihapus secara massal",
+		"ja-JP": "複数の通知が正常に削除されました",
 	},
 	SuccessNotificationRetrievedKey: {
 		"en-US": "Notification retrieved successfully",
@@ -1730,6 +1949,16 @@ var messageTranslations = map[MessageKey]map[string]string{
 		// "id-ID": "Laporan masalah berhasil dihapus",
 		"ja-JP": "問題レポートが正常に削除されました",
 	},
+	SuccessIssueReportsBulkCreatedKey: {
+		"en-US": "Issue reports created successfully",
+		// "id-ID": "Laporan masalah berhasil dibuat secara massal",
+		"ja-JP": "複数の問題レポートが正常に作成されました",
+	},
+	SuccessIssueReportsBulkDeletedKey: {
+		"en-US": "Issue reports deleted successfully",
+		// "id-ID": "Laporan masalah berhasil dihapus secara massal",
+		"ja-JP": "複数の問題レポートが正常に削除されました",
+	},
 	SuccessIssueReportRetrievedKey: {
 		"en-US": "Issue report retrieved successfully",
 		// "id-ID": "Laporan masalah berhasil diambil",
@@ -1813,6 +2042,16 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Asset movement deleted successfully",
 		// "id-ID": "Pergerakan aset berhasil dihapus",
 		"ja-JP": "アセット移動が正常に削除されました",
+	},
+	SuccessAssetMovementsBulkCreatedKey: {
+		"en-US": "Asset movements created successfully",
+		// "id-ID": "Pergerakan aset berhasil dibuat secara massal",
+		"ja-JP": "複数のアセット移動が正常に作成されました",
+	},
+	SuccessAssetMovementsBulkDeletedKey: {
+		"en-US": "Asset movements deleted successfully",
+		// "id-ID": "Pergerakan aset berhasil dihapus secara massal",
+		"ja-JP": "複数のアセット移動が正常に削除されました",
 	},
 	SuccessAssetMovementRetrievedKey: {
 		"en-US": "Asset movement retrieved successfully",
@@ -1898,6 +2137,16 @@ var messageTranslations = map[MessageKey]map[string]string{
 		// "id-ID": "Jadwal pemeliharaan berhasil dihapus",
 		"ja-JP": "保守スケジュールが正常に削除されました",
 	},
+	SuccessMaintenanceSchedulesBulkCreatedKey: {
+		"en-US": "Maintenance schedules created successfully",
+		// "id-ID": "Jadwal pemeliharaan berhasil dibuat secara massal",
+		"ja-JP": "複数の保守スケジュールが正常に作成されました",
+	},
+	SuccessMaintenanceSchedulesBulkDeletedKey: {
+		"en-US": "Maintenance schedules deleted successfully",
+		// "id-ID": "Jadwal pemeliharaan berhasil dihapus secara massal",
+		"ja-JP": "複数の保守スケジュールが正常に削除されました",
+	},
 	SuccessMaintenanceScheduleRetrievedKey: {
 		"en-US": "Maintenance schedules retrieved successfully",
 		// "id-ID": "Jadwal pemeliharaan berhasil diambil",
@@ -1927,6 +2176,16 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Maintenance record deleted successfully",
 		// "id-ID": "Catatan pemeliharaan berhasil dihapus",
 		"ja-JP": "保守レコードが正常に削除されました",
+	},
+	SuccessMaintenanceRecordsBulkCreatedKey: {
+		"en-US": "Maintenance records created successfully",
+		// "id-ID": "Catatan pemeliharaan berhasil dibuat secara massal",
+		"ja-JP": "複数の保守レコードが正常に作成されました",
+	},
+	SuccessMaintenanceRecordsBulkDeletedKey: {
+		"en-US": "Maintenance records deleted successfully",
+		// "id-ID": "Catatan pemeliharaan berhasil dihapus secara massal",
+		"ja-JP": "複数の保守レコードが正常に削除されました",
 	},
 	SuccessMaintenanceRecordRetrievedKey: {
 		"en-US": "Maintenance records retrieved successfully",

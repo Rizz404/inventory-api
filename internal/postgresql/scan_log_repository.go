@@ -10,6 +10,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ScanLogRepository struct {
@@ -89,6 +90,46 @@ func (r *ScanLogRepository) CreateScanLog(ctx context.Context, payload *domain.S
 	// Return created scan log (no need to query again)
 	// GORM has already filled the model with created data including ID and timestamps
 	return mapper.ToDomainScanLog(&modelScanLog), nil
+}
+
+func (r *ScanLogRepository) BulkCreateScanLogs(ctx context.Context, scanLogs []domain.ScanLog) ([]domain.ScanLog, error) {
+	if len(scanLogs) == 0 {
+		return []domain.ScanLog{}, nil
+	}
+
+	models := make([]*model.ScanLog, len(scanLogs))
+	for i := range scanLogs {
+		m := mapper.ToModelScanLogForCreate(&scanLogs[i])
+		models[i] = &m
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.
+		Omit(clause.Associations).
+		Session(&gorm.Session{CreateBatchSize: 500}).
+		Create(&models).Error; err != nil {
+		tx.Rollback()
+		return nil, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	created := make([]domain.ScanLog, len(models))
+	for i := range models {
+		created[i] = mapper.ToDomainScanLog(models[i])
+	}
+	return created, nil
 }
 
 func (r *ScanLogRepository) DeleteScanLog(ctx context.Context, scanLogId string) error {

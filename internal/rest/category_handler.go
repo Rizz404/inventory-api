@@ -30,6 +30,11 @@ func NewCategoryHandler(app fiber.Router, s category.CategoryService) {
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
 		handler.CreateCategory,
 	)
+	categories.Post("/bulk",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.BulkCreateCategories,
+	)
 
 	categories.Get("/", handler.GetCategoriesPaginated)
 	categories.Get("/statistics", handler.GetCategoryStatistics)
@@ -95,6 +100,21 @@ func (h *CategoryHandler) parseCategoryFiltersAndSort(c *fiber.Ctx) (domain.Cate
 }
 
 // *===========================MUTATION===========================*
+func (h *CategoryHandler) BulkCreateCategories(c *fiber.Ctx) error {
+	var payload domain.BulkCreateCategoriesPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	categories, err := h.Service.BulkCreateCategories(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusCreated, utils.SuccessCategoriesBulkCreatedKey, categories)
+}
+
 func (h *CategoryHandler) CreateCategory(c *fiber.Ctx) error {
 	var payload domain.CreateCategoryPayload
 	if err := web.ParseAndValidate(c, &payload); err != nil {

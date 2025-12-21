@@ -16,6 +16,7 @@ import (
 type Repository interface {
 	// * MUTATION
 	CreateUser(ctx context.Context, payload *domain.User) (domain.User, error)
+	BulkCreateUsers(ctx context.Context, users []domain.User) ([]domain.User, error)
 	UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.User, error)
 	DeleteUser(ctx context.Context, userId string) error
 	BulkDeleteUsers(ctx context.Context, userIds []string) (domain.BulkDeleteUsers, error)
@@ -43,6 +44,7 @@ type Repository interface {
 type UserService interface {
 	// * MUTATION
 	CreateUser(ctx context.Context, payload *domain.CreateUserPayload, avatarFile *multipart.FileHeader) (domain.UserResponse, error)
+	BulkCreateUsers(ctx context.Context, payload *domain.BulkCreateUsersPayload) (domain.BulkCreateUsersResponse, error)
 	UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload, avatarFile *multipart.FileHeader) (domain.UserResponse, error)
 	DeleteUser(ctx context.Context, userId string) error
 	BulkDeleteUsers(ctx context.Context, payload *domain.BulkDeleteUsersPayload) (domain.BulkDeleteUsersResponse, error)
@@ -171,6 +173,83 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 
 	// * Convert to UserResponse using mapper
 	return mapper.UserToResponse(&createdUser), nil
+}
+
+func (s *Service) BulkCreateUsers(ctx context.Context, payload *domain.BulkCreateUsersPayload) (domain.BulkCreateUsersResponse, error) {
+	if payload == nil || len(payload.Users) == 0 {
+		return domain.BulkCreateUsersResponse{}, domain.ErrBadRequest("users payload is required")
+	}
+
+	nameSeen := make(map[string]struct{})
+	emailSeen := make(map[string]struct{})
+	for _, userPayload := range payload.Users {
+		if _, exists := nameSeen[userPayload.Name]; exists {
+			return domain.BulkCreateUsersResponse{}, domain.ErrBadRequest("duplicate user name: " + userPayload.Name)
+		}
+		nameSeen[userPayload.Name] = struct{}{}
+
+		if _, exists := emailSeen[userPayload.Email]; exists {
+			return domain.BulkCreateUsersResponse{}, domain.ErrBadRequest("duplicate user email: " + userPayload.Email)
+		}
+		emailSeen[userPayload.Email] = struct{}{}
+	}
+
+	// Check all names and emails against database
+	for name := range nameSeen {
+		exists, err := s.Repo.CheckNameExists(ctx, name)
+		if err != nil {
+			return domain.BulkCreateUsersResponse{}, err
+		}
+		if exists {
+			return domain.BulkCreateUsersResponse{}, domain.ErrConflictWithKey(utils.ErrUserNameExistsKey)
+		}
+	}
+
+	for email := range emailSeen {
+		exists, err := s.Repo.CheckEmailExists(ctx, email)
+		if err != nil {
+			return domain.BulkCreateUsersResponse{}, err
+		}
+		if exists {
+			return domain.BulkCreateUsersResponse{}, domain.ErrConflictWithKey(utils.ErrUserEmailExistsKey)
+		}
+	}
+
+	users := make([]domain.User, len(payload.Users))
+	for i, userPayload := range payload.Users {
+		hashedPassword, err := utils.HashPassword(userPayload.Password)
+		if err != nil {
+			return domain.BulkCreateUsersResponse{}, domain.ErrInternal(err)
+		}
+
+		preferredLang := "id-ID"
+		if userPayload.PreferredLang != nil {
+			preferredLang = *userPayload.PreferredLang
+		}
+
+		users[i] = domain.User{
+			Name:          userPayload.Name,
+			Email:         userPayload.Email,
+			PasswordHash:  hashedPassword,
+			FullName:      userPayload.FullName,
+			Role:          userPayload.Role,
+			EmployeeID:    userPayload.EmployeeID,
+			PreferredLang: preferredLang,
+			IsActive:      userPayload.IsActive,
+			AvatarURL:     userPayload.AvatarURL,
+		}
+	}
+
+	createdUsers, err := s.Repo.BulkCreateUsers(ctx, users)
+	if err != nil {
+		return domain.BulkCreateUsersResponse{}, err
+	}
+
+	response := domain.BulkCreateUsersResponse{
+		Users: mapper.UsersToResponses(createdUsers),
+	}
+
+	return response, nil
 }
 
 func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload, avatarFile *multipart.FileHeader) (domain.UserResponse, error) {

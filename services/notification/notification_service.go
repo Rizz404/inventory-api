@@ -15,6 +15,7 @@ type Repository interface {
 	CreateNotification(ctx context.Context, payload *domain.Notification) (domain.Notification, error)
 	UpdateNotification(ctx context.Context, notificationId string, payload *domain.UpdateNotificationPayload) (domain.Notification, error)
 	DeleteNotification(ctx context.Context, notificationId string) error
+	BulkCreateNotifications(ctx context.Context, notifications []domain.Notification) ([]domain.Notification, error)
 	BulkDeleteNotifications(ctx context.Context, notificationIds []string) (domain.BulkDeleteNotifications, error)
 	MarkNotifications(ctx context.Context, userId string, notificationIds []string, isRead bool) error
 
@@ -38,6 +39,7 @@ type NotificationService interface {
 	CreateNotification(ctx context.Context, payload *domain.CreateNotificationPayload) (domain.NotificationResponse, error)
 	UpdateNotification(ctx context.Context, notificationId string, payload *domain.UpdateNotificationPayload) (domain.NotificationResponse, error)
 	DeleteNotification(ctx context.Context, notificationId string) error
+	BulkCreateNotifications(ctx context.Context, payload *domain.BulkCreateNotificationsPayload) (domain.BulkCreateNotificationsResponse, error)
 	BulkDeleteNotifications(ctx context.Context, payload *domain.BulkDeleteNotificationsPayload) (domain.BulkDeleteNotificationsResponse, error)
 	MarkNotifications(ctx context.Context, userId string, notificationIds []string, isRead bool) error
 
@@ -125,6 +127,64 @@ func (s *Service) DeleteNotification(ctx context.Context, notificationId string)
 		return err
 	}
 	return nil
+}
+
+func (s *Service) BulkCreateNotifications(ctx context.Context, payload *domain.BulkCreateNotificationsPayload) (domain.BulkCreateNotificationsResponse, error) {
+	if payload == nil || len(payload.Notifications) == 0 {
+		return domain.BulkCreateNotificationsResponse{}, domain.ErrBadRequest("notifications payload is required")
+	}
+
+	// * Validate no duplicates in payload
+	seenMap := make(map[string]struct{})
+	for _, item := range payload.Notifications {
+		key := item.UserID
+		if _, exists := seenMap[key]; exists {
+			return domain.BulkCreateNotificationsResponse{}, domain.ErrBadRequest("duplicate user ID: " + key)
+		}
+		seenMap[key] = struct{}{}
+	}
+
+	// * Build domain notifications
+	notifications := make([]domain.Notification, len(payload.Notifications))
+	for i, item := range payload.Notifications {
+		notifications[i] = domain.Notification{
+			UserID:            item.UserID,
+			RelatedEntityType: item.RelatedEntityType,
+			RelatedEntityID:   item.RelatedEntityID,
+			RelatedAssetID:    item.RelatedAssetID,
+			Type:              item.Type,
+			Priority:          item.Priority,
+			IsRead:            false,
+			ExpiresAt:         item.ExpiresAt,
+			Translations:      make([]domain.NotificationTranslation, len(item.Translations)),
+		}
+
+		// * Convert translation payloads
+		for j, translationPayload := range item.Translations {
+			notifications[i].Translations[j] = domain.NotificationTranslation{
+				LangCode: translationPayload.LangCode,
+				Title:    translationPayload.Title,
+				Message:  translationPayload.Message,
+			}
+		}
+	}
+
+	// * Call repository bulk create
+	created, err := s.Repo.BulkCreateNotifications(ctx, notifications)
+	if err != nil {
+		return domain.BulkCreateNotificationsResponse{}, err
+	}
+
+	// * Send FCM notifications asynchronously
+	for i := range created {
+		go s.sendFCMNotification(context.Background(), &created[i])
+	}
+
+	// * Convert to responses
+	response := domain.BulkCreateNotificationsResponse{
+		Notifications: mapper.NotificationsToResponses(created, mapper.DefaultLangCode),
+	}
+	return response, nil
 }
 
 func (s *Service) BulkDeleteNotifications(ctx context.Context, payload *domain.BulkDeleteNotificationsPayload) (domain.BulkDeleteNotificationsResponse, error) {

@@ -15,6 +15,7 @@ type Repository interface {
 	CreateSchedule(ctx context.Context, payload *domain.MaintenanceSchedule) (domain.MaintenanceSchedule, error)
 	UpdateSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload) (domain.MaintenanceSchedule, error)
 	DeleteSchedule(ctx context.Context, scheduleId string) error
+	BulkCreateSchedules(ctx context.Context, schedules []domain.MaintenanceSchedule) ([]domain.MaintenanceSchedule, error)
 	BulkDeleteSchedules(ctx context.Context, scheduleIds []string) (domain.BulkDeleteMaintenanceSchedules, error)
 
 	// Schedule queries
@@ -59,6 +60,7 @@ type MaintenanceScheduleService interface {
 	CreateMaintenanceSchedule(ctx context.Context, payload *domain.CreateMaintenanceSchedulePayload, createdBy string) (domain.MaintenanceScheduleResponse, error)
 	UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload) (domain.MaintenanceScheduleResponse, error)
 	DeleteMaintenanceSchedule(ctx context.Context, scheduleId string) error
+	BulkCreateMaintenanceSchedules(ctx context.Context, payload *domain.BulkCreateMaintenanceSchedulesPayload, createdBy string) (domain.BulkCreateMaintenanceSchedulesResponse, error)
 	BulkDeleteMaintenanceSchedules(ctx context.Context, payload *domain.BulkDeleteMaintenanceSchedulesPayload) (domain.BulkDeleteMaintenanceSchedulesResponse, error)
 	GetMaintenanceSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, int64, error)
 	GetMaintenanceSchedulesCursor(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, error)
@@ -167,6 +169,94 @@ func (s *Service) UpdateMaintenanceSchedule(ctx context.Context, scheduleId stri
 
 func (s *Service) DeleteMaintenanceSchedule(ctx context.Context, scheduleId string) error {
 	return s.Repo.DeleteSchedule(ctx, scheduleId)
+}
+
+func (s *Service) BulkCreateMaintenanceSchedules(ctx context.Context, payload *domain.BulkCreateMaintenanceSchedulesPayload, createdBy string) (domain.BulkCreateMaintenanceSchedulesResponse, error) {
+	if payload == nil || len(payload.MaintenanceSchedules) == 0 {
+		return domain.BulkCreateMaintenanceSchedulesResponse{}, domain.ErrBadRequest("maintenance schedules payload is required")
+	}
+
+	// * Validate creator user exists
+	if createdBy != "" {
+		if exists, err := s.UserService.CheckUserExists(ctx, createdBy); err != nil {
+			return domain.BulkCreateMaintenanceSchedulesResponse{}, err
+		} else if !exists {
+			return domain.BulkCreateMaintenanceSchedulesResponse{}, domain.ErrNotFoundWithKey(utils.ErrUserNotFoundKey)
+		}
+	}
+
+	// * Validate all assets exist
+	assetMap := make(map[string]struct{})
+	for _, item := range payload.MaintenanceSchedules {
+		if _, exists := assetMap[item.AssetID]; !exists {
+			assetMap[item.AssetID] = struct{}{}
+			if exists, err := s.AssetService.CheckAssetExists(ctx, item.AssetID); err != nil {
+				return domain.BulkCreateMaintenanceSchedulesResponse{}, err
+			} else if !exists {
+				return domain.BulkCreateMaintenanceSchedulesResponse{}, domain.ErrNotFoundWithKey(utils.ErrAssetNotFoundKey)
+			}
+		}
+	}
+
+	// * Build domain schedules
+	schedules := make([]domain.MaintenanceSchedule, len(payload.MaintenanceSchedules))
+	for i, item := range payload.MaintenanceSchedules {
+		nextScheduledDate, err := time.Parse("2006-01-02", item.NextScheduledDate)
+		if err != nil {
+			return domain.BulkCreateMaintenanceSchedulesResponse{}, domain.ErrBadRequestWithKey(utils.ErrMaintenanceScheduleDateRequiredKey)
+		}
+
+		isRecurring := false
+		if item.IsRecurring != nil {
+			isRecurring = *item.IsRecurring
+		}
+
+		autoComplete := false
+		if item.AutoComplete != nil {
+			autoComplete = *item.AutoComplete
+		}
+
+		// * Validate: if recurring, must have interval
+		if isRecurring && (item.IntervalValue == nil || item.IntervalUnit == nil) {
+			return domain.BulkCreateMaintenanceSchedulesResponse{}, domain.ErrBadRequest("recurring schedule must have interval_value and interval_unit")
+		}
+
+		schedules[i] = domain.MaintenanceSchedule{
+			AssetID:           item.AssetID,
+			MaintenanceType:   item.MaintenanceType,
+			IsRecurring:       isRecurring,
+			IntervalValue:     item.IntervalValue,
+			IntervalUnit:      item.IntervalUnit,
+			ScheduledTime:     item.ScheduledTime,
+			NextScheduledDate: nextScheduledDate,
+			State:             domain.StateActive,
+			AutoComplete:      autoComplete,
+			EstimatedCost:     item.EstimatedCost,
+			CreatedBy:         createdBy,
+			Translations:      make([]domain.MaintenanceScheduleTranslation, len(item.Translations)),
+		}
+
+		// * Convert translations
+		for j, t := range item.Translations {
+			schedules[i].Translations[j] = domain.MaintenanceScheduleTranslation{
+				LangCode:    t.LangCode,
+				Title:       t.Title,
+				Description: t.Description,
+			}
+		}
+	}
+
+	// * Call repository bulk create
+	created, err := s.Repo.BulkCreateSchedules(ctx, schedules)
+	if err != nil {
+		return domain.BulkCreateMaintenanceSchedulesResponse{}, err
+	}
+
+	// * Convert to responses
+	response := domain.BulkCreateMaintenanceSchedulesResponse{
+		MaintenanceSchedules: mapper.MaintenanceSchedulesToResponses(created, mapper.DefaultLangCode),
+	}
+	return response, nil
 }
 
 func (s *Service) BulkDeleteMaintenanceSchedules(ctx context.Context, payload *domain.BulkDeleteMaintenanceSchedulesPayload) (domain.BulkDeleteMaintenanceSchedulesResponse, error) {

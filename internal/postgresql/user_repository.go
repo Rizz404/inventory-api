@@ -10,6 +10,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type UserRepository struct {
@@ -66,6 +67,46 @@ func (r *UserRepository) CreateUser(ctx context.Context, payload *domain.User) (
 	}
 
 	return mapper.ToDomainUser(&modelUser), nil
+}
+
+func (r *UserRepository) BulkCreateUsers(ctx context.Context, users []domain.User) ([]domain.User, error) {
+	if len(users) == 0 {
+		return []domain.User{}, nil
+	}
+
+	models := make([]*model.User, len(users))
+	for i := range users {
+		m := mapper.ToModelUserForCreate(&users[i])
+		models[i] = &m
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.
+		Omit(clause.Associations).
+		Session(&gorm.Session{CreateBatchSize: 500}).
+		Create(&models).Error; err != nil {
+		tx.Rollback()
+		return nil, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	created := make([]domain.User, len(models))
+	for i := range models {
+		created[i] = mapper.ToDomainUser(models[i])
+	}
+	return created, nil
 }
 
 func (r *UserRepository) UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.User, error) {

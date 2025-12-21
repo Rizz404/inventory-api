@@ -10,6 +10,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type NotificationRepository struct {
@@ -123,6 +124,70 @@ func (r *NotificationRepository) CreateNotification(ctx context.Context, payload
 		})
 	}
 	return domainNotification, nil
+}
+
+func (r *NotificationRepository) BulkCreateNotifications(ctx context.Context, notifications []domain.Notification) ([]domain.Notification, error) {
+	if len(notifications) == 0 {
+		return []domain.Notification{}, nil
+	}
+
+	models := make([]*model.Notification, len(notifications))
+	for i := range notifications {
+		m := mapper.ToModelNotificationForCreate(&notifications[i])
+		models[i] = &m
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.
+		Omit(clause.Associations).
+		Session(&gorm.Session{CreateBatchSize: 500}).
+		Create(&models).Error; err != nil {
+		tx.Rollback()
+		return nil, domain.ErrInternal(err)
+	}
+
+	// Build translations batch
+	var translations []model.NotificationTranslation
+	for i := range models {
+		n := notifications[i]
+		for _, t := range n.Translations {
+			mt := mapper.ToModelNotificationTranslationForCreate(models[i].ID.String(), &t)
+			translations = append(translations, mt)
+		}
+	}
+	if len(translations) > 0 {
+		if err := tx.Session(&gorm.Session{CreateBatchSize: 500}).Create(&translations).Error; err != nil {
+			tx.Rollback()
+			return nil, domain.ErrInternal(err)
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	created := make([]domain.Notification, len(models))
+	for i := range models {
+		created[i] = mapper.ToDomainNotification(models[i])
+		// attach translations from input for response consistency
+		for _, t := range notifications[i].Translations {
+			created[i].Translations = append(created[i].Translations, domain.NotificationTranslation{
+				LangCode: t.LangCode,
+				Title:    t.Title,
+				Message:  t.Message,
+			})
+		}
+	}
+	return created, nil
 }
 
 func (r *NotificationRepository) UpdateNotification(ctx context.Context, notificationId string, payload *domain.UpdateNotificationPayload) (domain.Notification, error) {

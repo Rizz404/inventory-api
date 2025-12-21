@@ -11,6 +11,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type LocationRepository struct {
@@ -99,6 +100,67 @@ func (r *LocationRepository) CreateLocation(ctx context.Context, payload *domain
 		})
 	}
 	return domainLocation, nil
+}
+
+func (r *LocationRepository) BulkCreateLocations(ctx context.Context, locations []domain.Location) ([]domain.Location, error) {
+	if len(locations) == 0 {
+		return []domain.Location{}, nil
+	}
+
+	models := make([]*model.Location, len(locations))
+	for i := range locations {
+		m := mapper.ToModelLocationForCreate(&locations[i])
+		models[i] = &m
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.
+		Omit(clause.Associations).
+		Session(&gorm.Session{CreateBatchSize: 500}).
+		Create(&models).Error; err != nil {
+		tx.Rollback()
+		return nil, domain.ErrInternal(err)
+	}
+
+	var translations []model.LocationTranslation
+	for i := range models {
+		l := locations[i]
+		for _, t := range l.Translations {
+			mt := mapper.ToModelLocationTranslationForCreate(models[i].ID.String(), &t)
+			translations = append(translations, mt)
+		}
+	}
+	if len(translations) > 0 {
+		if err := tx.Session(&gorm.Session{CreateBatchSize: 500}).Create(&translations).Error; err != nil {
+			tx.Rollback()
+			return nil, domain.ErrInternal(err)
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	created := make([]domain.Location, len(models))
+	for i := range models {
+		created[i] = mapper.ToDomainLocation(models[i])
+		for _, t := range locations[i].Translations {
+			created[i].Translations = append(created[i].Translations, domain.LocationTranslation{
+				LangCode:     t.LangCode,
+				LocationName: t.LocationName,
+			})
+		}
+	}
+	return created, nil
 }
 
 func (r *LocationRepository) UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload) (domain.Location, error) {

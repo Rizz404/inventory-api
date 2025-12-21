@@ -16,6 +16,7 @@ type Repository interface {
 	CreateIssueReport(ctx context.Context, payload *domain.IssueReport) (domain.IssueReport, error)
 	UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload) (domain.IssueReport, error)
 	DeleteIssueReport(ctx context.Context, issueReportId string) error
+	BulkCreateIssueReports(ctx context.Context, reports []domain.IssueReport) ([]domain.IssueReport, error)
 	BulkDeleteIssueReports(ctx context.Context, reportIds []string) (domain.BulkDeleteIssueReports, error)
 
 	// * QUERY
@@ -49,6 +50,7 @@ type IssueReportService interface {
 	CreateIssueReport(ctx context.Context, payload *domain.CreateIssueReportPayload, reportedBy string) (domain.IssueReportResponse, error)
 	UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload) (domain.IssueReportResponse, error)
 	DeleteIssueReport(ctx context.Context, issueReportId string) error
+	BulkCreateIssueReports(ctx context.Context, payload *domain.BulkCreateIssueReportsPayload, reportedBy string) (domain.BulkCreateIssueReportsResponse, error)
 	BulkDeleteIssueReports(ctx context.Context, payload *domain.BulkDeleteIssueReportsPayload) (domain.BulkDeleteIssueReportsResponse, error)
 
 	// * QUERY
@@ -139,6 +141,70 @@ func (s *Service) DeleteIssueReport(ctx context.Context, issueReportId string) e
 		return err
 	}
 	return nil
+}
+
+func (s *Service) BulkCreateIssueReports(ctx context.Context, payload *domain.BulkCreateIssueReportsPayload, reportedBy string) (domain.BulkCreateIssueReportsResponse, error) {
+	if payload == nil || len(payload.IssueReports) == 0 {
+		return domain.BulkCreateIssueReportsResponse{}, domain.ErrBadRequest("issue reports payload is required")
+	}
+
+	// * Validate no duplicates in payload
+	seenAssets := make(map[string]struct{})
+	for _, item := range payload.IssueReports {
+		if _, exists := seenAssets[item.AssetID]; exists {
+			return domain.BulkCreateIssueReportsResponse{}, domain.ErrBadRequest("duplicate asset ID: " + item.AssetID)
+		}
+		seenAssets[item.AssetID] = struct{}{}
+	}
+
+	// * Validate all assets exist
+	for assetID := range seenAssets {
+		_, err := s.AssetService.GetAssetById(ctx, assetID, mapper.DefaultLangCode)
+		if err != nil {
+			return domain.BulkCreateIssueReportsResponse{}, domain.ErrNotFound("asset")
+		}
+	}
+
+	// * Build domain issue reports
+	issueReports := make([]domain.IssueReport, len(payload.IssueReports))
+	for i, item := range payload.IssueReports {
+		issueReports[i] = domain.IssueReport{
+			AssetID:      item.AssetID,
+			ReportedBy:   reportedBy,
+			ReportedDate: time.Now(),
+			IssueType:    item.IssueType,
+			Priority:     item.Priority,
+			Status:       domain.IssueStatusOpen,
+			Translations: make([]domain.IssueReportTranslation, len(item.Translations)),
+		}
+
+		// * Convert translation payloads
+		for j, translationPayload := range item.Translations {
+			issueReports[i].Translations[j] = domain.IssueReportTranslation{
+				LangCode:        translationPayload.LangCode,
+				Title:           translationPayload.Title,
+				Description:     translationPayload.Description,
+				ResolutionNotes: nil,
+			}
+		}
+	}
+
+	// * Call repository bulk create
+	created, err := s.Repo.BulkCreateIssueReports(ctx, issueReports)
+	if err != nil {
+		return domain.BulkCreateIssueReportsResponse{}, err
+	}
+
+	// * Send notifications asynchronously
+	for i := range created {
+		go s.sendIssueReportedNotification(context.Background(), &created[i])
+	}
+
+	// * Convert to responses
+	response := domain.BulkCreateIssueReportsResponse{
+		IssueReports: mapper.IssueReportsToResponses(created, mapper.DefaultLangCode),
+	}
+	return response, nil
 }
 
 func (s *Service) BulkDeleteIssueReports(ctx context.Context, payload *domain.BulkDeleteIssueReportsPayload) (domain.BulkDeleteIssueReportsResponse, error) {

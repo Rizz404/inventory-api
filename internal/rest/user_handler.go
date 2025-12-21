@@ -36,6 +36,11 @@ func NewUserHandler(app fiber.Router, s user.UserService) {
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
 		handler.CreateUser,
 	)
+	users.Post("/bulk",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.BulkCreateUsers,
+	)
 
 	users.Get("/", handler.GetUsersPaginated)
 	users.Get("/statistics", handler.GetUserStatistics)
@@ -106,6 +111,21 @@ func (h *UserHandler) parseUserFiltersAndSort(c *fiber.Ctx) (domain.UserParams, 
 }
 
 // *===========================MUTATION===========================*
+func (h *UserHandler) BulkCreateUsers(c *fiber.Ctx) error {
+	var payload domain.BulkCreateUsersPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	users, err := h.Service.BulkCreateUsers(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusCreated, utils.SuccessUsersBulkCreatedKey, users)
+}
+
 func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 	var payload domain.CreateUserPayload
 

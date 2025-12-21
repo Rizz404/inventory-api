@@ -74,6 +74,16 @@ type BulkDeleteLocationsResponse struct {
 	DeletedIDS   []string `json:"deletedIds"`
 }
 
+// --- Bulk Create ---
+
+type BulkCreateLocationsPayload struct {
+	Locations []CreateLocationPayload `json:"locations" validate:"required,min=1,max=100,dive"`
+}
+
+type BulkCreateLocationsResponse struct {
+	Locations []LocationResponse `json:"locations"`
+}
+
 // --- Payloads ---
 
 type CreateLocationPayload struct {

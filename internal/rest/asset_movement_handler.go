@@ -31,6 +31,11 @@ func NewAssetMovementHandler(app fiber.Router, s asset_movement.AssetMovementSer
 		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! jangan lupa uncomment pas production
 		handler.CreateAssetMovement,
 	)
+	movements.Post("/bulk",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! jangan lupa uncomment pas production
+		handler.BulkCreateAssetMovements,
+	)
 
 	movements.Get("/", handler.GetAssetMovementsPaginated)
 	movements.Get("/statistics", handler.GetAssetMovementStatistics)
@@ -134,6 +139,26 @@ func (h *AssetMovementHandler) parseAssetMovementFiltersAndSort(c *fiber.Ctx) (d
 }
 
 // *===========================MUTATION===========================*
+func (h *AssetMovementHandler) BulkCreateAssetMovements(c *fiber.Ctx) error {
+	var payload domain.BulkCreateAssetMovementsPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	// * Get user ID from context (set by auth middleware)
+	userID, ok := web.GetUserIDFromContext(c)
+	if !ok {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
+	}
+
+	movements, err := h.Service.BulkCreateAssetMovements(c.Context(), &payload, userID)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusCreated, utils.SuccessAssetMovementsBulkCreatedKey, movements)
+}
+
 func (h *AssetMovementHandler) CreateAssetMovement(c *fiber.Ctx) error {
 	var payload domain.CreateAssetMovementPayload
 	if err := web.ParseAndValidate(c, &payload); err != nil {

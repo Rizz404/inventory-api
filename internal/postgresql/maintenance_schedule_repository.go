@@ -10,6 +10,7 @@ import (
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type MaintenanceScheduleRepository struct {
@@ -106,6 +107,69 @@ func (r *MaintenanceScheduleRepository) CreateSchedule(ctx context.Context, payl
 		})
 	}
 	return domainSchedule, nil
+}
+
+func (r *MaintenanceScheduleRepository) BulkCreateMaintenanceSchedules(ctx context.Context, schedules []domain.MaintenanceSchedule) ([]domain.MaintenanceSchedule, error) {
+	if len(schedules) == 0 {
+		return []domain.MaintenanceSchedule{}, nil
+	}
+
+	models := make([]*model.MaintenanceSchedule, len(schedules))
+	for i := range schedules {
+		m := mapper.ToModelMaintenanceScheduleForCreate(&schedules[i])
+		models[i] = &m
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.
+		Omit(clause.Associations).
+		Session(&gorm.Session{CreateBatchSize: 500}).
+		Create(&models).Error; err != nil {
+		tx.Rollback()
+		return nil, domain.ErrInternal(err)
+	}
+
+	// Insert translations in batch
+	var translations []model.MaintenanceScheduleTranslation
+	for i := range models {
+		s := schedules[i]
+		for _, t := range s.Translations {
+			mt := mapper.ToModelMaintenanceScheduleTranslationForCreate(models[i].ID.String(), &t)
+			translations = append(translations, mt)
+		}
+	}
+	if len(translations) > 0 {
+		if err := tx.Session(&gorm.Session{CreateBatchSize: 500}).Create(&translations).Error; err != nil {
+			tx.Rollback()
+			return nil, domain.ErrInternal(err)
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	created := make([]domain.MaintenanceSchedule, len(models))
+	for i := range models {
+		created[i] = mapper.ToDomainMaintenanceSchedule(models[i])
+		for _, t := range schedules[i].Translations {
+			created[i].Translations = append(created[i].Translations, domain.MaintenanceScheduleTranslation{
+				LangCode:    t.LangCode,
+				Title:       t.Title,
+				Description: t.Description,
+			})
+		}
+	}
+	return created, nil
 }
 
 func (r *MaintenanceScheduleRepository) UpdateSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload) (domain.MaintenanceSchedule, error) {

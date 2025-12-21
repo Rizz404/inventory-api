@@ -17,6 +17,7 @@ type Repository interface {
 	CreateRecord(ctx context.Context, payload *domain.MaintenanceRecord) (domain.MaintenanceRecord, error)
 	UpdateRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload) (domain.MaintenanceRecord, error)
 	DeleteRecord(ctx context.Context, recordId string) error
+	BulkCreateRecords(ctx context.Context, records []domain.MaintenanceRecord) ([]domain.MaintenanceRecord, error)
 	BulkDeleteRecords(ctx context.Context, recordIds []string) (domain.BulkDeleteMaintenanceRecords, error)
 
 	// Record queries
@@ -53,6 +54,7 @@ type MaintenanceRecordService interface {
 	CreateMaintenanceRecord(ctx context.Context, payload *domain.CreateMaintenanceRecordPayload, performedBy string) (domain.MaintenanceRecordResponse, error)
 	UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload) (domain.MaintenanceRecordResponse, error)
 	DeleteMaintenanceRecord(ctx context.Context, recordId string) error
+	BulkCreateMaintenanceRecords(ctx context.Context, payload *domain.BulkCreateMaintenanceRecordsPayload, performedBy string) (domain.BulkCreateMaintenanceRecordsResponse, error)
 	BulkDeleteMaintenanceRecords(ctx context.Context, payload *domain.BulkDeleteMaintenanceRecordsPayload) (domain.BulkDeleteMaintenanceRecordsResponse, error)
 	GetMaintenanceRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, int64, error)
 	GetMaintenanceRecordsCursor(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, error)
@@ -188,6 +190,99 @@ func (s *Service) UpdateMaintenanceRecord(ctx context.Context, recordId string, 
 
 func (s *Service) DeleteMaintenanceRecord(ctx context.Context, recordId string) error {
 	return s.Repo.DeleteRecord(ctx, recordId)
+}
+
+func (s *Service) BulkCreateMaintenanceRecords(ctx context.Context, payload *domain.BulkCreateMaintenanceRecordsPayload, performedBy string) (domain.BulkCreateMaintenanceRecordsResponse, error) {
+	if payload == nil || len(payload.MaintenanceRecords) == 0 {
+		return domain.BulkCreateMaintenanceRecordsResponse{}, domain.ErrBadRequest("maintenance records payload is required")
+	}
+
+	// * Validate all assets exist
+	assetMap := make(map[string]struct{})
+	for _, item := range payload.MaintenanceRecords {
+		if _, exists := assetMap[item.AssetID]; !exists {
+			assetMap[item.AssetID] = struct{}{}
+			if exists, err := s.AssetService.CheckAssetExists(ctx, item.AssetID); err != nil {
+				return domain.BulkCreateMaintenanceRecordsResponse{}, err
+			} else if !exists {
+				return domain.BulkCreateMaintenanceRecordsResponse{}, domain.ErrNotFoundWithKey(utils.ErrAssetNotFoundKey)
+			}
+		}
+	}
+
+	// * Build domain records
+	records := make([]domain.MaintenanceRecord, len(payload.MaintenanceRecords))
+	for i, item := range payload.MaintenanceRecords {
+		maintenanceDate, err := time.Parse("2006-01-02", item.MaintenanceDate)
+		if err != nil {
+			return domain.BulkCreateMaintenanceRecordsResponse{}, domain.ErrBadRequest("invalid maintenance_date format")
+		}
+
+		var completionDate *time.Time
+		if item.CompletionDate != nil {
+			parsedDate, err := time.Parse("2006-01-02", *item.CompletionDate)
+			if err != nil {
+				return domain.BulkCreateMaintenanceRecordsResponse{}, domain.ErrBadRequest("invalid completion_date format")
+			}
+			completionDate = &parsedDate
+		}
+
+		// * Determine performer
+		var performerPtr *string
+		if item.PerformedByUser != nil && *item.PerformedByUser != "" {
+			performerPtr = item.PerformedByUser
+		} else if performedBy != "" {
+			performerPtr = &performedBy
+		}
+
+		// * Validate performer if present
+		if performerPtr != nil {
+			if exists, err := s.UserService.CheckUserExists(ctx, *performerPtr); err != nil {
+				return domain.BulkCreateMaintenanceRecordsResponse{}, err
+			} else if !exists {
+				return domain.BulkCreateMaintenanceRecordsResponse{}, domain.ErrNotFoundWithKey(utils.ErrUserNotFoundKey)
+			}
+		}
+
+		records[i] = domain.MaintenanceRecord{
+			ScheduleID:        item.ScheduleID,
+			AssetID:           item.AssetID,
+			MaintenanceDate:   maintenanceDate,
+			CompletionDate:    completionDate,
+			DurationMinutes:   item.DurationMinutes,
+			PerformedByUser:   performerPtr,
+			PerformedByVendor: item.PerformedByVendor,
+			Result:            item.Result,
+			ActualCost:        item.ActualCost,
+			Translations:      make([]domain.MaintenanceRecordTranslation, len(item.Translations)),
+		}
+
+		// * Convert translations
+		for j, t := range item.Translations {
+			records[i].Translations[j] = domain.MaintenanceRecordTranslation{
+				LangCode: t.LangCode,
+				Title:    t.Title,
+				Notes:    t.Notes,
+			}
+		}
+	}
+
+	// * Call repository bulk create
+	created, err := s.Repo.BulkCreateRecords(ctx, records)
+	if err != nil {
+		return domain.BulkCreateMaintenanceRecordsResponse{}, err
+	}
+
+	// * Send notifications asynchronously
+	for i := range created {
+		go s.sendMaintenanceCompletedNotification(ctx, &created[i])
+	}
+
+	// * Convert to responses
+	response := domain.BulkCreateMaintenanceRecordsResponse{
+		MaintenanceRecords: mapper.MaintenanceRecordsToResponses(created, mapper.DefaultLangCode),
+	}
+	return response, nil
 }
 
 func (s *Service) BulkDeleteMaintenanceRecords(ctx context.Context, payload *domain.BulkDeleteMaintenanceRecordsPayload) (domain.BulkDeleteMaintenanceRecordsResponse, error) {
