@@ -100,6 +100,57 @@ func (r *UserRepository) DeleteUser(ctx context.Context, userId string) error {
 	return nil
 }
 
+func (r *UserRepository) BulkDeleteUsers(ctx context.Context, userIds []string) (domain.BulkDeleteUsers, error) {
+	result := domain.BulkDeleteUsers{
+		RequestedIDS: userIds,
+		DeletedIDS:   []string{},
+	}
+
+	if len(userIds) == 0 {
+		return result, nil
+	}
+
+	// First, find which users actually exist
+	var existingUsers []model.User
+	if err := r.db.WithContext(ctx).Select("id").Where("id IN ?", userIds).Find(&existingUsers).Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	// Collect existing user IDs
+	existingIds := make([]string, 0, len(existingUsers))
+	for _, user := range existingUsers {
+		existingIds = append(existingIds, user.ID.String())
+	}
+
+	// If no users exist, return early
+	if len(existingIds) == 0 {
+		return result, nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return result, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Delete users
+	if err := tx.Delete(&model.User{}, "id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	result.DeletedIDS = existingIds
+	return result, nil
+}
+
 func (r *UserRepository) UpdatePassword(ctx context.Context, userId string, hashedPassword string) error {
 	// Update only the password_hash and updated_at
 	updates := map[string]interface{}{

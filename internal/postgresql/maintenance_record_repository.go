@@ -180,6 +180,63 @@ func (r *MaintenanceRecordRepository) DeleteRecord(ctx context.Context, recordId
 	return nil
 }
 
+func (r *MaintenanceRecordRepository) BulkDeleteRecords(ctx context.Context, recordIds []string) (domain.BulkDeleteMaintenanceRecords, error) {
+	result := domain.BulkDeleteMaintenanceRecords{
+		RequestedIDS: recordIds,
+		DeletedIDS:   []string{},
+	}
+
+	if len(recordIds) == 0 {
+		return result, nil
+	}
+
+	// First, find which records actually exist
+	var existingRecords []model.MaintenanceRecord
+	if err := r.db.WithContext(ctx).Select("id").Where("id IN ?", recordIds).Find(&existingRecords).Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	// Collect existing record IDs
+	existingIds := make([]string, 0, len(existingRecords))
+	for _, record := range existingRecords {
+		existingIds = append(existingIds, record.ID.String())
+	}
+
+	// If no records exist, return early
+	if len(existingIds) == 0 {
+		return result, nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return result, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Delete translations first (foreign key constraint)
+	if err := tx.Delete(&model.MaintenanceRecordTranslation{}, "record_id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	// Delete maintenance records
+	if err := tx.Delete(&model.MaintenanceRecord{}, "id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	result.DeletedIDS = existingIds
+	return result, nil
+}
+
 // ===== QUERIES =====
 
 func (r *MaintenanceRecordRepository) GetRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecord, error) {

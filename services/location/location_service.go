@@ -16,6 +16,7 @@ type Repository interface {
 	CreateLocation(ctx context.Context, payload *domain.Location) (domain.Location, error)
 	UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload) (domain.Location, error)
 	DeleteLocation(ctx context.Context, locationId string) error
+	BulkDeleteLocations(ctx context.Context, locationIds []string) (domain.BulkDeleteLocations, error)
 
 	// * QUERY
 	GetLocationsPaginated(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.Location, error)
@@ -35,6 +36,7 @@ type LocationService interface {
 	CreateLocation(ctx context.Context, payload *domain.CreateLocationPayload) (domain.LocationResponse, error)
 	UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload) (domain.LocationResponse, error)
 	DeleteLocation(ctx context.Context, locationId string) error
+	BulkDeleteLocations(ctx context.Context, payload *domain.BulkDeleteLocationsPayload) (domain.BulkDeleteLocationsResponse, error)
 
 	// * QUERY
 	GetLocationsPaginated(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationListResponse, int64, error)
@@ -147,6 +149,27 @@ func (s *Service) DeleteLocation(ctx context.Context, locationId string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *Service) BulkDeleteLocations(ctx context.Context, payload *domain.BulkDeleteLocationsPayload) (domain.BulkDeleteLocationsResponse, error) {
+	// * Validate that IDs are provided
+	if len(payload.IDS) == 0 {
+		return domain.BulkDeleteLocationsResponse{}, domain.ErrBadRequestWithKey(utils.ErrLocationIDRequiredKey)
+	}
+
+	// * Perform bulk delete operation
+	result, err := s.Repo.BulkDeleteLocations(ctx, payload.IDS)
+	if err != nil {
+		return domain.BulkDeleteLocationsResponse{}, err
+	}
+
+	// * Convert to response
+	response := domain.BulkDeleteLocationsResponse{
+		RequestedIDS: result.RequestedIDS,
+		DeletedIDS:   result.DeletedIDS,
+	}
+
+	return response, nil
 }
 
 // *===========================QUERY===========================*

@@ -62,6 +62,11 @@ func NewIssueReportHandler(app fiber.Router, s issue_report.IssueReportService) 
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
 		handler.DeleteIssueReport,
 	)
+	issueReports.Post("/bulk-delete",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.BulkDeleteIssueReports,
+	)
 }
 
 func (h *IssueReportHandler) parseIssueReportFiltersAndSort(c *fiber.Ctx) (domain.IssueReportParams, error) {
@@ -198,6 +203,20 @@ func (h *IssueReportHandler) DeleteIssueReport(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessIssueReportDeletedKey, nil)
+}
+
+func (h *IssueReportHandler) BulkDeleteIssueReports(c *fiber.Ctx) error {
+	var payload domain.BulkDeleteIssueReportsPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	result, err := h.Service.BulkDeleteIssueReports(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessIssueReportsBulkDeletedKey, result)
 }
 
 // *===========================QUERY===========================*

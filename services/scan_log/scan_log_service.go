@@ -13,6 +13,7 @@ type Repository interface {
 	// * MUTATION
 	CreateScanLog(ctx context.Context, payload *domain.ScanLog) (domain.ScanLog, error)
 	DeleteScanLog(ctx context.Context, scanLogId string) error
+	BulkDeleteScanLogs(ctx context.Context, scanLogIds []string) (domain.BulkDeleteScanLogs, error)
 
 	// * QUERY
 	GetScanLogsPaginated(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLog, error)
@@ -31,6 +32,7 @@ type ScanLogService interface {
 	// * MUTATION
 	CreateScanLog(ctx context.Context, payload *domain.CreateScanLogPayload, scannedBy string) (domain.ScanLogResponse, error)
 	DeleteScanLog(ctx context.Context, scanLogId string) error
+	BulkDeleteScanLogs(ctx context.Context, payload *domain.BulkDeleteScanLogsPayload) (domain.BulkDeleteScanLogsResponse, error)
 
 	// * QUERY
 	GetScanLogsPaginated(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLogResponse, int64, error)
@@ -95,6 +97,27 @@ func (s *Service) DeleteScanLog(ctx context.Context, scanLogId string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *Service) BulkDeleteScanLogs(ctx context.Context, payload *domain.BulkDeleteScanLogsPayload) (domain.BulkDeleteScanLogsResponse, error) {
+	// * Validate that IDs are provided
+	if len(payload.IDS) == 0 {
+		return domain.BulkDeleteScanLogsResponse{}, domain.ErrBadRequest("scan log IDs are required")
+	}
+
+	// * Perform bulk delete operation
+	result, err := s.Repo.BulkDeleteScanLogs(ctx, payload.IDS)
+	if err != nil {
+		return domain.BulkDeleteScanLogsResponse{}, err
+	}
+
+	// * Convert to response
+	response := domain.BulkDeleteScanLogsResponse{
+		RequestedIDS: result.RequestedIDS,
+		DeletedIDS:   result.DeletedIDS,
+	}
+
+	return response, nil
 }
 
 // *===========================QUERY===========================*

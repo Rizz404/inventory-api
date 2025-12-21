@@ -49,6 +49,11 @@ func NewLocationHandler(app fiber.Router, s location.LocationService) {
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
 		handler.DeleteLocation,
 	)
+	locations.Post("/bulk-delete",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.BulkDeleteLocations,
+	)
 }
 
 func (h *LocationHandler) parseLocationFiltersAndSort(c *fiber.Ctx) (domain.LocationParams, error) {
@@ -124,6 +129,20 @@ func (h *LocationHandler) DeleteLocation(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessLocationDeletedKey, nil)
+}
+
+func (h *LocationHandler) BulkDeleteLocations(c *fiber.Ctx) error {
+	var payload domain.BulkDeleteLocationsPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	result, err := h.Service.BulkDeleteLocations(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessLocationsBulkDeletedKey, result)
 }
 
 // *===========================QUERY===========================*

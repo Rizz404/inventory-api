@@ -53,6 +53,11 @@ func NewUserHandler(app fiber.Router, s user.UserService) {
 	users.Patch("/:id", handler.UpdateUser)
 	users.Patch("/:id/password", middleware.AuthMiddleware(), handler.ChangePassword)
 	users.Delete("/:id", handler.DeleteUser)
+	users.Post("/bulk-delete",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.BulkDeleteUsers,
+	)
 }
 
 func (h *UserHandler) parseUserFiltersAndSort(c *fiber.Ctx) (domain.UserParams, error) {
@@ -274,6 +279,20 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessUserDeletedKey, nil)
+}
+
+func (h *UserHandler) BulkDeleteUsers(c *fiber.Ctx) error {
+	var payload domain.BulkDeleteUsersPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	result, err := h.Service.BulkDeleteUsers(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessUsersBulkDeletedKey, result)
 }
 
 // *===========================QUERY===========================*

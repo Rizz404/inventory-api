@@ -15,6 +15,7 @@ type Repository interface {
 	CreateNotification(ctx context.Context, payload *domain.Notification) (domain.Notification, error)
 	UpdateNotification(ctx context.Context, notificationId string, payload *domain.UpdateNotificationPayload) (domain.Notification, error)
 	DeleteNotification(ctx context.Context, notificationId string) error
+	BulkDeleteNotifications(ctx context.Context, notificationIds []string) (domain.BulkDeleteNotifications, error)
 	MarkNotifications(ctx context.Context, userId string, notificationIds []string, isRead bool) error
 
 	// * QUERY
@@ -37,6 +38,7 @@ type NotificationService interface {
 	CreateNotification(ctx context.Context, payload *domain.CreateNotificationPayload) (domain.NotificationResponse, error)
 	UpdateNotification(ctx context.Context, notificationId string, payload *domain.UpdateNotificationPayload) (domain.NotificationResponse, error)
 	DeleteNotification(ctx context.Context, notificationId string) error
+	BulkDeleteNotifications(ctx context.Context, payload *domain.BulkDeleteNotificationsPayload) (domain.BulkDeleteNotificationsResponse, error)
 	MarkNotifications(ctx context.Context, userId string, notificationIds []string, isRead bool) error
 
 	// * QUERY
@@ -123,6 +125,27 @@ func (s *Service) DeleteNotification(ctx context.Context, notificationId string)
 		return err
 	}
 	return nil
+}
+
+func (s *Service) BulkDeleteNotifications(ctx context.Context, payload *domain.BulkDeleteNotificationsPayload) (domain.BulkDeleteNotificationsResponse, error) {
+	// * Validate that IDs are provided
+	if len(payload.IDS) == 0 {
+		return domain.BulkDeleteNotificationsResponse{}, domain.ErrBadRequest("notification IDs are required")
+	}
+
+	// * Perform bulk delete operation
+	result, err := s.Repo.BulkDeleteNotifications(ctx, payload.IDS)
+	if err != nil {
+		return domain.BulkDeleteNotificationsResponse{}, err
+	}
+
+	// * Convert to response
+	response := domain.BulkDeleteNotificationsResponse{
+		RequestedIDS: result.RequestedIDS,
+		DeletedIDS:   result.DeletedIDS,
+	}
+
+	return response, nil
 }
 
 func (s *Service) MarkNotifications(ctx context.Context, userId string, notificationIds []string, isRead bool) error {

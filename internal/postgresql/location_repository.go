@@ -204,6 +204,63 @@ func (r *LocationRepository) DeleteLocation(ctx context.Context, locationId stri
 	return nil
 }
 
+func (r *LocationRepository) BulkDeleteLocations(ctx context.Context, locationIds []string) (domain.BulkDeleteLocations, error) {
+	result := domain.BulkDeleteLocations{
+		RequestedIDS: locationIds,
+		DeletedIDS:   []string{},
+	}
+
+	if len(locationIds) == 0 {
+		return result, nil
+	}
+
+	// First, find which locations actually exist
+	var existingLocations []model.Location
+	if err := r.db.WithContext(ctx).Select("id").Where("id IN ?", locationIds).Find(&existingLocations).Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	// Collect existing location IDs
+	existingIds := make([]string, 0, len(existingLocations))
+	for _, location := range existingLocations {
+		existingIds = append(existingIds, location.ID.String())
+	}
+
+	// If no locations exist, return early
+	if len(existingIds) == 0 {
+		return result, nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return result, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Delete translations first (foreign key constraint)
+	if err := tx.Delete(&model.LocationTranslation{}, "location_id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	// Delete locations
+	if err := tx.Delete(&model.Location{}, "id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	result.DeletedIDS = existingIds
+	return result, nil
+}
+
 // *===========================QUERY===========================*
 func (r *LocationRepository) GetLocationsPaginated(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.Location, error) {
 	var locations []model.Location

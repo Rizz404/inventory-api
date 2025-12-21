@@ -67,6 +67,11 @@ func NewNotificationHandler(app fiber.Router, s notification.NotificationService
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
 		handler.DeleteNotification,
 	)
+	notifications.Post("/bulk-delete",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.BulkDeleteNotifications,
+	)
 }
 
 func (h *NotificationHandler) parseNotificationFiltersAndSort(c *fiber.Ctx) (domain.NotificationParams, error) {
@@ -177,6 +182,20 @@ func (h *NotificationHandler) DeleteNotification(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationDeletedKey, nil)
+}
+
+func (h *NotificationHandler) BulkDeleteNotifications(c *fiber.Ctx) error {
+	var payload domain.BulkDeleteNotificationsPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	result, err := h.Service.BulkDeleteNotifications(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessNotificationsBulkDeletedKey, result)
 }
 
 func (h *NotificationHandler) MarkNotificationsAsRead(c *fiber.Ctx) error {

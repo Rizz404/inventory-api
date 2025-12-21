@@ -239,6 +239,63 @@ func (r *IssueReportRepository) DeleteIssueReport(ctx context.Context, issueRepo
 	return nil
 }
 
+func (r *IssueReportRepository) BulkDeleteIssueReports(ctx context.Context, reportIds []string) (domain.BulkDeleteIssueReports, error) {
+	result := domain.BulkDeleteIssueReports{
+		RequestedIDS: reportIds,
+		DeletedIDS:   []string{},
+	}
+
+	if len(reportIds) == 0 {
+		return result, nil
+	}
+
+	// First, find which reports actually exist
+	var existingReports []model.IssueReport
+	if err := r.db.WithContext(ctx).Select("id").Where("id IN ?", reportIds).Find(&existingReports).Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	// Collect existing report IDs
+	existingIds := make([]string, 0, len(existingReports))
+	for _, report := range existingReports {
+		existingIds = append(existingIds, report.ID.String())
+	}
+
+	// If no reports exist, return early
+	if len(existingIds) == 0 {
+		return result, nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return result, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Delete translations first (foreign key constraint)
+	if err := tx.Delete(&model.IssueReportTranslation{}, "report_id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	// Delete issue reports
+	if err := tx.Delete(&model.IssueReport{}, "id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	result.DeletedIDS = existingIds
+	return result, nil
+}
+
 // *===========================QUERY===========================*
 func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReport, error) {
 	var issueReports []model.IssueReport

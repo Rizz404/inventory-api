@@ -44,6 +44,11 @@ func NewMaintenanceScheduleHandler(app fiber.Router, s maintenance_schedule.Main
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
 		handler.DeleteMaintenanceSchedule,
 	)
+	schedules.Post("/bulk-delete",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
+		handler.BulkDeleteMaintenanceSchedules,
+	)
 }
 
 func (h *MaintenanceScheduleHandler) parseFiltersAndSort(c *fiber.Ctx) (domain.MaintenanceScheduleParams, error) {
@@ -140,6 +145,20 @@ func (h *MaintenanceScheduleHandler) DeleteMaintenanceSchedule(c *fiber.Ctx) err
 		return web.HandleError(c, err)
 	}
 	return web.Success(c, fiber.StatusOK, utils.SuccessMaintenanceScheduleDeletedKey, nil)
+}
+
+func (h *MaintenanceScheduleHandler) BulkDeleteMaintenanceSchedules(c *fiber.Ctx) error {
+	var payload domain.BulkDeleteMaintenanceSchedulesPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	result, err := h.Service.BulkDeleteMaintenanceSchedules(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessMaintenanceSchedulesBulkDeletedKey, result)
 }
 
 // *===========================QUERY===========================*

@@ -49,6 +49,11 @@ func NewAssetMovementHandler(app fiber.Router, s asset_movement.AssetMovementSer
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
 		handler.DeleteAssetMovement,
 	)
+	movements.Post("/bulk-delete",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.BulkDeleteAssetMovements,
+	)
 
 	// * Export endpoints
 	movements.Post("/export/list",
@@ -180,6 +185,20 @@ func (h *AssetMovementHandler) DeleteAssetMovement(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessAssetMovementDeletedKey, nil)
+}
+
+func (h *AssetMovementHandler) BulkDeleteAssetMovements(c *fiber.Ctx) error {
+	var payload domain.BulkDeleteAssetMovementsPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	result, err := h.Service.BulkDeleteAssetMovements(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessAssetMovementsBulkDeletedKey, result)
 }
 
 // *===========================QUERY===========================*

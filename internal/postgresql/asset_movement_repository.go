@@ -252,6 +252,63 @@ func (r *AssetMovementRepository) DeleteAssetMovement(ctx context.Context, movem
 	return nil
 }
 
+func (r *AssetMovementRepository) BulkDeleteAssetMovements(ctx context.Context, movementIds []string) (domain.BulkDeleteAssetMovements, error) {
+	result := domain.BulkDeleteAssetMovements{
+		RequestedIDS: movementIds,
+		DeletedIDS:   []string{},
+	}
+
+	if len(movementIds) == 0 {
+		return result, nil
+	}
+
+	// First, find which movements actually exist
+	var existingMovements []model.AssetMovement
+	if err := r.db.WithContext(ctx).Select("id").Where("id IN ?", movementIds).Find(&existingMovements).Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	// Collect existing movement IDs
+	existingIds := make([]string, 0, len(existingMovements))
+	for _, movement := range existingMovements {
+		existingIds = append(existingIds, movement.ID.String())
+	}
+
+	// If no movements exist, return early
+	if len(existingIds) == 0 {
+		return result, nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return result, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Delete translations first (foreign key constraint)
+	if err := tx.Delete(&model.AssetMovementTranslation{}, "movement_id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	// Delete asset movements
+	if err := tx.Delete(&model.AssetMovement{}, "id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	result.DeletedIDS = existingIds
+	return result, nil
+}
+
 // *===========================QUERY===========================*
 func (r *AssetMovementRepository) GetAssetMovementsPaginated(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovement, error) {
 	var movements []model.AssetMovement

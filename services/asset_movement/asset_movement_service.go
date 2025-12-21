@@ -17,6 +17,7 @@ type Repository interface {
 	CreateAssetMovement(ctx context.Context, payload *domain.AssetMovement) (domain.AssetMovement, error)
 	UpdateAssetMovement(ctx context.Context, movementId string, payload *domain.UpdateAssetMovementPayload) (domain.AssetMovement, error)
 	DeleteAssetMovement(ctx context.Context, movementId string) error
+	BulkDeleteAssetMovements(ctx context.Context, movementIds []string) (domain.BulkDeleteAssetMovements, error)
 
 	// * QUERY
 	GetAssetMovementsPaginated(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovement, error)
@@ -56,6 +57,7 @@ type AssetMovementService interface {
 	CreateAssetMovement(ctx context.Context, payload *domain.CreateAssetMovementPayload, movedBy string) (domain.AssetMovementResponse, error)
 	UpdateAssetMovement(ctx context.Context, movementId string, payload *domain.UpdateAssetMovementPayload) (domain.AssetMovementResponse, error)
 	DeleteAssetMovement(ctx context.Context, movementId string) error
+	BulkDeleteAssetMovements(ctx context.Context, payload *domain.BulkDeleteAssetMovementsPayload) (domain.BulkDeleteAssetMovementsResponse, error)
 
 	// * QUERY
 	GetAssetMovementsPaginated(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, int64, error)
@@ -229,6 +231,27 @@ func (s *Service) DeleteAssetMovement(ctx context.Context, movementId string) er
 		return err
 	}
 	return nil
+}
+
+func (s *Service) BulkDeleteAssetMovements(ctx context.Context, payload *domain.BulkDeleteAssetMovementsPayload) (domain.BulkDeleteAssetMovementsResponse, error) {
+	// * Validate that IDs are provided
+	if len(payload.IDS) == 0 {
+		return domain.BulkDeleteAssetMovementsResponse{}, domain.ErrBadRequest("asset movement IDs are required")
+	}
+
+	// * Perform bulk delete operation
+	result, err := s.Repo.BulkDeleteAssetMovements(ctx, payload.IDS)
+	if err != nil {
+		return domain.BulkDeleteAssetMovementsResponse{}, err
+	}
+
+	// * Convert to response
+	response := domain.BulkDeleteAssetMovementsResponse{
+		RequestedIDS: result.RequestedIDS,
+		DeletedIDS:   result.DeletedIDS,
+	}
+
+	return response, nil
 }
 
 // *===========================QUERY===========================*

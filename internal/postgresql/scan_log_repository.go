@@ -98,6 +98,57 @@ func (r *ScanLogRepository) DeleteScanLog(ctx context.Context, scanLogId string)
 	return nil
 }
 
+func (r *ScanLogRepository) BulkDeleteScanLogs(ctx context.Context, scanLogIds []string) (domain.BulkDeleteScanLogs, error) {
+	result := domain.BulkDeleteScanLogs{
+		RequestedIDS: scanLogIds,
+		DeletedIDS:   []string{},
+	}
+
+	if len(scanLogIds) == 0 {
+		return result, nil
+	}
+
+	// First, find which scan logs actually exist
+	var existingScanLogs []model.ScanLog
+	if err := r.db.WithContext(ctx).Select("id").Where("id IN ?", scanLogIds).Find(&existingScanLogs).Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	// Collect existing scan log IDs
+	existingIds := make([]string, 0, len(existingScanLogs))
+	for _, scanLog := range existingScanLogs {
+		existingIds = append(existingIds, scanLog.ID.String())
+	}
+
+	// If no scan logs exist, return early
+	if len(existingIds) == 0 {
+		return result, nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return result, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Delete scan logs
+	if err := tx.Delete(&model.ScanLog{}, "id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	result.DeletedIDS = existingIds
+	return result, nil
+}
+
 // *===========================QUERY===========================*
 func (r *ScanLogRepository) GetScanLogsPaginated(ctx context.Context, params domain.ScanLogParams) ([]domain.ScanLog, error) {
 	var scanLogs []model.ScanLog

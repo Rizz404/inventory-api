@@ -18,6 +18,7 @@ type Repository interface {
 	CreateUser(ctx context.Context, payload *domain.User) (domain.User, error)
 	UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload) (domain.User, error)
 	DeleteUser(ctx context.Context, userId string) error
+	BulkDeleteUsers(ctx context.Context, userIds []string) (domain.BulkDeleteUsers, error)
 	UpdatePassword(ctx context.Context, userId string, hashedPassword string) error
 
 	// * QUERY
@@ -44,6 +45,7 @@ type UserService interface {
 	CreateUser(ctx context.Context, payload *domain.CreateUserPayload, avatarFile *multipart.FileHeader) (domain.UserResponse, error)
 	UpdateUser(ctx context.Context, userId string, payload *domain.UpdateUserPayload, avatarFile *multipart.FileHeader) (domain.UserResponse, error)
 	DeleteUser(ctx context.Context, userId string) error
+	BulkDeleteUsers(ctx context.Context, payload *domain.BulkDeleteUsersPayload) (domain.BulkDeleteUsersResponse, error)
 	ChangePassword(ctx context.Context, userId string, payload *domain.ChangePasswordPayload) error
 	ChangeCurrentUserPassword(ctx context.Context, currentUserId string, payload *domain.ChangePasswordPayload) error
 
@@ -254,6 +256,27 @@ func (s *Service) DeleteUser(ctx context.Context, userId string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *Service) BulkDeleteUsers(ctx context.Context, payload *domain.BulkDeleteUsersPayload) (domain.BulkDeleteUsersResponse, error) {
+	// * Validate that IDs are provided
+	if len(payload.IDS) == 0 {
+		return domain.BulkDeleteUsersResponse{}, domain.ErrBadRequest("user IDs are required")
+	}
+
+	// * Perform bulk delete operation
+	result, err := s.Repo.BulkDeleteUsers(ctx, payload.IDS)
+	if err != nil {
+		return domain.BulkDeleteUsersResponse{}, err
+	}
+
+	// * Convert to response
+	response := domain.BulkDeleteUsersResponse{
+		RequestedIDS: result.RequestedIDS,
+		DeletedIDS:   result.DeletedIDS,
+	}
+
+	return response, nil
 }
 
 // ChangePassword allows an admin (or authorized) to change another user's password without needing the old password.

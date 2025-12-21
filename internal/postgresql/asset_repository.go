@@ -112,6 +112,57 @@ func (r *AssetRepository) DeleteAsset(ctx context.Context, assetId string) error
 	return nil
 }
 
+func (r *AssetRepository) BulkDeleteAssets(ctx context.Context, assetIds []string) (domain.BulkDeleteAssets, error) {
+	result := domain.BulkDeleteAssets{
+		RequestedIDS: assetIds,
+		DeletedIDS:   []string{},
+	}
+
+	if len(assetIds) == 0 {
+		return result, nil
+	}
+
+	// First, find which assets actually exist
+	var existingAssets []model.Asset
+	if err := r.db.WithContext(ctx).Select("id").Where("id IN ?", assetIds).Find(&existingAssets).Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	// Collect existing asset IDs
+	existingIds := make([]string, 0, len(existingAssets))
+	for _, asset := range existingAssets {
+		existingIds = append(existingIds, asset.ID.String())
+	}
+
+	// If no assets exist, return early
+	if len(existingIds) == 0 {
+		return result, nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return result, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Delete assets
+	if err := tx.Delete(&model.Asset{}, "id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	result.DeletedIDS = existingIds
+	return result, nil
+}
+
 // *===========================QUERY===========================*
 func (r *AssetRepository) GetAssetsPaginated(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.Asset, error) {
 	var assets []model.Asset

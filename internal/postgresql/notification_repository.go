@@ -218,6 +218,63 @@ func (r *NotificationRepository) DeleteNotification(ctx context.Context, notific
 	return nil
 }
 
+func (r *NotificationRepository) BulkDeleteNotifications(ctx context.Context, notificationIds []string) (domain.BulkDeleteNotifications, error) {
+	result := domain.BulkDeleteNotifications{
+		RequestedIDS: notificationIds,
+		DeletedIDS:   []string{},
+	}
+
+	if len(notificationIds) == 0 {
+		return result, nil
+	}
+
+	// First, find which notifications actually exist
+	var existingNotifications []model.Notification
+	if err := r.db.WithContext(ctx).Select("id").Where("id IN ?", notificationIds).Find(&existingNotifications).Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	// Collect existing notification IDs
+	existingIds := make([]string, 0, len(existingNotifications))
+	for _, notification := range existingNotifications {
+		existingIds = append(existingIds, notification.ID.String())
+	}
+
+	// If no notifications exist, return early
+	if len(existingIds) == 0 {
+		return result, nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return result, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Delete translations first (foreign key constraint)
+	if err := tx.Delete(&model.NotificationTranslation{}, "notification_id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	// Delete notifications
+	if err := tx.Delete(&model.Notification{}, "id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	result.DeletedIDS = existingIds
+	return result, nil
+}
+
 // *===========================QUERY===========================*
 func (r *NotificationRepository) GetNotificationsPaginated(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.Notification, error) {
 	var notifications []model.Notification

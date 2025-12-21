@@ -16,6 +16,7 @@ type Repository interface {
 	CreateIssueReport(ctx context.Context, payload *domain.IssueReport) (domain.IssueReport, error)
 	UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload) (domain.IssueReport, error)
 	DeleteIssueReport(ctx context.Context, issueReportId string) error
+	BulkDeleteIssueReports(ctx context.Context, reportIds []string) (domain.BulkDeleteIssueReports, error)
 
 	// * QUERY
 	GetIssueReportsPaginated(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReport, error)
@@ -48,6 +49,7 @@ type IssueReportService interface {
 	CreateIssueReport(ctx context.Context, payload *domain.CreateIssueReportPayload, reportedBy string) (domain.IssueReportResponse, error)
 	UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload) (domain.IssueReportResponse, error)
 	DeleteIssueReport(ctx context.Context, issueReportId string) error
+	BulkDeleteIssueReports(ctx context.Context, payload *domain.BulkDeleteIssueReportsPayload) (domain.BulkDeleteIssueReportsResponse, error)
 
 	// * QUERY
 	GetIssueReportsPaginated(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReportListResponse, int64, error)
@@ -137,6 +139,27 @@ func (s *Service) DeleteIssueReport(ctx context.Context, issueReportId string) e
 		return err
 	}
 	return nil
+}
+
+func (s *Service) BulkDeleteIssueReports(ctx context.Context, payload *domain.BulkDeleteIssueReportsPayload) (domain.BulkDeleteIssueReportsResponse, error) {
+	// * Validate that IDs are provided
+	if len(payload.IDS) == 0 {
+		return domain.BulkDeleteIssueReportsResponse{}, domain.ErrBadRequest("issue report IDs are required")
+	}
+
+	// * Perform bulk delete operation
+	result, err := s.Repo.BulkDeleteIssueReports(ctx, payload.IDS)
+	if err != nil {
+		return domain.BulkDeleteIssueReportsResponse{}, err
+	}
+
+	// * Convert to response
+	response := domain.BulkDeleteIssueReportsResponse{
+		RequestedIDS: result.RequestedIDS,
+		DeletedIDS:   result.DeletedIDS,
+	}
+
+	return response, nil
 }
 
 // *===========================HELPER METHODS===========================*

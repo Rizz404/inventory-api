@@ -17,6 +17,7 @@ type Repository interface {
 	CreateRecord(ctx context.Context, payload *domain.MaintenanceRecord) (domain.MaintenanceRecord, error)
 	UpdateRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload) (domain.MaintenanceRecord, error)
 	DeleteRecord(ctx context.Context, recordId string) error
+	BulkDeleteRecords(ctx context.Context, recordIds []string) (domain.BulkDeleteMaintenanceRecords, error)
 
 	// Record queries
 	GetRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecord, error)
@@ -52,6 +53,7 @@ type MaintenanceRecordService interface {
 	CreateMaintenanceRecord(ctx context.Context, payload *domain.CreateMaintenanceRecordPayload, performedBy string) (domain.MaintenanceRecordResponse, error)
 	UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload) (domain.MaintenanceRecordResponse, error)
 	DeleteMaintenanceRecord(ctx context.Context, recordId string) error
+	BulkDeleteMaintenanceRecords(ctx context.Context, payload *domain.BulkDeleteMaintenanceRecordsPayload) (domain.BulkDeleteMaintenanceRecordsResponse, error)
 	GetMaintenanceRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, int64, error)
 	GetMaintenanceRecordsCursor(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, error)
 	GetMaintenanceRecordById(ctx context.Context, recordId string, langCode string) (domain.MaintenanceRecordResponse, error)
@@ -186,6 +188,27 @@ func (s *Service) UpdateMaintenanceRecord(ctx context.Context, recordId string, 
 
 func (s *Service) DeleteMaintenanceRecord(ctx context.Context, recordId string) error {
 	return s.Repo.DeleteRecord(ctx, recordId)
+}
+
+func (s *Service) BulkDeleteMaintenanceRecords(ctx context.Context, payload *domain.BulkDeleteMaintenanceRecordsPayload) (domain.BulkDeleteMaintenanceRecordsResponse, error) {
+	// * Validate that IDs are provided
+	if len(payload.IDS) == 0 {
+		return domain.BulkDeleteMaintenanceRecordsResponse{}, domain.ErrBadRequest("maintenance record IDs are required")
+	}
+
+	// * Perform bulk delete operation
+	result, err := s.Repo.BulkDeleteRecords(ctx, payload.IDS)
+	if err != nil {
+		return domain.BulkDeleteMaintenanceRecordsResponse{}, err
+	}
+
+	// * Convert to response
+	response := domain.BulkDeleteMaintenanceRecordsResponse{
+		RequestedIDS: result.RequestedIDS,
+		DeletedIDS:   result.DeletedIDS,
+	}
+
+	return response, nil
 }
 
 func (s *Service) GetMaintenanceRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, int64, error) {

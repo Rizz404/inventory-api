@@ -15,6 +15,7 @@ type Repository interface {
 	CreateSchedule(ctx context.Context, payload *domain.MaintenanceSchedule) (domain.MaintenanceSchedule, error)
 	UpdateSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload) (domain.MaintenanceSchedule, error)
 	DeleteSchedule(ctx context.Context, scheduleId string) error
+	BulkDeleteSchedules(ctx context.Context, scheduleIds []string) (domain.BulkDeleteMaintenanceSchedules, error)
 
 	// Schedule queries
 	GetSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceSchedule, error)
@@ -58,6 +59,7 @@ type MaintenanceScheduleService interface {
 	CreateMaintenanceSchedule(ctx context.Context, payload *domain.CreateMaintenanceSchedulePayload, createdBy string) (domain.MaintenanceScheduleResponse, error)
 	UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload) (domain.MaintenanceScheduleResponse, error)
 	DeleteMaintenanceSchedule(ctx context.Context, scheduleId string) error
+	BulkDeleteMaintenanceSchedules(ctx context.Context, payload *domain.BulkDeleteMaintenanceSchedulesPayload) (domain.BulkDeleteMaintenanceSchedulesResponse, error)
 	GetMaintenanceSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, int64, error)
 	GetMaintenanceSchedulesCursor(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, error)
 	GetMaintenanceScheduleById(ctx context.Context, scheduleId string, langCode string) (domain.MaintenanceScheduleResponse, error)
@@ -165,6 +167,27 @@ func (s *Service) UpdateMaintenanceSchedule(ctx context.Context, scheduleId stri
 
 func (s *Service) DeleteMaintenanceSchedule(ctx context.Context, scheduleId string) error {
 	return s.Repo.DeleteSchedule(ctx, scheduleId)
+}
+
+func (s *Service) BulkDeleteMaintenanceSchedules(ctx context.Context, payload *domain.BulkDeleteMaintenanceSchedulesPayload) (domain.BulkDeleteMaintenanceSchedulesResponse, error) {
+	// * Validate that IDs are provided
+	if len(payload.IDS) == 0 {
+		return domain.BulkDeleteMaintenanceSchedulesResponse{}, domain.ErrBadRequest("maintenance schedule IDs are required")
+	}
+
+	// * Perform bulk delete operation
+	result, err := s.Repo.BulkDeleteSchedules(ctx, payload.IDS)
+	if err != nil {
+		return domain.BulkDeleteMaintenanceSchedulesResponse{}, err
+	}
+
+	// * Convert to response
+	response := domain.BulkDeleteMaintenanceSchedulesResponse{
+		RequestedIDS: result.RequestedIDS,
+		DeletedIDS:   result.DeletedIDS,
+	}
+
+	return response, nil
 }
 
 func (s *Service) GetMaintenanceSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, int64, error) {

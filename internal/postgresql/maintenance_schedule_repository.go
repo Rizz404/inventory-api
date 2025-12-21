@@ -182,6 +182,63 @@ func (r *MaintenanceScheduleRepository) DeleteSchedule(ctx context.Context, sche
 	return nil
 }
 
+func (r *MaintenanceScheduleRepository) BulkDeleteSchedules(ctx context.Context, scheduleIds []string) (domain.BulkDeleteMaintenanceSchedules, error) {
+	result := domain.BulkDeleteMaintenanceSchedules{
+		RequestedIDS: scheduleIds,
+		DeletedIDS:   []string{},
+	}
+
+	if len(scheduleIds) == 0 {
+		return result, nil
+	}
+
+	// First, find which schedules actually exist
+	var existingSchedules []model.MaintenanceSchedule
+	if err := r.db.WithContext(ctx).Select("id").Where("id IN ?", scheduleIds).Find(&existingSchedules).Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	// Collect existing schedule IDs
+	existingIds := make([]string, 0, len(existingSchedules))
+	for _, schedule := range existingSchedules {
+		existingIds = append(existingIds, schedule.ID.String())
+	}
+
+	// If no schedules exist, return early
+	if len(existingIds) == 0 {
+		return result, nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return result, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Delete translations first (foreign key constraint)
+	if err := tx.Delete(&model.MaintenanceScheduleTranslation{}, "schedule_id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	// Delete maintenance schedules
+	if err := tx.Delete(&model.MaintenanceSchedule{}, "id IN ?", existingIds).Error; err != nil {
+		tx.Rollback()
+		return result, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return result, domain.ErrInternal(err)
+	}
+
+	result.DeletedIDS = existingIds
+	return result, nil
+}
+
 // ===== QUERIES =====
 
 func (r *MaintenanceScheduleRepository) GetSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceSchedule, error) {

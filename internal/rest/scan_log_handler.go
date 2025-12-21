@@ -48,6 +48,11 @@ func NewScanLogHandler(app fiber.Router, s scan_log.ScanLogService) {
 		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
 		handler.DeleteScanLog,
 	)
+	scanLogs.Post("/bulk-delete",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		handler.BulkDeleteScanLogs,
+	)
 }
 
 func (h *ScanLogHandler) parseScanLogFiltersAndSort(c *fiber.Ctx) (domain.ScanLogParams, error) {
@@ -152,6 +157,20 @@ func (h *ScanLogHandler) DeleteScanLog(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessScanLogDeletedKey, nil)
+}
+
+func (h *ScanLogHandler) BulkDeleteScanLogs(c *fiber.Ctx) error {
+	var payload domain.BulkDeleteScanLogsPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	result, err := h.Service.BulkDeleteScanLogs(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessScanLogsBulkDeletedKey, result)
 }
 
 // *===========================QUERY===========================*

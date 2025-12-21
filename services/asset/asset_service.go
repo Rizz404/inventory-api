@@ -22,6 +22,7 @@ type Repository interface {
 	CreateAsset(ctx context.Context, payload *domain.Asset) (domain.Asset, error)
 	UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload) (domain.Asset, error)
 	DeleteAsset(ctx context.Context, assetId string) error
+	BulkDeleteAssets(ctx context.Context, assetIds []string) (domain.BulkDeleteAssets, error)
 
 	// * QUERY
 	GetAssetsPaginated(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.Asset, error)
@@ -47,6 +48,7 @@ type AssetService interface {
 	CreateAsset(ctx context.Context, payload *domain.CreateAssetPayload, dataMatrixImageFile *multipart.FileHeader, langCode string) (domain.AssetResponse, error)
 	UpdateAsset(ctx context.Context, assetId string, payload *domain.UpdateAssetPayload, dataMatrixImageFile *multipart.FileHeader, langCode string) (domain.AssetResponse, error)
 	DeleteAsset(ctx context.Context, assetId string) error
+	BulkDeleteAssets(ctx context.Context, payload *domain.BulkDeleteAssetsPayload) (domain.BulkDeleteAssetsResponse, error)
 
 	// * QUERY
 	GetAssetsPaginated(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.AssetResponse, int64, error)
@@ -320,6 +322,27 @@ func (s *Service) DeleteAsset(ctx context.Context, assetId string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *Service) BulkDeleteAssets(ctx context.Context, payload *domain.BulkDeleteAssetsPayload) (domain.BulkDeleteAssetsResponse, error) {
+	// * Validate that IDs are provided
+	if len(payload.IDS) == 0 {
+		return domain.BulkDeleteAssetsResponse{}, domain.ErrBadRequestWithKey(utils.ErrAssetIDRequiredKey)
+	}
+
+	// * Perform bulk delete operation
+	result, err := s.Repo.BulkDeleteAssets(ctx, payload.IDS)
+	if err != nil {
+		return domain.BulkDeleteAssetsResponse{}, err
+	}
+
+	// * Convert to response
+	response := domain.BulkDeleteAssetsResponse{
+		RequestedIDS: result.RequestedIDS,
+		DeletedIDS:   result.DeletedIDS,
+	}
+
+	return response, nil
 }
 
 // *===========================QUERY===========================*
