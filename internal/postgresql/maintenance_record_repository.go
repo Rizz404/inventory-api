@@ -170,6 +170,12 @@ func (r *MaintenanceRecordRepository) BulkCreateMaintenanceRecords(ctx context.C
 	return created, nil
 }
 
+// BulkCreateRecords satisfies the service repository interface by delegating
+// to the existing bulk creation logic used elsewhere in the codebase.
+func (r *MaintenanceRecordRepository) BulkCreateRecords(ctx context.Context, records []domain.MaintenanceRecord) ([]domain.MaintenanceRecord, error) {
+	return r.BulkCreateMaintenanceRecords(ctx, records)
+}
+
 func (r *MaintenanceRecordRepository) UpdateRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload) (domain.MaintenanceRecord, error) {
 	tx := r.db.WithContext(ctx).Begin()
 	if tx.Error != nil {

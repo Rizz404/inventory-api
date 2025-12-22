@@ -172,6 +172,12 @@ func (r *MaintenanceScheduleRepository) BulkCreateMaintenanceSchedules(ctx conte
 	return created, nil
 }
 
+// BulkCreateSchedules satisfies the service repository interface by delegating
+// to the existing bulk creation logic used elsewhere in the codebase.
+func (r *MaintenanceScheduleRepository) BulkCreateSchedules(ctx context.Context, schedules []domain.MaintenanceSchedule) ([]domain.MaintenanceSchedule, error) {
+	return r.BulkCreateMaintenanceSchedules(ctx, schedules)
+}
+
 func (r *MaintenanceScheduleRepository) UpdateSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload) (domain.MaintenanceSchedule, error) {
 	tx := r.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
