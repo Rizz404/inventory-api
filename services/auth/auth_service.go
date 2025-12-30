@@ -16,6 +16,7 @@ type Repository interface {
 	// * MUTATION
 	CreateUser(ctx context.Context, payload *domain.User) (domain.User, error)
 	UpdateUserPassword(ctx context.Context, email, passwordHash string) error
+	UpdateLastLogin(ctx context.Context, userId string) error
 
 	// * QUERY
 	GetUserById(ctx context.Context, userId string) (domain.User, error)
@@ -33,9 +34,9 @@ type resetCodeEntry struct {
 }
 
 type Service struct {
-	Repo        Repository
-	SMTPClient  *smtp.Client
-	resetCodes  sync.Map // email -> resetCodeEntry
+	Repo       Repository
+	SMTPClient *smtp.Client
+	resetCodes sync.Map // email -> resetCodeEntry
 }
 
 func NewService(r Repository, smtpClient *smtp.Client) *Service {
@@ -119,6 +120,14 @@ func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (doma
 		return domain.AuthResponse{}, domain.ErrInternal(err)
 	}
 
+	// Update last login timestamp (fire and forget, don't block login on failure)
+	go func() {
+		_ = s.Repo.UpdateLastLogin(context.Background(), user.ID)
+	}()
+
+	// Get current time for last login in response
+	now := time.Now()
+
 	// Create user response
 	userResponse := domain.UserResponse{
 		ID:            user.ID,
@@ -130,6 +139,9 @@ func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (doma
 		PreferredLang: user.PreferredLang,
 		IsActive:      user.IsActive,
 		AvatarURL:     user.AvatarURL,
+		PhoneNumber:   user.PhoneNumber,
+		FCMToken:      user.FCMToken,
+		LastLogin:     &now,
 		CreatedAt:     user.CreatedAt,
 		UpdatedAt:     user.UpdatedAt,
 	}
@@ -339,4 +351,3 @@ func (s *Service) generateResetCode() (string, error) {
 }
 
 // *===========================QUERY===========================*
-

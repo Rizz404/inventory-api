@@ -58,7 +58,8 @@ func (us *UserSeeder) createAdminUser(ctx context.Context) error {
 		EmployeeID:    nil,
 		PreferredLang: stringPtr("en-US"),
 		IsActive:      true,
-		AvatarURL:     stringPtr("https://via.placeholder.com/150/007bff/ffffff?text=AD"),
+		AvatarURL:     stringPtr("https://ui-avatars.com/api/?name=System+Administrator&size=150&background=007bff&color=fff&bold=true"),
+		PhoneNumber:   stringPtr("+6281234567890"),
 	}
 
 	_, err := us.userService.CreateUser(ctx, adminPayload, nil)
@@ -106,6 +107,7 @@ func (us *UserSeeder) createRandomUsers(ctx context.Context, count int) error {
 			PreferredLang: stringPtr(languages[rand.Intn(len(languages))]),
 			IsActive:      rand.Intn(100) < 90, // 90% active
 			AvatarURL:     stringPtr(generateAvatarURL(firstName, lastName)),
+			PhoneNumber:   stringPtr(gofakeit.Phone()),
 		}
 
 		_, err := us.userService.CreateUser(ctx, userPayload, nil)

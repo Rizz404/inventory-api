@@ -144,6 +144,17 @@ func (r *UserRepository) UpdateUserPassword(ctx context.Context, email, password
 	return nil
 }
 
+func (r *UserRepository) UpdateLastLogin(ctx context.Context, userId string) error {
+	err := r.db.WithContext(ctx).
+		Model(&model.User{}).
+		Where("id = ?", userId).
+		Update("last_login", time.Now()).Error
+	if err != nil {
+		return domain.ErrInternal(err)
+	}
+	return nil
+}
+
 func (r *UserRepository) DeleteUser(ctx context.Context, userId string) error {
 	err := r.db.WithContext(ctx).Delete(&model.User{}, "id = ?", userId).Error
 	if err != nil {

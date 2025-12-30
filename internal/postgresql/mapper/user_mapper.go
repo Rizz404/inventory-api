@@ -17,7 +17,9 @@ func ToModelUser(d *domain.User) model.User {
 		PreferredLang: d.PreferredLang,
 		IsActive:      d.IsActive,
 		AvatarURL:     d.AvatarURL,
+		PhoneNumber:   d.PhoneNumber,
 		FCMToken:      d.FCMToken,
+		LastLogin:     d.LastLogin,
 	}
 }
 
@@ -32,7 +34,9 @@ func ToModelUserForCreate(d *domain.User) model.User {
 		PreferredLang: d.PreferredLang,
 		IsActive:      d.IsActive,
 		AvatarURL:     d.AvatarURL,
+		PhoneNumber:   d.PhoneNumber,
 		FCMToken:      d.FCMToken,
+		LastLogin:     d.LastLogin,
 	}
 }
 
@@ -49,7 +53,9 @@ func ToDomainUser(m *model.User) domain.User {
 		PreferredLang: m.PreferredLang,
 		IsActive:      m.IsActive,
 		AvatarURL:     m.AvatarURL,
+		PhoneNumber:   m.PhoneNumber,
 		FCMToken:      m.FCMToken,
+		LastLogin:     m.LastLogin,
 		CreatedAt:     m.CreatedAt,
 		UpdatedAt:     m.UpdatedAt,
 	}
@@ -78,7 +84,9 @@ func UserToResponse(u *domain.User) domain.UserResponse {
 		PreferredLang: u.PreferredLang,
 		IsActive:      u.IsActive,
 		AvatarURL:     u.AvatarURL,
+		PhoneNumber:   u.PhoneNumber,
 		FCMToken:      u.FCMToken,
+		LastLogin:     u.LastLogin,
 		CreatedAt:     u.CreatedAt,
 		UpdatedAt:     u.UpdatedAt,
 	}
@@ -106,6 +114,8 @@ func UserToListResponse(u *domain.User) domain.UserListResponse {
 		PreferredLang: u.PreferredLang,
 		IsActive:      u.IsActive,
 		AvatarURL:     u.AvatarURL,
+		PhoneNumber:   u.PhoneNumber,
+		LastLogin:     u.LastLogin,
 		CreatedAt:     u.CreatedAt,
 		UpdatedAt:     u.UpdatedAt,
 	}

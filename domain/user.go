@@ -30,49 +30,55 @@ const (
 // --- Structs ---
 
 type User struct {
-	ID            string    `json:"id"`
-	Name          string    `json:"name"`
-	Email         string    `json:"email"`
-	PasswordHash  string    `json:"passwordHash"`
-	FullName      string    `json:"fullName"`
-	Role          UserRole  `json:"role"`
-	EmployeeID    *string   `json:"employeeId"` // ! gak usah diapa-apain dulu, soalnya belum ada
-	PreferredLang string    `json:"preferredLang"`
-	IsActive      bool      `json:"isActive"`
-	AvatarURL     *string   `json:"avatarUrl,omitempty"`
-	FCMToken      *string   `json:"fcmToken,omitempty"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	ID            string     `json:"id"`
+	Name          string     `json:"name"`
+	Email         string     `json:"email"`
+	PasswordHash  string     `json:"passwordHash"`
+	FullName      string     `json:"fullName"`
+	Role          UserRole   `json:"role"`
+	EmployeeID    *string    `json:"employeeId"` // ! gak usah diapa-apain dulu, soalnya belum ada
+	PreferredLang string     `json:"preferredLang"`
+	IsActive      bool       `json:"isActive"`
+	AvatarURL     *string    `json:"avatarUrl,omitempty"`
+	PhoneNumber   *string    `json:"phoneNumber,omitempty"`
+	FCMToken      *string    `json:"fcmToken,omitempty"`
+	LastLogin     *time.Time `json:"lastLogin,omitempty"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
 }
 
 // ! jangan omitempty biar client nya tau
 type UserResponse struct {
-	ID            string    `json:"id" example:"550e8400-e29b-41d4-a716-446655440000"`
-	Name          string    `json:"name" example:"john_doe"`
-	Email         string    `json:"email" example:"john.doe@example.com"`
-	FullName      string    `json:"fullName" example:"John Doe"`
-	Role          UserRole  `json:"role" example:"Admin"`
-	EmployeeID    *string   `json:"employeeId" example:"EMP001"`
-	PreferredLang string    `json:"preferredLang" example:"en"`
-	IsActive      bool      `json:"isActive" example:"true"`
-	AvatarURL     *string   `json:"avatarUrl" example:"https://example.com/avatar.jpg"`
-	FCMToken      *string   `json:"fcmToken"`
-	CreatedAt     time.Time `json:"createdAt" example:"2023-01-01T00:00:00Z"`
-	UpdatedAt     time.Time `json:"updatedAt" example:"2023-01-01T00:00:00Z"`
+	ID            string     `json:"id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Name          string     `json:"name" example:"john_doe"`
+	Email         string     `json:"email" example:"john.doe@example.com"`
+	FullName      string     `json:"fullName" example:"John Doe"`
+	Role          UserRole   `json:"role" example:"Admin"`
+	EmployeeID    *string    `json:"employeeId" example:"EMP001"`
+	PreferredLang string     `json:"preferredLang" example:"en"`
+	IsActive      bool       `json:"isActive" example:"true"`
+	AvatarURL     *string    `json:"avatarUrl" example:"https://example.com/avatar.jpg"`
+	PhoneNumber   *string    `json:"phoneNumber" example:"+6281234567890"`
+	FCMToken      *string    `json:"fcmToken"`
+	LastLogin     *time.Time `json:"lastLogin" example:"2023-01-01T00:00:00Z"`
+	CreatedAt     time.Time  `json:"createdAt" example:"2023-01-01T00:00:00Z"`
+	UpdatedAt     time.Time  `json:"updatedAt" example:"2023-01-01T00:00:00Z"`
 }
 
 type UserListResponse struct {
-	ID            string    `json:"id" example:"550e8400-e29b-41d4-a716-446655440000"`
-	Name          string    `json:"name" example:"john_doe"`
-	Email         string    `json:"email" example:"john.doe@example.com"`
-	FullName      string    `json:"fullName" example:"John Doe"`
-	Role          UserRole  `json:"role" example:"Admin"`
-	EmployeeID    *string   `json:"employeeId" example:"EMP001"`
-	PreferredLang string    `json:"preferredLang" example:"en"`
-	IsActive      bool      `json:"isActive" example:"true"`
-	AvatarURL     *string   `json:"avatarUrl" example:"https://example.com/avatar.jpg"`
-	CreatedAt     time.Time `json:"createdAt" example:"2023-01-01T00:00:00Z"`
-	UpdatedAt     time.Time `json:"updatedAt" example:"2023-01-01T00:00:00Z"`
+	ID            string     `json:"id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Name          string     `json:"name" example:"john_doe"`
+	Email         string     `json:"email" example:"john.doe@example.com"`
+	FullName      string     `json:"fullName" example:"John Doe"`
+	Role          UserRole   `json:"role" example:"Admin"`
+	EmployeeID    *string    `json:"employeeId" example:"EMP001"`
+	PreferredLang string     `json:"preferredLang" example:"en"`
+	IsActive      bool       `json:"isActive" example:"true"`
+	AvatarURL     *string    `json:"avatarUrl" example:"https://example.com/avatar.jpg"`
+	PhoneNumber   *string    `json:"phoneNumber" example:"+6281234567890"`
+	LastLogin     *time.Time `json:"lastLogin" example:"2023-01-01T00:00:00Z"`
+	CreatedAt     time.Time  `json:"createdAt" example:"2023-01-01T00:00:00Z"`
+	UpdatedAt     time.Time  `json:"updatedAt" example:"2023-01-01T00:00:00Z"`
 }
 
 type AuthResponse struct {
@@ -127,6 +133,7 @@ type CreateUserPayload struct {
 	PreferredLang *string  `json:"preferredLang,omitempty" example:"en" form:"preferredLang" validate:"omitempty,max=5"`
 	IsActive      bool     `json:"isActive" example:"true" form:"isActive" validate:"required"`
 	AvatarURL     *string  `json:"avatarUrl,omitempty" example:"https://example.com/avatar.jpg" form:"avatarUrl" validate:"omitempty,url"`
+	PhoneNumber   *string  `json:"phoneNumber,omitempty" example:"+6281234567890" form:"phoneNumber" validate:"omitempty,max=20"`
 }
 
 type UpdateUserPayload struct {
@@ -138,6 +145,7 @@ type UpdateUserPayload struct {
 	PreferredLang *string   `json:"preferredLang,omitempty" example:"en" form:"preferredLang" validate:"omitempty,max=5"`
 	IsActive      *bool     `json:"isActive,omitempty" example:"true" form:"isActive" validate:"omitempty"`
 	AvatarURL     *string   `json:"avatarUrl,omitempty" example:"https://example.com/avatar.jpg" form:"avatarUrl" validate:"omitempty,url"`
+	PhoneNumber   *string   `json:"phoneNumber,omitempty" example:"+6281234567890" form:"phoneNumber" validate:"omitempty,max=20"`
 	FCMToken      *string   `json:"fcmToken,omitempty" form:"fcmToken" validate:"omitempty"`
 }
 
