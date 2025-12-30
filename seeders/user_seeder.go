@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/services/user"
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/google/uuid"
@@ -56,10 +57,10 @@ func (us *UserSeeder) createAdminUser(ctx context.Context) error {
 		FullName:      "System Administrator",
 		Role:          domain.RoleAdmin,
 		EmployeeID:    nil,
-		PreferredLang: stringPtr("en-US"),
-		IsActive:      true,
-		AvatarURL:     stringPtr("https://ui-avatars.com/api/?name=System+Administrator&size=150&background=007bff&color=fff&bold=true"),
-		PhoneNumber:   stringPtr("+6281234567890"),
+		PreferredLang: utils.StringPtr("en-US"),
+		IsActive:      utils.BoolPtr(true),
+		AvatarURL:     utils.StringPtr("https://ui-avatars.com/api/?name=System+Administrator&size=150&background=007bff&color=fff&bold=true"),
+		PhoneNumber:   utils.StringPtr("+6281234567890"),
 	}
 
 	_, err := us.userService.CreateUser(ctx, adminPayload, nil)
@@ -104,10 +105,10 @@ func (us *UserSeeder) createRandomUsers(ctx context.Context, count int) error {
 			FullName:      fmt.Sprintf("%s %s", firstName, lastName),
 			Role:          role,
 			EmployeeID:    nil,
-			PreferredLang: stringPtr(languages[rand.Intn(len(languages))]),
-			IsActive:      rand.Intn(100) < 90, // 90% active
-			AvatarURL:     stringPtr(generateAvatarURL(firstName, lastName)),
-			PhoneNumber:   stringPtr(gofakeit.Phone()),
+			PreferredLang: utils.StringPtr(languages[rand.Intn(len(languages))]),
+			IsActive:      utils.BoolPtr(rand.Intn(100) < 90), // 90% active
+			AvatarURL:     utils.StringPtr(generateAvatarURL(firstName, lastName)),
+			PhoneNumber:   utils.StringPtr(gofakeit.Phone()),
 		}
 
 		_, err := us.userService.CreateUser(ctx, userPayload, nil)
@@ -182,9 +183,4 @@ func normalizeString(s string) string {
 		}
 	}
 	return result
-}
-
-// stringPtr returns a pointer to string
-func stringPtr(s string) *string {
-	return &s
 }

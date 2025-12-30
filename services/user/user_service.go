@@ -134,6 +134,12 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 		avatarURL = payload.AvatarURL
 	}
 
+	// * Set default IsActive if not provided
+	isActive := true
+	if payload.IsActive != nil {
+		isActive = *payload.IsActive
+	}
+
 	// * Siapkan user baru
 	newUser := domain.User{
 		Name:          payload.Name,
@@ -143,7 +149,7 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 		Role:          payload.Role,
 		EmployeeID:    payload.EmployeeID,
 		PreferredLang: preferredLang,
-		IsActive:      true, // Default active
+		IsActive:      isActive,
 		AvatarURL:     avatarURL,
 	}
 
@@ -227,6 +233,11 @@ func (s *Service) BulkCreateUsers(ctx context.Context, payload *domain.BulkCreat
 			preferredLang = *userPayload.PreferredLang
 		}
 
+		isActive := true
+		if userPayload.IsActive != nil {
+			isActive = *userPayload.IsActive
+		}
+
 		users[i] = domain.User{
 			Name:          userPayload.Name,
 			Email:         userPayload.Email,
@@ -235,7 +246,7 @@ func (s *Service) BulkCreateUsers(ctx context.Context, payload *domain.BulkCreat
 			Role:          userPayload.Role,
 			EmployeeID:    userPayload.EmployeeID,
 			PreferredLang: preferredLang,
-			IsActive:      userPayload.IsActive,
+			IsActive:      isActive,
 			AvatarURL:     userPayload.AvatarURL,
 		}
 	}

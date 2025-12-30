@@ -414,8 +414,8 @@ func (s *Service) sendCategoryUpdatedNotification(ctx context.Context, categoryI
 
 	notificationPayload := &domain.CreateNotificationPayload{
 		UserID:            userID,
-		RelatedEntityType: stringPtr("category"),
-		RelatedEntityID:   stringPtr(categoryID),
+		RelatedEntityType: utils.StringPtr("category"),
+		RelatedEntityID:   utils.StringPtr(categoryID),
 		Type:              domain.NotificationTypeCategoryChange,
 		Translations:      translations,
 	}
@@ -426,9 +426,4 @@ func (s *Service) sendCategoryUpdatedNotification(ctx context.Context, categoryI
 	} else {
 		log.Printf("Successfully created category updated notification for user ID: %s", userID)
 	}
-}
-
-// Helper function to create string pointer
-func stringPtr(s string) *string {
-	return &s
 }

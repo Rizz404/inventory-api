@@ -131,7 +131,7 @@ type CreateUserPayload struct {
 	Role          UserRole `json:"role" example:"Admin" form:"role" validate:"required,oneof=Admin Staff Employee"`
 	EmployeeID    *string  `json:"employeeId,omitempty" example:"EMP001" form:"employeeId" validate:"omitempty,max=20"` // ! gak usah diapa-apain dulu, soalnya belum ada
 	PreferredLang *string  `json:"preferredLang,omitempty" example:"en" form:"preferredLang" validate:"omitempty,max=5"`
-	IsActive      bool     `json:"isActive" example:"true" form:"isActive" validate:"required"`
+	IsActive      *bool    `json:"isActive,omitempty" example:"true" form:"isActive" validate:"omitempty"`
 	AvatarURL     *string  `json:"avatarUrl,omitempty" example:"https://example.com/avatar.jpg" form:"avatarUrl" validate:"omitempty,url"`
 	PhoneNumber   *string  `json:"phoneNumber,omitempty" example:"+6281234567890" form:"phoneNumber" validate:"omitempty,max=20"`
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/services/asset"
 	"github.com/Rizz404/inventory-api/services/category"
 	"github.com/brianvoe/gofakeit/v6"
@@ -148,11 +149,11 @@ func (as *AssetSeeder) generateAssetPayload(ctx context.Context, categoryIDs []s
 		AssetName:     assetName,
 		CategoryID:    categoryIDs[rand.Intn(len(categoryIDs))],
 		Brand:         &brand,
-		Model:         stringPtr(gofakeit.CarModel()),
-		SerialNumber:  stringPtr(gofakeit.LetterN(10) + gofakeit.DigitN(6)),
+		Model:         utils.StringPtr(gofakeit.CarModel()),
+		SerialNumber:  utils.StringPtr(gofakeit.LetterN(10) + gofakeit.DigitN(6)),
 		PurchaseDate:  &purchaseDateStr,
 		PurchasePrice: &purchasePrice,
-		VendorName:    stringPtr(gofakeit.Company()),
+		VendorName:    utils.StringPtr(gofakeit.Company()),
 		WarrantyEnd:   &warrantyEndStr,
 		Status:        status,
 		Condition:     condition,

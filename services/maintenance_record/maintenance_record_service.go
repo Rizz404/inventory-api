@@ -399,7 +399,7 @@ func (s *Service) sendMaintenanceCompletedNotification(ctx context.Context, reco
 
 	notificationPayload := &domain.CreateNotificationPayload{
 		UserID:            *asset.AssignedToID,
-		RelatedEntityType: stringPtr("maintenance_record"),
+		RelatedEntityType: utils.StringPtr("maintenance_record"),
 		RelatedEntityID:   &record.ID,
 		RelatedAssetID:    &record.AssetID,
 		Type:              domain.NotificationTypeMaintenance,
@@ -411,11 +411,6 @@ func (s *Service) sendMaintenanceCompletedNotification(ctx context.Context, reco
 	if err != nil {
 		// Log error but don't fail the operation
 	}
-}
-
-// Helper function to create string pointer
-func stringPtr(s string) *string {
-	return &s
 }
 
 // sendMaintenanceFailedNotification sends notification for failed maintenance
@@ -449,7 +444,7 @@ func (s *Service) sendMaintenanceFailedNotification(ctx context.Context, record 
 
 	notificationPayload := &domain.CreateNotificationPayload{
 		UserID:            *asset.AssignedToID,
-		RelatedEntityType: stringPtr("maintenance_record"),
+		RelatedEntityType: utils.StringPtr("maintenance_record"),
 		RelatedEntityID:   &record.ID,
 		RelatedAssetID:    &record.AssetID,
 		Type:              domain.NotificationTypeMaintenance,

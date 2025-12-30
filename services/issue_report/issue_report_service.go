@@ -8,6 +8,7 @@ import (
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
+	"github.com/Rizz404/inventory-api/internal/utils"
 )
 
 // * Repository interface defines the contract for issue report data operations
@@ -290,7 +291,7 @@ func (s *Service) sendIssueReportedNotification(ctx context.Context, issueReport
 
 		notificationPayload := &domain.CreateNotificationPayload{
 			UserID:            userId,
-			RelatedEntityType: stringPtr("issue_report"),
+			RelatedEntityType: utils.StringPtr("issue_report"),
 			RelatedEntityID:   &issueReport.ID,
 			RelatedAssetID:    &issueReport.AssetID,
 			Type:              domain.NotificationTypeIssue,
@@ -348,7 +349,7 @@ func (s *Service) sendIssueUpdatedNotification(ctx context.Context, issueReport 
 
 		notificationPayload := &domain.CreateNotificationPayload{
 			UserID:            userId,
-			RelatedEntityType: stringPtr("issue_report"),
+			RelatedEntityType: utils.StringPtr("issue_report"),
 			RelatedEntityID:   &issueReport.ID,
 			RelatedAssetID:    &issueReport.AssetID,
 			Type:              domain.NotificationTypeIssue,
@@ -361,11 +362,6 @@ func (s *Service) sendIssueUpdatedNotification(ctx context.Context, issueReport 
 			log.Printf("Failed to create issue updated notification for user ID: %s, issue report ID: %s: %v", userId, issueReport.ID, err)
 		}
 	}
-}
-
-// Helper function to create string pointer
-func stringPtr(s string) *string {
-	return &s
 }
 
 // Helper function to determine notification priority based on issue priority

@@ -391,8 +391,8 @@ func (s *Service) sendLocationUpdatedNotification(ctx context.Context, locationI
 
 	notificationPayload := &domain.CreateNotificationPayload{
 		UserID:            userID,
-		RelatedEntityType: stringPtr("location"),
-		RelatedEntityID:   stringPtr(locationID),
+		RelatedEntityType: utils.StringPtr("location"),
+		RelatedEntityID:   utils.StringPtr(locationID),
 		Type:              domain.NotificationTypeLocationChange,
 		Priority:          domain.NotificationPriorityLow, // Location change = low priority
 		Translations:      translations,
@@ -404,9 +404,4 @@ func (s *Service) sendLocationUpdatedNotification(ctx context.Context, locationI
 	} else {
 		log.Printf("Successfully created location updated notification for user ID: %s", userID)
 	}
-}
-
-// Helper function to create string pointer
-func stringPtr(s string) *string {
-	return &s
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/Rizz404/inventory-api/services/location"
 )
 
@@ -72,10 +73,10 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 	return []*domain.CreateLocationPayload{
 		{
 			LocationCode: "HO_JKT",
-			Building:     stringPtr("Neo Soho Recidence"),
-			Floor:        stringPtr("20"),
-			Latitude:     float64Ptr(-6.1744685),
-			Longitude:    float64Ptr(106.7897796),
+			Building:     utils.StringPtr("Neo Soho Recidence"),
+			Floor:        utils.StringPtr("20"),
+			Latitude:     utils.Float64Ptr(-6.1744685),
+			Longitude:    utils.Float64Ptr(106.7897796),
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Head Office - Neo Soho"},
 				{LangCode: "id-ID", LocationName: "Kantor Pusat - Neo Soho"},
@@ -212,9 +213,4 @@ func translateLocationToJP(building, locationType string) string {
 	}
 
 	return fmt.Sprintf("%s - %s", buildingJP, typeJP)
-}
-
-// float64Ptr returns a pointer to float64
-func float64Ptr(f float64) *float64 {
-	return &f
 }

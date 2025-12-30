@@ -7,6 +7,7 @@ import (
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/notification/messages"
+	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/robfig/cron/v3"
 )
 
@@ -140,7 +141,7 @@ func (cs *CronService) sendMaintenanceDueSoonNotification(ctx context.Context, s
 
 	notificationPayload := &domain.CreateNotificationPayload{
 		UserID:            *asset.AssignedToID,
-		RelatedEntityType: stringPtr("maintenance_schedule"),
+		RelatedEntityType: utils.StringPtr("maintenance_schedule"),
 		RelatedEntityID:   &schedule.ID,
 		RelatedAssetID:    &schedule.AssetID,
 		Type:              domain.NotificationTypeMaintenance,
@@ -154,11 +155,6 @@ func (cs *CronService) sendMaintenanceDueSoonNotification(ctx context.Context, s
 	} else {
 		log.Printf("Successfully created maintenance due soon notification for schedule ID: %s, user ID: %s", schedule.ID, *asset.AssignedToID)
 	}
-}
-
-// Helper function to create string pointer
-func stringPtr(s string) *string {
-	return &s
 }
 
 // sendMaintenanceOverdueNotification sends notification for overdue maintenance
@@ -196,7 +192,7 @@ func (cs *CronService) sendMaintenanceOverdueNotification(ctx context.Context, s
 
 	notificationPayload := &domain.CreateNotificationPayload{
 		UserID:            *asset.AssignedToID,
-		RelatedEntityType: stringPtr("maintenance_schedule"),
+		RelatedEntityType: utils.StringPtr("maintenance_schedule"),
 		RelatedEntityID:   &schedule.ID,
 		RelatedAssetID:    &schedule.AssetID,
 		Type:              domain.NotificationTypeMaintenance,
@@ -236,12 +232,12 @@ func (cs *CronService) updateRecurringSchedules() {
 
 		// Update the schedule
 		updatePayload := &domain.UpdateMaintenanceSchedulePayload{
-			NextScheduledDate: stringPtr(nextDate.Format("2006-01-02")),
+			NextScheduledDate: utils.StringPtr(nextDate.Format("2006-01-02")),
 		}
 
 		// Reset last_executed_date to current next_scheduled_date
 		lastExecuted := schedule.NextScheduledDate
-		updatePayload.NextScheduledDate = stringPtr(nextDate.Format("2006-01-02"))
+		updatePayload.NextScheduledDate = utils.StringPtr(nextDate.Format("2006-01-02"))
 
 		_, err := cs.repo.UpdateSchedule(ctx, schedule.ID, updatePayload)
 		if err != nil {
@@ -260,7 +256,7 @@ func (cs *CronService) updateRecurringSchedules() {
 		// Check if auto-complete is enabled for non-recurring after first execution
 		if schedule.AutoComplete && !schedule.IsRecurring {
 			completePayload := &domain.UpdateMaintenanceSchedulePayload{
-				State: statePtr(domain.StateCompleted),
+				State: utils.Ptr(domain.StateCompleted),
 			}
 			if _, err := cs.repo.UpdateSchedule(ctx, schedule.ID, completePayload); err != nil {
 				log.Printf("Failed to auto-complete schedule ID %s: %v", schedule.ID, err)
@@ -290,9 +286,4 @@ func calculateNextScheduledDate(currentDate time.Time, intervalValue int, interv
 		// Default to days if unknown
 		return currentDate.AddDate(0, 0, intervalValue)
 	}
-}
-
-// statePtr returns pointer to ScheduleState
-func statePtr(s domain.ScheduleState) *domain.ScheduleState {
-	return &s
 }
