@@ -2,14 +2,20 @@ package auth
 
 import (
 	"context"
+	"crypto/rand"
+	"fmt"
+	"sync"
+	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/client/smtp"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
 
 type Repository interface {
 	// * MUTATION
 	CreateUser(ctx context.Context, payload *domain.User) (domain.User, error)
+	UpdateUserPassword(ctx context.Context, email, passwordHash string) error
 
 	// * QUERY
 	GetUserById(ctx context.Context, userId string) (domain.User, error)
@@ -19,13 +25,23 @@ type Repository interface {
 	CheckEmailExists(ctx context.Context, email string) (bool, error)
 }
 
-type Service struct {
-	Repo Repository
+// resetCodeEntry stores reset code with expiration
+type resetCodeEntry struct {
+	Code      string
+	Email     string
+	ExpiresAt time.Time
 }
 
-func NewService(r Repository) *Service {
+type Service struct {
+	Repo        Repository
+	SMTPClient  *smtp.Client
+	resetCodes  sync.Map // email -> resetCodeEntry
+}
+
+func NewService(r Repository, smtpClient *smtp.Client) *Service {
 	return &Service{
-		Repo: r,
+		Repo:       r,
+		SMTPClient: smtpClient,
 	}
 }
 
@@ -197,4 +213,130 @@ func (s *Service) RefreshToken(ctx context.Context, payload *domain.RefreshToken
 	return authResponse, nil
 }
 
+// ForgotPassword generates and sends a password reset code to the user's email
+func (s *Service) ForgotPassword(ctx context.Context, payload *domain.ForgotPasswordPayload) (domain.ForgotPasswordResponse, error) {
+	// Check if SMTP is enabled
+	if s.SMTPClient == nil || !s.SMTPClient.IsEnabled() {
+		return domain.ForgotPasswordResponse{}, domain.ErrInternalWithMessage("Email service is not available")
+	}
+
+	// Check if user exists
+	user, err := s.Repo.GetUserByEmail(ctx, payload.Email)
+	if err != nil {
+		// Return success even if email doesn't exist (security: don't reveal if email exists)
+		return domain.ForgotPasswordResponse{
+			Message: "If the email exists, a reset code will be sent",
+		}, nil
+	}
+
+	// Generate 6-digit code
+	code, err := s.generateResetCode()
+	if err != nil {
+		return domain.ForgotPasswordResponse{}, domain.ErrInternal(err)
+	}
+
+	// Store code with 15 minutes expiration
+	s.resetCodes.Store(payload.Email, resetCodeEntry{
+		Code:      code,
+		Email:     payload.Email,
+		ExpiresAt: time.Now().Add(15 * time.Minute),
+	})
+
+	// Send email
+	userName := user.Name
+	if user.FullName != "" {
+		userName = user.FullName
+	}
+
+	if err := s.SMTPClient.SendPasswordResetEmail(ctx, payload.Email, code, userName); err != nil {
+		return domain.ForgotPasswordResponse{}, domain.ErrInternalWithKey(utils.ErrEmailSendFailedKey)
+	}
+
+	return domain.ForgotPasswordResponse{
+		Message: "Reset code sent to your email",
+	}, nil
+}
+
+// VerifyResetCode verifies the password reset code
+func (s *Service) VerifyResetCode(ctx context.Context, payload *domain.VerifyResetCodePayload) (domain.VerifyResetCodeResponse, error) {
+	entry, ok := s.resetCodes.Load(payload.Email)
+	if !ok {
+		return domain.VerifyResetCodeResponse{Valid: false}, nil
+	}
+
+	resetEntry := entry.(resetCodeEntry)
+
+	// Check if code expired
+	if time.Now().After(resetEntry.ExpiresAt) {
+		s.resetCodes.Delete(payload.Email)
+		return domain.VerifyResetCodeResponse{Valid: false}, nil
+	}
+
+	// Check if code matches
+	if resetEntry.Code != payload.Code {
+		return domain.VerifyResetCodeResponse{Valid: false}, nil
+	}
+
+	return domain.VerifyResetCodeResponse{Valid: true}, nil
+}
+
+// ResetPassword resets the user's password using the verification code
+func (s *Service) ResetPassword(ctx context.Context, payload *domain.ResetPasswordPayload) (domain.ResetPasswordResponse, error) {
+	// Verify code first
+	entry, ok := s.resetCodes.Load(payload.Email)
+	if !ok {
+		return domain.ResetPasswordResponse{}, domain.ErrBadRequestWithKey(utils.ErrResetCodeNotFoundKey)
+	}
+
+	resetEntry := entry.(resetCodeEntry)
+
+	// Check if code expired
+	if time.Now().After(resetEntry.ExpiresAt) {
+		s.resetCodes.Delete(payload.Email)
+		return domain.ResetPasswordResponse{}, domain.ErrBadRequestWithKey(utils.ErrResetCodeExpiredKey)
+	}
+
+	// Check if code matches
+	if resetEntry.Code != payload.Code {
+		return domain.ResetPasswordResponse{}, domain.ErrBadRequestWithKey(utils.ErrResetCodeInvalidKey)
+	}
+
+	// Check if user exists
+	_, err := s.Repo.GetUserByEmail(ctx, payload.Email)
+	if err != nil {
+		return domain.ResetPasswordResponse{}, domain.ErrNotFoundWithKey(utils.ErrUserNotFoundKey)
+	}
+
+	// Hash new password
+	hashedPassword, err := utils.HashPassword(payload.NewPassword)
+	if err != nil {
+		return domain.ResetPasswordResponse{}, domain.ErrInternal(err)
+	}
+
+	// Update password
+	if err := s.Repo.UpdateUserPassword(ctx, payload.Email, hashedPassword); err != nil {
+		return domain.ResetPasswordResponse{}, err
+	}
+
+	// Delete used reset code
+	s.resetCodes.Delete(payload.Email)
+
+	return domain.ResetPasswordResponse{
+		Message: "Password reset successfully",
+	}, nil
+}
+
+// generateResetCode generates a random 6-digit code
+func (s *Service) generateResetCode() (string, error) {
+	b := make([]byte, 3)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	// Convert to 6-digit number
+	code := int(b[0])*10000 + int(b[1])*100 + int(b[2])
+	code = code % 1000000
+	return fmt.Sprintf("%06d", code), nil
+}
+
 // *===========================QUERY===========================*
+

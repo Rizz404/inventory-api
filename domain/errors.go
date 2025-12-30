@@ -98,7 +98,12 @@ func ErrInternal(err error) *AppError {
 	return NewAppError(500, "an unexpected internal error occured", err)
 }
 
+// * ErrInternalWithMessage creates an internal error with custom message
+func ErrInternalWithMessage(message string) *AppError {
+	return NewAppError(500, message, nil)
+}
+
 // * ErrInternalWithKey creates an internal error with i18n support
-func ErrInternalWithKey(messageKey utils.MessageKey, err error, params ...string) *AppError {
-	return NewAppErrorWithKey(500, messageKey, params, err)
+func ErrInternalWithKey(messageKey utils.MessageKey, params ...string) *AppError {
+	return NewAppErrorWithKey(500, messageKey, params, nil)
 }

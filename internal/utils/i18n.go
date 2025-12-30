@@ -96,11 +96,15 @@ const (
 	ErrMaintenanceRecordTitleRequiredKey   MessageKey = "error.maintenance.record_title_required"
 
 	// * Auth-specific error keys
-	ErrInvalidCredentialsKey MessageKey = "error.auth.invalid_credentials"
-	ErrTokenExpiredKey       MessageKey = "error.auth.token_expired"
-	ErrTokenInvalidKey       MessageKey = "error.auth.token_invalid"
-	ErrAPIKeyMissingKey      MessageKey = "error.auth.api_key_missing"
-	ErrAPIKeyInvalidKey      MessageKey = "error.auth.api_key_invalid"
+	ErrInvalidCredentialsKey    MessageKey = "error.auth.invalid_credentials"
+	ErrTokenExpiredKey          MessageKey = "error.auth.token_expired"
+	ErrTokenInvalidKey          MessageKey = "error.auth.token_invalid"
+	ErrAPIKeyMissingKey         MessageKey = "error.auth.api_key_missing"
+	ErrAPIKeyInvalidKey         MessageKey = "error.auth.api_key_invalid"
+	ErrResetCodeInvalidKey      MessageKey = "error.auth.reset_code_invalid"
+	ErrResetCodeExpiredKey      MessageKey = "error.auth.reset_code_expired"
+	ErrEmailSendFailedKey       MessageKey = "error.auth.email_send_failed"
+	ErrResetCodeNotFoundKey     MessageKey = "error.auth.reset_code_not_found"
 
 	// * File upload error keys
 	ErrFileRequiredKey       MessageKey = "error.file.required"
@@ -246,10 +250,13 @@ const (
 	SuccessMaintenanceRecordStatisticsRetrievedKey   MessageKey = "success.maintenance.record_statistics_retrieved"
 
 	// * Auth-specific success keys
-	SuccessLoginKey          MessageKey = "success.auth.login"
-	SuccessLogoutKey         MessageKey = "success.auth.logout"
-	SuccessRefreshKey        MessageKey = "success.auth.refresh"
-	SuccessTokenRefreshedKey MessageKey = "success.auth.token_refreshed"
+	SuccessLoginKey              MessageKey = "success.auth.login"
+	SuccessLogoutKey             MessageKey = "success.auth.logout"
+	SuccessRefreshKey            MessageKey = "success.auth.refresh"
+	SuccessTokenRefreshedKey     MessageKey = "success.auth.token_refreshed"
+	SuccessResetCodeSentKey      MessageKey = "success.auth.reset_code_sent"
+	SuccessResetCodeVerifiedKey  MessageKey = "success.auth.reset_code_verified"
+	SuccessPasswordResetKey      MessageKey = "success.auth.password_reset"
 
 	// * File upload success keys
 	SuccessFileUploadedKey          MessageKey = "success.file.uploaded"

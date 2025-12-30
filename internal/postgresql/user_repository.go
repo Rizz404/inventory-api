@@ -133,6 +133,17 @@ func (r *UserRepository) UpdateUser(ctx context.Context, userId string, payload 
 	return mapper.ToDomainUser(&updatedUser), nil
 }
 
+func (r *UserRepository) UpdateUserPassword(ctx context.Context, email, passwordHash string) error {
+	err := r.db.WithContext(ctx).
+		Model(&model.User{}).
+		Where("email = ?", email).
+		Update("password_hash", passwordHash).Error
+	if err != nil {
+		return domain.ErrInternal(err)
+	}
+	return nil
+}
+
 func (r *UserRepository) DeleteUser(ctx context.Context, userId string) error {
 	err := r.db.WithContext(ctx).Delete(&model.User{}, "id = ?", userId).Error
 	if err != nil {

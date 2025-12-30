@@ -150,6 +150,37 @@ type RefreshTokenPayload struct {
 	RefreshToken string `json:"refreshToken" form:"refreshToken" validate:"required"`
 }
 
+// --- Forgot Password Payloads ---
+
+type ForgotPasswordPayload struct {
+	Email string `json:"email" form:"email" validate:"required,email" example:"john.doe@example.com"`
+}
+
+type VerifyResetCodePayload struct {
+	Email string `json:"email" form:"email" validate:"required,email" example:"john.doe@example.com"`
+	Code  string `json:"code" form:"code" validate:"required,len=6" example:"123456"`
+}
+
+type ResetPasswordPayload struct {
+	Email       string `json:"email" form:"email" validate:"required,email" example:"john.doe@example.com"`
+	Code        string `json:"code" form:"code" validate:"required,len=6" example:"123456"`
+	NewPassword string `json:"newPassword" form:"newPassword" validate:"required,min=8" example:"newpassword123"`
+}
+
+// --- Forgot Password Responses ---
+
+type ForgotPasswordResponse struct {
+	Message string `json:"message" example:"Reset code sent to your email"`
+}
+
+type VerifyResetCodeResponse struct {
+	Valid bool `json:"valid" example:"true"`
+}
+
+type ResetPasswordResponse struct {
+	Message string `json:"message" example:"Password reset successfully"`
+}
+
 type BulkDeleteUsersPayload struct {
 	IDS []string `json:"ids" validate:"required,min=1,max=100,dive,required"`
 }

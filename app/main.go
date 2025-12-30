@@ -105,7 +105,7 @@ func main() {
 	maintenanceRecordRepository := postgresql.NewMaintenanceRecordRepository(db)
 
 	// *===================================SERVICE===================================*
-	authService := auth.NewService(userRepository)
+	authService := auth.NewService(userRepository, clients.SMTP)
 	userService := user.NewService(userRepository, clients.Cloudinary)
 	notificationService := notification.NewService(notificationRepository, userRepository, clients.FCM)
 	categoryService := category.NewService(categoryRepository, notificationService, userRepository)

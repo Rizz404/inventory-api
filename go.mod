@@ -6,8 +6,8 @@ require (
 	firebase.google.com/go/v4 v4.18.0
 	github.com/boombuler/barcode v1.1.0
 	github.com/brianvoe/gofakeit/v6 v6.28.0
-	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
 	github.com/cloudinary/cloudinary-go/v2 v2.13.0
+	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/gofiber/contrib/jwt v1.1.2
 	github.com/gofiber/fiber/v2 v2.52.9
@@ -101,6 +101,7 @@ require (
 	github.com/tiendc/go-deepcopy v1.6.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.66.0 // indirect
+	github.com/wneessen/go-mail v0.7.2 // indirect
 	github.com/xuri/efp v0.0.1 // indirect
 	github.com/xuri/nfp v0.0.1 // indirect
 	github.com/zeebo/errs v1.4.0 // indirect

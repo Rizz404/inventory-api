@@ -15,6 +15,9 @@ type AuthService interface {
 	Register(ctx context.Context, payload *domain.RegisterPayload) (domain.User, error)
 	Login(ctx context.Context, payload *domain.LoginPayload) (domain.AuthResponse, error)
 	RefreshToken(ctx context.Context, payload *domain.RefreshTokenPayload) (domain.AuthResponse, error)
+	ForgotPassword(ctx context.Context, payload *domain.ForgotPasswordPayload) (domain.ForgotPasswordResponse, error)
+	VerifyResetCode(ctx context.Context, payload *domain.VerifyResetCodePayload) (domain.VerifyResetCodeResponse, error)
+	ResetPassword(ctx context.Context, payload *domain.ResetPasswordPayload) (domain.ResetPasswordResponse, error)
 
 	// * QUERY
 }
@@ -36,6 +39,9 @@ func NewAuthHandler(app fiber.Router, s AuthService) {
 	users.Post("/register", handler.Register)
 	users.Post("/login", handler.Login)
 	users.Post("/refresh", handler.RefreshToken)
+	users.Post("/forgot-password", handler.ForgotPassword)
+	users.Post("/verify-reset-code", handler.VerifyResetCode)
+	users.Post("/reset-password", handler.ResetPassword)
 
 }
 
@@ -121,6 +127,85 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessTokenRefreshedKey, authResponse)
+}
+
+// ForgotPassword godoc
+//
+//	@Summary		Request password reset
+//	@Description	Send a password reset code to the user's email
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			forgotPasswordPayload	body		domain.ForgotPasswordPayload	true	"Email for password reset"
+//	@Success		200						{object}	web.SuccessResponse{data=domain.ForgotPasswordResponse}	"Reset code sent"
+//	@Failure		400						{object}	web.ErrorResponse{error=web.ValidationErrors}	"Validation failed"
+//	@Failure		500						{object}	web.ErrorResponse	"Internal server error"
+//	@Router			/auth/forgot-password [post]
+func (h *AuthHandler) ForgotPassword(c *fiber.Ctx) error {
+	var payload domain.ForgotPasswordPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	response, err := h.Service.ForgotPassword(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessResetCodeSentKey, response)
+}
+
+// VerifyResetCode godoc
+//
+//	@Summary		Verify password reset code
+//	@Description	Verify if the password reset code is valid
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			verifyResetCodePayload	body		domain.VerifyResetCodePayload	true	"Email and reset code"
+//	@Success		200						{object}	web.SuccessResponse{data=domain.VerifyResetCodeResponse}	"Code verification result"
+//	@Failure		400						{object}	web.ErrorResponse{error=web.ValidationErrors}	"Validation failed"
+//	@Failure		500						{object}	web.ErrorResponse	"Internal server error"
+//	@Router			/auth/verify-reset-code [post]
+func (h *AuthHandler) VerifyResetCode(c *fiber.Ctx) error {
+	var payload domain.VerifyResetCodePayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	response, err := h.Service.VerifyResetCode(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessResetCodeVerifiedKey, response)
+}
+
+// ResetPassword godoc
+//
+//	@Summary		Reset password
+//	@Description	Reset user password using the verification code
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			resetPasswordPayload	body		domain.ResetPasswordPayload	true	"Email, code, and new password"
+//	@Success		200						{object}	web.SuccessResponse{data=domain.ResetPasswordResponse}	"Password reset successfully"
+//	@Failure		400						{object}	web.ErrorResponse{error=web.ValidationErrors}	"Validation failed or invalid code"
+//	@Failure		404						{object}	web.ErrorResponse	"User not found"
+//	@Failure		500						{object}	web.ErrorResponse	"Internal server error"
+//	@Router			/auth/reset-password [post]
+func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
+	var payload domain.ResetPasswordPayload
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	response, err := h.Service.ResetPassword(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessPasswordResetKey, response)
 }
 
 // *===========================QUERY===========================*
