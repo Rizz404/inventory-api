@@ -156,16 +156,14 @@ func generateUniqueEmployeeID(role domain.UserRole) string {
 	return fmt.Sprintf("%s%s", prefix, strings.ToUpper(uuidStr[:8]))
 }
 
-// generateAvatarURL creates a placeholder avatar URL
+// generateAvatarURL creates an avatar URL using UI Avatars API
 func generateAvatarURL(firstName, lastName string) string {
-	initials := fmt.Sprintf("%c%c",
-		normalizeString(firstName)[0],
-		normalizeString(lastName)[0])
+	fullName := fmt.Sprintf("%s+%s", firstName, lastName)
 
 	colors := []string{"007bff", "28a745", "dc3545", "ffc107", "17a2b8", "6f42c1", "e83e8c", "fd7e14"}
 	color := colors[rand.Intn(len(colors))]
 
-	return fmt.Sprintf("https://via.placeholder.com/150/%s/ffffff?text=%s", color, initials)
+	return fmt.Sprintf("https://ui-avatars.com/api/?name=%s&size=150&background=%s&color=fff&bold=true", fullName, color)
 }
 
 // normalizeString converts string to lowercase and removes special characters
