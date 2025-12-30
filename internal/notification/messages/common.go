@@ -13,7 +13,7 @@ type NotificationTranslation struct {
 }
 
 // SupportedLanguages contains all supported language codes
-var SupportedLanguages = []string{"en-US", "ja-JP"}
+var SupportedLanguages = []string{"en-US", "id-ID", "ja-JP"}
 
 // GetNotificationMessage returns the localized notification message
 func GetNotificationMessage(key NotificationMessageKey, langCode string, params map[string]string, translations map[NotificationMessageKey]map[string]string) string {
@@ -64,6 +64,8 @@ func normalizeLanguageCode(langCode string) string {
 	switch langCode {
 	case "en", "en-us", "EN", "EN-US":
 		return "en-US"
+	case "id", "id-id", "ID", "ID-ID":
+		return "id-ID"
 	case "ja", "ja-jp", "JA", "JA-JP":
 		return "ja-JP"
 	default:

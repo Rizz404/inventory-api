@@ -24,40 +24,48 @@ var issueReportNotificationTranslations = map[NotificationMessageKey]map[string]
 	// ==================== ISSUE REPORT CREATED ====================
 	NotifIssueReportedTitleKey: {
 		"en-US": "New Issue Reported",
+		"id-ID": "Masalah Baru Dilaporkan",
 		"ja-JP": "新しい問題が報告されました",
 	},
 	NotifIssueReportedMessageKey: {
 		"en-US": "A new issue has been reported for asset \"{assetName}\".",
+		"id-ID": "Masalah baru telah dilaporkan untuk aset \"{assetName}\".",
 		"ja-JP": "資産 \"{assetName}\" に対して新しい問題が報告されました。",
 	},
 
 	// ==================== ISSUE REPORT UPDATED ====================
 	NotifIssueUpdatedTitleKey: {
 		"en-US": "Issue Updated",
+		"id-ID": "Masalah Diperbarui",
 		"ja-JP": "問題が更新されました",
 	},
 	NotifIssueUpdatedMessageKey: {
 		"en-US": "Issue report for asset \"{assetName}\" has been updated.",
+		"id-ID": "Laporan masalah untuk aset \"{assetName}\" telah diperbarui.",
 		"ja-JP": "資産 \"{assetName}\" の問題レポートが更新されました。",
 	},
 
 	// ==================== ISSUE REPORT RESOLVED ====================
 	NotifIssueResolvedTitleKey: {
 		"en-US": "Issue Resolved",
+		"id-ID": "Masalah Diselesaikan",
 		"ja-JP": "問題が解決されました",
 	},
 	NotifIssueResolvedMessageKey: {
 		"en-US": "Issue report for asset \"{assetName}\" has been resolved. Resolution: \"{resolutionNotes}\".",
+		"id-ID": "Laporan masalah untuk aset \"{assetName}\" telah diselesaikan. Resolusi: \"{resolutionNotes}\".",
 		"ja-JP": "資産 \"{assetName}\" の問題レポートが解決されました。解決策: \"{resolutionNotes}\"。",
 	},
 
 	// ==================== ISSUE REPORT REOPENED ====================
 	NotifIssueReopenedTitleKey: {
 		"en-US": "Issue Reopened",
+		"id-ID": "Masalah Dibuka Kembali",
 		"ja-JP": "問題が再開されました",
 	},
 	NotifIssueReopenedMessageKey: {
 		"en-US": "Issue report for asset \"{assetName}\" has been reopened.",
+		"id-ID": "Laporan masalah untuk aset \"{assetName}\" telah dibuka kembali.",
 		"ja-JP": "資産 \"{assetName}\" の問題レポートが再開されました。",
 	},
 }

@@ -12,10 +12,12 @@ var categoryNotificationTranslations = map[NotificationMessageKey]map[string]str
 	// ==================== CATEGORY UPDATED ====================
 	NotifCategoryUpdatedTitleKey: {
 		"en-US": "Category Updated",
+		"id-ID": "Kategori Diperbarui",
 		"ja-JP": "カテゴリが更新されました",
 	},
 	NotifCategoryUpdatedMessageKey: {
 		"en-US": "Category \"{categoryName}\" has been updated.",
+		"id-ID": "Kategori \"{categoryName}\" telah diperbarui.",
 		"ja-JP": "カテゴリ \"{categoryName}\" が更新されました。",
 	},
 }

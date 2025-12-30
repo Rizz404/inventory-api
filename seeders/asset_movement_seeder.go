@@ -107,6 +107,10 @@ func (ams *AssetMovementSeeder) generateAssetMovementPayload(assetIDs []string, 
 			LangCode: "id-ID",
 			Notes:    notes,
 		},
+		{
+			LangCode: "ja-JP",
+			Notes:    notes,
+		},
 	}
 
 	// Determine target based on movement type

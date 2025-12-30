@@ -20,30 +20,36 @@ var maintenanceScheduleNotificationTranslations = map[NotificationMessageKey]map
 	// ==================== MAINTENANCE SCHEDULED ====================
 	NotifMaintenanceScheduledTitleKey: {
 		"en-US": "Maintenance Scheduled",
+		"id-ID": "Pemeliharaan Dijadwalkan",
 		"ja-JP": "メンテナンスがスケジュールされました",
 	},
 	NotifMaintenanceScheduledMessageKey: {
 		"en-US": "Maintenance for asset \"{assetName}\" is scheduled on {scheduledDate}.",
+		"id-ID": "Pemeliharaan untuk aset \"{assetName}\" dijadwalkan pada {scheduledDate}.",
 		"ja-JP": "資産 \"{assetName}\" のメンテナンスが {scheduledDate} にスケジュールされました。",
 	},
 
 	// ==================== MAINTENANCE DUE SOON ====================
 	NotifMaintenanceDueSoonTitleKey: {
 		"en-US": "Maintenance Due Soon",
+		"id-ID": "Pemeliharaan Segera Jatuh Tempo",
 		"ja-JP": "メンテナンス期限が近づいています",
 	},
 	NotifMaintenanceDueSoonMessageKey: {
 		"en-US": "Maintenance for asset \"{assetName}\" is due on {scheduledDate}. Please prepare.",
+		"id-ID": "Pemeliharaan untuk aset \"{assetName}\" jatuh tempo pada {scheduledDate}. Silakan persiapkan.",
 		"ja-JP": "資産 \"{assetName}\" のメンテナンス期限が {scheduledDate} です。準備してください。",
 	},
 
 	// ==================== MAINTENANCE OVERDUE ====================
 	NotifMaintenanceOverdueTitleKey: {
 		"en-US": "Maintenance Overdue",
+		"id-ID": "Pemeliharaan Terlambat",
 		"ja-JP": "メンテナンスが期限切れです",
 	},
 	NotifMaintenanceOverdueMessageKey: {
 		"en-US": "Maintenance for asset \"{assetName}\" is overdue. Scheduled date was {scheduledDate}.",
+		"id-ID": "Pemeliharaan untuk aset \"{assetName}\" sudah terlambat. Tanggal yang dijadwalkan adalah {scheduledDate}.",
 		"ja-JP": "資産 \"{assetName}\" のメンテナンスが期限切れです。スケジュールされた日付は {scheduledDate} でした。",
 	},
 }

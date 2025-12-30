@@ -165,6 +165,16 @@ func (mss *MaintenanceScheduleSeeder) generateMaintenanceSchedulePayload(assetID
 			Title:       title,
 			Description: &description,
 		},
+		{
+			LangCode:    "id-ID",
+			Title:       title,
+			Description: &description,
+		},
+		{
+			LangCode:    "ja-JP",
+			Title:       title,
+			Description: &description,
+		},
 	}
 
 	// Format next scheduled date

@@ -16,20 +16,24 @@ var assetMovementNotificationTranslations = map[NotificationMessageKey]map[strin
 	// ==================== ASSET LOCATION MOVED ====================
 	NotifAssetMovedTitleKey: {
 		"en-US": "Asset Location Changed",
+		"id-ID": "Lokasi Aset Berubah",
 		"ja-JP": "資産の場所が変更されました",
 	},
 	NotifAssetMovedMessageKey: {
 		"en-US": "Asset \"{assetName}\" ({assetTag}) has been moved from \"{oldLocation}\" to \"{newLocation}\".",
+		"id-ID": "Aset \"{assetName}\" ({assetTag}) telah dipindahkan dari \"{oldLocation}\" ke \"{newLocation}\".",
 		"ja-JP": "資産 \"{assetName}\" ({assetTag}) が \"{oldLocation}\" から \"{newLocation}\" に移動されました。",
 	},
 
 	// ==================== ASSET USER ASSIGNED ====================
 	NotifAssetUserAssignedTitleKey: {
 		"en-US": "Asset Assigned to You",
+		"id-ID": "Aset Ditugaskan kepada Anda",
 		"ja-JP": "資産があなたに割り当てられました",
 	},
 	NotifAssetUserAssignedMessageKey: {
 		"en-US": "Asset \"{assetName}\" ({assetTag}) has been assigned from \"{oldUser}\" to you.",
+		"id-ID": "Aset \"{assetName}\" ({assetTag}) telah ditugaskan dari \"{oldUser}\" kepada Anda.",
 		"ja-JP": "資産 \"{assetName}\" ({assetTag}) が \"{oldUser}\" からあなたに割り当てられました。",
 	},
 }

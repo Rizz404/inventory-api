@@ -494,7 +494,7 @@
 ### Ubah Bahasa Interface
 - User dapat mengubah `preferred_lang` kapan saja dari menu Settings.
 - Perubahan bahasa langsung terlihat di seluruh aplikasi tanpa perlu logout.
--- Bahasa yang didukung: en-US (English), ja-JP (日本語).
+-- Bahasa yang didukung: id-ID (Indonesia), en-US (English), ja-JP (日本語).
 
 ---
 

@@ -78,7 +78,7 @@ func (ls *LocationSeeder) getPredefinedLocations() []*domain.CreateLocationPaylo
 			Longitude:    float64Ptr(106.7897796),
 			Translations: []domain.CreateLocationTranslationPayload{
 				{LangCode: "en-US", LocationName: "Head Office - Neo Soho"},
-				// {LangCode: "id-ID", LocationName: "Kantor Pusat - Neo Soho"},
+				{LangCode: "id-ID", LocationName: "Kantor Pusat - Neo Soho"},
 				{LangCode: "ja-JP", LocationName: "本社 - ネオソーホー"},
 			},
 		},
@@ -118,7 +118,7 @@ func (ls *LocationSeeder) generateRandomLocation(index int) *domain.CreateLocati
 
 	// Generate location names
 	locationNameEN := fmt.Sprintf("%s - %s", buildingName, locationName)
-	// locationNameID := translateLocationToID(buildingName, locationName)
+	locationNameID := translateLocationToID(buildingName, locationName)
 	locationNameJP := translateLocationToJP(buildingName, locationName)
 
 	return &domain.CreateLocationPayload{
@@ -132,10 +132,10 @@ func (ls *LocationSeeder) generateRandomLocation(index int) *domain.CreateLocati
 				LangCode:     "en-US",
 				LocationName: locationNameEN,
 			},
-			// {
-			// 	LangCode:     "id-ID",
-			// 	LocationName: locationNameID,
-			// },
+			{
+				LangCode:     "id-ID",
+				LocationName: locationNameID,
+			},
 			{
 				LangCode:     "ja-JP",
 				LocationName: locationNameJP,

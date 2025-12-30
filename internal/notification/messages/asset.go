@@ -55,131 +55,159 @@ var assetNotificationTranslations = map[NotificationMessageKey]map[string]string
 	// ==================== ASSET ASSIGNMENT ====================
 	NotifAssetAssignedTitleKey: {
 		"en-US": "Asset Assigned",
+		"id-ID": "Aset Ditugaskan",
 		"ja-JP": "資産が割り当てられました",
 	},
 	NotifAssetAssignedMessageKey: {
 		"en-US": "Asset \"{assetName}\" has been assigned to you.",
+		"id-ID": "Aset \"{assetName}\" telah ditugaskan kepada Anda.",
 		"ja-JP": "資産 \"{assetName}\" があなたに割り当てられました。",
 	},
 
 	NotifAssetNewAssignedTitleKey: {
 		"en-US": "New Asset Assigned",
+		"id-ID": "Aset Baru Ditugaskan",
 		"ja-JP": "新しい資産が割り当てられました",
 	},
 	NotifAssetNewAssignedMessageKey: {
 		"en-US": "New asset \"{assetName}\" has been assigned to you.",
+		"id-ID": "Aset baru \"{assetName}\" telah ditugaskan kepada Anda.",
 		"ja-JP": "新しい資産 \"{assetName}\" があなたに割り当てられました。",
 	},
 
 	NotifAssetUnassignedTitleKey: {
 		"en-US": "Asset Unassigned",
+		"id-ID": "Aset Dibatalkan",
 		"ja-JP": "資産の割り当てが解除されました",
 	},
 	NotifAssetUnassignedMessageKey: {
 		"en-US": "Asset \"{assetName}\" has been unassigned from you.",
+		"id-ID": "Aset \"{assetName}\" telah dibatalkan dari Anda.",
 		"ja-JP": "資産 \"{assetName}\" の割り当てがあなたから解除されました。",
 	},
 
 	// ==================== ASSET STATUS CHANGE ====================
 	NotifAssetStatusChangedTitleKey: {
 		"en-US": "Asset Status Changed",
+		"id-ID": "Status Aset Berubah",
 		"ja-JP": "資産ステータスが変更されました",
 	},
 	NotifAssetStatusChangedMessageKey: {
 		"en-US": "Asset \"{assetName}\" status changed from {oldStatus} to {newStatus}.",
+		"id-ID": "Status aset \"{assetName}\" berubah dari {oldStatus} menjadi {newStatus}.",
 		"ja-JP": "資産 \"{assetName}\" のステータスが {oldStatus} から {newStatus} に変更されました。",
 	},
 
 	NotifAssetActivatedTitleKey: {
 		"en-US": "Asset Activated",
+		"id-ID": "Aset Diaktifkan",
 		"ja-JP": "資産が有効化されました",
 	},
 	NotifAssetActivatedMessageKey: {
 		"en-US": "Asset \"{assetName}\" is now active and ready to use.",
+		"id-ID": "Aset \"{assetName}\" sekarang aktif dan siap digunakan.",
 		"ja-JP": "資産 \"{assetName}\" が有効化され、使用準備が整いました。",
 	},
 
 	NotifAssetMaintenanceTitleKey: {
 		"en-US": "Asset Under Maintenance",
+		"id-ID": "Aset Dalam Pemeliharaan",
 		"ja-JP": "資産がメンテナンス中です",
 	},
 	NotifAssetMaintenanceMessageKey: {
 		"en-US": "Asset \"{assetName}\" has been moved to maintenance status.",
+		"id-ID": "Aset \"{assetName}\" telah dipindahkan ke status pemeliharaan.",
 		"ja-JP": "資産 \"{assetName}\" がメンテナンスステータスに移動されました。",
 	},
 
 	NotifAssetDisposedTitleKey: {
 		"en-US": "Asset Disposed",
+		"id-ID": "Aset Dibuang",
 		"ja-JP": "資産が廃棄されました",
 	},
 	NotifAssetDisposedMessageKey: {
 		"en-US": "Asset \"{assetName}\" has been disposed.",
+		"id-ID": "Aset \"{assetName}\" telah dibuang.",
 		"ja-JP": "資産 \"{assetName}\" が廃棄されました。",
 	},
 
 	NotifAssetLostTitleKey: {
 		"en-US": "Asset Reported Lost",
+		"id-ID": "Aset Dilaporkan Hilang",
 		"ja-JP": "資産が行方不明として報告されました",
 	},
 	NotifAssetLostMessageKey: {
 		"en-US": "Asset \"{assetName}\" has been reported as lost.",
+		"id-ID": "Aset \"{assetName}\" telah dilaporkan hilang.",
 		"ja-JP": "資産 \"{assetName}\" が行方不明として報告されました。",
 	},
 
 	// ==================== ASSET CONDITION CHANGE ====================
 	NotifAssetConditionChangedTitleKey: {
 		"en-US": "Asset Condition Changed",
+		"id-ID": "Kondisi Aset Berubah",
 		"ja-JP": "資産の状態が変更されました",
 	},
 	NotifAssetConditionChangedMessageKey: {
 		"en-US": "Asset \"{assetName}\" condition changed from {oldCondition} to {newCondition}.",
+		"id-ID": "Kondisi aset \"{assetName}\" berubah dari {oldCondition} menjadi {newCondition}.",
 		"ja-JP": "資産 \"{assetName}\" の状態が {oldCondition} から {newCondition} に変更されました。",
 	},
 
 	NotifAssetConditionDamagedTitleKey: {
 		"en-US": "Asset Damaged",
+		"id-ID": "Aset Rusak",
 		"ja-JP": "資産が損傷しました",
 	},
 	NotifAssetConditionDamagedMessageKey: {
 		"en-US": "Asset \"{assetName}\" has been marked as damaged. Please check immediately.",
+		"id-ID": "Aset \"{assetName}\" telah ditandai sebagai rusak. Silakan periksa segera.",
 		"ja-JP": "資産 \"{assetName}\" が損傷としてマークされました。すぐに確認してください。",
 	},
 
 	NotifAssetConditionPoorTitleKey: {
 		"en-US": "Asset in Poor Condition",
+		"id-ID": "Aset Dalam Kondisi Buruk",
 		"ja-JP": "資産の状態が不良です",
 	},
 	NotifAssetConditionPoorMessageKey: {
 		"en-US": "Asset \"{assetName}\" condition has deteriorated to poor. Maintenance may be needed.",
+		"id-ID": "Kondisi aset \"{assetName}\" telah memburuk. Pemeliharaan mungkin diperlukan.",
 		"ja-JP": "資産 \"{assetName}\" の状態が不良に悪化しました。メンテナンスが必要かもしれません。",
 	},
 
 	// ==================== ASSET WARRANTY ====================
 	NotifAssetWarrantyExpiringSoonTitleKey: {
 		"en-US": "Warranty Expiring Soon",
+		"id-ID": "Garansi Akan Berakhir",
 		"ja-JP": "保証期間がまもなく終了します",
 	},
 	NotifAssetWarrantyExpiringSoonMessageKey: {
 		"en-US": "Warranty for asset \"{assetName}\" will expire on {expiryDate}.",
+		"id-ID": "Garansi untuk aset \"{assetName}\" akan berakhir pada {expiryDate}.",
 		"ja-JP": "資産 \"{assetName}\" の保証期間が {expiryDate} に終了します。",
 	},
 
 	NotifAssetWarrantyExpiredTitleKey: {
 		"en-US": "Warranty Expired",
+		"id-ID": "Garansi Berakhir",
 		"ja-JP": "保証期間が終了しました",
 	},
 	NotifAssetWarrantyExpiredMessageKey: {
 		"en-US": "Warranty for asset \"{assetName}\" has expired.",
+		"id-ID": "Garansi untuk aset \"{assetName}\" telah berakhir.",
 		"ja-JP": "資産 \"{assetName}\" の保証期間が終了しました。",
 	},
 
 	// ==================== ASSET VALUE/PURCHASE ====================
 	NotifAssetHighValueTitleKey: {
 		"en-US": "High Value Asset Added",
+		"id-ID": "Aset Bernilai Tinggi Ditambahkan",
 		"ja-JP": "高額資産が追加されました",
 	},
 	NotifAssetHighValueMessageKey: {
 		"en-US": "High value asset \"{assetName}\" worth {value} has been added to your inventory.",
+		"id-ID": "Aset bernilai tinggi \"{assetName}\" senilai {value} telah ditambahkan ke inventaris Anda.",
 		"ja-JP": "高額資産 \"{assetName}\" 価値 {value} が在庫に追加されました。",
 	},
 }

@@ -12,10 +12,12 @@ var locationNotificationTranslations = map[NotificationMessageKey]map[string]str
 	// ==================== LOCATION UPDATED ====================
 	NotifLocationUpdatedTitleKey: {
 		"en-US": "Location Updated",
+		"id-ID": "Lokasi Diperbarui",
 		"ja-JP": "場所が更新されました",
 	},
 	NotifLocationUpdatedMessageKey: {
 		"en-US": "Location \"{locationName}\" has been updated in the system.",
+		"id-ID": "Lokasi \"{locationName}\" telah diperbarui di sistem.",
 		"ja-JP": "場所 \"{locationName}\" がシステムで更新されました。",
 	},
 }

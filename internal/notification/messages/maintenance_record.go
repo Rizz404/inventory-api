@@ -16,20 +16,24 @@ var maintenanceRecordNotificationTranslations = map[NotificationMessageKey]map[s
 	// ==================== MAINTENANCE COMPLETED ====================
 	NotifMaintenanceCompletedTitleKey: {
 		"en-US": "Maintenance Completed",
+		"id-ID": "Pemeliharaan Selesai",
 		"ja-JP": "メンテナンスが完了しました",
 	},
 	NotifMaintenanceCompletedMessageKey: {
 		"en-US": "Maintenance for asset \"{assetName}\" has been completed. Notes: \"{notes}\".",
+		"id-ID": "Pemeliharaan untuk aset \"{assetName}\" telah selesai. Catatan: \"{notes}\".",
 		"ja-JP": "資産 \"{assetName}\" のメンテナンスが完了しました。メモ: \"{notes}\"。",
 	},
 
 	// ==================== MAINTENANCE FAILED ====================
 	NotifMaintenanceFailedTitleKey: {
 		"en-US": "Maintenance Failed",
+		"id-ID": "Pemeliharaan Gagal",
 		"ja-JP": "メンテナンスが失敗しました",
 	},
 	NotifMaintenanceFailedMessageKey: {
 		"en-US": "Maintenance for asset \"{assetName}\" could not be completed. Reason: \"{failureReason}\".",
+		"id-ID": "Pemeliharaan untuk aset \"{assetName}\" tidak dapat diselesaikan. Alasan: \"{failureReason}\".",
 		"ja-JP": "資産 \"{assetName}\" のメンテナンスが完了できませんでした。理由: \"{failureReason}\"。",
 	},
 }
