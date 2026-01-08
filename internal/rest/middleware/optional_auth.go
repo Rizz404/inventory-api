@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -37,7 +38,7 @@ func OptionalAuth() fiber.Handler {
 			c.Locals("email", *claims.Email)
 		}
 		if claims.Role != nil {
-			c.Locals("role", *claims.Role)
+			c.Locals("role", domain.UserRole(*claims.Role))
 		}
 		if claims.IsActive != nil {
 			c.Locals("is_active", *claims.IsActive)

@@ -51,7 +51,7 @@ func AuthMiddleware() fiber.Handler {
 			}
 
 			if claims.Role != nil {
-				c.Locals("role", *claims.Role)
+				c.Locals("role", domain.UserRole(*claims.Role))
 			}
 
 			if claims.IsActive != nil {
