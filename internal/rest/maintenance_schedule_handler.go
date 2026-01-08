@@ -25,12 +25,12 @@ func NewMaintenanceScheduleHandler(app fiber.Router, s maintenance_schedule.Main
 	)
 	schedules.Post("/",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.CreateMaintenanceSchedule,
 	)
 	schedules.Post("/bulk",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.BulkCreateMaintenanceSchedules,
 	)
 	schedules.Get("/", handler.GetMaintenanceSchedulesPaginated)
@@ -41,17 +41,17 @@ func NewMaintenanceScheduleHandler(app fiber.Router, s maintenance_schedule.Main
 	schedules.Get("/:id", handler.GetMaintenanceScheduleById)
 	schedules.Patch("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.UpdateMaintenanceSchedule,
 	)
 	schedules.Delete("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.DeleteMaintenanceSchedule,
 	)
 	schedules.Post("/bulk-delete",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.BulkDeleteMaintenanceSchedules,
 	)
 }

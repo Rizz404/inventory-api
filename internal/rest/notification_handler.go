@@ -27,12 +27,12 @@ func NewNotificationHandler(app fiber.Router, s notification.NotificationService
 	// * Create
 	notifications.Post("/",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.CreateNotification,
 	)
 	notifications.Post("/bulk",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.BulkCreateNotifications,
 	)
 
@@ -64,17 +64,17 @@ func NewNotificationHandler(app fiber.Router, s notification.NotificationService
 
 	notifications.Patch("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.UpdateNotification,
 	)
 	notifications.Delete("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.DeleteNotification,
 	)
 	notifications.Post("/bulk-delete",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.BulkDeleteNotifications,
 	)
 }

@@ -63,12 +63,12 @@ func NewIssueReportHandler(app fiber.Router, s issue_report.IssueReportService) 
 	)
 	issueReports.Delete("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.DeleteIssueReport,
 	)
 	issueReports.Post("/bulk-delete",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.BulkDeleteIssueReports,
 	)
 }

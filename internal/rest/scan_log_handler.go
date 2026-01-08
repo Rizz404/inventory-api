@@ -49,12 +49,12 @@ func NewScanLogHandler(app fiber.Router, s scan_log.ScanLogService) {
 	scanLogs.Get("/:id", handler.GetScanLogById)
 	scanLogs.Delete("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.DeleteScanLog,
 	)
 	scanLogs.Post("/bulk-delete",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.BulkDeleteScanLogs,
 	)
 }

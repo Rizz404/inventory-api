@@ -29,12 +29,12 @@ func NewAssetHandler(app fiber.Router, s asset.AssetService) {
 	// * Create
 	assets.Post("/",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.CreateAsset,
 	)
 	assets.Post("/bulk",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.BulkCreateAssets,
 	)
 
@@ -50,40 +50,40 @@ func NewAssetHandler(app fiber.Router, s asset.AssetService) {
 	assets.Post("/generate-bulk-tags", handler.GenerateBulkAssetTags)
 	assets.Post("/upload/bulk-datamatrix",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.UploadBulkDataMatrixImages,
 	)
 	assets.Get("/:id", handler.GetAssetById)
 	assets.Patch("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleUser), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.UpdateAsset,
 	)
 	assets.Delete("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.DeleteAsset,
 	)
 	assets.Post("/bulk-delete",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.BulkDeleteAssets,
 	)
 
 	// * Export endpoints
 	assets.Post("/export/list",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleUser), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.ExportAssetList,
 	)
 	assets.Get("/export/statistics",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleUser), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.ExportAssetStatistics,
 	)
 	assets.Post("/export/datamatrix",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleUser), // ! uncomment in production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.ExportAssetDataMatrix,
 	)
 }

@@ -28,12 +28,12 @@ func NewAssetMovementHandler(app fiber.Router, s asset_movement.AssetMovementSer
 	// * Create
 	movements.Post("/",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.CreateAssetMovement,
 	)
 	movements.Post("/bulk",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.BulkCreateAssetMovements,
 	)
 
@@ -46,24 +46,24 @@ func NewAssetMovementHandler(app fiber.Router, s asset_movement.AssetMovementSer
 	movements.Get("/:id", handler.GetAssetMovementById)
 	movements.Patch("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.UpdateAssetMovement,
 	)
 	movements.Delete("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.DeleteAssetMovement,
 	)
 	movements.Post("/bulk-delete",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.BulkDeleteAssetMovements,
 	)
 
 	// * Export endpoints
 	movements.Post("/export/list",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleManager), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.ExportAssetMovementList,
 	)
 }

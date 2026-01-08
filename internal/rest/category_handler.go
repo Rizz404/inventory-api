@@ -27,12 +27,12 @@ func NewCategoryHandler(app fiber.Router, s category.CategoryService) {
 	// * Create
 	categories.Post("/",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.CreateCategory,
 	)
 	categories.Post("/bulk",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.BulkCreateCategories,
 	)
 
@@ -46,17 +46,17 @@ func NewCategoryHandler(app fiber.Router, s category.CategoryService) {
 	categories.Get("/:id", handler.GetCategoryById)
 	categories.Patch("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.UpdateCategory,
 	)
 	categories.Delete("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.DeleteCategory,
 	)
 	categories.Post("/bulk-delete",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.BulkDeleteCategories,
 	)
 }

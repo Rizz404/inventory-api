@@ -33,12 +33,12 @@ func NewUserHandler(app fiber.Router, s user.UserService) {
 	)
 	users.Post("/",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.CreateUser,
 	)
 	users.Post("/bulk",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.BulkCreateUsers,
 	)
 
@@ -60,7 +60,7 @@ func NewUserHandler(app fiber.Router, s user.UserService) {
 	users.Delete("/:id", handler.DeleteUser)
 	users.Post("/bulk-delete",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.BulkDeleteUsers,
 	)
 }

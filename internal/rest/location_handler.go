@@ -27,12 +27,12 @@ func NewLocationHandler(app fiber.Router, s location.LocationService) {
 	// * Create
 	locations.Post("/",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.CreateLocation,
 	)
 	locations.Post("/bulk",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.BulkCreateLocations,
 	)
 
@@ -46,17 +46,17 @@ func NewLocationHandler(app fiber.Router, s location.LocationService) {
 	locations.Get("/:id", handler.GetLocationById)
 	locations.Patch("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.UpdateLocation,
 	)
 	locations.Delete("/:id",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.DeleteLocation,
 	)
 	locations.Post("/bulk-delete",
 		middleware.AuthMiddleware(),
-		// middleware.AuthorizeRole(domain.RoleAdmin), // ! jangan lupa uncomment pas production
+		middleware.AuthorizeRole(domain.RoleAdmin),
 		handler.BulkDeleteLocations,
 	)
 }
