@@ -96,15 +96,15 @@ const (
 	ErrMaintenanceRecordTitleRequiredKey   MessageKey = "error.maintenance.record_title_required"
 
 	// * Auth-specific error keys
-	ErrInvalidCredentialsKey    MessageKey = "error.auth.invalid_credentials"
-	ErrTokenExpiredKey          MessageKey = "error.auth.token_expired"
-	ErrTokenInvalidKey          MessageKey = "error.auth.token_invalid"
-	ErrAPIKeyMissingKey         MessageKey = "error.auth.api_key_missing"
-	ErrAPIKeyInvalidKey         MessageKey = "error.auth.api_key_invalid"
-	ErrResetCodeInvalidKey      MessageKey = "error.auth.reset_code_invalid"
-	ErrResetCodeExpiredKey      MessageKey = "error.auth.reset_code_expired"
-	ErrEmailSendFailedKey       MessageKey = "error.auth.email_send_failed"
-	ErrResetCodeNotFoundKey     MessageKey = "error.auth.reset_code_not_found"
+	ErrInvalidCredentialsKey MessageKey = "error.auth.invalid_credentials"
+	ErrTokenExpiredKey       MessageKey = "error.auth.token_expired"
+	ErrTokenInvalidKey       MessageKey = "error.auth.token_invalid"
+	ErrAPIKeyMissingKey      MessageKey = "error.auth.api_key_missing"
+	ErrAPIKeyInvalidKey      MessageKey = "error.auth.api_key_invalid"
+	ErrResetCodeInvalidKey   MessageKey = "error.auth.reset_code_invalid"
+	ErrResetCodeExpiredKey   MessageKey = "error.auth.reset_code_expired"
+	ErrEmailSendFailedKey    MessageKey = "error.auth.email_send_failed"
+	ErrResetCodeNotFoundKey  MessageKey = "error.auth.reset_code_not_found"
 
 	// * File upload error keys
 	ErrFileRequiredKey       MessageKey = "error.file.required"
@@ -252,13 +252,13 @@ const (
 	SuccessMaintenanceRecordStatisticsRetrievedKey   MessageKey = "success.maintenance.record_statistics_retrieved"
 
 	// * Auth-specific success keys
-	SuccessLoginKey              MessageKey = "success.auth.login"
-	SuccessLogoutKey             MessageKey = "success.auth.logout"
-	SuccessRefreshKey            MessageKey = "success.auth.refresh"
-	SuccessTokenRefreshedKey     MessageKey = "success.auth.token_refreshed"
-	SuccessResetCodeSentKey      MessageKey = "success.auth.reset_code_sent"
-	SuccessResetCodeVerifiedKey  MessageKey = "success.auth.reset_code_verified"
-	SuccessPasswordResetKey      MessageKey = "success.auth.password_reset"
+	SuccessLoginKey             MessageKey = "success.auth.login"
+	SuccessLogoutKey            MessageKey = "success.auth.logout"
+	SuccessRefreshKey           MessageKey = "success.auth.refresh"
+	SuccessTokenRefreshedKey    MessageKey = "success.auth.token_refreshed"
+	SuccessResetCodeSentKey     MessageKey = "success.auth.reset_code_sent"
+	SuccessResetCodeVerifiedKey MessageKey = "success.auth.reset_code_verified"
+	SuccessPasswordResetKey     MessageKey = "success.auth.password_reset"
 
 	// * File upload success keys
 	SuccessFileUploadedKey          MessageKey = "success.file.uploaded"
@@ -657,6 +657,26 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Invalid API key",
 		"id-ID": "API key tidak valid",
 		"ja-JP": "無効なAPIキー",
+	},
+	ErrResetCodeInvalidKey: {
+		"en-US": "Invalid reset code",
+		"id-ID": "Kode reset tidak valid",
+		"ja-JP": "無効なリセットコード",
+	},
+	ErrResetCodeExpiredKey: {
+		"en-US": "Reset code has expired",
+		"id-ID": "Kode reset telah kedaluwarsa",
+		"ja-JP": "リセットコードの有効期限が切れています",
+	},
+	ErrEmailSendFailedKey: {
+		"en-US": "Failed to send email",
+		"id-ID": "Gagal mengirim email",
+		"ja-JP": "メール送信に失敗しました",
+	},
+	ErrResetCodeNotFoundKey: {
+		"en-US": "Reset code not found",
+		"id-ID": "Kode reset tidak ditemukan",
+		"ja-JP": "リセットコードが見つかりません",
 	},
 
 	// * File upload error messages
@@ -1059,6 +1079,21 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"id-ID": "Token berhasil diperbarui",
 		"ja-JP": "トークンが正常に更新されました",
 	},
+	SuccessResetCodeSentKey: {
+		"en-US": "Reset code sent successfully",
+		"id-ID": "Kode reset berhasil dikirim",
+		"ja-JP": "リセットコードが正常に送信されました",
+	},
+	SuccessResetCodeVerifiedKey: {
+		"en-US": "Reset code verified successfully",
+		"id-ID": "Kode reset berhasil diverifikasi",
+		"ja-JP": "リセットコードが正常に検証されました",
+	},
+	SuccessPasswordResetKey: {
+		"en-US": "Password reset successfully",
+		"id-ID": "Kata sandi berhasil direset",
+		"ja-JP": "パスワードが正常にリセットされました",
+	},
 
 	// * File upload success messages
 	SuccessFileUploadedKey: {
@@ -1419,6 +1454,18 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"ja-JP": "総ユーザー数",
 	},
 
+	// * Common PDF pagination labels (shared across all PDF exports)
+	"pdf.page": {
+		"en-US": "Page",
+		"id-ID": "Halaman",
+		"ja-JP": "ページ",
+	},
+	"pdf.of": {
+		"en-US": "of",
+		"id-ID": "dari",
+		"ja-JP": "/",
+	},
+
 	// * Scan Log PDF Export labels
 	PDFScanLogListReportKey: {
 		"en-US": "Scan Log List Report",
@@ -1656,16 +1703,6 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Total Maintenance Records",
 		"id-ID": "Total Catatan Pemeliharaan",
 		"ja-JP": "総保守レコード数",
-	},
-	PDFMaintenanceRecordPageKey: {
-		"en-US": "Page",
-		"id-ID": "Halaman",
-		"ja-JP": "ページ",
-	},
-	PDFMaintenanceRecordOfKey: {
-		"en-US": "of",
-		"id-ID": "dari",
-		"ja-JP": "/",
 	},
 
 	// * Issue Report PDF Export labels
