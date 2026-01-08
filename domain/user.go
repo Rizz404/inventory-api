@@ -177,16 +177,8 @@ type ResetPasswordPayload struct {
 
 // --- Forgot Password Responses ---
 
-type ForgotPasswordResponse struct {
-	Message string `json:"message" example:"Reset code sent to your email"`
-}
-
 type VerifyResetCodeResponse struct {
 	Valid bool `json:"valid" example:"true"`
-}
-
-type ResetPasswordResponse struct {
-	Message string `json:"message" example:"Password reset successfully"`
 }
 
 type BulkDeleteUsersPayload struct {

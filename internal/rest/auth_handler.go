@@ -15,9 +15,9 @@ type AuthService interface {
 	Register(ctx context.Context, payload *domain.RegisterPayload) (domain.User, error)
 	Login(ctx context.Context, payload *domain.LoginPayload) (domain.AuthResponse, error)
 	RefreshToken(ctx context.Context, payload *domain.RefreshTokenPayload) (domain.AuthResponse, error)
-	ForgotPassword(ctx context.Context, payload *domain.ForgotPasswordPayload) (domain.ForgotPasswordResponse, error)
+	ForgotPassword(ctx context.Context, payload *domain.ForgotPasswordPayload) (string, error)
 	VerifyResetCode(ctx context.Context, payload *domain.VerifyResetCodePayload) (domain.VerifyResetCodeResponse, error)
-	ResetPassword(ctx context.Context, payload *domain.ResetPasswordPayload) (domain.ResetPasswordResponse, error)
+	ResetPassword(ctx context.Context, payload *domain.ResetPasswordPayload) (string, error)
 
 	// * QUERY
 }
@@ -137,7 +137,7 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			forgotPasswordPayload	body		domain.ForgotPasswordPayload	true	"Email for password reset"
-//	@Success		200						{object}	web.SuccessResponse{data=domain.ForgotPasswordResponse}	"Reset code sent"
+//	@Success		200						{object}	web.SuccessResponse{data=object}	"Reset code sent"
 //	@Failure		400						{object}	web.ErrorResponse{error=web.ValidationErrors}	"Validation failed"
 //	@Failure		500						{object}	web.ErrorResponse	"Internal server error"
 //	@Router			/auth/forgot-password [post]
@@ -147,12 +147,12 @@ func (h *AuthHandler) ForgotPassword(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	response, err := h.Service.ForgotPassword(c.Context(), &payload)
+	_, err := h.Service.ForgotPassword(c.Context(), &payload)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, utils.SuccessResetCodeSentKey, response)
+	return web.Success(c, fiber.StatusOK, utils.SuccessResetCodeSentKey, nil)
 }
 
 // VerifyResetCode godoc
@@ -189,7 +189,7 @@ func (h *AuthHandler) VerifyResetCode(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			resetPasswordPayload	body		domain.ResetPasswordPayload	true	"Email, code, and new password"
-//	@Success		200						{object}	web.SuccessResponse{data=domain.ResetPasswordResponse}	"Password reset successfully"
+//	@Success		200						{object}	web.SuccessResponse{data=object}	"Password reset successfully"
 //	@Failure		400						{object}	web.ErrorResponse{error=web.ValidationErrors}	"Validation failed or invalid code"
 //	@Failure		404						{object}	web.ErrorResponse	"User not found"
 //	@Failure		500						{object}	web.ErrorResponse	"Internal server error"
@@ -200,12 +200,12 @@ func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	response, err := h.Service.ResetPassword(c.Context(), &payload)
+	_, err := h.Service.ResetPassword(c.Context(), &payload)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
 
-	return web.Success(c, fiber.StatusOK, utils.SuccessPasswordResetKey, response)
+	return web.Success(c, fiber.StatusOK, utils.SuccessPasswordResetKey, nil)
 }
 
 // *===========================QUERY===========================*

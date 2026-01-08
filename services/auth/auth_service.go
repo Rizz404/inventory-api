@@ -226,25 +226,23 @@ func (s *Service) RefreshToken(ctx context.Context, payload *domain.RefreshToken
 }
 
 // ForgotPassword generates and sends a password reset code to the user's email
-func (s *Service) ForgotPassword(ctx context.Context, payload *domain.ForgotPasswordPayload) (domain.ForgotPasswordResponse, error) {
+func (s *Service) ForgotPassword(ctx context.Context, payload *domain.ForgotPasswordPayload) (string, error) {
 	// Check if SMTP is enabled
 	if s.SMTPClient == nil || !s.SMTPClient.IsEnabled() {
-		return domain.ForgotPasswordResponse{}, domain.ErrInternalWithMessage("Email service is not available")
+		return "", domain.ErrInternalWithMessage("Email service is not available")
 	}
 
 	// Check if user exists
 	user, err := s.Repo.GetUserByEmail(ctx, payload.Email)
 	if err != nil {
 		// Return success even if email doesn't exist (security: don't reveal if email exists)
-		return domain.ForgotPasswordResponse{
-			Message: "If the email exists, a reset code will be sent",
-		}, nil
+		return "If the email exists, a reset code will be sent", nil
 	}
 
 	// Generate 6-digit code
 	code, err := s.generateResetCode()
 	if err != nil {
-		return domain.ForgotPasswordResponse{}, domain.ErrInternal(err)
+		return "", domain.ErrInternal(err)
 	}
 
 	// Store code with 15 minutes expiration
@@ -261,12 +259,10 @@ func (s *Service) ForgotPassword(ctx context.Context, payload *domain.ForgotPass
 	}
 
 	if err := s.SMTPClient.SendPasswordResetEmail(ctx, payload.Email, code, userName); err != nil {
-		return domain.ForgotPasswordResponse{}, domain.ErrInternalWithKey(utils.ErrEmailSendFailedKey)
+		return "", domain.ErrInternalWithKey(utils.ErrEmailSendFailedKey)
 	}
 
-	return domain.ForgotPasswordResponse{
-		Message: "Reset code sent to your email",
-	}, nil
+	return "Reset code sent to your email", nil
 }
 
 // VerifyResetCode verifies the password reset code
@@ -293,11 +289,11 @@ func (s *Service) VerifyResetCode(ctx context.Context, payload *domain.VerifyRes
 }
 
 // ResetPassword resets the user's password using the verification code
-func (s *Service) ResetPassword(ctx context.Context, payload *domain.ResetPasswordPayload) (domain.ResetPasswordResponse, error) {
+func (s *Service) ResetPassword(ctx context.Context, payload *domain.ResetPasswordPayload) (string, error) {
 	// Verify code first
 	entry, ok := s.resetCodes.Load(payload.Email)
 	if !ok {
-		return domain.ResetPasswordResponse{}, domain.ErrBadRequestWithKey(utils.ErrResetCodeNotFoundKey)
+		return "", domain.ErrBadRequestWithKey(utils.ErrResetCodeNotFoundKey)
 	}
 
 	resetEntry := entry.(resetCodeEntry)
@@ -305,37 +301,35 @@ func (s *Service) ResetPassword(ctx context.Context, payload *domain.ResetPasswo
 	// Check if code expired
 	if time.Now().After(resetEntry.ExpiresAt) {
 		s.resetCodes.Delete(payload.Email)
-		return domain.ResetPasswordResponse{}, domain.ErrBadRequestWithKey(utils.ErrResetCodeExpiredKey)
+		return "", domain.ErrBadRequestWithKey(utils.ErrResetCodeExpiredKey)
 	}
 
 	// Check if code matches
 	if resetEntry.Code != payload.Code {
-		return domain.ResetPasswordResponse{}, domain.ErrBadRequestWithKey(utils.ErrResetCodeInvalidKey)
+		return "", domain.ErrBadRequestWithKey(utils.ErrResetCodeInvalidKey)
 	}
 
 	// Check if user exists
 	_, err := s.Repo.GetUserByEmail(ctx, payload.Email)
 	if err != nil {
-		return domain.ResetPasswordResponse{}, domain.ErrNotFoundWithKey(utils.ErrUserNotFoundKey)
+		return "", domain.ErrNotFoundWithKey(utils.ErrUserNotFoundKey)
 	}
 
 	// Hash new password
 	hashedPassword, err := utils.HashPassword(payload.NewPassword)
 	if err != nil {
-		return domain.ResetPasswordResponse{}, domain.ErrInternal(err)
+		return "", domain.ErrInternal(err)
 	}
 
 	// Update password
 	if err := s.Repo.UpdateUserPassword(ctx, payload.Email, hashedPassword); err != nil {
-		return domain.ResetPasswordResponse{}, err
+		return "", err
 	}
 
 	// Delete used reset code
 	s.resetCodes.Delete(payload.Email)
 
-	return domain.ResetPasswordResponse{
-		Message: "Password reset successfully",
-	}, nil
+	return "Password reset successfully", nil
 }
 
 // generateResetCode generates a random 6-digit code
