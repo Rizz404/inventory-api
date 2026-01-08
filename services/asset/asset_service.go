@@ -38,6 +38,7 @@ type Repository interface {
 	CountAssets(ctx context.Context, params domain.AssetParams) (int64, error)
 	GetAssetStatistics(ctx context.Context) (domain.AssetStatistics, error)
 	GetLastAssetTagByCategory(ctx context.Context, categoryId string) (string, error)
+	GetLastAssetTagsByCategoryBatch(ctx context.Context, categoryId string, quantity int) ([]string, error)
 	GetAssetsForExport(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.Asset, error)
 	GetAssetsWithWarrantyExpiring(ctx context.Context, daysFromNow int) ([]domain.Asset, error)
 	GetAssetsWithExpiredWarranty(ctx context.Context) ([]domain.Asset, error)
@@ -63,6 +64,8 @@ type AssetService interface {
 	CountAssets(ctx context.Context, params domain.AssetParams) (int64, error)
 	GetAssetStatistics(ctx context.Context) (domain.AssetStatisticsResponse, error)
 	GenerateAssetTagSuggestion(ctx context.Context, payload *domain.GenerateAssetTagPayload) (domain.GenerateAssetTagResponse, error)
+	GenerateBulkAssetTags(ctx context.Context, payload *domain.GenerateBulkAssetTagsPayload) (domain.GenerateBulkAssetTagsResponse, error)
+	UploadBulkDataMatrixImages(ctx context.Context, assetTags []string, files []*multipart.FileHeader) (domain.UploadBulkDataMatrixResponse, error)
 
 	// * EXPORT
 	ExportAssetList(ctx context.Context, payload *domain.ExportAssetListPayload, langCode string) ([]byte, string, error)
@@ -139,10 +142,11 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 	if dataMatrixImageFile != nil {
 		// Upload file to Cloudinary if client is available
 		if s.CloudinaryClient != nil {
-			// Generate temporary asset ID for image naming
-			tempAssetID := "temp_" + ulid.Make().String()
+			// Generate ULID for unique filename
+			ulidStr := ulid.Make().String()
 			uploadConfig := cloudinary.GetDataMatrixImageUploadConfig()
-			publicID := "asset_" + tempAssetID + "_datamatrix"
+			// Naming pattern: {assetTag}_{ulid}
+			publicID := fmt.Sprintf("%s_%s", payload.AssetTag, ulidStr)
 			uploadConfig.PublicID = &publicID
 
 			uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, dataMatrixImageFile, uploadConfig)
@@ -208,24 +212,6 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 	// * Send notification if asset is high-value
 	if payload.PurchasePrice != nil && *payload.PurchasePrice > 10000 {
 		go s.sendHighValueAssetNotificationToAdmins(context.Background(), &createdAsset)
-	}
-
-	// * Update data matrix image public ID with actual asset ID if file was uploaded
-	if dataMatrixImageFile != nil && s.CloudinaryClient != nil && dataMatrixImageURL != "" {
-		// Re-upload with correct public ID
-		uploadConfig := cloudinary.GetDataMatrixImageUploadConfig()
-		finalPublicID := "asset_" + createdAsset.ID + "_datamatrix"
-		uploadConfig.PublicID = &finalPublicID
-
-		uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, dataMatrixImageFile, uploadConfig)
-		if err == nil {
-			// Update asset with final data matrix image URL
-			updatePayload := &domain.UpdateAssetPayload{
-				DataMatrixImageUrl: &uploadResult.SecureURL,
-			}
-			createdAsset, _ = s.Repo.UpdateAsset(ctx, createdAsset.ID, updatePayload)
-		}
-		// Note: We don't return error here to avoid failing asset creation if image re-upload fails
 	}
 
 	// * Convert to AssetResponse using mapper
@@ -372,25 +358,48 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 
 	// * Handle data matrix image update
 	var shouldDeleteOldImage bool
-	oldImagePublicID := "asset_" + assetId + "_datamatrix"
+	// Extract old public ID from URL if exists
+	oldImagePublicID := ""
+	if existingAsset.DataMatrixImageUrl != "" && strings.Contains(existingAsset.DataMatrixImageUrl, "sigma-asset/datamatrix/") {
+		// Extract public ID from Cloudinary URL
+		// Format: https://res.cloudinary.com/.../sigma-asset/datamatrix/{assetTag}_{ulid}.ext
+		parts := strings.Split(existingAsset.DataMatrixImageUrl, "/")
+		for i, part := range parts {
+			if part == "datamatrix" && i+1 < len(parts) {
+				// Get filename with extension, remove extension
+				fileWithExt := parts[i+1]
+				lastDot := strings.LastIndex(fileWithExt, ".")
+				if lastDot > 0 {
+					oldImagePublicID = "sigma-asset/datamatrix/" + fileWithExt[:lastDot]
+				}
+				break
+			}
+		}
+	}
 
 	if dataMatrixImageFile != nil {
 		// Upload new data matrix image file
 		if s.CloudinaryClient != nil {
+			// Generate ULID for unique filename
+			ulidStr := ulid.Make().String()
 			uploadConfig := cloudinary.GetDataMatrixImageUploadConfig()
-			publicID := "asset_" + assetId + "_datamatrix"
+			// Use asset tag from existing asset or payload
+			assetTag := existingAsset.AssetTag
+			if payload.AssetTag != nil {
+				assetTag = *payload.AssetTag
+			}
+			// Naming pattern: {assetTag}_{ulid}
+			publicID := fmt.Sprintf("%s_%s", assetTag, ulidStr)
 			uploadConfig.PublicID = &publicID
 
 			uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, dataMatrixImageFile, uploadConfig)
 			if err != nil {
-				// Provide detailed error message
-				errorMsg := "Failed to upload data matrix image: " + err.Error()
-				return domain.AssetResponse{}, domain.ErrBadRequest(errorMsg)
+				return domain.AssetResponse{}, domain.ErrBadRequest("Failed to upload data matrix image: " + err.Error())
 			}
 
 			// Set new data matrix image URL in payload
 			payload.DataMatrixImageUrl = &uploadResult.SecureURL
-			// Note: Cloudinary will automatically overwrite old image due to same public ID
+			shouldDeleteOldImage = true
 		} else {
 			return domain.AssetResponse{}, domain.ErrBadRequestWithKey(utils.ErrCloudinaryConfigKey)
 		}
@@ -404,25 +413,19 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 		// If payload.DataMatrixImageUrl has a valid URL, it will be used as-is
 	}
 
-	// Use the UpdateAsset method
-	_, err = s.Repo.UpdateAsset(ctx, assetId, payload)
+	// * Update asset and convert to AssetResponse using mapper
+	updatedAsset, err := s.Repo.UpdateAsset(ctx, assetId, payload)
 	if err != nil {
 		return domain.AssetResponse{}, err
 	}
 
 	// * Delete old data matrix image from Cloudinary if needed
-	if shouldDeleteOldImage && s.CloudinaryClient != nil && existingAsset.DataMatrixImageUrl != "" {
-		// Only delete if the old image was stored in Cloudinary (contains our public ID pattern)
-		if strings.Contains(existingAsset.DataMatrixImageUrl, "asset_"+assetId+"_datamatrix") {
-			_ = s.CloudinaryClient.DeleteFile(ctx, oldImagePublicID)
-			// Note: We don't return error here to avoid failing asset update if image deletion fails
+	if shouldDeleteOldImage && s.CloudinaryClient != nil && oldImagePublicID != "" {
+		err = s.CloudinaryClient.DeleteFile(ctx, oldImagePublicID)
+		if err != nil {
+			log.Printf("Failed to delete old data matrix image: %v", err)
 		}
-	}
-
-	// * Update asset and convert to AssetResponse using mapper
-	updatedAsset, err := s.Repo.UpdateAsset(ctx, assetId, payload)
-	if err != nil {
-		return domain.AssetResponse{}, err
+		// Note: We don't return error here to avoid failing asset update if image deletion fails
 	}
 
 	// * Send notifications for changes
@@ -582,6 +585,127 @@ func (s *Service) GenerateAssetTagSuggestion(ctx context.Context, payload *domai
 		LastAssetTag:  lastAssetTag,
 		SuggestedTag:  suggestedTag,
 		NextIncrement: nextIncrement,
+	}, nil
+}
+
+// GenerateBulkAssetTags generates multiple sequential asset tags for bulk operations
+func (s *Service) GenerateBulkAssetTags(ctx context.Context, payload *domain.GenerateBulkAssetTagsPayload) (domain.GenerateBulkAssetTagsResponse, error) {
+	// * Validate quantity
+	if payload.Quantity < 1 || payload.Quantity > 100 {
+		return domain.GenerateBulkAssetTagsResponse{}, domain.ErrBadRequest("quantity must be between 1 and 100")
+	}
+
+	// * Get category to retrieve CategoryCode
+	category, err := s.CategoryService.GetCategoryById(ctx, payload.CategoryID, "en")
+	if err != nil {
+		return domain.GenerateBulkAssetTagsResponse{}, err
+	}
+
+	// * Get the last asset tag for this category
+	lastAssetTag, err := s.Repo.GetLastAssetTagByCategory(ctx, payload.CategoryID)
+	if err != nil {
+		return domain.GenerateBulkAssetTagsResponse{}, err
+	}
+
+	// * Calculate starting increment
+	startIncrement := 1
+	if lastAssetTag != "" {
+		dashIndex := strings.Index(lastAssetTag, "-")
+		if dashIndex != -1 && dashIndex < len(lastAssetTag)-1 {
+			numericPart := lastAssetTag[dashIndex+1:]
+			var parsedNum int
+			_, err := fmt.Sscanf(numericPart, "%d", &parsedNum)
+			if err == nil {
+				startIncrement = parsedNum + 1
+			}
+		}
+	}
+
+	// * Generate sequential tags
+	tags := make([]string, payload.Quantity)
+	for i := 0; i < payload.Quantity; i++ {
+		tags[i] = fmt.Sprintf("%s-%05d", category.CategoryCode, startIncrement+i)
+	}
+
+	endIncrement := startIncrement + payload.Quantity - 1
+
+	return domain.GenerateBulkAssetTagsResponse{
+		CategoryCode:   category.CategoryCode,
+		LastAssetTag:   lastAssetTag,
+		StartTag:       tags[0],
+		EndTag:         tags[len(tags)-1],
+		Tags:           tags,
+		Quantity:       payload.Quantity,
+		StartIncrement: startIncrement,
+		EndIncrement:   endIncrement,
+	}, nil
+}
+
+// UploadBulkDataMatrixImages uploads multiple data matrix images to Cloudinary
+func (s *Service) UploadBulkDataMatrixImages(ctx context.Context, assetTags []string, files []*multipart.FileHeader) (domain.UploadBulkDataMatrixResponse, error) {
+	if len(files) == 0 {
+		return domain.UploadBulkDataMatrixResponse{}, domain.ErrBadRequest("at least one file is required")
+	}
+
+	if len(files) > 100 {
+		return domain.UploadBulkDataMatrixResponse{}, domain.ErrBadRequest("maximum 100 files allowed")
+	}
+
+	if len(assetTags) != len(files) {
+		return domain.UploadBulkDataMatrixResponse{}, domain.ErrBadRequest("number of asset tags must match number of files")
+	}
+
+	if s.CloudinaryClient == nil {
+		return domain.UploadBulkDataMatrixResponse{}, domain.ErrInternal(fmt.Errorf("cloudinary client not configured"))
+	}
+
+	// Prepare public IDs for each file
+	// Naming pattern: {assetTag}_{ulid}
+	publicIDs := make([]string, len(assetTags))
+	for i, tag := range assetTags {
+		ulidStr := ulid.Make().String()
+		publicIDs[i] = fmt.Sprintf("%s_%s", tag, ulidStr)
+	}
+
+	// Get base upload config for data matrix images
+	baseConfig := cloudinary.GetDataMatrixImageUploadConfig()
+
+	// Upload all files using efficient bulk upload method
+	uploadResult, err := s.CloudinaryClient.UploadMultipleFilesWithPublicIDs(ctx, files, publicIDs, baseConfig)
+	if err != nil {
+		return domain.UploadBulkDataMatrixResponse{}, domain.ErrInternal(err)
+	}
+
+	// Extract URLs from successful uploads
+	urls := make([]string, len(files))
+	uploadedCount := 0
+
+	// Map results back to original file order
+	resultMap := make(map[string]string) // publicID -> secureURL
+	for _, result := range uploadResult.Results {
+		resultMap[result.PublicID] = result.SecureURL
+	}
+
+	// Fill URLs array in the correct order
+	for i, publicID := range publicIDs {
+		if url, ok := resultMap[publicID]; ok {
+			urls[i] = url
+			uploadedCount++
+		} else {
+			urls[i] = "" // Empty URL indicates failed upload
+			log.Printf("Failed to upload data matrix image for tag %s", assetTags[i])
+		}
+	}
+
+	// Return error if all uploads failed
+	if uploadedCount == 0 {
+		return domain.UploadBulkDataMatrixResponse{}, domain.ErrInternal(fmt.Errorf("all image uploads failed"))
+	}
+
+	return domain.UploadBulkDataMatrixResponse{
+		Urls:      urls,
+		Count:     uploadedCount,
+		AssetTags: assetTags,
 	}, nil
 }
 

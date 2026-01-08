@@ -183,6 +183,8 @@ const (
 	SuccessAssetDataMatrixExistenceCheckedKey   MessageKey = "success.asset.datamatrix_existence_checked"
 	SuccessAssetSerialNumberExistenceCheckedKey MessageKey = "success.asset.serial_number_existence_checked"
 	SuccessAssetTagGeneratedKey                 MessageKey = "success.asset.tag_generated"
+	SuccessBulkAssetTagsGeneratedKey            MessageKey = "success.asset.bulk_tags_generated"
+	SuccessBulkDataMatrixUploadedKey            MessageKey = "success.asset.bulk_datamatrix_uploaded"
 
 	// * Scan log-specific success keys
 	SuccessScanLogCreatedKey             MessageKey = "success.scan_log.created"
@@ -982,6 +984,16 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Asset tag suggestion generated successfully",
 		"id-ID": "Saran tag aset berhasil dibuat",
 		"ja-JP": "アセットタグの提案が正常に生成されました",
+	},
+	SuccessBulkAssetTagsGeneratedKey: {
+		"en-US": "Bulk asset tags generated successfully",
+		"id-ID": "Tag aset massal berhasil dibuat",
+		"ja-JP": "一括アセットタグが正常に生成されました",
+	},
+	SuccessBulkDataMatrixUploadedKey: {
+		"en-US": "Bulk data matrix images uploaded successfully",
+		"id-ID": "Gambar data matrix massal berhasil diunggah",
+		"ja-JP": "一括データマトリックス画像が正常にアップロードされました",
 	},
 
 	// * Scan log-specific success messages

@@ -667,6 +667,29 @@ func (r *AssetRepository) GetLastAssetTagByCategory(ctx context.Context, categor
 	return asset.AssetTag, nil
 }
 
+func (r *AssetRepository) GetLastAssetTagsByCategoryBatch(ctx context.Context, categoryId string, quantity int) ([]string, error) {
+	var assets []model.Asset
+
+	// Get the last 'quantity' asset tags for the given category, ordered by asset_tag descending
+	err := r.db.WithContext(ctx).
+		Where("category_id = ?", categoryId).
+		Order("asset_tag DESC").
+		Limit(quantity).
+		Select("asset_tag").
+		Find(&assets).Error
+
+	if err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	tags := make([]string, len(assets))
+	for i, asset := range assets {
+		tags[i] = asset.AssetTag
+	}
+
+	return tags, nil
+}
+
 func (r *AssetRepository) GetAssetsForExport(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.Asset, error) {
 	var assets []model.Asset
 	db := r.db.WithContext(ctx).

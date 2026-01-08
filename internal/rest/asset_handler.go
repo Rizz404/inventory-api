@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"mime/multipart"
 	"strconv"
 	"strings"
@@ -46,6 +47,12 @@ func NewAssetHandler(app fiber.Router, s asset.AssetService) {
 	assets.Get("/check/serial/:serial", handler.CheckSerialNumberExists)
 	assets.Get("/check/:id", handler.CheckAssetExists)
 	assets.Post("/generate-tag", handler.GenerateAssetTagSuggestion)
+	assets.Post("/generate-bulk-tags", handler.GenerateBulkAssetTags)
+	assets.Post("/upload/bulk-datamatrix",
+		middleware.AuthMiddleware(),
+		// middleware.AuthorizeRole(domain.RoleAdmin), // ! uncomment in production
+		handler.UploadBulkDataMatrixImages,
+	)
 	assets.Get("/:id", handler.GetAssetById)
 	assets.Patch("/:id",
 		middleware.AuthMiddleware(),
@@ -433,6 +440,60 @@ func (h *AssetHandler) GenerateAssetTagSuggestion(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessAssetTagGeneratedKey, response)
+}
+
+func (h *AssetHandler) GenerateBulkAssetTags(c *fiber.Ctx) error {
+	var payload domain.GenerateBulkAssetTagsPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	response, err := h.Service.GenerateBulkAssetTags(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessBulkAssetTagsGeneratedKey, response)
+}
+
+func (h *AssetHandler) UploadBulkDataMatrixImages(c *fiber.Ctx) error {
+	// Parse multipart form
+	form, err := c.MultipartForm()
+	if err != nil {
+		return web.HandleError(c, domain.ErrBadRequest("failed to parse multipart form"))
+	}
+
+	// Get files from form (expect field name: dataMatrixImages[])
+	files := form.File["dataMatrixImages"]
+	if len(files) == 0 {
+		return web.HandleError(c, domain.ErrBadRequest("at least one dataMatrixImages file is required"))
+	}
+
+	// Get asset tags from form (expect field name: assetTags[])
+	assetTagsRaw := form.Value["assetTags"]
+	if len(assetTagsRaw) == 0 {
+		return web.HandleError(c, domain.ErrBadRequest("assetTags array is required"))
+	}
+
+	// Validate file count matches asset tags count
+	if len(files) != len(assetTagsRaw) {
+		return web.HandleError(c, domain.ErrBadRequest("number of files must match number of asset tags"))
+	}
+
+	// Validate each file (max 10MB per image)
+	for i, file := range files {
+		if validationErr := web.ValidateImageFile(file, fmt.Sprintf("dataMatrixImages[%d]", i), 10); validationErr != nil {
+			return web.HandleError(c, domain.ErrBadRequest(web.FormatFileValidationError(validationErr)))
+		}
+	}
+
+	response, err := h.Service.UploadBulkDataMatrixImages(c.Context(), assetTagsRaw, files)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessBulkDataMatrixUploadedKey, response)
 }
 
 // *===========================EXPORT===========================*

@@ -11,7 +11,6 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/cloudinary/cloudinary-go/v2/api/admin"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
-	"github.com/gofiber/fiber/v2"
 )
 
 type Client struct {
@@ -123,32 +122,26 @@ func (c *Client) UploadSingleFile(ctx context.Context, file *multipart.FileHeade
 	}, nil
 }
 
-// UploadMultipleFiles uploads multiple files to Cloudinary
-func (c *Client) UploadMultipleFiles(ctx context.Context, fiberCtx *fiber.Ctx, config UploadConfig) (*MultiUploadResult, error) {
-	// Parse multipart form
-	form, err := fiberCtx.MultipartForm()
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse multipart form: %w", err)
-	}
-
-	files := form.File[config.InputName]
+// UploadMultipleFiles uploads multiple files to Cloudinary (framework-agnostic)
+// For each file, you can customize the PublicID by modifying baseConfig before calling
+func (c *Client) UploadMultipleFiles(ctx context.Context, files []*multipart.FileHeader, baseConfig UploadConfig) (*MultiUploadResult, error) {
 	if len(files) == 0 {
-		return nil, fmt.Errorf("no files found with input name: %s", config.InputName)
+		return nil, fmt.Errorf("no files provided")
 	}
 
 	// Validate number of files
-	if len(files) > config.MaxFiles {
-		return nil, fmt.Errorf("too many files: got %d, max allowed %d", len(files), config.MaxFiles)
+	if baseConfig.MaxFiles > 0 && len(files) > baseConfig.MaxFiles {
+		return nil, fmt.Errorf("too many files: got %d, max allowed %d", len(files), baseConfig.MaxFiles)
 	}
 
 	result := &MultiUploadResult{
-		Results: make([]UploadResult, 0),
+		Results: make([]UploadResult, 0, len(files)),
 		Failed:  make([]UploadError, 0),
 	}
 
-	// Upload each file
+	// Upload each file with the base config
 	for _, file := range files {
-		uploadResult, err := c.UploadSingleFile(ctx, file, config)
+		uploadResult, err := c.UploadSingleFile(ctx, file, baseConfig)
 		if err != nil {
 			result.Failed = append(result.Failed, UploadError{
 				FileName: file.Filename,
@@ -158,6 +151,58 @@ func (c *Client) UploadMultipleFiles(ctx context.Context, fiberCtx *fiber.Ctx, c
 		}
 
 		result.Results = append(result.Results, *uploadResult)
+	}
+
+	// Return error if all uploads failed
+	if len(result.Results) == 0 && len(result.Failed) > 0 {
+		return nil, fmt.Errorf("all %d file uploads failed", len(files))
+	}
+
+	return result, nil
+}
+
+// UploadMultipleFilesWithPublicIDs uploads multiple files with custom public IDs for each file
+// This is more efficient than calling UploadSingleFile in a loop when you need different public IDs
+func (c *Client) UploadMultipleFilesWithPublicIDs(ctx context.Context, files []*multipart.FileHeader, publicIDs []string, baseConfig UploadConfig) (*MultiUploadResult, error) {
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no files provided")
+	}
+
+	if len(files) != len(publicIDs) {
+		return nil, fmt.Errorf("number of files (%d) must match number of public IDs (%d)", len(files), len(publicIDs))
+	}
+
+	// Validate number of files
+	if baseConfig.MaxFiles > 0 && len(files) > baseConfig.MaxFiles {
+		return nil, fmt.Errorf("too many files: got %d, max allowed %d", len(files), baseConfig.MaxFiles)
+	}
+
+	result := &MultiUploadResult{
+		Results: make([]UploadResult, 0, len(files)),
+		Failed:  make([]UploadError, 0),
+	}
+
+	// Upload each file with its corresponding public ID
+	for i, file := range files {
+		// Create a copy of config with the specific public ID
+		fileConfig := baseConfig
+		fileConfig.PublicID = &publicIDs[i]
+
+		uploadResult, err := c.UploadSingleFile(ctx, file, fileConfig)
+		if err != nil {
+			result.Failed = append(result.Failed, UploadError{
+				FileName: file.Filename,
+				Error:    err.Error(),
+			})
+			continue
+		}
+
+		result.Results = append(result.Results, *uploadResult)
+	}
+
+	// Return error if all uploads failed
+	if len(result.Results) == 0 && len(result.Failed) > 0 {
+		return nil, fmt.Errorf("all %d file uploads failed", len(files))
 	}
 
 	return result, nil
@@ -266,7 +311,7 @@ func GetAvatarUploadConfig() UploadConfig {
 			".heif",
 			".avif",
 		},
-		FolderName:  "avatars",
+		FolderName:  "sigma-asset/avatars",
 		InputName:   "avatar",
 		MaxFiles:    1,
 		MaxFileSize: 5 * 1024 * 1024, // 5MB
@@ -289,7 +334,7 @@ func GetDataMatrixImageUploadConfig() UploadConfig {
 			".svg",
 			".avif",
 		},
-		FolderName:  "datamatrix",
+		FolderName:  "sigma-asset/datamatrix",
 		InputName:   "dataMatrixImage",
 		MaxFiles:    1,
 		MaxFileSize: 2 * 1024 * 1024, // 2MB
@@ -311,7 +356,7 @@ func GetDocumentUploadConfig() UploadConfig {
 			".tif",
 			".bmp",
 		},
-		FolderName:  "documents",
+		FolderName:  "sigma-asset/documents",
 		InputName:   "documents",
 		MaxFiles:    10,
 		MaxFileSize: 10 * 1024 * 1024, // 10MB

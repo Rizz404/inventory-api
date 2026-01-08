@@ -189,6 +189,17 @@ type GenerateAssetTagPayload struct {
 	CategoryID string `json:"categoryId" validate:"required"`
 }
 
+type GenerateBulkAssetTagsPayload struct {
+	CategoryID string `json:"categoryId" validate:"required"`
+	Quantity   int    `json:"quantity" validate:"required,min=1,max=100"`
+}
+
+type UploadBulkDataMatrixPayload struct {
+	// Files are handled via multipart/form-data
+	// Each file should be named: dataMatrixImages[0], dataMatrixImages[1], etc.
+	AssetTags []string `json:"assetTags" validate:"required,min=1,max=100,dive,required"`
+}
+
 type ExportAssetListPayload struct {
 	Format                 ExportFormat        `json:"format" validate:"required,oneof=pdf excel"`
 	SearchQuery            *string             `json:"searchQuery,omitempty"`
@@ -214,6 +225,23 @@ type GenerateAssetTagResponse struct {
 	LastAssetTag  string `json:"lastAssetTag"`
 	SuggestedTag  string `json:"suggestedTag"`
 	NextIncrement int    `json:"nextIncrement"`
+}
+
+type GenerateBulkAssetTagsResponse struct {
+	CategoryCode  string   `json:"categoryCode"`
+	LastAssetTag  string   `json:"lastAssetTag"`
+	StartTag      string   `json:"startTag"`
+	EndTag        string   `json:"endTag"`
+	Tags          []string `json:"tags"`
+	Quantity      int      `json:"quantity"`
+	StartIncrement int     `json:"startIncrement"`
+	EndIncrement   int     `json:"endIncrement"`
+}
+
+type UploadBulkDataMatrixResponse struct {
+	Urls      []string `json:"urls"`
+	Count     int      `json:"count"`
+	AssetTags []string `json:"assetTags"`
 }
 
 // --- Query Parameters ---
