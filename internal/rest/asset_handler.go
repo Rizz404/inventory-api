@@ -53,6 +53,11 @@ func NewAssetHandler(app fiber.Router, s asset.AssetService) {
 		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.UploadBulkDataMatrixImages,
 	)
+	assets.Post("/delete/bulk-datamatrix",
+		middleware.AuthMiddleware(),
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
+		handler.DeleteBulkDataMatrixImages,
+	)
 	assets.Get("/:id", handler.GetAssetById)
 	assets.Patch("/:id",
 		middleware.AuthMiddleware(),
@@ -494,6 +499,21 @@ func (h *AssetHandler) UploadBulkDataMatrixImages(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessBulkDataMatrixUploadedKey, response)
+}
+
+func (h *AssetHandler) DeleteBulkDataMatrixImages(c *fiber.Ctx) error {
+	var payload domain.DeleteBulkDataMatrixPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	response, err := h.Service.DeleteBulkDataMatrixImages(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessBulkDataMatrixDeletedKey, response)
 }
 
 // *===========================EXPORT===========================*

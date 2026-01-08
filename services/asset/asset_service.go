@@ -66,6 +66,7 @@ type AssetService interface {
 	GenerateAssetTagSuggestion(ctx context.Context, payload *domain.GenerateAssetTagPayload) (domain.GenerateAssetTagResponse, error)
 	GenerateBulkAssetTags(ctx context.Context, payload *domain.GenerateBulkAssetTagsPayload) (domain.GenerateBulkAssetTagsResponse, error)
 	UploadBulkDataMatrixImages(ctx context.Context, assetTags []string, files []*multipart.FileHeader) (domain.UploadBulkDataMatrixResponse, error)
+	DeleteBulkDataMatrixImages(ctx context.Context, payload *domain.DeleteBulkDataMatrixPayload) (domain.DeleteBulkDataMatrixResponse, error)
 
 	// * EXPORT
 	ExportAssetList(ctx context.Context, payload *domain.ExportAssetListPayload, langCode string) ([]byte, string, error)
@@ -709,7 +710,121 @@ func (s *Service) UploadBulkDataMatrixImages(ctx context.Context, assetTags []st
 	}, nil
 }
 
+// DeleteBulkDataMatrixImages deletes data matrix images from Cloudinary and nullifies DB field
+func (s *Service) DeleteBulkDataMatrixImages(ctx context.Context, payload *domain.DeleteBulkDataMatrixPayload) (domain.DeleteBulkDataMatrixResponse, error) {
+	if len(payload.AssetTags) == 0 {
+		return domain.DeleteBulkDataMatrixResponse{}, domain.ErrBadRequest("at least one asset tag is required")
+	}
+
+	if len(payload.AssetTags) > 100 {
+		return domain.DeleteBulkDataMatrixResponse{}, domain.ErrBadRequest("maximum 100 asset tags allowed")
+	}
+
+	if s.CloudinaryClient == nil {
+		return domain.DeleteBulkDataMatrixResponse{}, domain.ErrInternal(fmt.Errorf("cloudinary client not configured"))
+	}
+
+	deletedCount := 0
+	failedTags := []string{}
+
+	// Process each asset tag
+	for _, tag := range payload.AssetTags {
+		// Get asset by tag
+		asset, err := s.Repo.GetAssetByAssetTag(ctx, tag)
+		if err != nil {
+			failedTags = append(failedTags, tag)
+			log.Printf("Failed to get asset with tag %s: %v", tag, err)
+			continue
+		}
+
+		// Skip if asset has no data matrix image
+		if asset.DataMatrixImageUrl == "" {
+			failedTags = append(failedTags, tag)
+			log.Printf("Asset with tag %s has no data matrix image", tag)
+			continue
+		}
+
+		// Extract public ID from Cloudinary URL
+		publicID := s.extractPublicIDFromURL(asset.DataMatrixImageUrl)
+		if publicID == "" {
+			failedTags = append(failedTags, tag)
+			log.Printf("Failed to extract public ID from URL for tag %s", tag)
+			continue
+		}
+
+		// Delete from Cloudinary
+		if err := s.CloudinaryClient.DeleteFile(ctx, publicID); err != nil {
+			log.Printf("Failed to delete file from Cloudinary for tag %s: %v", tag, err)
+			// Continue anyway to nullify DB field
+		}
+
+		// Update asset to remove data matrix image URL from DB
+		emptyString := ""
+		updatePayload := &domain.UpdateAssetPayload{
+			DataMatrixImageUrl: &emptyString,
+		}
+
+		_, err = s.Repo.UpdateAsset(ctx, asset.ID, updatePayload)
+		if err != nil {
+			failedTags = append(failedTags, tag)
+			log.Printf("Failed to update asset with tag %s: %v", tag, err)
+			continue
+		}
+
+		deletedCount++
+	}
+
+	return domain.DeleteBulkDataMatrixResponse{
+		DeletedCount: deletedCount,
+		FailedTags:   failedTags,
+		AssetTags:    payload.AssetTags,
+	}, nil
+}
+
 // *===========================HELPER METHODS===========================*
+
+// extractPublicIDFromURL extracts the public ID from a Cloudinary URL
+// Example: https://res.cloudinary.com/demo/image/upload/v1234567890/sigma-asset/datamatrix/ASSET-001_01HQXXX.jpg
+// Returns: sigma-asset/datamatrix/ASSET-001_01HQXXX
+func (s *Service) extractPublicIDFromURL(url string) string {
+	if url == "" {
+		return ""
+	}
+
+	// Find the upload segment in the URL
+	parts := strings.Split(url, "/upload/")
+	if len(parts) < 2 {
+		return ""
+	}
+
+	// Get everything after /upload/
+	afterUpload := parts[1]
+
+	// Split by / to get path segments
+	segments := strings.Split(afterUpload, "/")
+	if len(segments) < 2 {
+		return ""
+	}
+
+	// Skip version (v1234567890) if present
+	startIdx := 0
+	if len(segments) > 0 && strings.HasPrefix(segments[0], "v") {
+		startIdx = 1
+	}
+
+	// Reconstruct path without version and extension
+	pathParts := segments[startIdx:]
+
+	// Remove file extension from last segment
+	if len(pathParts) > 0 {
+		lastPart := pathParts[len(pathParts)-1]
+		if dotIdx := strings.LastIndex(lastPart, "."); dotIdx > 0 {
+			pathParts[len(pathParts)-1] = lastPart[:dotIdx]
+		}
+	}
+
+	return strings.Join(pathParts, "/")
+}
 
 // sendUpdateNotifications sends all relevant notifications when asset is updated
 func (s *Service) sendUpdateNotifications(ctx context.Context, oldAsset, newAsset *domain.Asset, payload *domain.UpdateAssetPayload) {

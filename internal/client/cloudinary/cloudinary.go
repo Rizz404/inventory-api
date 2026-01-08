@@ -220,6 +220,28 @@ func (c *Client) DeleteFile(ctx context.Context, publicID string) error {
 	return nil
 }
 
+// DeleteMultipleFiles deletes multiple files from Cloudinary by public IDs
+func (c *Client) DeleteMultipleFiles(ctx context.Context, publicIDs []string) (int, []string, error) {
+	if len(publicIDs) == 0 {
+		return 0, nil, fmt.Errorf("no public IDs provided")
+	}
+
+	deletedCount := 0
+	failedIDs := []string{}
+
+	// Delete each file individually
+	for _, publicID := range publicIDs {
+		err := c.DeleteFile(ctx, publicID)
+		if err != nil {
+			failedIDs = append(failedIDs, publicID)
+			continue
+		}
+		deletedCount++
+	}
+
+	return deletedCount, failedIDs, nil
+}
+
 // GetFileInfo gets file information from Cloudinary
 func (c *Client) GetFileInfo(ctx context.Context, publicID string) (*UploadResult, error) {
 	result, err := c.cld.Admin.Asset(ctx, admin.AssetParams{

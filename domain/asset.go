@@ -244,6 +244,16 @@ type UploadBulkDataMatrixResponse struct {
 	AssetTags []string `json:"assetTags"`
 }
 
+type DeleteBulkDataMatrixPayload struct {
+	AssetTags []string `json:"assetTags" validate:"required,min=1,max=100,dive,required"`
+}
+
+type DeleteBulkDataMatrixResponse struct {
+	DeletedCount int      `json:"deletedCount"`
+	FailedTags   []string `json:"failedTags,omitempty"`
+	AssetTags    []string `json:"assetTags"`
+}
+
 // --- Query Parameters ---
 
 type AssetFilterOptions struct {
