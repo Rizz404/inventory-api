@@ -671,10 +671,20 @@ func (s *Service) UploadBulkDataMatrixImages(ctx context.Context, assetTags []st
 	// Get bulk upload config for data matrix images
 	baseConfig := cloudinary.GetBulkDataMatrixImageUploadConfig()
 
+	log.Printf("Starting bulk upload of %d files to Cloudinary", len(files))
+
 	// Upload all files using efficient bulk upload method
 	uploadResult, err := s.CloudinaryClient.UploadMultipleFilesWithPublicIDs(ctx, files, publicIDs, baseConfig)
 	if err != nil {
+		log.Printf("ERROR: Bulk upload to Cloudinary failed: %v", err)
 		return domain.UploadBulkDataMatrixResponse{}, domain.ErrInternal(err)
+	}
+
+	log.Printf("Cloudinary upload completed: %d succeeded, %d failed", len(uploadResult.Results), len(uploadResult.Failed))
+
+	// Log detailed failures
+	for _, failure := range uploadResult.Failed {
+		log.Printf("Upload failed for file '%s': %s", failure.FileName, failure.Error)
 	}
 
 	// Extract URLs from successful uploads
