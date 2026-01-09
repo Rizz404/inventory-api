@@ -47,6 +47,12 @@
 // Monitor: btm, procs, dust, duf
 // ❌ Avoid: dir, findstr, find, grep, cat, manual cd
 
+// 10) Deployment & Docker
+// - Backend deployed on AWS using Docker & Docker Compose
+// - ❌ NEVER run docker/docker-compose commands in terminal
+// - Only provide docker commands as instructions/notes
+// - User will manually execute Docker operations
+
 // Terminal workflows:
 // fd -e go | rg "TODO" // find TODOs
 // eza --tree -L 3 internal/ // show structure
