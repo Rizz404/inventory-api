@@ -364,6 +364,29 @@ func GetDataMatrixImageUploadConfig() UploadConfig {
 	}
 }
 
+// GetBulkDataMatrixImageUploadConfig returns a pre-configured upload config for bulk data matrix images
+func GetBulkDataMatrixImageUploadConfig() UploadConfig {
+	return UploadConfig{
+		AllowedTypes: []string{
+			".jpg",
+			".jpeg",
+			".png",
+			".gif",
+			".webp",
+			".bmp",
+			".tiff",
+			".tif",
+			".svg",
+			".avif",
+		},
+		FolderName:  "sigma-asset/datamatrix",
+		InputName:   "dataMatrixImages",
+		MaxFiles:    0,                // No limit for bulk upload
+		MaxFileSize: 10 * 1024 * 1024, // 10MB per file
+		Overwrite:   true,
+	}
+}
+
 // GetDocumentUploadConfig returns a pre-configured upload config for documents
 func GetDocumentUploadConfig() UploadConfig {
 	return UploadConfig{

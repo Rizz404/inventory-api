@@ -668,8 +668,8 @@ func (s *Service) UploadBulkDataMatrixImages(ctx context.Context, assetTags []st
 		publicIDs[i] = fmt.Sprintf("%s_%s", tag, ulidStr)
 	}
 
-	// Get base upload config for data matrix images
-	baseConfig := cloudinary.GetDataMatrixImageUploadConfig()
+	// Get bulk upload config for data matrix images
+	baseConfig := cloudinary.GetBulkDataMatrixImageUploadConfig()
 
 	// Upload all files using efficient bulk upload method
 	uploadResult, err := s.CloudinaryClient.UploadMultipleFilesWithPublicIDs(ctx, files, publicIDs, baseConfig)
