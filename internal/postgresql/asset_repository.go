@@ -649,10 +649,11 @@ func (r *AssetRepository) GetAssetStatistics(ctx context.Context) (domain.AssetS
 func (r *AssetRepository) GetLastAssetTagByCategory(ctx context.Context, categoryId string) (string, error) {
 	var asset model.Asset
 
-	// Get the last asset tag for the given category, ordered by asset_tag descending
+	// Get the last asset tag for the given category, ordered by created_at descending
+	// to get the most recently created asset (which should have the highest tag number)
 	err := r.db.WithContext(ctx).
 		Where("category_id = ?", categoryId).
-		Order("asset_tag DESC").
+		Order("created_at DESC").
 		Limit(1).
 		First(&asset).Error
 

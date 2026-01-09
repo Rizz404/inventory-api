@@ -565,8 +565,8 @@ func (s *Service) GenerateAssetTagSuggestion(ctx context.Context, payload *domai
 	nextIncrement := 1
 	if lastAssetTag != "" {
 		// Extract the numeric part from the last asset tag
-		// Format expected: CATEGORYCODE-00001
-		dashIndex := strings.Index(lastAssetTag, "-")
+		// Format expected: CATEGORYCODE-00001 (use LastIndex to handle multi-dash codes like FURN-SEAT)
+		dashIndex := strings.LastIndex(lastAssetTag, "-")
 		if dashIndex != -1 && dashIndex < len(lastAssetTag)-1 {
 			numericPart := lastAssetTag[dashIndex+1:]
 			// Try to parse the numeric part
@@ -611,7 +611,8 @@ func (s *Service) GenerateBulkAssetTags(ctx context.Context, payload *domain.Gen
 	// * Calculate starting increment
 	startIncrement := 1
 	if lastAssetTag != "" {
-		dashIndex := strings.Index(lastAssetTag, "-")
+		// Use LastIndex to handle multi-dash category codes like FURN-SEAT
+		dashIndex := strings.LastIndex(lastAssetTag, "-")
 		if dashIndex != -1 && dashIndex < len(lastAssetTag)-1 {
 			numericPart := lastAssetTag[dashIndex+1:]
 			var parsedNum int
