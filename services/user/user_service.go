@@ -114,9 +114,9 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 		// Upload file to Cloudinary if client is available
 		if s.CloudinaryClient != nil {
 			// Generate temporary user ID for avatar naming
-			tempUserID := "temp_" + ulid.Make().String()
+			tempUserID := "temp-" + ulid.Make().String()
 			uploadConfig := cloudinary.GetAvatarUploadConfig()
-			publicID := "user_" + tempUserID + "_avatar"
+			publicID := "user-" + tempUserID + "-avatar"
 			uploadConfig.PublicID = &publicID
 
 			uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, avatarFile, uploadConfig)
@@ -163,7 +163,7 @@ func (s *Service) CreateUser(ctx context.Context, payload *domain.CreateUserPayl
 	if avatarFile != nil && s.CloudinaryClient != nil && avatarURL != nil {
 		// Re-upload with correct public ID
 		uploadConfig := cloudinary.GetAvatarUploadConfig()
-		finalPublicID := "user_" + createdUser.ID + "_avatar"
+		finalPublicID := "user-" + createdUser.ID + "-avatar"
 		uploadConfig.PublicID = &finalPublicID
 
 		uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, avatarFile, uploadConfig)
@@ -289,13 +289,13 @@ func (s *Service) UpdateUser(ctx context.Context, userId string, payload *domain
 
 	// * Handle avatar update
 	var shouldDeleteOldAvatar bool
-	oldAvatarPublicID := "user_" + userId + "_avatar"
+	oldAvatarPublicID := "user-" + userId + "-avatar"
 
 	if avatarFile != nil {
 		// Upload new avatar file
 		if s.CloudinaryClient != nil {
 			uploadConfig := cloudinary.GetAvatarUploadConfig()
-			publicID := "user_" + userId + "_avatar"
+			publicID := "user-" + userId + "-avatar"
 			uploadConfig.PublicID = &publicID
 
 			uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, avatarFile, uploadConfig)

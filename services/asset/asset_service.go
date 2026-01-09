@@ -661,11 +661,11 @@ func (s *Service) UploadBulkDataMatrixImages(ctx context.Context, assetTags []st
 	}
 
 	// Prepare public IDs for each file
-	// Naming pattern: {assetTag}_{ulid}
+	// Naming pattern: {assetTag}-{ulid}
 	publicIDs := make([]string, len(assetTags))
 	for i, tag := range assetTags {
 		ulidStr := ulid.Make().String()
-		publicIDs[i] = fmt.Sprintf("%s_%s", tag, ulidStr)
+		publicIDs[i] = fmt.Sprintf("%s-%s", tag, ulidStr)
 	}
 
 	// Get bulk upload config for data matrix images
@@ -687,24 +687,23 @@ func (s *Service) UploadBulkDataMatrixImages(ctx context.Context, assetTags []st
 		log.Printf("Upload failed for file '%s': %s", failure.FileName, failure.Error)
 	}
 
-	// Extract URLs from successful uploads
+	// Extract URLs from successful uploads using index-based mapping
+	// Since uploads are sequential, Results array order matches files array order
 	urls := make([]string, len(files))
-	uploadedCount := 0
+	uploadedCount := len(uploadResult.Results)
 
-	// Map results back to original file order
-	resultMap := make(map[string]string) // publicID -> secureURL
-	for _, result := range uploadResult.Results {
-		resultMap[result.PublicID] = result.SecureURL
+	// Map results by index (most reliable method)
+	for i, result := range uploadResult.Results {
+		if i < len(urls) {
+			urls[i] = result.SecureURL
+			log.Printf("SUCCESS: Mapped file[%d] '%s' (tag: %s) to URL: %s", i, files[i].Filename, assetTags[i], result.SecureURL)
+		}
 	}
 
-	// Fill URLs array in the correct order
-	for i, publicID := range publicIDs {
-		if url, ok := resultMap[publicID]; ok {
-			urls[i] = url
-			uploadedCount++
-		} else {
-			urls[i] = "" // Empty URL indicates failed upload
-			log.Printf("Failed to upload data matrix image for tag %s", assetTags[i])
+	// Check for any failed uploads and log them
+	if len(uploadResult.Failed) > 0 {
+		for i, failure := range uploadResult.Failed {
+			log.Printf("FAILED: File[%d] '%s' upload failed: %s", i, failure.FileName, failure.Error)
 		}
 	}
 
