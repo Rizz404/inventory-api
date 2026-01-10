@@ -426,3 +426,64 @@ func GetCategoryImageUploadConfig() UploadConfig {
 		Overwrite:   false,
 	}
 }
+
+// GetAssetImageUploadConfig returns a pre-configured upload config for asset images
+func GetAssetImageUploadConfig() UploadConfig {
+	return UploadConfig{
+		AllowedTypes: []string{
+			".jpg",
+			".jpeg",
+			".png",
+			".gif",
+			".webp",
+		},
+		FolderName:  "sigma-asset/assets",
+		InputName:   "images",
+		MaxFiles:    10, // Allow up to 10 images per asset
+		MaxFileSize: 10 * 1024 * 1024, // 10MB per image
+		Overwrite:   false,
+	}
+}
+
+// ExtractPublicIDFromURL extracts the public ID from a Cloudinary URL
+// Example: https://res.cloudinary.com/demo/image/upload/v1234567890/sigma-asset/datamatrix/ASSET-001_01HQXXX.jpg
+// Returns: sigma-asset/datamatrix/ASSET-001_01HQXXX
+func ExtractPublicIDFromURL(url string) string {
+	if url == "" {
+		return ""
+	}
+
+	// Find the upload segment in the URL
+	parts := strings.Split(url, "/upload/")
+	if len(parts) < 2 {
+		return ""
+	}
+
+	// Get everything after /upload/
+	afterUpload := parts[1]
+
+	// Split by / to get path segments
+	segments := strings.Split(afterUpload, "/")
+	if len(segments) < 2 {
+		return ""
+	}
+
+	// Skip version (v1234567890) if present
+	startIdx := 0
+	if len(segments) > 0 && strings.HasPrefix(segments[0], "v") {
+		startIdx = 1
+	}
+
+	// Reconstruct path without version and extension
+	pathParts := segments[startIdx:]
+
+	// Remove file extension from last segment
+	if len(pathParts) > 0 {
+		lastPart := pathParts[len(pathParts)-1]
+		if dotIdx := strings.LastIndex(lastPart, "."); dotIdx > 0 {
+			pathParts[len(pathParts)-1] = lastPart[:dotIdx]
+		}
+	}
+
+	return strings.Join(pathParts, "/")
+}

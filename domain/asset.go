@@ -47,6 +47,46 @@ const (
 	ExportFormatExcel ExportFormat = "excel"
 )
 
+// --- Image Structs (Reusable) ---
+
+type Image struct {
+	ID        string    `json:"id"`
+	ImageURL  string    `json:"imageUrl"`
+	PublicID  *string   `json:"publicId,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type ImageResponse struct {
+	ID        string    `json:"id"`
+	ImageURL  string    `json:"imageUrl"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// --- Asset Image Junction Structs ---
+
+type AssetImage struct {
+	ID           string    `json:"id"`
+	AssetID      string    `json:"assetId"`
+	ImageID      string    `json:"imageId"`
+	DisplayOrder int       `json:"displayOrder"`
+	IsPrimary    bool      `json:"isPrimary"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+	// * Populated
+	Image *Image `json:"image,omitempty"`
+}
+
+type AssetImageResponse struct {
+	ID           string         `json:"id"`
+	ImageURL     string         `json:"imageUrl"`
+	DisplayOrder int            `json:"displayOrder"`
+	IsPrimary    bool           `json:"isPrimary"`
+	CreatedAt    time.Time      `json:"createdAt"`
+	UpdatedAt    time.Time      `json:"updatedAt"`
+}
+
 // --- Structs ---
 
 type Asset struct {
@@ -70,9 +110,10 @@ type Asset struct {
 	UpdatedAt          time.Time      `json:"updatedAt"`
 	// * Populated
 	// Todo: Masih pake translation populated, nanti benerin diakhir
-	Category *Category `json:"category"`
-	Location *Location `json:"location"`
-	User     *User     `json:"user"`
+	Category *Category     `json:"category"`
+	Location *Location     `json:"location"`
+	User     *User         `json:"user"`
+	Images   []AssetImage  `json:"images,omitempty"`
 }
 
 type AssetResponse struct {
@@ -95,9 +136,10 @@ type AssetResponse struct {
 	CreatedAt          time.Time         `json:"createdAt"`
 	UpdatedAt          time.Time         `json:"updatedAt"`
 	// ???
-	Category   *CategoryResponse `json:"category"`
-	Location   *LocationResponse `json:"location"`
-	AssignedTo *UserResponse     `json:"assignedTo"`
+	Category   *CategoryResponse     `json:"category"`
+	Location   *LocationResponse     `json:"location"`
+	AssignedTo *UserResponse         `json:"assignedTo"`
+	Images     []AssetImageResponse  `json:"images,omitempty"`
 }
 
 type AssetListResponse struct {
@@ -120,9 +162,10 @@ type AssetListResponse struct {
 	CreatedAt          time.Time         `json:"createdAt"`
 	UpdatedAt          time.Time         `json:"updatedAt"`
 	// * Populated
-	Category   *CategoryResponse `json:"category"`
-	Location   *LocationResponse `json:"location"`
-	AssignedTo *UserResponse     `json:"assignedTo"`
+	Category   *CategoryResponse     `json:"category"`
+	Location   *LocationResponse     `json:"location"`
+	AssignedTo *UserResponse         `json:"assignedTo"`
+	Images     []AssetImageResponse  `json:"images,omitempty"`
 }
 
 type BulkDeleteAssets struct {
@@ -252,6 +295,30 @@ type DeleteBulkDataMatrixResponse struct {
 	DeletedCount int      `json:"deletedCount"`
 	FailedTags   []string `json:"failedTags,omitempty"`
 	AssetTags    []string `json:"assetTags"`
+}
+
+// * Bulk Asset Images (Independent Operations)
+type UploadBulkAssetImagesResponse struct {
+	Results []AssetImageUploadResult `json:"results"`
+	Count   int                      `json:"count"`
+}
+
+type AssetImageUploadResult struct {
+	AssetID  string `json:"assetId"`
+	ImageURL string `json:"imageUrl,omitempty"`
+	Success  bool   `json:"success"`
+	Error    string `json:"error,omitempty"`
+}
+
+type DeleteBulkAssetImagesPayload struct {
+	AssetImageIDs []string `json:"assetImageIds" validate:"required,min=1,max=100,dive,required"`
+}
+
+type DeleteBulkAssetImagesResponse struct {
+	DeletedCount    int      `json:"deletedCount"`
+	FailedIDs       []string `json:"failedIds,omitempty"`
+	AssetImageIDs   []string `json:"assetImageIds"`
+	OrphanedCleaned int      `json:"orphanedCleaned"`
 }
 
 // --- Query Parameters ---

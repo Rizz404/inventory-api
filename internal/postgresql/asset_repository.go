@@ -137,7 +137,7 @@ func (r *AssetRepository) UpdateAsset(ctx context.Context, assetId string, paylo
 	}
 
 	// Get updated asset
-	err = r.db.WithContext(ctx).Preload("Category").Preload("Category.Translations").Preload("Location").Preload("Location.Translations").Preload("User").First(&updatedAsset, "id = ?", assetId).Error
+	err = r.db.WithContext(ctx).Preload("Category").Preload("Category.Translations").Preload("Location").Preload("Location.Translations").Preload("User").Preload("AssetImages.Image").First(&updatedAsset, "id = ?", assetId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Asset{}, domain.ErrNotFound("asset")
@@ -216,7 +216,8 @@ func (r *AssetRepository) GetAssetsPaginated(ctx context.Context, params domain.
 		Preload("Category.Translations").
 		Preload("Location").
 		Preload("Location.Translations").
-		Preload("User")
+		Preload("User").
+		Preload("AssetImages.Image")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
@@ -256,7 +257,8 @@ func (r *AssetRepository) GetAssetsCursor(ctx context.Context, params domain.Ass
 		Preload("Category.Translations").
 		Preload("Location").
 		Preload("Location.Translations").
-		Preload("User")
+		Preload("User").
+		Preload("AssetImages.Image")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
@@ -298,6 +300,7 @@ func (r *AssetRepository) GetAssetById(ctx context.Context, assetId string) (dom
 		Preload("Location").
 		Preload("Location.Translations").
 		Preload("User").
+		Preload("AssetImages.Image").
 		First(&asset, "id = ?", assetId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -318,6 +321,7 @@ func (r *AssetRepository) GetAssetByAssetTag(ctx context.Context, assetTag strin
 		Preload("Location").
 		Preload("Location.Translations").
 		Preload("User").
+		Preload("AssetImages.Image").
 		Where("asset_tag = ?", assetTag).First(&asset).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -699,7 +703,8 @@ func (r *AssetRepository) GetAssetsForExport(ctx context.Context, params domain.
 		Preload("Category.Translations").
 		Preload("Location").
 		Preload("Location.Translations").
-		Preload("User")
+		Preload("User").
+		Preload("AssetImages.Image")
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
@@ -736,6 +741,7 @@ func (r *AssetRepository) GetAssetsWithWarrantyExpiring(ctx context.Context, day
 		Preload("Location").
 		Preload("Location.Translations").
 		Preload("User").
+		Preload("AssetImages.Image").
 		Where("warranty_end IS NOT NULL").
 		Where("warranty_end > ?", now).
 		Where("warranty_end <= ?", futureDate).
@@ -762,6 +768,7 @@ func (r *AssetRepository) GetAssetsWithExpiredWarranty(ctx context.Context) ([]d
 		Preload("Location").
 		Preload("Location.Translations").
 		Preload("User").
+		Preload("AssetImages.Image").
 		Where("warranty_end IS NOT NULL").
 		Where("warranty_end < ?", now).
 		Where("warranty_end >= ?", yesterday).
@@ -773,3 +780,160 @@ func (r *AssetRepository) GetAssetsWithExpiredWarranty(ctx context.Context) ([]d
 
 	return mapper.ToDomainAssets(assets), nil
 }
+
+// *===========================IMAGE & ASSET IMAGES CRUD===========================*
+
+// CreateImage creates a new reusable image
+func (r *AssetRepository) CreateImage(ctx context.Context, imageURL string, publicID *string) (domain.Image, error) {
+	modelImage := mapper.ToModelImageForCreate(&domain.Image{
+		ImageURL: imageURL,
+		PublicID: publicID,
+	})
+
+	if err := r.db.WithContext(ctx).Create(&modelImage).Error; err != nil {
+		return domain.Image{}, domain.ErrInternal(err)
+	}
+
+	return mapper.ToDomainImage(&modelImage), nil
+}
+
+// GetImageByPublicID finds an existing image by Cloudinary public_id
+func (r *AssetRepository) GetImageByPublicID(ctx context.Context, publicID string) (*domain.Image, error) {
+	var modelImage model.Image
+	err := r.db.WithContext(ctx).Where("public_id = ?", publicID).First(&modelImage).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // Not found, not an error
+		}
+		return nil, domain.ErrInternal(err)
+	}
+
+	image := mapper.ToDomainImage(&modelImage)
+	return &image, nil
+}
+
+// AttachImagesToAsset creates asset_images junction records
+func (r *AssetRepository) AttachImagesToAsset(ctx context.Context, assetID string, imageIDs []string, displayOrders []int, primaryIndex int) ([]domain.AssetImage, error) {
+	if len(imageIDs) == 0 {
+		return []domain.AssetImage{}, nil
+	}
+
+	models := make([]*model.AssetImage, len(imageIDs))
+	for i, imageID := range imageIDs {
+		displayOrder := 0
+		if i < len(displayOrders) {
+			displayOrder = displayOrders[i]
+		}
+		isPrimary := (i == primaryIndex)
+
+		modelImg := mapper.ToModelAssetImageForCreate(assetID, imageID, displayOrder, isPrimary)
+		models[i] = &modelImg
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Create(&models).Error; err != nil {
+		tx.Rollback()
+		return nil, domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	// Fetch with Image preloaded
+	var created []model.AssetImage
+	if err := r.db.WithContext(ctx).Preload("Image").Where("asset_id = ?", assetID).Find(&created).Error; err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	return mapper.ToDomainAssetImages(created), nil
+}
+
+// GetAssetImages retrieves all images for an asset with Image preloaded
+func (r *AssetRepository) GetAssetImages(ctx context.Context, assetID string) ([]domain.AssetImage, error) {
+	var assetImages []model.AssetImage
+	err := r.db.WithContext(ctx).
+		Preload("Image").
+		Where("asset_id = ?", assetID).
+		Order("display_order ASC, created_at ASC").
+		Find(&assetImages).Error
+	if err != nil {
+		return nil, domain.ErrInternal(err)
+	}
+
+	return mapper.ToDomainAssetImages(assetImages), nil
+}
+
+// DetachImageFromAsset removes asset_images junction (does NOT delete the image itself)
+func (r *AssetRepository) DetachImageFromAsset(ctx context.Context, assetImageID string) error {
+	err := r.db.WithContext(ctx).Delete(&model.AssetImage{}, "id = ?", assetImageID).Error
+	if err != nil {
+		return domain.ErrInternal(err)
+	}
+	return nil
+}
+
+// DetachAllImagesFromAsset removes all asset_images junctions for an asset
+func (r *AssetRepository) DetachAllImagesFromAsset(ctx context.Context, assetID string) error {
+	err := r.db.WithContext(ctx).Where("asset_id = ?", assetID).Delete(&model.AssetImage{}).Error
+	if err != nil {
+		return domain.ErrInternal(err)
+	}
+	return nil
+}
+
+// UpdateAssetImagePrimary sets one asset_image as primary for the asset
+func (r *AssetRepository) UpdateAssetImagePrimary(ctx context.Context, assetID string, assetImageID string) error {
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return domain.ErrInternal(tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Unset all primary flags for this asset
+	if err := tx.Model(&model.AssetImage{}).
+		Where("asset_id = ?", assetID).
+		Update("is_primary", false).Error; err != nil {
+		tx.Rollback()
+		return domain.ErrInternal(err)
+	}
+
+	// Set the specified asset_image as primary
+	if err := tx.Model(&model.AssetImage{}).
+		Where("id = ?", assetImageID).
+		Update("is_primary", true).Error; err != nil {
+		tx.Rollback()
+		return domain.ErrInternal(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return domain.ErrInternal(err)
+	}
+
+	return nil
+}
+
+// DeleteUnusedImages deletes Image records that are not referenced in asset_images
+func (r *AssetRepository) DeleteUnusedImages(ctx context.Context) error {
+	// Find images that have no asset_images references
+	err := r.db.WithContext(ctx).
+		Exec(`DELETE FROM images WHERE id NOT IN (SELECT DISTINCT image_id FROM asset_images)`).Error
+	if err != nil {
+		return domain.ErrInternal(err)
+	}
+	return nil
+}
+

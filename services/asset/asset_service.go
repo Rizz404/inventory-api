@@ -42,6 +42,16 @@ type Repository interface {
 	GetAssetsForExport(ctx context.Context, params domain.AssetParams, langCode string) ([]domain.Asset, error)
 	GetAssetsWithWarrantyExpiring(ctx context.Context, daysFromNow int) ([]domain.Asset, error)
 	GetAssetsWithExpiredWarranty(ctx context.Context) ([]domain.Asset, error)
+
+	// * IMAGE & ASSET IMAGES CRUD
+	CreateImage(ctx context.Context, imageURL string, publicID *string) (domain.Image, error)
+	GetImageByPublicID(ctx context.Context, publicID string) (*domain.Image, error)
+	AttachImagesToAsset(ctx context.Context, assetID string, imageIDs []string, displayOrders []int, primaryIndex int) ([]domain.AssetImage, error)
+	GetAssetImages(ctx context.Context, assetID string) ([]domain.AssetImage, error)
+	DetachImageFromAsset(ctx context.Context, assetImageID string) error
+	DetachAllImagesFromAsset(ctx context.Context, assetID string) error
+	UpdateAssetImagePrimary(ctx context.Context, assetID string, assetImageID string) error
+	DeleteUnusedImages(ctx context.Context) error
 }
 
 // * AssetService interface defines the contract for asset business operations
@@ -67,6 +77,10 @@ type AssetService interface {
 	GenerateBulkAssetTags(ctx context.Context, payload *domain.GenerateBulkAssetTagsPayload) (domain.GenerateBulkAssetTagsResponse, error)
 	UploadBulkDataMatrixImages(ctx context.Context, assetTags []string, files []*multipart.FileHeader) (domain.UploadBulkDataMatrixResponse, error)
 	DeleteBulkDataMatrixImages(ctx context.Context, payload *domain.DeleteBulkDataMatrixPayload) (domain.DeleteBulkDataMatrixResponse, error)
+
+	// * ASSET IMAGES
+	UploadBulkAssetImages(ctx context.Context, assetIds []string, files []*multipart.FileHeader) (domain.UploadBulkAssetImagesResponse, error)
+	DeleteBulkAssetImages(ctx context.Context, payload *domain.DeleteBulkAssetImagesPayload) (domain.DeleteBulkAssetImagesResponse, error)
 
 	// * EXPORT
 	ExportAssetList(ctx context.Context, payload *domain.ExportAssetListPayload, langCode string) ([]byte, string, error)
@@ -755,7 +769,7 @@ func (s *Service) DeleteBulkDataMatrixImages(ctx context.Context, payload *domai
 		}
 
 		// Extract public ID from Cloudinary URL
-		publicID := s.extractPublicIDFromURL(asset.DataMatrixImageUrl)
+		publicID := cloudinary.ExtractPublicIDFromURL(asset.DataMatrixImageUrl)
 		if publicID == "" {
 			failedTags = append(failedTags, tag)
 			log.Printf("Failed to extract public ID from URL for tag %s", tag)
@@ -793,47 +807,244 @@ func (s *Service) DeleteBulkDataMatrixImages(ctx context.Context, payload *domai
 
 // *===========================HELPER METHODS===========================*
 
-// extractPublicIDFromURL extracts the public ID from a Cloudinary URL
-// Example: https://res.cloudinary.com/demo/image/upload/v1234567890/sigma-asset/datamatrix/ASSET-001_01HQXXX.jpg
-// Returns: sigma-asset/datamatrix/ASSET-001_01HQXXX
-func (s *Service) extractPublicIDFromURL(url string) string {
-	if url == "" {
-		return ""
+// uploadAndAttachAssetImages uploads images to Cloudinary and attaches them to an asset
+// Uses many-to-many relationship with image reusability via public_id deduplication
+func (s *Service) uploadAndAttachAssetImages(ctx context.Context, assetID string, imageFiles []*multipart.FileHeader) error {
+	if len(imageFiles) == 0 {
+		return nil
 	}
 
-	// Find the upload segment in the URL
-	parts := strings.Split(url, "/upload/")
-	if len(parts) < 2 {
-		return ""
+	if s.CloudinaryClient == nil {
+		return fmt.Errorf("cloudinary client not configured")
 	}
 
-	// Get everything after /upload/
-	afterUpload := parts[1]
+	// Get upload config for asset images
+	uploadConfig := cloudinary.GetAssetImageUploadConfig()
 
-	// Split by / to get path segments
-	segments := strings.Split(afterUpload, "/")
-	if len(segments) < 2 {
-		return ""
+	log.Printf("Starting upload of %d asset images to Cloudinary", len(imageFiles))
+
+	// Upload all files to Cloudinary (auto-generated publicIDs for potential reuse)
+	uploadResult, err := s.CloudinaryClient.UploadMultipleFiles(ctx, imageFiles, uploadConfig)
+	if err != nil {
+		log.Printf("ERROR: Asset images upload to Cloudinary failed: %v", err)
+		return fmt.Errorf("failed to upload images to cloudinary: %w", err)
 	}
 
-	// Skip version (v1234567890) if present
-	startIdx := 0
-	if len(segments) > 0 && strings.HasPrefix(segments[0], "v") {
-		startIdx = 1
+	log.Printf("Cloudinary upload completed: %d succeeded, %d failed", len(uploadResult.Results), len(uploadResult.Failed))
+
+	// Log detailed failures
+	for _, failure := range uploadResult.Failed {
+		log.Printf("Upload failed for file '%s': %s", failure.FileName, failure.Error)
 	}
 
-	// Reconstruct path without version and extension
-	pathParts := segments[startIdx:]
+	// Return error if all uploads failed
+	if len(uploadResult.Results) == 0 {
+		return fmt.Errorf("all %d image uploads failed", len(imageFiles))
+	}
 
-	// Remove file extension from last segment
-	if len(pathParts) > 0 {
-		lastPart := pathParts[len(pathParts)-1]
-		if dotIdx := strings.LastIndex(lastPart, "."); dotIdx > 0 {
-			pathParts[len(pathParts)-1] = lastPart[:dotIdx]
+	// Process successful uploads and attach to asset
+	var imageIDs []string
+	var displayOrders []int
+
+	for i, result := range uploadResult.Results {
+		// Check if image with this public_id already exists (deduplication)
+		existingImage, err := s.Repo.GetImageByPublicID(ctx, result.PublicID)
+		if err != nil {
+			log.Printf("Error checking existing image: %v", err)
+		}
+
+		var imageID string
+		if existingImage != nil {
+			// Image already exists in pool, reuse it!
+			imageID = existingImage.ID
+			log.Printf("✓ Reusing existing image: %s (public_id: %s)", imageID, result.PublicID)
+		} else {
+			// Create new image record in pool
+			newImage, err := s.Repo.CreateImage(ctx, result.SecureURL, &result.PublicID)
+			if err != nil {
+				log.Printf("Failed to create image record for %s: %v", result.PublicID, err)
+				continue
+			}
+			imageID = newImage.ID
+			log.Printf("✓ Created new image: %s (public_id: %s)", imageID, result.PublicID)
+		}
+
+		imageIDs = append(imageIDs, imageID)
+		displayOrders = append(displayOrders, i)
+	}
+
+	// Attach images to asset via junction table (first image is primary by default)
+	if len(imageIDs) > 0 {
+		_, err := s.Repo.AttachImagesToAsset(ctx, assetID, imageIDs, displayOrders, 0)
+		if err != nil {
+			return fmt.Errorf("failed to attach images to asset: %w", err)
+		}
+		log.Printf("✓ Attached %d images to asset %s", len(imageIDs), assetID)
+	}
+
+	return nil
+}
+
+// *===========================ASSET IMAGES (INDEPENDENT OPERATIONS)===========================*
+
+// UploadBulkAssetImages uploads images to Cloudinary and attaches them to their respective assets
+// This is an independent operation that can be called separately from asset creation/update
+func (s *Service) UploadBulkAssetImages(ctx context.Context, assetIds []string, files []*multipart.FileHeader) (domain.UploadBulkAssetImagesResponse, error) {
+	// Validate inputs
+	if len(assetIds) == 0 || len(files) == 0 {
+		return domain.UploadBulkAssetImagesResponse{}, domain.ErrBadRequest("assetIds and files are required")
+	}
+
+	if len(assetIds) != len(files) {
+		return domain.UploadBulkAssetImagesResponse{}, domain.ErrBadRequest("number of assetIds must match number of files")
+	}
+
+	if len(assetIds) > 100 {
+		return domain.UploadBulkAssetImagesResponse{}, domain.ErrBadRequest("maximum 100 images per request")
+	}
+
+	// Check Cloudinary client availability
+	if s.CloudinaryClient == nil {
+		return domain.UploadBulkAssetImagesResponse{}, domain.ErrInternalWithMessage("cloudinary client not configured")
+	}
+
+	// Verify all assets exist before uploading
+	for _, assetID := range assetIds {
+		exists, err := s.Repo.CheckAssetExists(ctx, assetID)
+		if err != nil {
+			return domain.UploadBulkAssetImagesResponse{}, fmt.Errorf("failed to verify asset %s: %w", assetID, err)
+		}
+		if !exists {
+			return domain.UploadBulkAssetImagesResponse{}, domain.ErrNotFound("asset not found: " + assetID)
 		}
 	}
 
-	return strings.Join(pathParts, "/")
+	// Get upload config
+	uploadConfig := cloudinary.GetAssetImageUploadConfig()
+
+	// Upload all files to Cloudinary
+	uploadResult, err := s.CloudinaryClient.UploadMultipleFiles(ctx, files, uploadConfig)
+	if err != nil {
+		log.Printf("ERROR: Bulk asset images upload failed: %v", err)
+		return domain.UploadBulkAssetImagesResponse{}, fmt.Errorf("failed to upload images to cloudinary: %w", err)
+	}
+
+	// Process results
+	results := make([]domain.AssetImageUploadResult, len(assetIds))
+	successCount := 0
+
+	// Process successful uploads
+	for i, result := range uploadResult.Results {
+		assetID := assetIds[i]
+
+		// Check if image already exists (deduplication)
+		existingImage, _ := s.Repo.GetImageByPublicID(ctx, result.PublicID)
+
+		var imageID string
+		if existingImage != nil {
+			imageID = existingImage.ID
+			log.Printf("✓ Reusing existing image for asset %s (public_id: %s)", assetID, result.PublicID)
+		} else {
+			// Create new image record
+			newImage, err := s.Repo.CreateImage(ctx, result.SecureURL, &result.PublicID)
+			if err != nil {
+				results[i] = domain.AssetImageUploadResult{
+					AssetID: assetID,
+					Success: false,
+					Error:   fmt.Sprintf("failed to create image record: %v", err),
+				}
+				continue
+			}
+			imageID = newImage.ID
+			log.Printf("✓ Created new image for asset %s (public_id: %s)", assetID, result.PublicID)
+		}
+
+		// Attach image to asset (as non-primary by default to avoid conflict)
+		_, err = s.Repo.AttachImagesToAsset(ctx, assetID, []string{imageID}, []int{0}, -1)
+		if err != nil {
+			results[i] = domain.AssetImageUploadResult{
+				AssetID: assetID,
+				Success: false,
+				Error:   fmt.Sprintf("failed to attach image: %v", err),
+			}
+			continue
+		}
+
+		results[i] = domain.AssetImageUploadResult{
+			AssetID:  assetID,
+			ImageURL: result.SecureURL,
+			Success:  true,
+		}
+		successCount++
+	}
+
+	// Process failed uploads
+	for _, failure := range uploadResult.Failed {
+		// Find corresponding assetID by index
+		idx := -1
+		for i, file := range files {
+			if file.Filename == failure.FileName {
+				idx = i
+				break
+			}
+		}
+
+		if idx >= 0 && idx < len(assetIds) {
+			results[idx] = domain.AssetImageUploadResult{
+				AssetID: assetIds[idx],
+				Success: false,
+				Error:   failure.Error,
+			}
+		}
+	}
+
+	return domain.UploadBulkAssetImagesResponse{
+		Results: results,
+		Count:   successCount,
+	}, nil
+}
+
+// DeleteBulkAssetImages removes asset_images junction records and cleans up orphaned images
+// This is an independent operation that can be called separately from asset update
+func (s *Service) DeleteBulkAssetImages(ctx context.Context, payload *domain.DeleteBulkAssetImagesPayload) (domain.DeleteBulkAssetImagesResponse, error) {
+	if len(payload.AssetImageIDs) == 0 {
+		return domain.DeleteBulkAssetImagesResponse{}, domain.ErrBadRequest("assetImageIds are required")
+	}
+
+	if len(payload.AssetImageIDs) > 100 {
+		return domain.DeleteBulkAssetImagesResponse{}, domain.ErrBadRequest("maximum 100 asset images per request")
+	}
+
+	deletedCount := 0
+	failedIDs := []string{}
+
+	// Delete each asset_image junction record
+	for _, assetImageID := range payload.AssetImageIDs {
+		err := s.Repo.DetachImageFromAsset(ctx, assetImageID)
+		if err != nil {
+			log.Printf("Failed to detach asset image %s: %v", assetImageID, err)
+			failedIDs = append(failedIDs, assetImageID)
+			continue
+		}
+		deletedCount++
+	}
+
+	// Clean up orphaned images (images no longer attached to any asset)
+	orphanedCleaned := 0
+	if err := s.Repo.DeleteUnusedImages(ctx); err != nil {
+		log.Printf("Warning: Failed to clean up orphaned images: %v", err)
+	} else {
+		// Note: We don't have a count of deleted orphaned images from the query
+		// This is just a cleanup operation
+		log.Printf("✓ Cleaned up orphaned images")
+	}
+
+	return domain.DeleteBulkAssetImagesResponse{
+		DeletedCount:    deletedCount,
+		FailedIDs:       failedIDs,
+		AssetImageIDs:   payload.AssetImageIDs,
+		OrphanedCleaned: orphanedCleaned,
+	}, nil
 }
 
 // sendUpdateNotifications sends all relevant notifications when asset is updated

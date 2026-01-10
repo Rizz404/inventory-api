@@ -140,6 +140,11 @@ func ToDomainAsset(m *model.Asset) domain.Asset {
 		domainAsset.User = &user
 	}
 
+	// Convert images if preloaded
+	if len(m.AssetImages) > 0 {
+		domainAsset.Images = ToDomainAssetImages(m.AssetImages)
+	}
+
 	return domainAsset
 }
 
@@ -191,6 +196,11 @@ func AssetToResponse(d *domain.Asset, langCode string) domain.AssetResponse {
 	if d.User != nil {
 		userResponse := UserToResponse(d.User)
 		response.AssignedTo = &userResponse
+	}
+
+	// Convert images
+	if len(d.Images) > 0 {
+		response.Images = AssetImagesToResponses(d.Images)
 	}
 
 	return response
@@ -448,4 +458,167 @@ func MapAssetSortFieldToColumn(field domain.AssetSortField) string {
 		return column
 	}
 	return "created_at"
+}
+
+// *==================== Asset Image conversions ====================
+
+// Image mappers
+func ToModelImage(d *domain.Image) model.Image {
+	modelImage := model.Image{
+		ImageURL: d.ImageURL,
+		PublicID: d.PublicID,
+	}
+
+	if d.ID != "" {
+		if parsedID, err := ulid.Parse(d.ID); err == nil {
+			modelImage.ID = model.SQLULID(parsedID)
+		}
+	}
+
+	return modelImage
+}
+
+func ToModelImageForCreate(d *domain.Image) model.Image {
+	return model.Image{
+		ImageURL: d.ImageURL,
+		PublicID: d.PublicID,
+	}
+}
+
+func ToDomainImage(m *model.Image) domain.Image {
+	return domain.Image{
+		ID:        m.ID.String(),
+		ImageURL:  m.ImageURL,
+		PublicID:  m.PublicID,
+		CreatedAt: m.CreatedAt,
+		UpdatedAt: m.UpdatedAt,
+	}
+}
+
+func ToDomainImages(models []model.Image) []domain.Image {
+	if len(models) == 0 {
+		return []domain.Image{}
+	}
+	images := make([]domain.Image, len(models))
+	for i, m := range models {
+		images[i] = ToDomainImage(&m)
+	}
+	return images
+}
+
+func ImageToResponse(d *domain.Image) domain.ImageResponse {
+	return domain.ImageResponse{
+		ID:        d.ID,
+		ImageURL:  d.ImageURL,
+		CreatedAt: d.CreatedAt,
+		UpdatedAt: d.UpdatedAt,
+	}
+}
+
+// AssetImage junction mappers
+func ToModelAssetImage(d *domain.AssetImage) model.AssetImage {
+	modelImage := model.AssetImage{
+		DisplayOrder: d.DisplayOrder,
+		IsPrimary:    d.IsPrimary,
+	}
+
+	if d.ID != "" {
+		if parsedID, err := ulid.Parse(d.ID); err == nil {
+			modelImage.ID = model.SQLULID(parsedID)
+		}
+	}
+
+	if d.AssetID != "" {
+		if parsedAssetID, err := ulid.Parse(d.AssetID); err == nil {
+			modelImage.AssetID = model.SQLULID(parsedAssetID)
+		}
+	}
+
+	if d.ImageID != "" {
+		if parsedImageID, err := ulid.Parse(d.ImageID); err == nil {
+			modelImage.ImageID = model.SQLULID(parsedImageID)
+		}
+	}
+
+	return modelImage
+}
+
+func ToModelAssetImageForCreate(assetID string, imageID string, displayOrder int, isPrimary bool) model.AssetImage {
+	modelImage := model.AssetImage{
+		DisplayOrder: displayOrder,
+		IsPrimary:    isPrimary,
+	}
+
+	if assetID != "" {
+		if parsedAssetID, err := ulid.Parse(assetID); err == nil {
+			modelImage.AssetID = model.SQLULID(parsedAssetID)
+		}
+	}
+
+	if imageID != "" {
+		if parsedImageID, err := ulid.Parse(imageID); err == nil {
+			modelImage.ImageID = model.SQLULID(parsedImageID)
+		}
+	}
+
+	return modelImage
+}
+
+func ToDomainAssetImage(m *model.AssetImage) domain.AssetImage {
+	domainAssetImage := domain.AssetImage{
+		ID:           m.ID.String(),
+		AssetID:      m.AssetID.String(),
+		ImageID:      m.ImageID.String(),
+		DisplayOrder: m.DisplayOrder,
+		IsPrimary:    m.IsPrimary,
+		CreatedAt:    m.CreatedAt,
+		UpdatedAt:    m.UpdatedAt,
+	}
+
+	// Populate image if preloaded
+	if m.Image != nil && !m.Image.ID.IsZero() {
+		image := ToDomainImage(m.Image)
+		domainAssetImage.Image = &image
+	}
+
+	return domainAssetImage
+}
+
+func ToDomainAssetImages(models []model.AssetImage) []domain.AssetImage {
+	if len(models) == 0 {
+		return []domain.AssetImage{}
+	}
+	images := make([]domain.AssetImage, len(models))
+	for i, m := range models {
+		images[i] = ToDomainAssetImage(&m)
+	}
+	return images
+}
+
+func AssetImageToResponse(d *domain.AssetImage) domain.AssetImageResponse {
+	response := domain.AssetImageResponse{
+		ID:           d.ID,
+		DisplayOrder: d.DisplayOrder,
+		IsPrimary:    d.IsPrimary,
+		CreatedAt:    d.CreatedAt,
+		UpdatedAt:    d.UpdatedAt,
+	}
+
+	// Get ImageURL from populated Image
+	if d.Image != nil {
+		response.ImageURL = d.Image.ImageURL
+	}
+
+	return response
+}
+
+func AssetImagesToResponses(images []domain.AssetImage) []domain.AssetImageResponse {
+	if len(images) == 0 {
+		return []domain.AssetImageResponse{}
+	}
+	responses := make([]domain.AssetImageResponse, len(images))
+	for i, img := range images {
+		responses[i] = AssetImageToResponse(&img)
+	}
+	return responses
 }

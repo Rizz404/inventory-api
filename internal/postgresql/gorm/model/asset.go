@@ -28,9 +28,10 @@ type Asset struct {
 	AssignedTo         *SQLULID              `gorm:"type:varchar(26)"`
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
-	Category           Category  `gorm:"foreignKey:CategoryID"`
-	Location           *Location `gorm:"foreignKey:LocationID"`
-	User               *User     `gorm:"foreignKey:AssignedTo"`
+	Category           Category      `gorm:"foreignKey:CategoryID"`
+	Location           *Location     `gorm:"foreignKey:LocationID"`
+	User               *User         `gorm:"foreignKey:AssignedTo"`
+	AssetImages        []AssetImage  `gorm:"foreignKey:AssetID"`
 }
 
 func (Asset) TableName() string {
@@ -43,6 +44,56 @@ func (u *Asset) BeforeCreate(tx *gorm.DB) error {
 	if u.ID.IsZero() {
 		u.ID = SQLULID(ulid.Make())
 		log.Printf("🚀 Generated new ULID for Asset: %s", u.ID.String())
+	}
+
+	return nil
+}
+
+type Image struct {
+	ID        SQLULID `gorm:"primaryKey;type:varchar(26)"`
+	ImageURL  string  `gorm:"type:text;not null"`
+	PublicID  *string `gorm:"type:varchar(255);index"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (Image) TableName() string {
+	return "images"
+}
+
+func (u *Image) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 Image.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for Image: %s", u.ID.String())
+	}
+
+	return nil
+}
+
+type AssetImage struct {
+	ID           SQLULID `gorm:"primaryKey;type:varchar(26)"`
+	AssetID      SQLULID `gorm:"type:varchar(26);not null;index"`
+	ImageID      SQLULID `gorm:"type:varchar(26);not null;index"`
+	DisplayOrder int     `gorm:"type:integer;default:0;index"`
+	IsPrimary    bool    `gorm:"type:boolean;default:false;index"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	// * Populated
+	Image *Image `gorm:"foreignKey:ImageID"`
+}
+
+func (AssetImage) TableName() string {
+	return "asset_images"
+}
+
+func (u *AssetImage) BeforeCreate(tx *gorm.DB) error {
+	log.Printf("🚀 AssetImage.BeforeCreate called! Current ID: %s, IsZero: %t", u.ID.String(), u.ID.IsZero())
+
+	if u.ID.IsZero() {
+		u.ID = SQLULID(ulid.Make())
+		log.Printf("🚀 Generated new ULID for AssetImage: %s", u.ID.String())
 	}
 
 	return nil

@@ -186,6 +186,8 @@ const (
 	SuccessBulkAssetTagsGeneratedKey            MessageKey = "success.asset.bulk_tags_generated"
 	SuccessBulkDataMatrixUploadedKey            MessageKey = "success.asset.bulk_datamatrix_uploaded"
 	SuccessBulkDataMatrixDeletedKey             MessageKey = "success.asset.bulk_datamatrix_deleted"
+	SuccessBulkAssetImagesUploadedKey           MessageKey = "success.asset.bulk_images_uploaded"
+	SuccessBulkAssetImagesDeletedKey            MessageKey = "success.asset.bulk_images_deleted"
 
 	// * Scan log-specific success keys
 	SuccessScanLogCreatedKey             MessageKey = "success.scan_log.created"
@@ -1020,6 +1022,16 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Bulk data matrix images deleted successfully",
 		"id-ID": "Gambar data matrix massal berhasil dihapus",
 		"ja-JP": "一括データマトリックス画像が正常に削除されました",
+	},
+	SuccessBulkAssetImagesUploadedKey: {
+		"en-US": "Bulk asset images uploaded successfully",
+		"id-ID": "Gambar aset massal berhasil diunggah",
+		"ja-JP": "一括アセット画像が正常にアップロードされました",
+	},
+	SuccessBulkAssetImagesDeletedKey: {
+		"en-US": "Bulk asset images deleted successfully",
+		"id-ID": "Gambar aset massal berhasil dihapus",
+		"ja-JP": "一括アセット画像が正常に削除されました",
 	},
 
 	// * Scan log-specific success messages

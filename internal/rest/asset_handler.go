@@ -58,6 +58,19 @@ func NewAssetHandler(app fiber.Router, s asset.AssetService) {
 		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
 		handler.DeleteBulkDataMatrixImages,
 	)
+
+	// * Asset Images (Independent Operations)
+	assets.Post("/upload/bulk-images",
+		middleware.AuthMiddleware(),
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
+		handler.UploadBulkAssetImages,
+	)
+	assets.Post("/delete/bulk-images",
+		middleware.AuthMiddleware(),
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
+		handler.DeleteBulkAssetImages,
+	)
+
 	assets.Get("/:id", handler.GetAssetById)
 	assets.Patch("/:id",
 		middleware.AuthMiddleware(),
@@ -587,4 +600,65 @@ func (h *AssetHandler) ExportAssetDataMatrix(c *fiber.Ctx) error {
 	c.Set("Content-Disposition", "attachment; filename="+filename)
 
 	return c.Send(data)
+}
+
+// *===========================ASSET IMAGES (INDEPENDENT OPERATIONS)===========================*
+
+func (h *AssetHandler) UploadBulkAssetImages(c *fiber.Ctx) error {
+	// Parse multipart form
+	form, err := c.MultipartForm()
+	if err != nil {
+		return web.HandleError(c, domain.ErrBadRequest("failed to parse multipart form"))
+	}
+
+	// Get files from form (expect field name: assetImages[])
+	files := form.File["assetImages"]
+	if len(files) == 0 {
+		return web.HandleError(c, domain.ErrBadRequest("at least one assetImages file is required"))
+	}
+
+	// Get asset IDs from form (expect field name: assetIds[])
+	assetIdsRaw := form.Value["assetIds"]
+	if len(assetIdsRaw) == 0 {
+		return web.HandleError(c, domain.ErrBadRequest("assetIds array is required"))
+	}
+
+	// Validate file count matches asset IDs count
+	if len(files) != len(assetIdsRaw) {
+		return web.HandleError(c, domain.ErrBadRequest("number of files must match number of asset IDs"))
+	}
+
+	// Validate max 100 images per request
+	if len(files) > 100 {
+		return web.HandleError(c, domain.ErrBadRequest("maximum 100 images per request"))
+	}
+
+	// Validate each file (max 10MB per image)
+	for i, file := range files {
+		if validationErr := web.ValidateImageFile(file, fmt.Sprintf("assetImages[%d]", i), 10); validationErr != nil {
+			return web.HandleError(c, domain.ErrBadRequest(web.FormatFileValidationError(validationErr)))
+		}
+	}
+
+	response, err := h.Service.UploadBulkAssetImages(c.Context(), assetIdsRaw, files)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessBulkAssetImagesUploadedKey, response)
+}
+
+func (h *AssetHandler) DeleteBulkAssetImages(c *fiber.Ctx) error {
+	var payload domain.DeleteBulkAssetImagesPayload
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
+	}
+
+	response, err := h.Service.DeleteBulkAssetImages(c.Context(), &payload)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessBulkAssetImagesDeletedKey, response)
 }
