@@ -12,6 +12,7 @@ type Category struct {
 	ID           SQLULID  `gorm:"primaryKey;type:varchar(26)"`
 	ParentID     *SQLULID `gorm:"type:varchar(26)"`
 	CategoryCode string   `gorm:"type:varchar(20);unique;not null"`
+	ImageURL     *string  `gorm:"type:text"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	Parent       *Category             `gorm:"foreignKey:ParentID"`

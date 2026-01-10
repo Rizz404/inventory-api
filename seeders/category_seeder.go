@@ -191,7 +191,7 @@ func (cs *CategorySeeder) Seed(ctx context.Context, parentCount, childrenCount i
 			Translations: translations,
 		}
 
-		created, err := cs.categoryService.CreateCategory(ctx, payload)
+		created, err := cs.categoryService.CreateCategory(ctx, payload, nil)
 		if err != nil {
 			fmt.Printf("   ⚠️  Failed to create parent category %s: %v\n", catData.Code, err)
 			continue
@@ -219,7 +219,7 @@ func (cs *CategorySeeder) Seed(ctx context.Context, parentCount, childrenCount i
 				Translations: childTranslations,
 			}
 
-			_, err := cs.categoryService.CreateCategory(ctx, childPayload)
+			_, err := cs.categoryService.CreateCategory(ctx, childPayload, nil)
 			if err != nil {
 				fmt.Printf("   ⚠️  Failed to create child category %s: %v\n", childData.Code, err)
 				continue

@@ -408,3 +408,21 @@ func GetDocumentUploadConfig() UploadConfig {
 		Overwrite:   false,
 	}
 }
+
+// GetCategoryImageUploadConfig returns a pre-configured upload config for category images
+func GetCategoryImageUploadConfig() UploadConfig {
+	return UploadConfig{
+		AllowedTypes: []string{
+			".jpg",
+			".jpeg",
+			".png",
+			".gif",
+			".webp",
+		},
+		FolderName:  "sigma-asset/categories",
+		InputName:   "image",
+		MaxFiles:    1,
+		MaxFileSize: 5 * 1024 * 1024, // 5MB
+		Overwrite:   false,
+	}
+}

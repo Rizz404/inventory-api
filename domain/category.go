@@ -19,6 +19,7 @@ type Category struct {
 	ID           string                `json:"id"`
 	ParentID     *string               `json:"parentId"`
 	CategoryCode string                `json:"categoryCode"`
+	ImageURL     *string               `json:"imageUrl,omitempty"`
 	CreatedAt    time.Time             `json:"createdAt"`
 	UpdatedAt    time.Time             `json:"updatedAt"`
 	Parent       *Category             `json:"parent,omitempty"`
@@ -50,6 +51,7 @@ type CategoryResponse struct {
 	CategoryCode string                        `json:"categoryCode"`
 	CategoryName string                        `json:"categoryName"`
 	Description  *string                       `json:"description"`
+	ImageURL     *string                       `json:"imageUrl"`
 	Parent       *CategoryResponse             `json:"parent"`
 	CreatedAt    time.Time                     `json:"createdAt"`
 	UpdatedAt    time.Time                     `json:"updatedAt"`
@@ -62,6 +64,7 @@ type CategoryListResponse struct {
 	CategoryCode string                `json:"categoryCode"`
 	CategoryName string                `json:"categoryName"`
 	Description  *string               `json:"description"`
+	ImageURL     *string               `json:"imageUrl"`
 	Parent       *CategoryListResponse `json:"parent"`
 	CreatedAt    time.Time             `json:"createdAt"`
 	UpdatedAt    time.Time             `json:"updatedAt"`
@@ -87,6 +90,7 @@ type BulkCreateCategoriesResponse struct {
 type CreateCategoryPayload struct {
 	ParentID     *string                            `json:"parentId,omitempty" validate:"omitempty"`
 	CategoryCode string                             `json:"categoryCode" validate:"required,max=20"`
+	ImageURL     *string                            `json:"imageUrl,omitempty" validate:"omitempty,url"`
 	Translations []CreateCategoryTranslationPayload `json:"translations" validate:"required,min=1,dive"`
 }
 
@@ -99,6 +103,7 @@ type CreateCategoryTranslationPayload struct {
 type UpdateCategoryPayload struct {
 	ParentID     *string                            `json:"parentId,omitempty" validate:"omitempty"`
 	CategoryCode *string                            `json:"categoryCode,omitempty" validate:"omitempty,max=20"`
+	ImageURL     *string                            `json:"imageUrl,omitempty" validate:"omitempty,url"`
 	Translations []UpdateCategoryTranslationPayload `json:"translations,omitempty" validate:"omitempty,dive"`
 }
 

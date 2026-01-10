@@ -31,6 +31,7 @@ func ToModelCategory(d *domain.Category) model.Category {
 func ToModelCategoryForCreate(d *domain.Category) model.Category {
 	modelCategory := model.Category{
 		CategoryCode: d.CategoryCode,
+		ImageURL:     d.ImageURL,
 	}
 
 	if d.ParentID != nil && *d.ParentID != "" {
@@ -86,6 +87,7 @@ func ToDomainCategory(m *model.Category) domain.Category {
 	domainCategory := domain.Category{
 		ID:           m.ID.String(),
 		CategoryCode: m.CategoryCode,
+		ImageURL:     m.ImageURL,
 		CreatedAt:    m.CreatedAt,
 		UpdatedAt:    m.UpdatedAt,
 	}
@@ -137,6 +139,7 @@ func CategoryToResponse(d *domain.Category, langCode string) domain.CategoryResp
 		ID:           d.ID,
 		ParentID:     d.ParentID,
 		CategoryCode: d.CategoryCode,
+		ImageURL:     d.ImageURL,
 		CreatedAt:    d.CreatedAt,
 		UpdatedAt:    d.UpdatedAt,
 		Translations: make([]domain.CategoryTranslationResponse, len(d.Translations)),
@@ -191,6 +194,7 @@ func CategoryToListResponse(d *domain.Category, langCode string) domain.Category
 		ID:           d.ID,
 		ParentID:     d.ParentID,
 		CategoryCode: d.CategoryCode,
+		ImageURL:     d.ImageURL,
 		CreatedAt:    d.CreatedAt,
 		UpdatedAt:    d.UpdatedAt,
 	}
@@ -277,6 +281,13 @@ func ToModelCategoryUpdateMap(payload *domain.UpdateCategoryPayload) map[string]
 	}
 	if payload.CategoryCode != nil {
 		updates["category_code"] = *payload.CategoryCode
+	}
+	if payload.ImageURL != nil {
+		if *payload.ImageURL == "" {
+			updates["image_url"] = nil
+		} else {
+			updates["image_url"] = *payload.ImageURL
+		}
 	}
 
 	return updates

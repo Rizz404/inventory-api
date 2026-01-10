@@ -1,7 +1,9 @@
 package rest
 
 import (
+	"mime/multipart"
 	"strconv"
+	"strings"
 
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/rest/middleware"
@@ -117,11 +119,34 @@ func (h *CategoryHandler) BulkCreateCategories(c *fiber.Ctx) error {
 
 func (h *CategoryHandler) CreateCategory(c *fiber.Ctx) error {
 	var payload domain.CreateCategoryPayload
-	if err := web.ParseAndValidate(c, &payload); err != nil {
-		return web.HandleError(c, err)
+
+	// Check content type to determine parsing method
+	contentType := c.Get("Content-Type")
+	var imageFile *multipart.FileHeader
+
+	if strings.Contains(contentType, "multipart/form-data") {
+		// Parse multipart form data
+		if err := c.BodyParser(&payload); err != nil {
+			return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+		}
+
+		// Try to get image file (optional)
+		file, err := c.FormFile("image")
+		if err == nil {
+			imageFile = file
+		} else if err.Error() != "there is no uploaded file associated with the given key" {
+			// Only return error if it's not "file not found" error
+			return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+		}
+		// Note: We don't return error if image file is missing since it's optional
+	} else {
+		// Parse JSON/form-urlencoded data
+		if err := web.ParseAndValidate(c, &payload); err != nil {
+			return web.HandleError(c, err)
+		}
 	}
 
-	category, err := h.Service.CreateCategory(c.Context(), &payload)
+	category, err := h.Service.CreateCategory(c.Context(), &payload, imageFile)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
@@ -136,11 +161,34 @@ func (h *CategoryHandler) UpdateCategory(c *fiber.Ctx) error {
 	}
 
 	var payload domain.UpdateCategoryPayload
-	if err := web.ParseAndValidate(c, &payload); err != nil {
-		return web.HandleError(c, err)
+
+	// Check content type to determine parsing method
+	contentType := c.Get("Content-Type")
+	var imageFile *multipart.FileHeader
+
+	if strings.Contains(contentType, "multipart/form-data") {
+		// Parse multipart form data
+		if err := c.BodyParser(&payload); err != nil {
+			return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+		}
+
+		// Try to get image file (optional)
+		file, err := c.FormFile("image")
+		if err == nil {
+			imageFile = file
+		} else if err.Error() != "there is no uploaded file associated with the given key" {
+			// Only return error if it's not "file not found" error
+			return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+		}
+		// Note: We don't return error if image file is missing since it's optional
+	} else {
+		// Parse JSON/form-urlencoded data
+		if err := web.ParseAndValidate(c, &payload); err != nil {
+			return web.HandleError(c, err)
+		}
 	}
 
-	category, err := h.Service.UpdateCategory(c.Context(), id, &payload)
+	category, err := h.Service.UpdateCategory(c.Context(), id, &payload, imageFile)
 	if err != nil {
 		return web.HandleError(c, err)
 	}

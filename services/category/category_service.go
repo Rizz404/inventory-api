@@ -3,11 +3,14 @@ package category
 import (
 	"context"
 	"log"
+	"mime/multipart"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/client/cloudinary"
 	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
+	"github.com/oklog/ulid/v2"
 )
 
 // * Repository interface defines the contract for category data operations
@@ -34,9 +37,9 @@ type Repository interface {
 // * CategoryService interface defines the contract for category business operations
 type CategoryService interface {
 	// * MUTATION
-	CreateCategory(ctx context.Context, payload *domain.CreateCategoryPayload) (domain.CategoryResponse, error)
+	CreateCategory(ctx context.Context, payload *domain.CreateCategoryPayload, imageFile *multipart.FileHeader) (domain.CategoryResponse, error)
 	BulkCreateCategories(ctx context.Context, payload *domain.BulkCreateCategoriesPayload) (domain.BulkCreateCategoriesResponse, error)
-	UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.CategoryResponse, error)
+	UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload, imageFile *multipart.FileHeader) (domain.CategoryResponse, error)
 	DeleteCategory(ctx context.Context, categoryId string) error
 	BulkDeleteCategories(ctx context.Context, payload *domain.BulkDeleteCategoriesPayload) (domain.BulkDeleteCategoriesResponse, error)
 
@@ -65,21 +68,23 @@ type Service struct {
 	Repo                Repository
 	NotificationService NotificationService
 	UserRepo            UserRepository
+	CloudinaryClient    *cloudinary.Client
 }
 
 // * Ensure Service implements CategoryService interface
 var _ CategoryService = (*Service)(nil)
 
-func NewService(r Repository, notificationService NotificationService, userRepo UserRepository) CategoryService {
+func NewService(r Repository, notificationService NotificationService, userRepo UserRepository, cloudinaryClient *cloudinary.Client) CategoryService {
 	return &Service{
 		Repo:                r,
 		NotificationService: notificationService,
 		UserRepo:            userRepo,
+		CloudinaryClient:    cloudinaryClient,
 	}
 }
 
 // *===========================MUTATION===========================*
-func (s *Service) CreateCategory(ctx context.Context, payload *domain.CreateCategoryPayload) (domain.CategoryResponse, error) {
+func (s *Service) CreateCategory(ctx context.Context, payload *domain.CreateCategoryPayload, imageFile *multipart.FileHeader) (domain.CategoryResponse, error) {
 	// * Check if category code already exists
 	if codeExists, err := s.Repo.CheckCategoryCodeExist(ctx, payload.CategoryCode); err != nil {
 		return domain.CategoryResponse{}, err
@@ -96,10 +101,37 @@ func (s *Service) CreateCategory(ctx context.Context, payload *domain.CreateCate
 		}
 	}
 
+	// * Handle image upload if file is provided
+	var imageURL *string
+	if imageFile != nil {
+		// Upload file to Cloudinary if client is available
+		if s.CloudinaryClient != nil {
+			// Generate temporary category ID for image naming
+			tempCategoryID := "temp-" + ulid.Make().String()
+			uploadConfig := cloudinary.GetCategoryImageUploadConfig()
+			publicID := "category-" + tempCategoryID + "-image"
+			uploadConfig.PublicID = &publicID
+
+			uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, imageFile, uploadConfig)
+			if err != nil {
+				// Provide detailed error message
+				errorMsg := "Failed to upload category image: " + err.Error()
+				return domain.CategoryResponse{}, domain.ErrBadRequest(errorMsg)
+			}
+			imageURL = &uploadResult.SecureURL
+		} else {
+			return domain.CategoryResponse{}, domain.ErrBadRequestWithKey(utils.ErrCloudinaryConfigKey)
+		}
+	} else if payload.ImageURL != nil {
+		// Use provided image URL from JSON/form data
+		imageURL = payload.ImageURL
+	}
+
 	// * Prepare domain category
 	newCategory := domain.Category{
 		ParentID:     payload.ParentID,
 		CategoryCode: payload.CategoryCode,
+		ImageURL:     imageURL,
 		Translations: make([]domain.CategoryTranslation, len(payload.Translations)),
 	}
 
@@ -192,9 +224,9 @@ func (s *Service) BulkCreateCategories(ctx context.Context, payload *domain.Bulk
 	return response, nil
 }
 
-func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload) (domain.CategoryResponse, error) {
+func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload, imageFile *multipart.FileHeader) (domain.CategoryResponse, error) {
 	// * Check if category exists
-	_, err := s.Repo.GetCategoryById(ctx, categoryId)
+	existingCategory, err := s.Repo.GetCategoryById(ctx, categoryId)
 	if err != nil {
 		return domain.CategoryResponse{}, err
 	}
@@ -214,6 +246,34 @@ func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload
 			return domain.CategoryResponse{}, err
 		} else if !parentExists {
 			return domain.CategoryResponse{}, domain.ErrNotFoundWithKey(utils.ErrCategoryNotFoundKey)
+		}
+	}
+
+	// * Handle image upload if file is provided
+	if imageFile != nil {
+		// Upload file to Cloudinary if client is available
+		if s.CloudinaryClient != nil {
+			uploadConfig := cloudinary.GetCategoryImageUploadConfig()
+			publicID := "category-" + categoryId + "-image"
+			uploadConfig.PublicID = &publicID
+			uploadConfig.Overwrite = true // Overwrite existing image
+
+			uploadResult, err := s.CloudinaryClient.UploadSingleFile(ctx, imageFile, uploadConfig)
+			if err != nil {
+				// Provide detailed error message
+				errorMsg := "Failed to upload category image: " + err.Error()
+				return domain.CategoryResponse{}, domain.ErrBadRequest(errorMsg)
+			}
+			newImageURL := uploadResult.SecureURL
+			payload.ImageURL = &newImageURL
+		} else {
+			return domain.CategoryResponse{}, domain.ErrBadRequestWithKey(utils.ErrCloudinaryConfigKey)
+		}
+	} else if payload.ImageURL != nil && *payload.ImageURL == "" {
+		// If imageUrl is explicitly set to empty string, delete the old image from Cloudinary
+		if s.CloudinaryClient != nil && existingCategory.ImageURL != nil {
+			// Extract public ID from existing URL and delete (optional - Cloudinary has storage limits)
+			// For now, we just set it to nil in the database
 		}
 	}
 
