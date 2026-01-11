@@ -48,6 +48,11 @@ func NewAssetHandler(app fiber.Router, s asset.AssetService) {
 	assets.Get("/check/:id", handler.CheckAssetExists)
 	assets.Post("/generate-tag", handler.GenerateAssetTagSuggestion)
 	assets.Post("/generate-bulk-tags", handler.GenerateBulkAssetTags)
+	assets.Post("/upload/template-images",
+		middleware.AuthMiddleware(),
+		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
+		handler.UploadTemplateImages,
+	)
 	assets.Post("/upload/bulk-datamatrix",
 		middleware.AuthMiddleware(),
 		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
@@ -600,6 +605,41 @@ func (h *AssetHandler) ExportAssetDataMatrix(c *fiber.Ctx) error {
 	c.Set("Content-Disposition", "attachment; filename="+filename)
 
 	return c.Send(data)
+}
+
+// *===========================TEMPLATE IMAGES (FOR BULK CREATE)===========================*
+
+func (h *AssetHandler) UploadTemplateImages(c *fiber.Ctx) error {
+	// Parse multipart form
+	form, err := c.MultipartForm()
+	if err != nil {
+		return web.HandleError(c, domain.ErrBadRequest("failed to parse multipart form"))
+	}
+
+	// Get files from form (expect field name: templateImages[])
+	files := form.File["templateImages"]
+	if len(files) == 0 {
+		return web.HandleError(c, domain.ErrBadRequest("at least one templateImages file is required"))
+	}
+
+	// Validate max 10 template images per request
+	if len(files) > 10 {
+		return web.HandleError(c, domain.ErrBadRequest("maximum 10 template images per request"))
+	}
+
+	// Validate each file (max 10MB per image)
+	for i, file := range files {
+		if validationErr := web.ValidateImageFile(file, fmt.Sprintf("templateImages[%d]", i), 10); validationErr != nil {
+			return web.HandleError(c, domain.ErrBadRequest(web.FormatFileValidationError(validationErr)))
+		}
+	}
+
+	response, err := h.Service.UploadTemplateImages(c.Context(), files)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessTemplateImagesUploadedKey, response)
 }
 
 // *===========================ASSET IMAGES (INDEPENDENT OPERATIONS)===========================*

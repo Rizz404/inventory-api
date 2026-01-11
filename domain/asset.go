@@ -204,6 +204,7 @@ type CreateAssetPayload struct {
 	Condition          AssetCondition `json:"condition,omitempty" validate:"omitempty,oneof=Good Fair Poor Damaged"`
 	LocationID         *string        `json:"locationId,omitempty" validate:"omitempty"`
 	AssignedTo         *string        `json:"assignedTo,omitempty" validate:"omitempty"`
+	ImageUrls          []string       `json:"imageUrls,omitempty" validate:"omitempty,max=10,dive,url"`
 }
 
 type UpdateAssetPayload struct {
@@ -295,6 +296,12 @@ type DeleteBulkDataMatrixResponse struct {
 	DeletedCount int      `json:"deletedCount"`
 	FailedTags   []string `json:"failedTags,omitempty"`
 	AssetTags    []string `json:"assetTags"`
+}
+
+// * Template Images Upload (For Bulk Create)
+type UploadTemplateImagesResponse struct {
+	ImageUrls []string `json:"imageUrls"`
+	Count     int      `json:"count"`
 }
 
 // * Bulk Asset Images (Independent Operations)

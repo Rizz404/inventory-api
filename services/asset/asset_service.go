@@ -78,6 +78,9 @@ type AssetService interface {
 	UploadBulkDataMatrixImages(ctx context.Context, assetTags []string, files []*multipart.FileHeader) (domain.UploadBulkDataMatrixResponse, error)
 	DeleteBulkDataMatrixImages(ctx context.Context, payload *domain.DeleteBulkDataMatrixPayload) (domain.DeleteBulkDataMatrixResponse, error)
 
+	// * TEMPLATE IMAGES (For Bulk Create)
+	UploadTemplateImages(ctx context.Context, files []*multipart.FileHeader) (domain.UploadTemplateImagesResponse, error)
+
 	// * ASSET IMAGES
 	UploadBulkAssetImages(ctx context.Context, assetIds []string, files []*multipart.FileHeader) (domain.UploadBulkAssetImagesResponse, error)
 	DeleteBulkAssetImages(ctx context.Context, payload *domain.DeleteBulkAssetImagesPayload) (domain.DeleteBulkAssetImagesResponse, error)
@@ -329,7 +332,15 @@ func (s *Service) BulkCreateAssets(ctx context.Context, payload *domain.BulkCrea
 		return domain.BulkCreateAssetsResponse{}, err
 	}
 
+	// Attach images to assets if imageUrls provided
 	for i := range createdAssets {
+		if len(payload.Assets[i].ImageUrls) > 0 {
+			if err := s.attachImageUrlsToAsset(ctx, createdAssets[i].ID, payload.Assets[i].ImageUrls); err != nil {
+				log.Printf("Failed to attach images to asset %s: %v", createdAssets[i].AssetTag, err)
+				// Continue with other assets, don't fail entire bulk operation
+			}
+		}
+
 		if payload.Assets[i].AssignedTo != nil && *payload.Assets[i].AssignedTo != "" {
 			go s.sendAssetAssignmentNotification(context.Background(), &createdAssets[i], *payload.Assets[i].AssignedTo, true)
 		}
@@ -880,6 +891,122 @@ func (s *Service) uploadAndAttachAssetImages(ctx context.Context, assetID string
 			return fmt.Errorf("failed to attach images to asset: %w", err)
 		}
 		log.Printf("✓ Attached %d images to asset %s", len(imageIDs), assetID)
+	}
+
+	return nil
+}
+
+// *===========================TEMPLATE IMAGES (FOR BULK CREATE)===========================*
+
+// UploadTemplateImages uploads images to Cloudinary for later reuse in bulk asset creation
+// These images are not attached to any asset yet, just stored in images table
+func (s *Service) UploadTemplateImages(ctx context.Context, files []*multipart.FileHeader) (domain.UploadTemplateImagesResponse, error) {
+	if len(files) == 0 {
+		return domain.UploadTemplateImagesResponse{}, domain.ErrBadRequest("at least one image file is required")
+	}
+
+	if len(files) > 10 {
+		return domain.UploadTemplateImagesResponse{}, domain.ErrBadRequest("maximum 10 template images per request")
+	}
+
+	if s.CloudinaryClient == nil {
+		return domain.UploadTemplateImagesResponse{}, domain.ErrInternalWithMessage("cloudinary client not configured")
+	}
+
+	// Get upload config for template images (same folder as regular asset images)
+	uploadConfig := cloudinary.GetAssetImageUploadConfig()
+	// No need to override folder, use default sigma-asset/assets
+
+	log.Printf("Starting upload of %d template images to Cloudinary", len(files))
+
+	// Upload all files to Cloudinary (auto-generated publicIDs for reusability)
+	uploadResult, err := s.CloudinaryClient.UploadMultipleFiles(ctx, files, uploadConfig)
+	if err != nil {
+		return domain.UploadTemplateImagesResponse{}, domain.ErrInternalWithMessage(fmt.Sprintf("failed to upload template images: %v", err))
+	}
+
+	log.Printf("Cloudinary upload completed: %d succeeded, %d failed", len(uploadResult.Results), len(uploadResult.Failed))
+
+	// Log detailed failures
+	for _, failure := range uploadResult.Failed {
+		log.Printf("Failed to upload template image %s: %v", failure.FileName, failure.Error)
+	}
+
+	// Return error if all uploads failed
+	if len(uploadResult.Results) == 0 {
+		return domain.UploadTemplateImagesResponse{}, domain.ErrInternalWithMessage("all template image uploads failed")
+	}
+
+	// Process successful uploads and save to images table
+	imageUrls := make([]string, 0, len(uploadResult.Results))
+	for _, result := range uploadResult.Results {
+		// Check if image with this public_id already exists (deduplication)
+		existingImage, err := s.Repo.GetImageByPublicID(ctx, result.PublicID)
+		if err == nil && existingImage != nil {
+			// Image already exists, reuse it
+			log.Printf("Template image already exists with public_id %s, reusing", result.PublicID)
+			imageUrls = append(imageUrls, existingImage.ImageURL)
+			continue
+		}
+
+		// Save new image to database for reusability
+		publicID := result.PublicID
+		newImage, err := s.Repo.CreateImage(ctx, result.SecureURL, &publicID)
+		if err != nil {
+			log.Printf("Failed to save template image to DB (public_id: %s): %v", result.PublicID, err)
+			continue
+		}
+		imageUrls = append(imageUrls, newImage.ImageURL)
+	}
+
+	if len(imageUrls) == 0 {
+		return domain.UploadTemplateImagesResponse{}, domain.ErrInternalWithMessage("no template images saved successfully")
+	}
+
+	return domain.UploadTemplateImagesResponse{
+		ImageUrls: imageUrls,
+		Count:     len(imageUrls),
+	}, nil
+}
+
+// attachImageUrlsToAsset attaches existing images (by URL) to an asset via junction table
+// Used for reusing uploaded template images across multiple assets
+func (s *Service) attachImageUrlsToAsset(ctx context.Context, assetID string, imageUrls []string) error {
+	if len(imageUrls) == 0 {
+		return nil
+	}
+
+	// Find existing images by URLs
+	imageIDs := make([]string, 0, len(imageUrls))
+	displayOrders := make([]int, 0, len(imageUrls))
+
+	for i, imageUrl := range imageUrls {
+		// Extract public_id from Cloudinary URL for lookup
+		publicID := cloudinary.ExtractPublicIDFromURL(imageUrl)
+		if publicID == "" {
+			log.Printf("Failed to extract public_id from URL: %s", imageUrl)
+			continue
+		}
+
+		// Find image by public_id
+		image, err := s.Repo.GetImageByPublicID(ctx, publicID)
+		if err != nil {
+			log.Printf("Image not found for public_id %s: %v", publicID, err)
+			continue
+		}
+
+		imageIDs = append(imageIDs, image.ID)
+		displayOrders = append(displayOrders, i+1)
+	}
+
+	if len(imageIDs) == 0 {
+		return domain.ErrBadRequest("no valid images found for provided URLs")
+	}
+
+	// Attach images to asset (first image is primary)
+	_, err := s.Repo.AttachImagesToAsset(ctx, assetID, imageIDs, displayOrders, 0)
+	if err != nil {
+		return domain.ErrInternalWithMessage(fmt.Sprintf("failed to attach images to asset: %v", err))
 	}
 
 	return nil
