@@ -172,10 +172,17 @@ func mapFormValuesToStruct(values map[string][]string, dst any) error {
 			continue
 		}
 
-		// Ambil value pertama
-		formValue := formValues[0]
-		if err := setFieldValue(field, formValue); err != nil {
-			return fmt.Errorf("failed to set field %s: %w", fieldName, err)
+		// Handle slice types
+		if field.Kind() == reflect.Slice {
+			if err := setSliceFieldValue(field, formValues); err != nil {
+				return fmt.Errorf("failed to set field %s: %w", fieldName, err)
+			}
+		} else {
+			// Handle single value (take first)
+			formValue := formValues[0]
+			if err := setFieldValue(field, formValue); err != nil {
+				return fmt.Errorf("failed to set field %s: %w", fieldName, err)
+			}
 		}
 	}
 
@@ -248,6 +255,23 @@ func setFieldValue(field reflect.Value, value string) error {
 		return fmt.Errorf("unsupported field type: %s", field.Kind())
 	}
 
+	return nil
+}
+
+// setSliceFieldValue sets a slice field from multiple form values
+func setSliceFieldValue(field reflect.Value, values []string) error {
+	elemType := field.Type().Elem()
+	slice := reflect.MakeSlice(field.Type(), 0, len(values))
+
+	for _, value := range values {
+		elem := reflect.New(elemType).Elem()
+		if err := setFieldValue(elem, value); err != nil {
+			return err
+		}
+		slice = reflect.Append(slice, elem)
+	}
+
+	field.Set(slice)
 	return nil
 }
 
