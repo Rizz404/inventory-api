@@ -46,6 +46,7 @@ type Repository interface {
 	// * IMAGE & ASSET IMAGES CRUD
 	CreateImage(ctx context.Context, imageURL string, publicID *string) (domain.Image, error)
 	GetImageByPublicID(ctx context.Context, publicID string) (*domain.Image, error)
+	GetAvailableAssetImages(ctx context.Context, limit int, cursor string) ([]domain.Image, error)
 	AttachImagesToAsset(ctx context.Context, assetID string, imageIDs []string, displayOrders []int, primaryIndex int) ([]domain.AssetImage, error)
 	GetAssetImages(ctx context.Context, assetID string) ([]domain.AssetImage, error)
 	DetachImageFromAsset(ctx context.Context, assetImageID string) error
@@ -82,6 +83,7 @@ type AssetService interface {
 	UploadTemplateImages(ctx context.Context, files []*multipart.FileHeader) (domain.UploadTemplateImagesResponse, error)
 
 	// * ASSET IMAGES
+	GetAvailableAssetImages(ctx context.Context, limit int, cursor string) ([]domain.ImageResponse, error)
 	UploadBulkAssetImages(ctx context.Context, assetIds []string, files []*multipart.FileHeader) (domain.UploadBulkAssetImagesResponse, error)
 	DeleteBulkAssetImages(ctx context.Context, payload *domain.DeleteBulkAssetImagesPayload) (domain.DeleteBulkAssetImagesResponse, error)
 
@@ -220,6 +222,14 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 	if err != nil {
 		// * Repository already handles error translation, so return directly
 		return domain.AssetResponse{}, err
+	}
+
+	// * Attach images if imageUrls provided
+	if len(payload.ImageUrls) > 0 {
+		err = s.attachImageUrlsToAsset(ctx, createdAsset.ID, payload.ImageUrls)
+		if err != nil {
+			log.Printf("Failed to attach images to asset %s: %v", createdAsset.AssetTag, err)
+		}
 	}
 
 	// * Send notification if asset is assigned to a user
@@ -1013,6 +1023,28 @@ func (s *Service) attachImageUrlsToAsset(ctx context.Context, assetID string, im
 }
 
 // *===========================ASSET IMAGES (INDEPENDENT OPERATIONS)===========================*
+
+// GetAvailableAssetImages retrieves available asset images (from sigma-asset/assets folder only) that can be reused
+// Uses cursor-based pagination for efficient scrolling through large image pools
+func (s *Service) GetAvailableAssetImages(ctx context.Context, limit int, cursor string) ([]domain.ImageResponse, error) {
+	images, err := s.Repo.GetAvailableAssetImages(ctx, limit, cursor)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert to response
+	responses := make([]domain.ImageResponse, len(images))
+	for i, img := range images {
+		responses[i] = domain.ImageResponse{
+			ID:        img.ID,
+			ImageURL:  img.ImageURL,
+			CreatedAt: img.CreatedAt,
+			UpdatedAt: img.UpdatedAt,
+		}
+	}
+
+	return responses, nil
+}
 
 // UploadBulkAssetImages uploads images to Cloudinary and attaches them to their respective assets
 // This is an independent operation that can be called separately from asset creation/update

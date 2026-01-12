@@ -185,6 +185,7 @@ const (
 	SuccessAssetTagGeneratedKey                 MessageKey = "success.asset.tag_generated"
 	SuccessBulkAssetTagsGeneratedKey            MessageKey = "success.asset.bulk_tags_generated"
 	SuccessTemplateImagesUploadedKey            MessageKey = "success.asset.template_images_uploaded"
+	SuccessImagesRetrievedKey                   MessageKey = "success.asset.images_retrieved"
 	SuccessBulkDataMatrixUploadedKey            MessageKey = "success.asset.bulk_datamatrix_uploaded"
 	SuccessBulkDataMatrixDeletedKey             MessageKey = "success.asset.bulk_datamatrix_deleted"
 	SuccessBulkAssetImagesUploadedKey           MessageKey = "success.asset.bulk_images_uploaded"
@@ -1018,6 +1019,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Template images uploaded successfully",
 		"id-ID": "Gambar template berhasil diunggah",
 		"ja-JP": "テンプレート画像が正常にアップロードされました",
+	},
+	SuccessImagesRetrievedKey: {
+		"en-US": "Available images retrieved successfully",
+		"id-ID": "Gambar yang tersedia berhasil diambil",
+		"ja-JP": "利用可能な画像が正常に取得されました",
 	},
 	SuccessBulkDataMatrixUploadedKey: {
 		"en-US": "Bulk data matrix images uploaded successfully",

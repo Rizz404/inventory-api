@@ -48,6 +48,7 @@ func NewAssetHandler(app fiber.Router, s asset.AssetService) {
 	assets.Get("/check/:id", handler.CheckAssetExists)
 	assets.Post("/generate-tag", handler.GenerateAssetTagSuggestion)
 	assets.Post("/generate-bulk-tags", handler.GenerateBulkAssetTags)
+	assets.Get("/images", handler.GetAvailableAssetImages)
 	assets.Post("/upload/template-images",
 		middleware.AuthMiddleware(),
 		middleware.AuthorizeRole(domain.RoleAdmin, domain.RoleStaff),
@@ -608,6 +609,32 @@ func (h *AssetHandler) ExportAssetDataMatrix(c *fiber.Ctx) error {
 }
 
 // *===========================TEMPLATE IMAGES (FOR BULK CREATE)===========================*
+
+func (h *AssetHandler) GetAvailableAssetImages(c *fiber.Ctx) error {
+	limit, _ := strconv.Atoi(c.Query("limit", "20"))
+	cursor := c.Query("cursor")
+
+	// Validate limit
+	if limit > 100 {
+		limit = 100
+	}
+	if limit < 1 {
+		limit = 20
+	}
+
+	images, err := h.Service.GetAvailableAssetImages(c.Context(), limit, cursor)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	var nextCursor string
+	hasNextPage := len(images) == limit
+	if hasNextPage && len(images) > 0 {
+		nextCursor = images[len(images)-1].ID
+	}
+
+	return web.SuccessWithCursor(c, fiber.StatusOK, utils.SuccessImagesRetrievedKey, images, nextCursor, hasNextPage, limit)
+}
 
 func (h *AssetHandler) UploadTemplateImages(c *fiber.Ctx) error {
 	// Parse multipart form

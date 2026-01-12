@@ -812,6 +812,29 @@ func (r *AssetRepository) GetImageByPublicID(ctx context.Context, publicID strin
 	return &image, nil
 }
 
+// GetAvailableAssetImages retrieves asset images only (from sigma-asset/assets folder) with cursor pagination
+// Filters out data matrix images, avatars, and other non-asset images
+func (r *AssetRepository) GetAvailableAssetImages(ctx context.Context, limit int, cursor string) ([]domain.Image, error) {
+	var images []model.Image
+
+	// Build query - filter only asset images by public_id pattern
+	query := r.db.WithContext(ctx).
+		Where("public_id LIKE ?", "sigma-asset/assets/%").
+		Order("created_at DESC")
+
+	// Apply cursor if provided
+	if cursor != "" {
+		query = query.Where("id < ?", cursor)
+	}
+
+	// Limit + 1 to check if there are more results
+	if err := query.Limit(limit).Find(&images).Error; err != nil {
+		return nil, err
+	}
+
+	return mapper.ToDomainImages(images), nil
+}
+
 // AttachImagesToAsset creates asset_images junction records
 func (r *AssetRepository) AttachImagesToAsset(ctx context.Context, assetID string, imageIDs []string, displayOrders []int, primaryIndex int) ([]domain.AssetImage, error) {
 	if len(imageIDs) == 0 {
