@@ -326,7 +326,8 @@ func (r *MaintenanceRecordRepository) GetRecordsPaginated(ctx context.Context, p
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON maintenance_records.id = mrt.record_id").
-			Where("mrt.title ILIKE ?", sq).
+			Joins("LEFT JOIN assets a ON maintenance_records.asset_id = a.id").
+			Where("mrt.title ILIKE ? OR a.asset_name ILIKE ?", sq, sq).
 			Group("maintenance_records.id")
 	}
 
@@ -365,7 +366,8 @@ func (r *MaintenanceRecordRepository) GetRecordsCursor(ctx context.Context, para
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON maintenance_records.id = mrt.record_id").
-			Where("mrt.title ILIKE ?", sq).
+			Joins("LEFT JOIN assets a ON maintenance_records.asset_id = a.id").
+			Where("mrt.title ILIKE ? OR a.asset_name ILIKE ?", sq, sq).
 			Group("maintenance_records.id")
 	}
 
@@ -426,7 +428,8 @@ func (r *MaintenanceRecordRepository) CountRecords(ctx context.Context, params d
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON maintenance_records.id = mrt.record_id").
-			Where("mrt.title ILIKE ?", sq).
+			Joins("LEFT JOIN assets a ON maintenance_records.asset_id = a.id").
+			Where("mrt.title ILIKE ? OR a.asset_name ILIKE ?", sq, sq).
 			Group("maintenance_records.id")
 	}
 	db = r.applyRecordFilters(db, params.Filters)
@@ -693,7 +696,8 @@ func (r *MaintenanceRecordRepository) GetMaintenanceRecordsForExport(ctx context
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_record_translations mrt ON maintenance_records.id = mrt.record_id").
-			Where("mrt.title ILIKE ?", sq).
+			Joins("LEFT JOIN assets a ON maintenance_records.asset_id = a.id").
+			Where("mrt.title ILIKE ? OR a.asset_name ILIKE ?", sq, sq).
 			Group("maintenance_records.id")
 	}
 

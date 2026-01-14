@@ -326,7 +326,8 @@ func (r *MaintenanceScheduleRepository) GetSchedulesPaginated(ctx context.Contex
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON maintenance_schedules.id = mst.schedule_id").
-			Where("mst.title ILIKE ?", sq).
+			Joins("LEFT JOIN assets a ON maintenance_schedules.asset_id = a.id").
+			Where("mst.title ILIKE ? OR a.asset_name ILIKE ?", sq, sq).
 			Group("maintenance_schedules.id")
 	}
 
@@ -363,7 +364,8 @@ func (r *MaintenanceScheduleRepository) GetSchedulesCursor(ctx context.Context, 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON maintenance_schedules.id = mst.schedule_id").
-			Where("mst.title ILIKE ?", sq).
+			Joins("LEFT JOIN assets a ON maintenance_schedules.asset_id = a.id").
+			Where("mst.title ILIKE ? OR a.asset_name ILIKE ?", sq, sq).
 			Group("maintenance_schedules.id")
 	}
 
@@ -422,7 +424,8 @@ func (r *MaintenanceScheduleRepository) CountSchedules(ctx context.Context, para
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON maintenance_schedules.id = mst.schedule_id").
-			Where("mst.title ILIKE ?", sq).
+			Joins("LEFT JOIN assets a ON maintenance_schedules.asset_id = a.id").
+			Where("mst.title ILIKE ? OR a.asset_name ILIKE ?", sq, sq).
 			Group("maintenance_schedules.id")
 	}
 	db = r.applyScheduleFilters(db, params.Filters)
@@ -808,7 +811,8 @@ func (r *MaintenanceScheduleRepository) GetMaintenanceSchedulesForExport(ctx con
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		sq := "%" + *params.SearchQuery + "%"
 		db = db.Joins("LEFT JOIN maintenance_schedule_translations mst ON maintenance_schedules.id = mst.schedule_id").
-			Where("mst.title ILIKE ? OR maintenance_schedules.maintenance_type ILIKE ?", sq, sq).
+			Joins("LEFT JOIN assets a ON maintenance_schedules.asset_id = a.id").
+			Where("mst.title ILIKE ? OR a.asset_name ILIKE ?", sq, sq).
 			Group("maintenance_schedules.id")
 	}
 
