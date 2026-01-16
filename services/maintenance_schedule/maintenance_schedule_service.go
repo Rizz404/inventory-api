@@ -2,9 +2,11 @@ package maintenance_schedule
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
 )
@@ -149,6 +151,10 @@ func (s *Service) CreateMaintenanceSchedule(ctx context.Context, payload *domain
 	if err != nil {
 		return domain.MaintenanceScheduleResponse{}, err
 	}
+
+	// Send notification asynchronously
+	go s.sendMaintenanceScheduledNotification(ctx, &created)
+
 	return mapper.MaintenanceScheduleToResponse(&created, mapper.DefaultLangCode), nil
 }
 
@@ -252,6 +258,11 @@ func (s *Service) BulkCreateMaintenanceSchedules(ctx context.Context, payload *d
 		return domain.BulkCreateMaintenanceSchedulesResponse{}, err
 	}
 
+	// Send notifications for all created schedules
+	for i := range created {
+		go s.sendMaintenanceScheduledNotification(ctx, &created[i])
+	}
+
 	// * Convert to responses
 	response := domain.BulkCreateMaintenanceSchedulesResponse{
 		MaintenanceSchedules: mapper.MaintenanceSchedulesToResponses(created, mapper.DefaultLangCode),
@@ -328,4 +339,52 @@ func (s *Service) GetMaintenanceScheduleStatistics(ctx context.Context) (domain.
 		return domain.MaintenanceScheduleStatisticsResponse{}, err
 	}
 	return mapper.MaintenanceScheduleStatisticsToResponse(&stats), nil
+}
+
+// *===========================HELPER METHODS===========================*
+
+// sendMaintenanceScheduledNotification sends notification for new maintenance schedule
+func (s *Service) sendMaintenanceScheduledNotification(ctx context.Context, schedule *domain.MaintenanceSchedule) {
+	if s.NotificationService == nil {
+		log.Printf("Notification service not available, skipping maintenance scheduled notification for schedule ID: %s", schedule.ID)
+		return
+	}
+
+	// Get asset information
+	asset, err := s.AssetService.GetAssetById(ctx, schedule.AssetID, mapper.DefaultLangCode)
+	if err != nil {
+		log.Printf("Failed to get asset for maintenance scheduled notification: %v", err)
+		return
+	}
+
+	// Format scheduled date
+	scheduledDate := schedule.NextScheduledDate.Format("2006-01-02")
+
+	titleKey, messageKey, params := messages.MaintenanceScheduledNotification(asset.AssetName, asset.AssetTag, scheduledDate)
+	utilTranslations := messages.GetMaintenanceScheduleNotificationTranslations(titleKey, messageKey, params)
+
+	// Convert to domain translations
+	translations := make([]domain.CreateNotificationTranslationPayload, len(utilTranslations))
+	for i, t := range utilTranslations {
+		translations[i] = domain.CreateNotificationTranslationPayload{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Message:  t.Message,
+		}
+	}
+
+	notificationPayload := &domain.CreateNotificationPayload{
+		UserID:            schedule.CreatedBy,
+		RelatedEntityType: utils.StringPtr("maintenance_schedule"),
+		RelatedEntityID:   utils.StringPtr(schedule.ID),
+		Type:              domain.NotificationTypeStatusChange,
+		Translations:      translations,
+	}
+
+	_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
+	if err != nil {
+		log.Printf("Failed to create maintenance scheduled notification for schedule ID: %s: %v", schedule.ID, err)
+	} else {
+		log.Printf("Successfully created maintenance scheduled notification for schedule ID: %s", schedule.ID)
+	}
 }

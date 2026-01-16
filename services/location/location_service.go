@@ -110,9 +110,6 @@ func (s *Service) CreateLocation(ctx context.Context, payload *domain.CreateLoca
 		return domain.LocationResponse{}, err
 	}
 
-	// * Send notification to all admin users
-	s.sendLocationUpdatedNotificationToAdmins(ctx, &createdLocation)
-
 	// * Convert to LocationResponse using mapper
 	return mapper.LocationToResponse(&createdLocation, mapper.DefaultLangCode), nil
 }
@@ -164,11 +161,6 @@ func (s *Service) BulkCreateLocations(ctx context.Context, payload *domain.BulkC
 	createdLocations, err := s.Repo.BulkCreateLocations(ctx, locations)
 	if err != nil {
 		return domain.BulkCreateLocationsResponse{}, err
-	}
-
-	// Send notifications for all created locations
-	for i := range createdLocations {
-		s.sendLocationUpdatedNotificationToAdmins(ctx, &createdLocations[i])
 	}
 
 	response := domain.BulkCreateLocationsResponse{

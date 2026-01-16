@@ -149,9 +149,6 @@ func (s *Service) CreateCategory(ctx context.Context, payload *domain.CreateCate
 		return domain.CategoryResponse{}, err
 	}
 
-	// * Send notification to all admin users
-	s.sendCategoryUpdatedNotificationToAdmins(ctx, &createdCategory)
-
 	// * Convert to CategoryResponse using mapper
 	return mapper.CategoryToResponse(&createdCategory, mapper.DefaultLangCode), nil
 }
@@ -210,11 +207,6 @@ func (s *Service) BulkCreateCategories(ctx context.Context, payload *domain.Bulk
 	createdCategories, err := s.Repo.BulkCreateCategories(ctx, categories)
 	if err != nil {
 		return domain.BulkCreateCategoriesResponse{}, err
-	}
-
-	// Send notifications for all created categories
-	for i := range createdCategories {
-		s.sendCategoryUpdatedNotificationToAdmins(ctx, &createdCategories[i])
 	}
 
 	response := domain.BulkCreateCategoriesResponse{
