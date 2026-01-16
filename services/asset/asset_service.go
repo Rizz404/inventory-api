@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"mime/multipart"
+	"strconv"
 	"strings"
 	"time"
 
@@ -374,8 +375,46 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 		return domain.AssetResponse{}, err
 	}
 
-	// * Check asset tag uniqueness if being updated
-	if payload.AssetTag != nil {
+	// * Auto-regenerate asset tag if category is being changed
+	var categoryChanged bool
+	if payload.CategoryID != nil && *payload.CategoryID != existingAsset.CategoryID {
+		categoryChanged = true
+
+		// Get new category info
+		newCategory, err := s.CategoryService.GetCategoryById(ctx, *payload.CategoryID, langCode)
+		if err != nil {
+			return domain.AssetResponse{}, err
+		}
+
+		// Get last asset tag for new category
+		lastTag, err := s.Repo.GetLastAssetTagByCategory(ctx, *payload.CategoryID)
+		if err != nil {
+			return domain.AssetResponse{}, err
+		}
+
+		// Calculate next increment
+		nextIncrement := 1
+		if lastTag != "" {
+			// Extract number from tag format: PREFIX-00001
+			parts := strings.Split(lastTag, "-")
+			if len(parts) > 0 {
+				numberStr := parts[len(parts)-1]
+				if lastNum, err := strconv.Atoi(numberStr); err == nil {
+					nextIncrement = lastNum + 1
+				}
+			}
+		}
+
+		// Generate new asset tag with dash and 5-digit padding
+		newAssetTag := fmt.Sprintf("%s-%05d", newCategory.CategoryCode, nextIncrement)
+		payload.AssetTag = &newAssetTag
+
+		log.Printf("Category changed for asset %s: %s -> %s, regenerated tag: %s -> %s",
+			assetId, existingAsset.CategoryID, *payload.CategoryID, existingAsset.AssetTag, newAssetTag)
+	}
+
+	// * Check asset tag uniqueness if being updated (and not auto-generated from category change)
+	if payload.AssetTag != nil && !categoryChanged {
 		if tagExists, err := s.Repo.CheckAssetTagExistsExcluding(ctx, *payload.AssetTag, assetId); err != nil {
 			return domain.AssetResponse{}, err
 		} else if tagExists {
@@ -411,6 +450,14 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 				break
 			}
 		}
+	}
+
+	// If category changed, clear old data matrix image (tag changed, QR code invalid)
+	if categoryChanged && existingAsset.DataMatrixImageUrl != "" {
+		emptyString := ""
+		payload.DataMatrixImageUrl = &emptyString
+		shouldDeleteOldImage = true
+		log.Printf("Category changed for asset %s, clearing old data matrix image", assetId)
 	}
 
 	if dataMatrixImageFile != nil {
