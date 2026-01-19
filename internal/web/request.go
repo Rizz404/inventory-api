@@ -269,6 +269,17 @@ func setFieldValue(field reflect.Value, value string) error {
 
 // setSliceFieldValue sets a slice field from multiple form values
 func setSliceFieldValue(field reflect.Value, values []string) error {
+	// * If only one value and it looks like JSON array, unmarshal directly
+	if len(values) == 1 && strings.HasPrefix(strings.TrimSpace(values[0]), "[") {
+		newVal := reflect.New(field.Type())
+		if err := json.Unmarshal([]byte(values[0]), newVal.Interface()); err != nil {
+			return fmt.Errorf("failed to unmarshal JSON array: %w", err)
+		}
+		field.Set(newVal.Elem())
+		return nil
+	}
+
+	// * Otherwise, treat as multiple form values
 	elemType := field.Type().Elem()
 	slice := reflect.MakeSlice(field.Type(), 0, len(values))
 
