@@ -125,9 +125,9 @@ func (h *CategoryHandler) CreateCategory(c *fiber.Ctx) error {
 	var imageFile *multipart.FileHeader
 
 	if strings.Contains(contentType, "multipart/form-data") {
-		// Parse multipart form data
-		if err := c.BodyParser(&payload); err != nil {
-			return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+		// Parse multipart form data with JSON unmarshaling support
+		if err := web.ParseFormAndValidate(c, &payload); err != nil {
+			return web.HandleError(c, err)
 		}
 
 		// Try to get image file (optional)
@@ -167,9 +167,9 @@ func (h *CategoryHandler) UpdateCategory(c *fiber.Ctx) error {
 	var imageFile *multipart.FileHeader
 
 	if strings.Contains(contentType, "multipart/form-data") {
-		// Parse multipart form data
-		if err := c.BodyParser(&payload); err != nil {
-			return web.HandleError(c, domain.ErrBadRequest(err.Error()))
+		// Parse multipart form data with JSON unmarshaling support
+		if err := web.ParseFormAndValidate(c, &payload); err != nil {
+			return web.HandleError(c, err)
 		}
 
 		// Try to get image file (optional)

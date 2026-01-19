@@ -586,10 +586,9 @@ func (h *AssetHandler) ExportAssetStatistics(c *fiber.Ctx) error {
 
 func (h *AssetHandler) ExportAssetDataMatrix(c *fiber.Ctx) error {
 	var payload domain.ExportAssetDataMatrixPayload
-	if err := c.BodyParser(&payload); err != nil {
-		langCode := web.GetLanguageFromContext(c)
-		message := utils.GetLocalizedMessage(utils.ErrValidationKey, langCode)
-		return web.Error(c, fiber.StatusBadRequest, message, err.Error())
+
+	if err := web.ParseAndValidate(c, &payload); err != nil {
+		return web.HandleError(c, err)
 	}
 
 	// Get language from headers
