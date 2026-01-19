@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"fmt"
 	"mime/multipart"
 	"path/filepath"
@@ -234,6 +235,14 @@ func setFieldValue(field reflect.Value, value string) error {
 		} else {
 			field.SetBool(boolVal)
 		}
+	case reflect.Slice, reflect.Struct, reflect.Map:
+		// * Handle JSON string for complex types (slice, struct, map)
+		// Create new value of the correct type
+		newVal := reflect.New(field.Type())
+		if err := json.Unmarshal([]byte(value), newVal.Interface()); err != nil {
+			return fmt.Errorf("failed to unmarshal JSON: %w", err)
+		}
+		field.Set(newVal.Elem())
 	case reflect.Pointer:
 		elemKind := field.Type().Elem().Kind()
 
