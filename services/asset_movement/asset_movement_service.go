@@ -62,10 +62,10 @@ type AssetMovementService interface {
 	BulkDeleteAssetMovements(ctx context.Context, payload *domain.BulkDeleteAssetMovementsPayload) (domain.BulkDeleteAssetMovementsResponse, error)
 
 	// * QUERY
-	GetAssetMovementsPaginated(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, int64, error)
-	GetAssetMovementsCursor(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, error)
+	GetAssetMovementsPaginated(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementResponse, int64, error)
+	GetAssetMovementsCursor(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementResponse, error)
 	GetAssetMovementById(ctx context.Context, movementId string, langCode string) (domain.AssetMovementResponse, error)
-	GetAssetMovementsByAssetId(ctx context.Context, assetId string, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, error)
+	GetAssetMovementsByAssetId(ctx context.Context, assetId string, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementResponse, error)
 	CheckAssetMovementExists(ctx context.Context, movementId string) (bool, error)
 	CountAssetMovements(ctx context.Context, params domain.AssetMovementParams) (int64, error)
 	GetAssetMovementStatistics(ctx context.Context) (domain.AssetMovementStatisticsResponse, error)
@@ -372,7 +372,7 @@ func (s *Service) BulkDeleteAssetMovements(ctx context.Context, payload *domain.
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetAssetMovementsPaginated(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, int64, error) {
+func (s *Service) GetAssetMovementsPaginated(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementResponse, int64, error) {
 	listItems, err := s.Repo.GetAssetMovementsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -384,20 +384,20 @@ func (s *Service) GetAssetMovementsPaginated(ctx context.Context, params domain.
 		return nil, 0, err
 	}
 
-	// Convert AssetMovement to AssetMovementListResponse using mapper
-	responses := mapper.AssetMovementsToListResponses(listItems, langCode)
+	// Convert AssetMovement to AssetMovementResponse using mapper (includes translations)
+	responses := mapper.AssetMovementsToResponses(listItems, langCode)
 
 	return responses, count, nil
 }
 
-func (s *Service) GetAssetMovementsCursor(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, error) {
+func (s *Service) GetAssetMovementsCursor(ctx context.Context, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementResponse, error) {
 	listItems, err := s.Repo.GetAssetMovementsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert AssetMovement to AssetMovementListResponse using mapper
-	responses := mapper.AssetMovementsToListResponses(listItems, langCode)
+	// Convert AssetMovement to AssetMovementResponse using mapper (includes translations)
+	responses := mapper.AssetMovementsToResponses(listItems, langCode)
 
 	return responses, nil
 }
@@ -412,7 +412,7 @@ func (s *Service) GetAssetMovementById(ctx context.Context, movementId string, l
 	return mapper.AssetMovementToResponse(&movement, langCode), nil
 }
 
-func (s *Service) GetAssetMovementsByAssetId(ctx context.Context, assetId string, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementListResponse, error) {
+func (s *Service) GetAssetMovementsByAssetId(ctx context.Context, assetId string, params domain.AssetMovementParams, langCode string) ([]domain.AssetMovementResponse, error) {
 	// * Check if asset exists
 	if assetExists, err := s.AssetService.CheckAssetExists(ctx, assetId); err != nil {
 		return nil, err
@@ -425,8 +425,8 @@ func (s *Service) GetAssetMovementsByAssetId(ctx context.Context, assetId string
 		return nil, err
 	}
 
-	// * Convert to AssetMovementListResponse using mapper
-	movementResponses := mapper.AssetMovementsToListResponses(movements, langCode)
+	// * Convert to AssetMovementResponse using mapper (includes translations)
+	movementResponses := mapper.AssetMovementsToResponses(movements, langCode)
 
 	return movementResponses, nil
 }

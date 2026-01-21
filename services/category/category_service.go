@@ -44,8 +44,8 @@ type CategoryService interface {
 	BulkDeleteCategories(ctx context.Context, payload *domain.BulkDeleteCategoriesPayload) (domain.BulkDeleteCategoriesResponse, error)
 
 	// * QUERY
-	GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryListResponse, int64, error)
-	GetCategoriesCursor(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryListResponse, error)
+	GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryResponse, int64, error)
+	GetCategoriesCursor(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryResponse, error)
 	GetCategoryById(ctx context.Context, categoryId string, langCode string) (domain.CategoryResponse, error)
 	GetCategoryByCode(ctx context.Context, categoryCode string, langCode string) (domain.CategoryResponse, error)
 	CheckCategoryExists(ctx context.Context, categoryId string) (bool, error)
@@ -311,7 +311,7 @@ func (s *Service) BulkDeleteCategories(ctx context.Context, payload *domain.Bulk
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryListResponse, int64, error) {
+func (s *Service) GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryResponse, int64, error) {
 	categories, err := s.Repo.GetCategoriesPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -323,20 +323,20 @@ func (s *Service) GetCategoriesPaginated(ctx context.Context, params domain.Cate
 		return nil, 0, err
 	}
 
-	// Convert Category to CategoryListResponse using mapper
-	responses := mapper.CategoriesToListResponses(categories, langCode)
+	// Convert Category to CategoryResponse using mapper (includes translations)
+	responses := mapper.CategoriesToResponses(categories, langCode)
 
 	return responses, count, nil
 }
 
-func (s *Service) GetCategoriesCursor(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryListResponse, error) {
+func (s *Service) GetCategoriesCursor(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.CategoryResponse, error) {
 	categories, err := s.Repo.GetCategoriesCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert Category to CategoryListResponse using mapper
-	responses := mapper.CategoriesToListResponses(categories, langCode)
+	// Convert Category to CategoryResponse using mapper (includes translations)
+	responses := mapper.CategoriesToResponses(categories, langCode)
 
 	return responses, nil
 }

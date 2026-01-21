@@ -35,8 +35,8 @@ func (s *Service) ExportIssueReportList(ctx context.Context, payload domain.Expo
 		return nil, "", err
 	}
 
-	// Convert to responses
-	reportResponses := mapper.IssueReportsToListResponses(reports, langCode)
+	// Convert to responses (includes translations)
+	reportResponses := mapper.IssueReportsToResponses(reports, langCode)
 
 	switch payload.Format {
 	case domain.ExportFormatPDF:
@@ -63,7 +63,7 @@ func (s *Service) ExportIssueReportList(ctx context.Context, payload domain.Expo
 }
 
 // exportIssueReportListToPDF generates PDF file for issue report list using gopdf
-func (s *Service) exportIssueReportListToPDF(reports []domain.IssueReportListResponse, langCode string) ([]byte, error) {
+func (s *Service) exportIssueReportListToPDF(reports []domain.IssueReportResponse, langCode string) ([]byte, error) {
 	workDir, _ := os.Getwd()
 	fontRegularPath := filepath.Join(workDir, "assets", "fonts", "NotoSansJP-Regular.ttf")
 	fontBoldPath := filepath.Join(workDir, "assets", "fonts", "NotoSansJP-Bold.ttf")
@@ -328,7 +328,7 @@ func (s *Service) exportIssueReportListToPDF(reports []domain.IssueReportListRes
 }
 
 // exportIssueReportListToExcel generates Excel file for issue report list
-func (s *Service) exportIssueReportListToExcel(reports []domain.IssueReportListResponse) ([]byte, error) {
+func (s *Service) exportIssueReportListToExcel(reports []domain.IssueReportResponse) ([]byte, error) {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {

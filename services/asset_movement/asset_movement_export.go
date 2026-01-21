@@ -35,8 +35,8 @@ func (s *Service) ExportAssetMovementList(ctx context.Context, payload domain.Ex
 		return nil, "", err
 	}
 
-	// Convert to responses
-	movementResponses := mapper.AssetMovementsToListResponses(movements, langCode)
+	// Convert to responses (includes translations)
+	movementResponses := mapper.AssetMovementsToResponses(movements, langCode)
 
 	switch payload.Format {
 	case domain.ExportFormatPDF:
@@ -63,7 +63,7 @@ func (s *Service) ExportAssetMovementList(ctx context.Context, payload domain.Ex
 }
 
 // exportAssetMovementListToPDF generates PDF file for asset movement list using gopdf
-func (s *Service) exportAssetMovementListToPDF(movements []domain.AssetMovementListResponse, langCode string) ([]byte, error) {
+func (s *Service) exportAssetMovementListToPDF(movements []domain.AssetMovementResponse, langCode string) ([]byte, error) {
 	// Get absolute path for fonts and logo
 	workDir, _ := os.Getwd()
 	fontRegularPath := filepath.Join(workDir, "assets", "fonts", "NotoSansJP-Regular.ttf")
@@ -353,7 +353,7 @@ func (s *Service) exportAssetMovementListToPDF(movements []domain.AssetMovementL
 }
 
 // exportAssetMovementListToExcel generates Excel file for asset movement list
-func (s *Service) exportAssetMovementListToExcel(movements []domain.AssetMovementListResponse) ([]byte, error) {
+func (s *Service) exportAssetMovementListToExcel(movements []domain.AssetMovementResponse) ([]byte, error) {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {

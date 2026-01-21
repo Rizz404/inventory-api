@@ -56,8 +56,8 @@ type MaintenanceRecordService interface {
 	DeleteMaintenanceRecord(ctx context.Context, recordId string) error
 	BulkCreateMaintenanceRecords(ctx context.Context, payload *domain.BulkCreateMaintenanceRecordsPayload, performedBy string) (domain.BulkCreateMaintenanceRecordsResponse, error)
 	BulkDeleteMaintenanceRecords(ctx context.Context, payload *domain.BulkDeleteMaintenanceRecordsPayload) (domain.BulkDeleteMaintenanceRecordsResponse, error)
-	GetMaintenanceRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, int64, error)
-	GetMaintenanceRecordsCursor(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, error)
+	GetMaintenanceRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordResponse, int64, error)
+	GetMaintenanceRecordsCursor(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordResponse, error)
 	GetMaintenanceRecordById(ctx context.Context, recordId string, langCode string) (domain.MaintenanceRecordResponse, error)
 	CheckMaintenanceRecordExists(ctx context.Context, recordId string) (bool, error)
 	CountMaintenanceRecords(ctx context.Context, params domain.MaintenanceRecordParams) (int64, error)
@@ -306,7 +306,7 @@ func (s *Service) BulkDeleteMaintenanceRecords(ctx context.Context, payload *dom
 	return response, nil
 }
 
-func (s *Service) GetMaintenanceRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, int64, error) {
+func (s *Service) GetMaintenanceRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordResponse, int64, error) {
 	records, err := s.Repo.GetRecordsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -316,18 +316,18 @@ func (s *Service) GetMaintenanceRecordsPaginated(ctx context.Context, params dom
 		return nil, 0, err
 	}
 
-	recordResponses := mapper.MaintenanceRecordsToListResponses(records, langCode)
+	recordResponses := mapper.MaintenanceRecordsToResponses(records, langCode)
 
 	return recordResponses, count, nil
 }
 
-func (s *Service) GetMaintenanceRecordsCursor(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordListResponse, error) {
+func (s *Service) GetMaintenanceRecordsCursor(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecordResponse, error) {
 	records, err := s.Repo.GetRecordsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	recordResponses := mapper.MaintenanceRecordsToListResponses(records, langCode)
+	recordResponses := mapper.MaintenanceRecordsToResponses(records, langCode)
 
 	return recordResponses, nil
 }

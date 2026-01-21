@@ -33,8 +33,8 @@ func (s *Service) ExportMaintenanceScheduleList(ctx context.Context, payload dom
 		return nil, "", err
 	}
 
-	// Convert to responses
-	scheduleResponses := mapper.MaintenanceSchedulesToListResponses(schedules, langCode)
+	// Convert to responses (includes translations)
+	scheduleResponses := mapper.MaintenanceSchedulesToResponses(schedules, langCode)
 
 	switch payload.Format {
 	case domain.ExportFormatPDF:
@@ -61,7 +61,7 @@ func (s *Service) ExportMaintenanceScheduleList(ctx context.Context, payload dom
 }
 
 // exportMaintenanceScheduleListToPDF generates PDF file for maintenance schedule list using gopdf
-func (s *Service) exportMaintenanceScheduleListToPDF(schedules []domain.MaintenanceScheduleListResponse, langCode string) ([]byte, error) {
+func (s *Service) exportMaintenanceScheduleListToPDF(schedules []domain.MaintenanceScheduleResponse, langCode string) ([]byte, error) {
 	workDir, _ := os.Getwd()
 	fontRegularPath := filepath.Join(workDir, "assets", "fonts", "NotoSansJP-Regular.ttf")
 	fontBoldPath := filepath.Join(workDir, "assets", "fonts", "NotoSansJP-Bold.ttf")
@@ -324,7 +324,7 @@ func (s *Service) exportMaintenanceScheduleListToPDF(schedules []domain.Maintena
 }
 
 // exportMaintenanceScheduleListToExcel generates Excel file for maintenance schedule list
-func (s *Service) exportMaintenanceScheduleListToExcel(schedules []domain.MaintenanceScheduleListResponse) ([]byte, error) {
+func (s *Service) exportMaintenanceScheduleListToExcel(schedules []domain.MaintenanceScheduleResponse) ([]byte, error) {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {

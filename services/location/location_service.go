@@ -41,8 +41,8 @@ type LocationService interface {
 	BulkDeleteLocations(ctx context.Context, payload *domain.BulkDeleteLocationsPayload) (domain.BulkDeleteLocationsResponse, error)
 
 	// * QUERY
-	GetLocationsPaginated(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationListResponse, int64, error)
-	GetLocationsCursor(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationListResponse, error)
+	GetLocationsPaginated(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationResponse, int64, error)
+	GetLocationsCursor(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationResponse, error)
 	GetLocationById(ctx context.Context, locationId string, langCode string) (domain.LocationResponse, error)
 	GetLocationByCode(ctx context.Context, locationCode string, langCode string) (domain.LocationResponse, error)
 	CheckLocationExists(ctx context.Context, locationId string) (bool, error)
@@ -228,7 +228,7 @@ func (s *Service) BulkDeleteLocations(ctx context.Context, payload *domain.BulkD
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetLocationsPaginated(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationListResponse, int64, error) {
+func (s *Service) GetLocationsPaginated(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationResponse, int64, error) {
 	locations, err := s.Repo.GetLocationsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -240,20 +240,20 @@ func (s *Service) GetLocationsPaginated(ctx context.Context, params domain.Locat
 		return nil, 0, err
 	}
 
-	// Convert Location to LocationListResponse using mapper
-	responses := mapper.LocationsToListResponses(locations, langCode)
+	// Convert Location to LocationResponse using mapper (includes translations)
+	responses := mapper.LocationsToResponses(locations, langCode)
 
 	return responses, count, nil
 }
 
-func (s *Service) GetLocationsCursor(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationListResponse, error) {
+func (s *Service) GetLocationsCursor(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.LocationResponse, error) {
 	locations, err := s.Repo.GetLocationsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert Location to LocationListResponse using mapper
-	responses := mapper.LocationsToListResponses(locations, langCode)
+	// Convert Location to LocationResponse using mapper (includes translations)
+	responses := mapper.LocationsToResponses(locations, langCode)
 
 	return responses, nil
 }

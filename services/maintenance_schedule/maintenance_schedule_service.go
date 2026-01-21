@@ -64,8 +64,8 @@ type MaintenanceScheduleService interface {
 	DeleteMaintenanceSchedule(ctx context.Context, scheduleId string) error
 	BulkCreateMaintenanceSchedules(ctx context.Context, payload *domain.BulkCreateMaintenanceSchedulesPayload, createdBy string) (domain.BulkCreateMaintenanceSchedulesResponse, error)
 	BulkDeleteMaintenanceSchedules(ctx context.Context, payload *domain.BulkDeleteMaintenanceSchedulesPayload) (domain.BulkDeleteMaintenanceSchedulesResponse, error)
-	GetMaintenanceSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, int64, error)
-	GetMaintenanceSchedulesCursor(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, error)
+	GetMaintenanceSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleResponse, int64, error)
+	GetMaintenanceSchedulesCursor(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleResponse, error)
 	GetMaintenanceScheduleById(ctx context.Context, scheduleId string, langCode string) (domain.MaintenanceScheduleResponse, error)
 	CheckMaintenanceScheduleExists(ctx context.Context, scheduleId string) (bool, error)
 	CountMaintenanceSchedules(ctx context.Context, params domain.MaintenanceScheduleParams) (int64, error)
@@ -291,7 +291,7 @@ func (s *Service) BulkDeleteMaintenanceSchedules(ctx context.Context, payload *d
 	return response, nil
 }
 
-func (s *Service) GetMaintenanceSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, int64, error) {
+func (s *Service) GetMaintenanceSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleResponse, int64, error) {
 	schedules, err := s.Repo.GetSchedulesPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -301,18 +301,18 @@ func (s *Service) GetMaintenanceSchedulesPaginated(ctx context.Context, params d
 		return nil, 0, err
 	}
 
-	schedulesResponses := mapper.MaintenanceSchedulesToListResponses(schedules, langCode)
+	schedulesResponses := mapper.MaintenanceSchedulesToResponses(schedules, langCode)
 
 	return schedulesResponses, count, nil
 }
 
-func (s *Service) GetMaintenanceSchedulesCursor(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleListResponse, error) {
+func (s *Service) GetMaintenanceSchedulesCursor(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceScheduleResponse, error) {
 	schedules, err := s.Repo.GetSchedulesCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	schedulesResponses := mapper.MaintenanceSchedulesToListResponses(schedules, langCode)
+	schedulesResponses := mapper.MaintenanceSchedulesToResponses(schedules, langCode)
 
 	return schedulesResponses, nil
 }

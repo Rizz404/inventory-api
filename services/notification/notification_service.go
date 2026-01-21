@@ -44,8 +44,8 @@ type NotificationService interface {
 	MarkNotifications(ctx context.Context, userId string, notificationIds []string, isRead bool) error
 
 	// * QUERY
-	GetNotificationsPaginated(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationListResponse, int64, error)
-	GetNotificationsCursor(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationListResponse, error)
+	GetNotificationsPaginated(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationResponse, int64, error)
+	GetNotificationsCursor(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationResponse, error)
 	GetNotificationById(ctx context.Context, notificationId string, langCode string) (domain.NotificationResponse, error)
 	CheckNotificationExists(ctx context.Context, notificationId string) (bool, error)
 	CountNotifications(ctx context.Context, params domain.NotificationParams) (int64, error)
@@ -217,7 +217,7 @@ func (s *Service) MarkNotifications(ctx context.Context, userId string, notifica
 }
 
 // *===========================QUERY===========================*
-func (s *Service) GetNotificationsPaginated(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationListResponse, int64, error) {
+func (s *Service) GetNotificationsPaginated(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationResponse, int64, error) {
 	notifications, err := s.Repo.GetNotificationsPaginated(ctx, params, langCode)
 	if err != nil {
 		return nil, 0, err
@@ -229,20 +229,20 @@ func (s *Service) GetNotificationsPaginated(ctx context.Context, params domain.N
 		return nil, 0, err
 	}
 
-	// Convert Notification to NotificationListResponse using mapper
-	responses := mapper.NotificationsToListResponses(notifications, langCode)
+	// Convert Notification to NotificationResponse using mapper (includes translations)
+	responses := mapper.NotificationsToResponses(notifications, langCode)
 
 	return responses, count, nil
 }
 
-func (s *Service) GetNotificationsCursor(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationListResponse, error) {
+func (s *Service) GetNotificationsCursor(ctx context.Context, params domain.NotificationParams, langCode string) ([]domain.NotificationResponse, error) {
 	notifications, err := s.Repo.GetNotificationsCursor(ctx, params, langCode)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert Notification to NotificationListResponse using mapper
-	responses := mapper.NotificationsToListResponses(notifications, langCode)
+	// Convert Notification to NotificationResponse using mapper (includes translations)
+	responses := mapper.NotificationsToResponses(notifications, langCode)
 
 	return responses, nil
 }

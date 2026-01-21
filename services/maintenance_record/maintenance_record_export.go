@@ -35,8 +35,8 @@ func (s *Service) ExportMaintenanceRecordList(ctx context.Context, payload domai
 		return nil, "", err
 	}
 
-	// Convert to responses
-	recordResponses := mapper.MaintenanceRecordsToListResponses(records, langCode)
+	// Convert to responses (includes translations)
+	recordResponses := mapper.MaintenanceRecordsToResponses(records, langCode)
 
 	switch payload.Format {
 	case domain.ExportFormatPDF:
@@ -63,7 +63,7 @@ func (s *Service) ExportMaintenanceRecordList(ctx context.Context, payload domai
 }
 
 // exportMaintenanceRecordListToPDF generates PDF file for maintenance record list using gopdf
-func (s *Service) exportMaintenanceRecordListToPDF(records []domain.MaintenanceRecordListResponse, langCode string) ([]byte, error) {
+func (s *Service) exportMaintenanceRecordListToPDF(records []domain.MaintenanceRecordResponse, langCode string) ([]byte, error) {
 	workDir, _ := os.Getwd()
 	fontRegularPath := filepath.Join(workDir, "assets", "fonts", "NotoSansJP-Regular.ttf")
 	fontBoldPath := filepath.Join(workDir, "assets", "fonts", "NotoSansJP-Bold.ttf")
@@ -332,7 +332,7 @@ func (s *Service) exportMaintenanceRecordListToPDF(records []domain.MaintenanceR
 }
 
 // exportMaintenanceRecordListToExcel generates Excel file for maintenance record list
-func (s *Service) exportMaintenanceRecordListToExcel(records []domain.MaintenanceRecordListResponse) ([]byte, error) {
+func (s *Service) exportMaintenanceRecordListToExcel(records []domain.MaintenanceRecordResponse) ([]byte, error) {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {
