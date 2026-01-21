@@ -195,9 +195,16 @@ func (s *Service) CreateAssetMovement(ctx context.Context, payload *domain.Creat
 
 func (s *Service) UpdateAssetMovement(ctx context.Context, movementId string, payload *domain.UpdateAssetMovementPayload) (domain.AssetMovementResponse, error) {
 	// * Check if asset movement exists
-	_, err := s.Repo.GetAssetMovementById(ctx, movementId)
+	existingMovement, err := s.Repo.GetAssetMovementById(ctx, movementId)
 	if err != nil {
 		return domain.AssetMovementResponse{}, err
+	}
+
+	// * Validate that destination is actually changing (prevent no-op updates)
+	if payload.ToLocationID != nil && existingMovement.ToLocationID != nil &&
+		*payload.ToLocationID == *existingMovement.ToLocationID &&
+		(payload.ToUserID == nil || (existingMovement.ToUserID != nil && *payload.ToUserID == *existingMovement.ToUserID)) {
+		return domain.AssetMovementResponse{}, domain.ErrBadRequest("destination location/user is the same as current")
 	}
 
 	// * Check if destination location exists if being updated

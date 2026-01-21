@@ -279,7 +279,7 @@ func (r *AssetMovementRepository) UpdateAssetMovement(ctx context.Context, movem
 		assetUpdates["location_id"] = *payload.ToLocationID
 	}
 	if payload.ToUserID != nil {
-		assetUpdates["assigned_to"] = *payload.ToUserID
+		assetUpdates["assigned_to_id"] = *payload.ToUserID
 	}
 
 	if len(assetUpdates) > 0 {

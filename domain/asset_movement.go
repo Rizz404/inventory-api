@@ -124,6 +124,9 @@ type CreateAssetMovementTranslationPayload struct {
 	Notes    string `json:"notes" validate:"required"`
 }
 
+// ! WARNING: fromLocationId, fromUserId, and assetId are IMMUTABLE
+// ! They represent historical data and should NEVER be updated
+// ! Only toLocationId and toUserId can be modified
 type UpdateAssetMovementPayload struct {
 	ToLocationID *string                                 `json:"toLocationId,omitempty" validate:"omitempty"`
 	ToUserID     *string                                 `json:"toUserId,omitempty" validate:"omitempty"`
