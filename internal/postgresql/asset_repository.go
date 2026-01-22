@@ -489,7 +489,7 @@ func (r *AssetRepository) GetAssetStatistics(ctx context.Context) (domain.AssetS
 
 	// Get warranty statistics
 	var activeWarranties, expiredWarranties, noWarrantyInfo int64
-	currentTime := time.Now()
+	currentTime := time.Now().UTC()
 	if err := r.db.WithContext(ctx).Model(&model.Asset{}).Where("warranty_end IS NOT NULL AND warranty_end > ?", currentTime).Count(&activeWarranties).Error; err != nil {
 		return stats, domain.ErrInternal(err)
 	}
@@ -732,7 +732,7 @@ func (r *AssetRepository) GetAssetsWithWarrantyExpiring(ctx context.Context, day
 	var assets []model.Asset
 
 	// Calculate date range
-	now := time.Now()
+	now := time.Now().UTC()
 	futureDate := now.AddDate(0, 0, daysFromNow)
 
 	db := r.db.WithContext(ctx).
@@ -759,7 +759,7 @@ func (r *AssetRepository) GetAssetsWithExpiredWarranty(ctx context.Context) ([]d
 	var assets []model.Asset
 
 	// Calculate yesterday and today
-	now := time.Now()
+	now := time.Now().UTC()
 	yesterday := now.AddDate(0, 0, -1)
 
 	db := r.db.WithContext(ctx).

@@ -102,8 +102,8 @@ func (s *Service) CreateMaintenanceSchedule(ctx context.Context, payload *domain
 		return domain.MaintenanceScheduleResponse{}, domain.ErrNotFoundWithKey(utils.ErrAssetNotFoundKey)
 	}
 
-	// Parse next scheduled date
-	nextScheduledDate, err := time.Parse("2006-01-02", payload.NextScheduledDate)
+	// Parse next scheduled date in UTC
+	nextScheduledDate, err := time.ParseInLocation("2006-01-02", payload.NextScheduledDate, time.UTC)
 	if err != nil {
 		return domain.MaintenanceScheduleResponse{}, domain.ErrBadRequestWithKey(utils.ErrMaintenanceScheduleDateRequiredKey)
 	}
@@ -207,7 +207,7 @@ func (s *Service) BulkCreateMaintenanceSchedules(ctx context.Context, payload *d
 	// * Build domain schedules
 	schedules := make([]domain.MaintenanceSchedule, len(payload.MaintenanceSchedules))
 	for i, item := range payload.MaintenanceSchedules {
-		nextScheduledDate, err := time.Parse("2006-01-02", item.NextScheduledDate)
+		nextScheduledDate, err := time.ParseInLocation("2006-01-02", item.NextScheduledDate, time.UTC)
 		if err != nil {
 			return domain.BulkCreateMaintenanceSchedulesResponse{}, domain.ErrBadRequestWithKey(utils.ErrMaintenanceScheduleDateRequiredKey)
 		}

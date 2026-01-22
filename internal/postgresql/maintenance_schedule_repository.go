@@ -707,7 +707,7 @@ func (r *MaintenanceScheduleRepository) GetMaintenanceScheduleStatistics(ctx con
 // GetSchedulesDueSoon retrieves maintenance schedules that are due within the specified number of days from now
 func (r *MaintenanceScheduleRepository) GetSchedulesDueSoon(ctx context.Context, daysFromNow int) ([]domain.MaintenanceSchedule, error) {
 	var models []model.MaintenanceSchedule
-	now := time.Now()
+	now := time.Now().UTC()
 	futureDate := now.AddDate(0, 0, daysFromNow)
 
 	err := r.db.WithContext(ctx).
@@ -733,7 +733,7 @@ func (r *MaintenanceScheduleRepository) GetSchedulesDueSoon(ctx context.Context,
 // GetOverdueSchedules retrieves maintenance schedules that are overdue (past scheduled date and still active)
 func (r *MaintenanceScheduleRepository) GetOverdueSchedules(ctx context.Context) ([]domain.MaintenanceSchedule, error) {
 	var models []model.MaintenanceSchedule
-	now := time.Now()
+	now := time.Now().UTC()
 
 	err := r.db.WithContext(ctx).
 		Preload("Translations").
@@ -757,7 +757,7 @@ func (r *MaintenanceScheduleRepository) GetOverdueSchedules(ctx context.Context)
 // GetRecurringSchedulesToUpdate retrieves recurring schedules that need next_scheduled_date update
 func (r *MaintenanceScheduleRepository) GetRecurringSchedulesToUpdate(ctx context.Context) ([]domain.MaintenanceSchedule, error) {
 	var models []model.MaintenanceSchedule
-	now := time.Now()
+	now := time.Now().UTC()
 
 	err := r.db.WithContext(ctx).
 		Preload("Translations").

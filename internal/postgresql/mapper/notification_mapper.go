@@ -296,7 +296,7 @@ func ToModelNotificationUpdateMap(payload *domain.UpdateNotificationPayload) map
 	if payload.IsRead != nil {
 		updates["is_read"] = *payload.IsRead
 		if *payload.IsRead {
-			now := time.Now()
+			now := time.Now().UTC()
 			updates["read_at"] = now
 		} else {
 			updates["read_at"] = nil

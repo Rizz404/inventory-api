@@ -188,14 +188,14 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 	// * Parse date strings to time.Time if provided
 	var purchaseDate *time.Time
 	if payload.PurchaseDate != nil && *payload.PurchaseDate != "" {
-		if parsedDate, err := time.Parse("2006-01-02", *payload.PurchaseDate); err == nil {
+		if parsedDate, err := time.ParseInLocation("2006-01-02", *payload.PurchaseDate, time.UTC); err == nil {
 			purchaseDate = &parsedDate
 		}
 	}
 
 	var warrantyEnd *time.Time
 	if payload.WarrantyEnd != nil && *payload.WarrantyEnd != "" {
-		if parsedDate, err := time.Parse("2006-01-02", *payload.WarrantyEnd); err == nil {
+		if parsedDate, err := time.ParseInLocation("2006-01-02", *payload.WarrantyEnd, time.UTC); err == nil {
 			warrantyEnd = &parsedDate
 		}
 	}
@@ -302,14 +302,14 @@ func (s *Service) BulkCreateAssets(ctx context.Context, payload *domain.BulkCrea
 
 		var purchaseDate *time.Time
 		if assetPayload.PurchaseDate != nil && *assetPayload.PurchaseDate != "" {
-			if parsedDate, err := time.Parse("2006-01-02", *assetPayload.PurchaseDate); err == nil {
+			if parsedDate, err := time.ParseInLocation("2006-01-02", *assetPayload.PurchaseDate, time.UTC); err == nil {
 				purchaseDate = &parsedDate
 			}
 		}
 
 		var warrantyEnd *time.Time
 		if assetPayload.WarrantyEnd != nil && *assetPayload.WarrantyEnd != "" {
-			if parsedDate, err := time.Parse("2006-01-02", *assetPayload.WarrantyEnd); err == nil {
+			if parsedDate, err := time.ParseInLocation("2006-01-02", *assetPayload.WarrantyEnd, time.UTC); err == nil {
 				warrantyEnd = &parsedDate
 			}
 		}

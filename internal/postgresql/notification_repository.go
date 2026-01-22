@@ -529,7 +529,7 @@ func (r *NotificationRepository) GetNotificationStatistics(ctx context.Context) 
 	}
 	if err := r.db.WithContext(ctx).Model(&model.Notification{}).
 		Select("DATE(created_at) as date, COUNT(*) as count").
-		Where("created_at >= ?", time.Now().AddDate(0, 0, -30)).
+		Where("created_at >= ?", time.Now().UTC().AddDate(0, 0, -30)).
 		Group("DATE(created_at)").
 		Order("date DESC").
 		Find(&creationTrends).Error; err != nil {
@@ -621,7 +621,7 @@ func (r *NotificationRepository) MarkNotifications(ctx context.Context, userId s
 	}
 
 	if isRead {
-		updates["read_at"] = time.Now()
+		updates["read_at"] = time.Now().UTC()
 	} else {
 		updates["read_at"] = nil
 	}

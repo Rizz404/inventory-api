@@ -212,7 +212,7 @@ func (r *IssueReportRepository) UpdateIssueReport(ctx context.Context, issueRepo
 	if payload.Status != nil {
 		if *payload.Status == domain.IssueStatusResolved {
 			// If changing to resolved, set resolved_date
-			now := time.Now()
+			now := time.Now().UTC()
 			updates["resolved_date"] = &now
 		} else if currentReport.Status == domain.IssueStatusResolved && *payload.Status != domain.IssueStatusResolved {
 			// If changing from resolved to something else, clear resolved_date and resolved_by
@@ -579,7 +579,7 @@ func (r *IssueReportRepository) GetIssueReportStatistics(ctx context.Context) (d
 	}
 	if err := r.db.WithContext(ctx).Model(&model.IssueReport{}).
 		Select("DATE(reported_date) as date, COUNT(*) as count").
-		Where("reported_date >= ?", time.Now().AddDate(0, 0, -30)).
+		Where("reported_date >= ?", time.Now().UTC().AddDate(0, 0, -30)).
 		Group("DATE(reported_date)").
 		Order("date DESC").
 		Find(&creationTrends).Error; err != nil {

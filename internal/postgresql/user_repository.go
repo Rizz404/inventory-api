@@ -148,7 +148,7 @@ func (r *UserRepository) UpdateLastLogin(ctx context.Context, userId string) err
 	err := r.db.WithContext(ctx).
 		Model(&model.User{}).
 		Where("id = ?", userId).
-		Update("last_login", time.Now()).Error
+		Update("last_login", time.Now().UTC()).Error
 	if err != nil {
 		return domain.ErrInternal(err)
 	}
@@ -218,7 +218,7 @@ func (r *UserRepository) UpdatePassword(ctx context.Context, userId string, hash
 	// Update only the password_hash and updated_at
 	updates := map[string]interface{}{
 		"password_hash": hashedPassword,
-		"updated_at":    time.Now(),
+		"updated_at":    time.Now().UTC(),
 	}
 	err := r.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", userId).Updates(updates).Error
 	if err != nil {

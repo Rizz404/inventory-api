@@ -104,7 +104,7 @@ func (s *Service) CreateMaintenanceRecord(ctx context.Context, payload *domain.C
 	}
 
 	// Parse date
-	maintenanceDate, err := time.Parse("2006-01-02", payload.MaintenanceDate)
+	maintenanceDate, err := time.ParseInLocation("2006-01-02", payload.MaintenanceDate, time.UTC)
 	if err != nil {
 		return domain.MaintenanceRecordResponse{}, domain.ErrBadRequestWithKey(utils.ErrMaintenanceRecordDateRequiredKey)
 	}
@@ -112,7 +112,7 @@ func (s *Service) CreateMaintenanceRecord(ctx context.Context, payload *domain.C
 	// Parse completion date if provided
 	var completionDate *time.Time
 	if payload.CompletionDate != nil && *payload.CompletionDate != "" {
-		parsed, err := time.Parse("2006-01-02", *payload.CompletionDate)
+		parsed, err := time.ParseInLocation("2006-01-02", *payload.CompletionDate, time.UTC)
 		if err != nil {
 			return domain.MaintenanceRecordResponse{}, domain.ErrBadRequest("invalid completion date format")
 		}
@@ -213,14 +213,14 @@ func (s *Service) BulkCreateMaintenanceRecords(ctx context.Context, payload *dom
 	// * Build domain records
 	records := make([]domain.MaintenanceRecord, len(payload.MaintenanceRecords))
 	for i, item := range payload.MaintenanceRecords {
-		maintenanceDate, err := time.Parse("2006-01-02", item.MaintenanceDate)
+		maintenanceDate, err := time.ParseInLocation("2006-01-02", item.MaintenanceDate, time.UTC)
 		if err != nil {
 			return domain.BulkCreateMaintenanceRecordsResponse{}, domain.ErrBadRequest("invalid maintenance_date format")
 		}
 
 		var completionDate *time.Time
 		if item.CompletionDate != nil {
-			parsedDate, err := time.Parse("2006-01-02", *item.CompletionDate)
+			parsedDate, err := time.ParseInLocation("2006-01-02", *item.CompletionDate, time.UTC)
 			if err != nil {
 				return domain.BulkCreateMaintenanceRecordsResponse{}, domain.ErrBadRequest("invalid completion_date format")
 			}

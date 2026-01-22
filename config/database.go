@@ -30,6 +30,9 @@ func InitializeDatabase() *gorm.DB {
 	}), &gorm.Config{
 		SkipDefaultTransaction: true,
 		Logger:                 newLogger,
+		NowFunc: func() time.Time {
+			return time.Now().UTC()
+		},
 	})
 	if err != nil {
 		log.Fatalf("failed to open connection to the database: %v", err)
