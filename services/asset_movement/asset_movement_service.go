@@ -157,12 +157,7 @@ func (s *Service) CreateAssetMovement(ctx context.Context, payload *domain.Creat
 		ToLocationID:   payload.ToLocationID,
 		FromUserID:     asset.AssignedToID,
 		ToUserID:       payload.ToUserID,
-		MovementDate:   time.Now(),
-		MovedBy:        movedBy,
-		Translations:   make([]domain.AssetMovementTranslation, len(payload.Translations)),
-	}
-
-	// * Convert translation payloads to domain translations
+	MovementDate:   time.Now().UTC(),
 	for i, translationPayload := range payload.Translations {
 		newMovement.Translations[i] = domain.AssetMovementTranslation{
 			LangCode: translationPayload.LangCode,
@@ -314,12 +309,7 @@ func (s *Service) BulkCreateAssetMovements(ctx context.Context, payload *domain.
 			ToLocationID:   item.ToLocationID,
 			FromUserID:     asset.AssignedToID,
 			ToUserID:       item.ToUserID,
-			MovementDate:   time.Now(),
-			MovedBy:        movedBy,
-			Translations:   make([]domain.AssetMovementTranslation, len(item.Translations)),
-		}
-
-		// * Convert translations
+		MovementDate:   time.Now().UTC(),
 		for j, translationPayload := range item.Translations {
 			movements[i].Translations[j] = domain.AssetMovementTranslation{
 				LangCode: translationPayload.LangCode,

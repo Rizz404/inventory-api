@@ -131,13 +131,13 @@ func (h *IssueReportHandler) parseIssueReportFiltersAndSort(c *fiber.Ctx) (domai
 	}
 
 	if dateFromStr := c.Query("dateFrom"); dateFromStr != "" {
-		if dateFrom, err := time.Parse("2006-01-02", dateFromStr); err == nil {
+		if dateFrom, err := time.ParseInLocation("2006-01-02", dateFromStr, time.UTC); err == nil {
 			filters.DateFrom = &dateFrom
 		}
 	}
 
 	if dateToStr := c.Query("dateTo"); dateToStr != "" {
-		if dateTo, err := time.Parse("2006-01-02", dateToStr); err == nil {
+		if dateTo, err := time.ParseInLocation("2006-01-02", dateToStr, time.UTC); err == nil {
 			filters.DateTo = &dateTo
 		}
 	}

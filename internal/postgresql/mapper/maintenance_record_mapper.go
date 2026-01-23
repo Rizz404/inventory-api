@@ -443,7 +443,7 @@ func ToModelMaintenanceRecordUpdateMap(payload *domain.UpdateMaintenanceRecordPa
 		if *payload.MaintenanceDate == "" {
 			updates["maintenance_date"] = nil
 		} else {
-			if parsedDate, err := time.Parse("2006-01-02", *payload.MaintenanceDate); err == nil {
+			if parsedDate, err := time.ParseInLocation("2006-01-02", *payload.MaintenanceDate, time.UTC); err == nil {
 				updates["maintenance_date"] = parsedDate
 			}
 		}
@@ -452,7 +452,7 @@ func ToModelMaintenanceRecordUpdateMap(payload *domain.UpdateMaintenanceRecordPa
 		if payload.CompletionDate == nil {
 			updates["completion_date"] = nil
 		} else {
-			if parsedDate, err := time.Parse("2006-01-02", *payload.CompletionDate); err == nil {
+			if parsedDate, err := time.ParseInLocation("2006-01-02", *payload.CompletionDate, time.UTC); err == nil {
 				updates["completion_date"] = parsedDate
 			}
 		}

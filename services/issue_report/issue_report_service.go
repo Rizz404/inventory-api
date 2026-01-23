@@ -89,7 +89,7 @@ func (s *Service) CreateIssueReport(ctx context.Context, payload *domain.CreateI
 	newIssueReport := domain.IssueReport{
 		AssetID:      payload.AssetID,
 		ReportedBy:   reportedBy,
-		ReportedDate: time.Now(),
+		ReportedDate: time.Now().UTC(),
 		IssueType:    payload.IssueType,
 		Priority:     payload.Priority,
 		Status:       domain.IssueStatusOpen, // New reports are always open
@@ -172,7 +172,7 @@ func (s *Service) BulkCreateIssueReports(ctx context.Context, payload *domain.Bu
 		issueReports[i] = domain.IssueReport{
 			AssetID:      item.AssetID,
 			ReportedBy:   reportedBy,
-			ReportedDate: time.Now(),
+			ReportedDate: time.Now().UTC(),
 			IssueType:    item.IssueType,
 			Priority:     item.Priority,
 			Status:       domain.IssueStatusOpen,

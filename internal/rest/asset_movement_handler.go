@@ -122,13 +122,13 @@ func (h *AssetMovementHandler) parseAssetMovementFiltersAndSort(c *fiber.Ctx) (d
 
 	// * Parse date range filters
 	if dateFrom := c.Query("dateFrom"); dateFrom != "" {
-		if parsedDate, err := time.Parse("2006-01-02", dateFrom); err == nil {
+		if parsedDate, err := time.ParseInLocation("2006-01-02", dateFrom, time.UTC); err == nil {
 			filters.DateFrom = &parsedDate
 		}
 	}
 
 	if dateTo := c.Query("dateTo"); dateTo != "" {
-		if parsedDate, err := time.Parse("2006-01-02", dateTo); err == nil {
+		if parsedDate, err := time.ParseInLocation("2006-01-02", dateTo, time.UTC); err == nil {
 			filters.DateTo = &parsedDate
 		}
 	}

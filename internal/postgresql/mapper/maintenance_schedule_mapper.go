@@ -444,7 +444,7 @@ func ToModelMaintenanceScheduleUpdateMap(payload *domain.UpdateMaintenanceSchedu
 		if *payload.NextScheduledDate == "" {
 			updates["next_scheduled_date"] = nil
 		} else {
-			if parsedDate, err := time.Parse("2006-01-02", *payload.NextScheduledDate); err == nil {
+			if parsedDate, err := time.ParseInLocation("2006-01-02", *payload.NextScheduledDate, time.UTC); err == nil {
 				updates["next_scheduled_date"] = parsedDate
 			}
 		}

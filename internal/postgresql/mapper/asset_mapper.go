@@ -393,7 +393,7 @@ func ToModelAssetUpdateMap(payload *domain.UpdateAssetPayload) map[string]any {
 		if *payload.PurchaseDate == "" {
 			updates["purchase_date"] = nil
 		} else {
-			if parsedDate, err := time.Parse("2006-01-02", *payload.PurchaseDate); err == nil {
+			if parsedDate, err := time.ParseInLocation("2006-01-02", *payload.PurchaseDate, time.UTC); err == nil {
 				updates["purchase_date"] = parsedDate
 			}
 		}
@@ -408,7 +408,7 @@ func ToModelAssetUpdateMap(payload *domain.UpdateAssetPayload) map[string]any {
 		if *payload.WarrantyEnd == "" {
 			updates["warranty_end"] = nil
 		} else {
-			if parsedDate, err := time.Parse("2006-01-02", *payload.WarrantyEnd); err == nil {
+			if parsedDate, err := time.ParseInLocation("2006-01-02", *payload.WarrantyEnd, time.UTC); err == nil {
 				updates["warranty_end"] = parsedDate
 			}
 		}

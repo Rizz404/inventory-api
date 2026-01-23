@@ -69,11 +69,7 @@ func (s *Service) CreateScanLog(ctx context.Context, payload *domain.CreateScanL
 		ScannedValue:    payload.ScannedValue,
 		ScanMethod:      payload.ScanMethod,
 		ScannedBy:       scannedBy,
-		ScanTimestamp:   time.Now(),
-		ScanLocationLat: payload.ScanLocationLat,
-		ScanLocationLng: payload.ScanLocationLng,
-		ScanResult:      payload.ScanResult, // Default result
-	}
+	ScanTimestamp:   time.Now().UTC(),
 
 	createdScanLog, err := s.Repo.CreateScanLog(ctx, &newScanLog)
 	if err != nil {
@@ -97,7 +93,7 @@ func (s *Service) BulkCreateScanLogs(ctx context.Context, payload *domain.BulkCr
 			ScannedValue:    item.ScannedValue,
 			ScanMethod:      item.ScanMethod,
 			ScannedBy:       scannedBy,
-			ScanTimestamp:   time.Now(),
+			ScanTimestamp:   time.Now().UTC(),
 			ScanLocationLat: item.ScanLocationLat,
 			ScanLocationLng: item.ScanLocationLng,
 			ScanResult:      item.ScanResult,

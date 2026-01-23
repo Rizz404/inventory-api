@@ -29,7 +29,7 @@ type CreateJWTPayload struct {
 }
 
 func CreateAccessToken(payload *CreateJWTPayload) (string, error) {
-	expirationTime := time.Now().Add(7 * 24 * time.Hour)
+	expirationTime := time.Now().UTC().Add(7 * 24 * time.Hour)
 
 	claims := &JWTClaims{
 		IDUser:   payload.IDUser,
@@ -39,7 +39,7 @@ func CreateAccessToken(payload *CreateJWTPayload) (string, error) {
 		IsActive: &payload.IsActive,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			Issuer:    "rizz",
 		},
 	}
@@ -61,13 +61,13 @@ func CreateAccessToken(payload *CreateJWTPayload) (string, error) {
 }
 
 func CreateRefreshToken(idUser string) (string, error) {
-	expirationTime := time.Now().Add(30 * 24 * time.Hour)
+	expirationTime := time.Now().UTC().Add(30 * 24 * time.Hour)
 
 	claims := &JWTClaims{
 		IDUser: idUser,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			Issuer:    "rizz-app",
 		},
 	}
