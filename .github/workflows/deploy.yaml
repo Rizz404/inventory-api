@@ -12,6 +12,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # ! Test dulu sebelum build
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+
+      - name: Build Check
+        run: |
+          go mod download
+          go build -o /tmp/app ./app/main.go
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -23,7 +34,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/inventory-api:latest
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/inventory-api:latest
+            ${{ secrets.DOCKER_USERNAME }}/inventory-api:${{ github.sha }}
 
   deploy-to-ec2:
     needs: build-and-push
@@ -45,8 +58,29 @@ jobs:
             # Download image terbaru dari Docker Hub
             docker compose pull app
 
-            # Restart container dengan image baru (Update!)
+            # Restart container dengan image baru
             docker compose up -d
+
+            # ! SAFETY: Tunggu 10 detik lalu cek health
+            sleep 10
+
+            # Cek apakah container masih running
+            if ! docker ps | grep -q sigma-track-backend; then
+              echo "❌ Container crashed! Rolling back..."
+
+              # Rollback ke image sebelumnya (ambil dari docker images)
+              PREVIOUS_IMAGE=$(docker images rizz404/inventory-api --format "{{.Tag}}" | sed -n '2p')
+
+              if [ ! -z "$PREVIOUS_IMAGE" ]; then
+                echo "Rolling back to image: $PREVIOUS_IMAGE"
+                docker tag rizz404/inventory-api:$PREVIOUS_IMAGE rizz404/inventory-api:latest
+                docker compose up -d
+              fi
+
+              exit 1
+            fi
+
+            echo "✅ Deployment successful!"
 
             # Bersihkan image sampah (biar disk space gak penuh)
             docker image prune -f

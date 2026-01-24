@@ -144,7 +144,19 @@ func main() {
 	app.Use(helmet.New())
 	app.Use(favicon.New())
 	app.Use(logger.New())
-	app.Use(healthcheck.New())
+
+	// *===================================HEALTHCHECK===================================*
+	// Health check middleware with custom endpoints
+	app.Use(healthcheck.New(healthcheck.Config{
+		LivenessProbe: func(c *fiber.Ctx) bool {
+			return true // App is alive
+		},
+		LivenessEndpoint: "/livez",
+		ReadinessProbe: func(c *fiber.Ctx) bool {
+			return true // App is ready
+		},
+		ReadinessEndpoint: "/readyz",
+	}))
 
 	// *===================================ROUTES===================================*
 	app.Get("/metrics", monitor.New())
