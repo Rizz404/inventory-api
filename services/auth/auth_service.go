@@ -126,7 +126,11 @@ func (s *Service) Login(ctx context.Context, payload *domain.LoginPayload) (doma
 	}()
 
 	// Get current time for last login in response
-now := time.Now().UTC()
+	now := time.Now().UTC()
+
+	// Create user response
+	userResponse := domain.UserResponse{
+		ID:            user.ID,
 		Name:          user.Name,
 		Email:         user.Email,
 		FullName:      user.FullName,
@@ -245,7 +249,11 @@ func (s *Service) ForgotPassword(ctx context.Context, payload *domain.ForgotPass
 	s.resetCodes.Store(payload.Email, resetCodeEntry{
 		Code:      code,
 		Email:     payload.Email,
-	ExpiresAt: time.Now().UTC().Add(15 * time.Minute),
+		ExpiresAt: time.Now().UTC().Add(15 * time.Minute),
+	})
+
+	// Send email
+	userName := user.Name
 	if user.FullName != "" {
 		userName = user.FullName
 	}
@@ -267,7 +275,10 @@ func (s *Service) VerifyResetCode(ctx context.Context, payload *domain.VerifyRes
 	resetEntry := entry.(resetCodeEntry)
 
 	// Check if code expired
-if time.Now().UTC().After(resetEntry.ExpiresAt) {
+	if time.Now().UTC().After(resetEntry.ExpiresAt) {
+		s.resetCodes.Delete(payload.Email)
+		return domain.VerifyResetCodeResponse{Valid: false}, nil
+	}
 
 	// Check if code matches
 	if resetEntry.Code != payload.Code {
@@ -288,7 +299,10 @@ func (s *Service) ResetPassword(ctx context.Context, payload *domain.ResetPasswo
 	resetEntry := entry.(resetCodeEntry)
 
 	// Check if code expired
-if time.Now().UTC().After(resetEntry.ExpiresAt) {
+	if time.Now().UTC().After(resetEntry.ExpiresAt) {
+		s.resetCodes.Delete(payload.Email)
+		return "", domain.ErrBadRequestWithKey(utils.ErrResetCodeExpiredKey)
+	}
 
 	// Check if code matches
 	if resetEntry.Code != payload.Code {

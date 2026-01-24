@@ -69,7 +69,8 @@ func (s *Service) CreateScanLog(ctx context.Context, payload *domain.CreateScanL
 		ScannedValue:    payload.ScannedValue,
 		ScanMethod:      payload.ScanMethod,
 		ScannedBy:       scannedBy,
-	ScanTimestamp:   time.Now().UTC(),
+		ScanTimestamp:   time.Now().UTC(),
+	}
 
 	createdScanLog, err := s.Repo.CreateScanLog(ctx, &newScanLog)
 	if err != nil {
