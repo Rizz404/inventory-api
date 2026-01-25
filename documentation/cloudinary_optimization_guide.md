@@ -2,14 +2,29 @@
 
 ## Overview
 
-Semua image yang di-upload ke Cloudinary **otomatis dioptimasi** menggunakan **eager transformations**. Ini mengurangi ukuran file tanpa mengurangi kualitas visual, menghemat storage & bandwidth di free tier.
+Semua image yang di-upload ke Cloudinary **otomatis dioptimasi** menggunakan **incoming transformations**. Original file langsung di-transform SEBELUM disimpan, jadi yang tersimpan adalah versi optimized. Ini menghemat storage & bandwidth di free tier.
 
 ## Bagaimana Cara Kerjanya?
 
-### 1. Eager Transformations
+### 1. Incoming Transformations (Bukan Eager!)
 - Transformasi dilakukan **saat upload** di server Cloudinary
-- **Tidak ada delay tambahan** untuk response ke client
-- Client langsung dapat URL hasil optimasi
+- Original file di-transform SEBELUM disimpan
+- **Hanya versi optimized yang disimpan**, original dibuang
+- **Tidak ada delay** untuk client
+- **Hemat storage quota** karena tidak ada duplikasi file
+
+### ❌ Perbedaan dengan Eager Transformations
+**Eager** (yang lama):
+- Original disimpan UTUH (4.73 MB)
+- Derived assets dibuat (Banner 31KB, Banner wide 24KB)
+- Total storage: 4.73 MB + 31 KB + 24 KB = ~4.8 MB per image
+- Boros untuk ratusan records
+
+**Incoming** (yang sekarang):
+- Original di-transform DULU jadi WebP + resize
+- Hanya versi optimized yang disimpan (~500 KB)
+- Total storage: 500 KB per image
+- **Hemat 90% storage!**
 
 ### 2. Format Conversion
 **WebP Format:**
@@ -30,37 +45,39 @@ Semua image yang di-upload ke Cloudinary **otomatis dioptimasi** menggunakan **e
 
 ### Avatar Images
 ```go
-EagerTransformations: "f_webp,q_auto"
+Transformation: "w_500,c_limit/f_webp,q_auto"
 ```
+- Resize max width 500px (maintain aspect ratio)
 - Convert ke WebP
-- Auto quality optimization
-- Hasil: ~60-70% lebih kecil
+- Auto quality
+- Hasil: Original ~3MB → Optimized ~150KB (~95% smaller)
 
 ### Category Images
 ```go
-EagerTransformations: "w_800,c_limit/f_webp,q_auto"
+Transformation: "w_800,c_limit/f_webp,q_auto"
 ```
 - Resize max width 800px (maintain aspect ratio)
 - Convert ke WebP
 - Auto quality
-- Hasil: ~70-85% lebih kecil
+- Hasil: Original ~2MB → Optimized ~200KB (~90% smaller)
 
 ### Asset Images
 ```go
-EagerTransformations: "w_1920,c_limit/f_webp,q_auto"
+Transformation: "w_1920,c_limit/f_webp,q_auto"
 ```
 - Resize max width 1920px (Full HD)
 - Convert ke WebP
 - Auto quality
-- Hasil: ~65-80% lebih kecil
+- Hasil: Original ~5MB → Optimized ~500KB (~90% smaller)
 
 ### QR/Barcode Images
 ```go
-EagerTransformations: "f_png,q_auto:best"
+Transformation: "f_png,q_auto:best"
 ```
 - Keep PNG (better for barcodes)
 - Best quality compression
 - Maintain scanability
+- Hasil: Original ~500KB → Optimized ~200KB (~60% smaller)
 
 ## Free Tier Compatibility
 
@@ -69,98 +86,90 @@ EagerTransformations: "f_png,q_auto:best"
 - Auto quality
 - Resize/crop
 - Format conversion
-- Eager transformations
+- Incoming transformations (transform original)
 
 ### 📊 Limits
 - 25 monthly credits
 - 1 credit = ~1000 transformations
-- Eager transformations **tidak count double** (hanya sekali)
+- **Incoming transformations count 1x** (hanya sekali saat upload)
+- **Eager transformations count 2x** (upload + derived asset) - TIDAK DIPAKAI
 
 ### 💡 Tips Menghemat
-1. Gunakan eager transformations (sekali transform saat upload)
-2. Hindari on-the-fly transformations di URL (count setiap request)
-3. Cache delivery URLs di frontend
-4. Resize sebelum upload jika > 5MB
+1. ✅ Gunakan incoming transformations (transform sekali, simpan optimized)
+2. ❌ Hindari eager transformations (bikin file duplikat)
+3. ❌ Hindari on-the-fly transformations di URL (count setiap request)
+4. ✅ Resize original sebelum disimpan
+5. ✅ Cache delivery URLs di frontend
 
 ## Performance Impact
 
 ### Upload Time
-- **+0-500ms** untuk eager transformations
-- Async processing (tidak block response)
-- Client tidak tunggu transformasi selesai
-
-### Response Time
-- **+0ms** untuk delivery (sudah ter-optimize)
-- CDN cache worldwide
-- Faster load untuk user
+- **+100-300ms** untuk incoming transformations
+- Transform dilakukan di server (tidak block client)
+- Client dapat response dengan URL final
 
 ### Storage
-**Before:** 100 images × 3MB = 300MB
-**After:** 100 images × 500KB = 50MB
-**Savings:** 83% storage reduction
+**Before (Eager):**
+- 100 images × 3MB (original) = 300MB
+- 100 images × 500KB (derived) = 50MB
+- **Total: 350MB**
 
-### Bandwidth
-**Before:** 1000 views × 3MB = 3GB/month
+**After (Incoming):**
+- 100 images × 500KB (optimized only) = 50MB
+- **Savings: 85% storage reduction**
 **After:** 1000 views × 500KB = 500MB/month
 **Savings:** 83% bandwidth reduction
 
 ## Real World Example
 
-### Input Image
+### Scenario: Category Image Upload
+
+**Input Image:**
 - Format: JPEG
 - Size: 3.2 MB
-- Dimensions: 4000×3000px
+- Dimensions: 3000×2000px
 
-### After Eager Transformation
+**Incoming Transformation:**
 ```go
-"w_1920,c_limit/f_webp,q_auto"
+Transformation: "w_800,c_limit/f_webp,q_auto"
 ```
 
-### Output
-- Format: WebP
-- Size: 380 KB (88% smaller)
-- Dimensions: 1920×1440px
+**❌ SEBELUM (Eager - Yang Lama):**
+- Original: 3.2 MB (JPEG, 3000×2000px) - disimpan
+- Derived: 200 KB (WebP, 800×533px) - dibuat
+- **Total storage: 3.4 MB**
+- App masih deliver original 3.2 MB kalau akses URL biasa
+
+**✅ SESUDAH (Incoming - Sekarang):**
+- Original: DIBUANG
+- Optimized: 180 KB (WebP, 800×533px) - disimpan sebagai original
+- **Total storage: 180 KB (95% savings!)**
+- App selalu deliver optimized 180 KB
 - Quality: Visually identical
 
-## Code Usage
+## Delivery URLs
 
-Upload sudah otomatis optimized:
+Result delivery URL otomatis optimized:
+
+**URL dari upload result:**
+```
+https://res.cloudinary.com/.../sigma-asset/categories/cat-123.webp
+```
+
+Yang tersimpan sudah optimized (800px, WebP, ~180KB), bukan original 3.2MB!
+
+## Code Usage (Tidak Berubah!)
+
+Upload sudah otomatis optimized, code tetap sama:
 
 ```go
-// Avatar upload - auto optimized to WebP
-uploadResult, err := cloudinaryClient.UploadSingleFile(
-    ctx,
-    file,
-    cloudinary.GetAvatarUploadConfig(),
-)
-
-// Category image - auto resized + WebP
+// Category image - auto resized + WebP (incoming transformation)
 uploadResult, err := cloudinaryClient.UploadSingleFile(
     ctx,
     file,
     cloudinary.GetCategoryImageUploadConfig(),
 )
-
-// Asset images - auto optimized bulk
-uploadResult, err := cloudinaryClient.UploadMultipleFiles(
-    ctx,
-    files,
-    cloudinary.GetAssetImageUploadConfig(),
-)
-```
-
-## Delivery URLs
-
-Hasil eager transformation otomatis dapat URL optimized:
-
-**Original URL:**
-```
-https://res.cloudinary.com/.../sigma-asset/assets/product-001.jpg
-```
-
-**Optimized URL (auto generated):**
-```
-https://res.cloudinary.com/.../sigma-asset/assets/product-001.webp
+// uploadResult.SecureURL sudah pointing ke optimized file!
 ```
 
 ## Monitoring
@@ -185,20 +194,23 @@ Cek usage di Cloudinary Dashboard:
 A: 95%+ browser modern. Cloudinary auto fallback untuk browser lama.
 
 **Q: Berapa lama waktu convert?**
-A: Async, tidak block response. Client langsung dapat URL.
+A: +100-300ms saat upload, tidak terasa karena proses upload sendiri butuh waktu.
 
 **Q: Apakah free tier cukup?**
 A: 25 credits = ~25,000 transformations/month. Cukup untuk MVP.
 
 **Q: Bagaimana kalau limit habis?**
-A: Upgrade ke Plus ($89/month) atau kurangi transformations.
+A: Upgrade ke Plus ($89/month) atau kurangi upload frequency.
 
-**Q: Bisa convert ke AVIF?**
-A: Bisa, tapi AVIF pakai extra quota. WebP lebih efisien untuk free tier.
+**Q: Kalau butuh original yang besar gimana?**
+A: Tidak bisa, original sudah dibuang. Incoming transformation untuk user-generated content yang ukuran tidak penting. Kalau butuh original, jangan pakai incoming transformation.
 
-## Resources
+**Q: Apakah bisa diganti ke eager transformation?**
+A: Bisa, tapi boros storage. Original 3MB tetap disimpan + derived 200KB = 3.2MB total.
 
-- [Cloudinary Transformations](https://cloudinary.com/documentation/image_transformations)
-- [Eager Transformations](https://cloudinary.com/documentation/eager_and_incoming_transformations)
-- [Image Optimization](https://cloudinary.com/documentation/image_optimization)
+**Q: Kenapa tidak pakai f_auto saja?**
+A: f_auto di URL count sebagai transformation setiap request. Incoming transformation cuma count sekali saat upload.
+
+**Q: Banner (tall) dan Banner (wide) itu apa?**
+A: Itu default eager transformations dari Cloudinary (preset lama). Bisa dihapus kalau tidak terpakai.
 - [Free Tier Limits](https://cloudinary.com/pricing)
