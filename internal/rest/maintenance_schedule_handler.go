@@ -153,7 +153,10 @@ func (h *MaintenanceScheduleHandler) UpdateMaintenanceSchedule(c *fiber.Ctx) err
 		return web.HandleError(c, err)
 	}
 
-	schedule, err := h.Service.UpdateMaintenanceSchedule(c.Context(), id, &payload)
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	schedule, err := h.Service.UpdateMaintenanceSchedule(c.Context(), id, &payload, langCode)
 	if err != nil {
 		return web.HandleError(c, err)
 	}

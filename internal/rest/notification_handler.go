@@ -182,7 +182,10 @@ func (h *NotificationHandler) UpdateNotification(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	notification, err := h.Service.UpdateNotification(c.Context(), id, &payload)
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	notification, err := h.Service.UpdateNotification(c.Context(), id, &payload, langCode)
 	if err != nil {
 		return web.HandleError(c, err)
 	}

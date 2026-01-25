@@ -56,7 +56,7 @@ type NotificationService interface {
 type AssetMovementService interface {
 	// * MUTATION
 	CreateAssetMovement(ctx context.Context, payload *domain.CreateAssetMovementPayload, movedBy string) (domain.AssetMovementResponse, error)
-	UpdateAssetMovement(ctx context.Context, movementId string, payload *domain.UpdateAssetMovementPayload) (domain.AssetMovementResponse, error)
+	UpdateAssetMovement(ctx context.Context, movementId string, payload *domain.UpdateAssetMovementPayload, langCode string) (domain.AssetMovementResponse, error)
 	DeleteAssetMovement(ctx context.Context, movementId string) error
 	BulkCreateAssetMovements(ctx context.Context, payload *domain.BulkCreateAssetMovementsPayload, movedBy string) (domain.BulkCreateAssetMovementsResponse, error)
 	BulkDeleteAssetMovements(ctx context.Context, payload *domain.BulkDeleteAssetMovementsPayload) (domain.BulkDeleteAssetMovementsResponse, error)
@@ -193,7 +193,7 @@ func (s *Service) CreateAssetMovement(ctx context.Context, payload *domain.Creat
 	return mapper.AssetMovementToResponse(&createdMovement, mapper.DefaultLangCode), nil
 }
 
-func (s *Service) UpdateAssetMovement(ctx context.Context, movementId string, payload *domain.UpdateAssetMovementPayload) (domain.AssetMovementResponse, error) {
+func (s *Service) UpdateAssetMovement(ctx context.Context, movementId string, payload *domain.UpdateAssetMovementPayload, langCode string) (domain.AssetMovementResponse, error) {
 	// * Check if asset movement exists
 	existingMovement, err := s.Repo.GetAssetMovementById(ctx, movementId)
 	if err != nil {
@@ -230,8 +230,8 @@ func (s *Service) UpdateAssetMovement(ctx context.Context, movementId string, pa
 		return domain.AssetMovementResponse{}, err
 	}
 
-	// * Convert to AssetMovementResponse using mapper
-	return mapper.AssetMovementToResponse(&updatedMovement, mapper.DefaultLangCode), nil
+	// * Convert to AssetMovementResponse using mapper with requested lang code
+	return mapper.AssetMovementToResponse(&updatedMovement, langCode), nil
 }
 
 func (s *Service) DeleteAssetMovement(ctx context.Context, movementId string) error {

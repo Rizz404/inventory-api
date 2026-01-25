@@ -143,7 +143,10 @@ func (h *MaintenanceRecordHandler) UpdateMaintenanceRecord(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	record, err := h.Service.UpdateMaintenanceRecord(c.Context(), id, &payload)
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	record, err := h.Service.UpdateMaintenanceRecord(c.Context(), id, &payload, langCode)
 	if err != nil {
 		return web.HandleError(c, err)
 	}

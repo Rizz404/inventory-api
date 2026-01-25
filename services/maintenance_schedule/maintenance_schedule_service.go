@@ -60,7 +60,7 @@ type NotificationService interface {
 // MaintenanceScheduleService business operations
 type MaintenanceScheduleService interface {
 	CreateMaintenanceSchedule(ctx context.Context, payload *domain.CreateMaintenanceSchedulePayload, createdBy string) (domain.MaintenanceScheduleResponse, error)
-	UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload) (domain.MaintenanceScheduleResponse, error)
+	UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload, langCode string) (domain.MaintenanceScheduleResponse, error)
 	DeleteMaintenanceSchedule(ctx context.Context, scheduleId string) error
 	BulkCreateMaintenanceSchedules(ctx context.Context, payload *domain.BulkCreateMaintenanceSchedulesPayload, createdBy string) (domain.BulkCreateMaintenanceSchedulesResponse, error)
 	BulkDeleteMaintenanceSchedules(ctx context.Context, payload *domain.BulkDeleteMaintenanceSchedulesPayload) (domain.BulkDeleteMaintenanceSchedulesResponse, error)
@@ -158,7 +158,7 @@ func (s *Service) CreateMaintenanceSchedule(ctx context.Context, payload *domain
 	return mapper.MaintenanceScheduleToResponse(&created, mapper.DefaultLangCode), nil
 }
 
-func (s *Service) UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload) (domain.MaintenanceScheduleResponse, error) {
+func (s *Service) UpdateMaintenanceSchedule(ctx context.Context, scheduleId string, payload *domain.UpdateMaintenanceSchedulePayload, langCode string) (domain.MaintenanceScheduleResponse, error) {
 	// Ensure schedule exists
 	if exists, err := s.Repo.CheckScheduleExist(ctx, scheduleId); err != nil {
 		return domain.MaintenanceScheduleResponse{}, err
@@ -170,7 +170,7 @@ func (s *Service) UpdateMaintenanceSchedule(ctx context.Context, scheduleId stri
 	if err != nil {
 		return domain.MaintenanceScheduleResponse{}, err
 	}
-	return mapper.MaintenanceScheduleToResponse(&updated, mapper.DefaultLangCode), nil
+	return mapper.MaintenanceScheduleToResponse(&updated, langCode), nil
 }
 
 func (s *Service) DeleteMaintenanceSchedule(ctx context.Context, scheduleId string) error {

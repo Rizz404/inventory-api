@@ -52,7 +52,7 @@ type NotificationService interface {
 // MaintenanceRecordService business operations
 type MaintenanceRecordService interface {
 	CreateMaintenanceRecord(ctx context.Context, payload *domain.CreateMaintenanceRecordPayload, performedBy string) (domain.MaintenanceRecordResponse, error)
-	UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload) (domain.MaintenanceRecordResponse, error)
+	UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload, langCode string) (domain.MaintenanceRecordResponse, error)
 	DeleteMaintenanceRecord(ctx context.Context, recordId string) error
 	BulkCreateMaintenanceRecords(ctx context.Context, payload *domain.BulkCreateMaintenanceRecordsPayload, performedBy string) (domain.BulkCreateMaintenanceRecordsResponse, error)
 	BulkDeleteMaintenanceRecords(ctx context.Context, payload *domain.BulkDeleteMaintenanceRecordsPayload) (domain.BulkDeleteMaintenanceRecordsResponse, error)
@@ -151,7 +151,7 @@ func (s *Service) CreateMaintenanceRecord(ctx context.Context, payload *domain.C
 	return mapper.MaintenanceRecordToResponse(&created, mapper.DefaultLangCode), nil
 }
 
-func (s *Service) UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload) (domain.MaintenanceRecordResponse, error) {
+func (s *Service) UpdateMaintenanceRecord(ctx context.Context, recordId string, payload *domain.UpdateMaintenanceRecordPayload, langCode string) (domain.MaintenanceRecordResponse, error) {
 	// Ensure record exists
 	if exists, err := s.Repo.CheckRecordExist(ctx, recordId); err != nil {
 		return domain.MaintenanceRecordResponse{}, err
@@ -185,7 +185,7 @@ func (s *Service) UpdateMaintenanceRecord(ctx context.Context, recordId string, 
 		s.sendMaintenanceFailedNotification(ctx, &updated, failureReason)
 	}
 
-	return mapper.MaintenanceRecordToResponse(&updated, mapper.DefaultLangCode), nil
+	return mapper.MaintenanceRecordToResponse(&updated, langCode), nil
 }
 
 func (s *Service) DeleteMaintenanceRecord(ctx context.Context, recordId string) error {

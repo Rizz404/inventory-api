@@ -37,7 +37,7 @@ type UserRepository interface {
 type NotificationService interface {
 	// * MUTATION
 	CreateNotification(ctx context.Context, payload *domain.CreateNotificationPayload) (domain.NotificationResponse, error)
-	UpdateNotification(ctx context.Context, notificationId string, payload *domain.UpdateNotificationPayload) (domain.NotificationResponse, error)
+	UpdateNotification(ctx context.Context, notificationId string, payload *domain.UpdateNotificationPayload, langCode string) (domain.NotificationResponse, error)
 	DeleteNotification(ctx context.Context, notificationId string) error
 	BulkCreateNotifications(ctx context.Context, payload *domain.BulkCreateNotificationsPayload) (domain.BulkCreateNotificationsResponse, error)
 	BulkDeleteNotifications(ctx context.Context, payload *domain.BulkDeleteNotificationsPayload) (domain.BulkDeleteNotificationsResponse, error)
@@ -105,7 +105,7 @@ func (s *Service) CreateNotification(ctx context.Context, payload *domain.Create
 	return mapper.NotificationToResponse(&createdNotification, mapper.DefaultLangCode), nil
 }
 
-func (s *Service) UpdateNotification(ctx context.Context, notificationId string, payload *domain.UpdateNotificationPayload) (domain.NotificationResponse, error) {
+func (s *Service) UpdateNotification(ctx context.Context, notificationId string, payload *domain.UpdateNotificationPayload, langCode string) (domain.NotificationResponse, error) {
 	// * Check if notification exists
 	_, err := s.Repo.GetNotificationById(ctx, notificationId)
 	if err != nil {
@@ -117,8 +117,8 @@ func (s *Service) UpdateNotification(ctx context.Context, notificationId string,
 		return domain.NotificationResponse{}, err
 	}
 
-	// * Convert to NotificationResponse using mapper
-	return mapper.NotificationToResponse(&updatedNotification, mapper.DefaultLangCode), nil
+	// * Convert to NotificationResponse using mapper with requested lang code
+	return mapper.NotificationToResponse(&updatedNotification, langCode), nil
 }
 
 func (s *Service) DeleteNotification(ctx context.Context, notificationId string) error {

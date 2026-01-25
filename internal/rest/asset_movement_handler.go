@@ -190,7 +190,10 @@ func (h *AssetMovementHandler) UpdateAssetMovement(c *fiber.Ctx) error {
 		return web.HandleError(c, err)
 	}
 
-	movement, err := h.Service.UpdateAssetMovement(c.Context(), id, &payload)
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	movement, err := h.Service.UpdateAssetMovement(c.Context(), id, &payload, langCode)
 	if err != nil {
 		return web.HandleError(c, err)
 	}

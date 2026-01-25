@@ -36,7 +36,7 @@ type LocationService interface {
 	// * MUTATION
 	CreateLocation(ctx context.Context, payload *domain.CreateLocationPayload) (domain.LocationResponse, error)
 	BulkCreateLocations(ctx context.Context, payload *domain.BulkCreateLocationsPayload) (domain.BulkCreateLocationsResponse, error)
-	UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload) (domain.LocationResponse, error)
+	UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload, langCode string) (domain.LocationResponse, error)
 	DeleteLocation(ctx context.Context, locationId string) error
 	BulkDeleteLocations(ctx context.Context, payload *domain.BulkDeleteLocationsPayload) (domain.BulkDeleteLocationsResponse, error)
 
@@ -170,7 +170,7 @@ func (s *Service) BulkCreateLocations(ctx context.Context, payload *domain.BulkC
 	return response, nil
 }
 
-func (s *Service) UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload) (domain.LocationResponse, error) {
+func (s *Service) UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload, langCode string) (domain.LocationResponse, error) {
 	// * Check if location exists
 	_, err := s.Repo.GetLocationById(ctx, locationId)
 	if err != nil {
@@ -194,8 +194,8 @@ func (s *Service) UpdateLocation(ctx context.Context, locationId string, payload
 	// * Send notification to all admin users
 	s.sendLocationUpdatedNotificationToAdmins(ctx, &updatedLocation)
 
-	// * Convert to LocationResponse using mapper
-	return mapper.LocationToResponse(&updatedLocation, mapper.DefaultLangCode), nil
+	// * Convert to LocationResponse using mapper with requested lang code
+	return mapper.LocationToResponse(&updatedLocation, langCode), nil
 }
 
 func (s *Service) DeleteLocation(ctx context.Context, locationId string) error {

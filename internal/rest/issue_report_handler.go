@@ -206,7 +206,10 @@ func (h *IssueReportHandler) UpdateIssueReport(c *fiber.Ctx) error {
 		payload.ResolvedBy = &userID
 	}
 
-	issueReport, err := h.Service.UpdateIssueReport(c.Context(), id, &payload)
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	issueReport, err := h.Service.UpdateIssueReport(c.Context(), id, &payload, langCode)
 	if err != nil {
 		return web.HandleError(c, err)
 	}

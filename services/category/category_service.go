@@ -39,7 +39,7 @@ type CategoryService interface {
 	// * MUTATION
 	CreateCategory(ctx context.Context, payload *domain.CreateCategoryPayload, imageFile *multipart.FileHeader) (domain.CategoryResponse, error)
 	BulkCreateCategories(ctx context.Context, payload *domain.BulkCreateCategoriesPayload) (domain.BulkCreateCategoriesResponse, error)
-	UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload, imageFile *multipart.FileHeader) (domain.CategoryResponse, error)
+	UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload, imageFile *multipart.FileHeader, langCode string) (domain.CategoryResponse, error)
 	DeleteCategory(ctx context.Context, categoryId string) error
 	BulkDeleteCategories(ctx context.Context, payload *domain.BulkDeleteCategoriesPayload) (domain.BulkDeleteCategoriesResponse, error)
 
@@ -216,7 +216,7 @@ func (s *Service) BulkCreateCategories(ctx context.Context, payload *domain.Bulk
 	return response, nil
 }
 
-func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload, imageFile *multipart.FileHeader) (domain.CategoryResponse, error) {
+func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload *domain.UpdateCategoryPayload, imageFile *multipart.FileHeader, langCode string) (domain.CategoryResponse, error) {
 	// * Check if category exists
 	existingCategory, err := s.Repo.GetCategoryById(ctx, categoryId)
 	if err != nil {
@@ -277,8 +277,8 @@ func (s *Service) UpdateCategory(ctx context.Context, categoryId string, payload
 	// * Send notification to all admin users
 	s.sendCategoryUpdatedNotificationToAdmins(ctx, &updatedCategory)
 
-	// * Convert to CategoryResponse using mapper
-	return mapper.CategoryToResponse(&updatedCategory, mapper.DefaultLangCode), nil
+	// * Convert to CategoryResponse using mapper with requested lang code
+	return mapper.CategoryToResponse(&updatedCategory, langCode), nil
 }
 
 func (s *Service) DeleteCategory(ctx context.Context, categoryId string) error {

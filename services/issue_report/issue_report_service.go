@@ -49,7 +49,7 @@ type UserRepository interface {
 type IssueReportService interface {
 	// * MUTATION
 	CreateIssueReport(ctx context.Context, payload *domain.CreateIssueReportPayload, reportedBy string) (domain.IssueReportResponse, error)
-	UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload) (domain.IssueReportResponse, error)
+	UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload, langCode string) (domain.IssueReportResponse, error)
 	DeleteIssueReport(ctx context.Context, issueReportId string) error
 	BulkCreateIssueReports(ctx context.Context, payload *domain.BulkCreateIssueReportsPayload, reportedBy string) (domain.BulkCreateIssueReportsResponse, error)
 	BulkDeleteIssueReports(ctx context.Context, payload *domain.BulkDeleteIssueReportsPayload) (domain.BulkDeleteIssueReportsResponse, error)
@@ -117,7 +117,7 @@ func (s *Service) CreateIssueReport(ctx context.Context, payload *domain.CreateI
 	return mapper.IssueReportToResponse(&createdIssueReport, mapper.DefaultLangCode), nil
 }
 
-func (s *Service) UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload) (domain.IssueReportResponse, error) {
+func (s *Service) UpdateIssueReport(ctx context.Context, issueReportId string, payload *domain.UpdateIssueReportPayload, langCode string) (domain.IssueReportResponse, error) {
 	// * Check if issue report exists
 	_, err := s.Repo.GetIssueReportById(ctx, issueReportId)
 	if err != nil {
@@ -132,8 +132,8 @@ func (s *Service) UpdateIssueReport(ctx context.Context, issueReportId string, p
 	// * Send notification asynchronously
 	go s.sendIssueUpdatedNotification(context.Background(), &updatedIssueReport)
 
-	// * Convert to IssueReportResponse using mapper
-	return mapper.IssueReportToResponse(&updatedIssueReport, mapper.DefaultLangCode), nil
+	// * Convert to IssueReportResponse using mapper with requested lang code
+	return mapper.IssueReportToResponse(&updatedIssueReport, langCode), nil
 }
 
 func (s *Service) DeleteIssueReport(ctx context.Context, issueReportId string) error {

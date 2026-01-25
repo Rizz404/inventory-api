@@ -188,7 +188,10 @@ func (h *CategoryHandler) UpdateCategory(c *fiber.Ctx) error {
 		}
 	}
 
-	category, err := h.Service.UpdateCategory(c.Context(), id, &payload, imageFile)
+	// * Get language from headers
+	langCode := web.GetLanguageFromContext(c)
+
+	category, err := h.Service.UpdateCategory(c.Context(), id, &payload, imageFile, langCode)
 	if err != nil {
 		return web.HandleError(c, err)
 	}
