@@ -18,13 +18,14 @@ type Client struct {
 }
 
 type UploadConfig struct {
-	AllowedTypes []string `json:"allowedTypes"` // e.g., ["image/jpeg", "image/png", "image/gif"]
-	FolderName   string   `json:"folderName"`   // e.g., "avatars", "documents"
-	InputName    string   `json:"inputName"`    // e.g., "avatar", "file"
-	MaxFiles     int      `json:"maxFiles"`     // Maximum number of files for multiple upload
-	MaxFileSize  int64    `json:"maxFileSize"`  // Maximum file size in bytes (e.g., 5MB = 5*1024*1024)
-	PublicID     *string  `json:"publicId"`     // Optional custom public ID
-	Overwrite    bool     `json:"overwrite"`    // Whether to overwrite existing files
+	AllowedTypes         []string `json:"allowedTypes"`         // e.g., ["image/jpeg", "image/png", "image/gif"]
+	FolderName           string   `json:"folderName"`           // e.g., "avatars", "documents"
+	InputName            string   `json:"inputName"`            // e.g., "avatar", "file"
+	MaxFiles             int      `json:"maxFiles"`             // Maximum number of files for multiple upload
+	MaxFileSize          int64    `json:"maxFileSize"`          // Maximum file size in bytes (e.g., 5MB = 5*1024*1024)
+	PublicID             *string  `json:"publicId"`             // Optional custom public ID
+	Overwrite            bool     `json:"overwrite"`            // Whether to overwrite existing files
+	EagerTransformations string   `json:"eagerTransformations"` // Eager transformations to apply on upload (e.g., "f_webp,q_auto")
 }
 
 type UploadResult struct {
@@ -101,6 +102,12 @@ func (c *Client) UploadSingleFile(ctx context.Context, file *multipart.FileHeade
 	// Set public ID if provided
 	if config.PublicID != nil && *config.PublicID != "" {
 		uploadParams.PublicID = *config.PublicID
+	}
+
+	// ! Apply eager transformations for optimization (WebP conversion, compression)
+	// * Eager transformations are processed during upload, no extra response time for clients
+	if config.EagerTransformations != "" {
+		uploadParams.Eager = config.EagerTransformations
 	}
 
 	// Upload to Cloudinary
@@ -316,6 +323,8 @@ func (c *Client) GenerateTransformationURL(publicID string, transformations stri
 }
 
 // GetAvatarUploadConfig returns a pre-configured upload config for user avatars
+// * Eager transformations convert to WebP + auto quality for optimal file size
+// * Free tier compatible, transformations processed during upload (no client delay)
 func GetAvatarUploadConfig() UploadConfig {
 	return UploadConfig{
 		AllowedTypes: []string{
@@ -333,15 +342,18 @@ func GetAvatarUploadConfig() UploadConfig {
 			".heif",
 			".avif",
 		},
-		FolderName:  "sigma-asset/avatars",
-		InputName:   "avatar",
-		MaxFiles:    1,
-		MaxFileSize: 5 * 1024 * 1024, // 5MB
-		Overwrite:   true,
+		FolderName:           "sigma-asset/avatars",
+		InputName:            "avatar",
+		MaxFiles:             1,
+		MaxFileSize:          5 * 1024 * 1024, // 5MB
+		Overwrite:            true,
+		EagerTransformations: "f_webp,q_auto", // Convert to WebP + auto quality
 	}
 }
 
 // GetDataMatrixImageUploadConfig returns a pre-configured upload config for asset data matrix images
+// * Eager transformations: optimize PNG for QR/barcode readability
+// * PNG format better for barcodes/QR codes than WebP
 func GetDataMatrixImageUploadConfig() UploadConfig {
 	return UploadConfig{
 		AllowedTypes: []string{
@@ -356,15 +368,17 @@ func GetDataMatrixImageUploadConfig() UploadConfig {
 			".svg",
 			".avif",
 		},
-		FolderName:  "sigma-asset/datamatrix",
-		InputName:   "dataMatrixImage",
-		MaxFiles:    1,
-		MaxFileSize: 2 * 1024 * 1024, // 2MB
-		Overwrite:   true,
+		FolderName:           "sigma-asset/datamatrix",
+		InputName:            "dataMatrixImage",
+		MaxFiles:             1,
+		MaxFileSize:          2 * 1024 * 1024, // 2MB
+		Overwrite:            true,
+		EagerTransformations: "f_png,q_auto:best", // Keep PNG for barcode clarity + best quality compression
 	}
 }
 
 // GetBulkDataMatrixImageUploadConfig returns a pre-configured upload config for bulk data matrix images
+// * Eager transformations: optimize PNG for QR/barcode readability in bulk
 func GetBulkDataMatrixImageUploadConfig() UploadConfig {
 	return UploadConfig{
 		AllowedTypes: []string{
@@ -379,15 +393,18 @@ func GetBulkDataMatrixImageUploadConfig() UploadConfig {
 			".svg",
 			".avif",
 		},
-		FolderName:  "sigma-asset/datamatrix",
-		InputName:   "dataMatrixImages",
-		MaxFiles:    0,                // No limit for bulk upload
-		MaxFileSize: 10 * 1024 * 1024, // 10MB per file
-		Overwrite:   true,
+		FolderName:           "sigma-asset/datamatrix",
+		InputName:            "dataMatrixImages",
+		MaxFiles:             0,                // No limit for bulk upload
+		MaxFileSize:          10 * 1024 * 1024, // 10MB per file
+		Overwrite:            true,
+		EagerTransformations: "f_png,q_auto:best", // Keep PNG for barcode clarity
 	}
 }
 
 // GetDocumentUploadConfig returns a pre-configured upload config for documents
+// * Eager transformations: auto format + quality for non-PDF images
+// * PDFs remain unchanged, images converted to WebP
 func GetDocumentUploadConfig() UploadConfig {
 	return UploadConfig{
 		AllowedTypes: []string{
@@ -401,15 +418,18 @@ func GetDocumentUploadConfig() UploadConfig {
 			".tif",
 			".bmp",
 		},
-		FolderName:  "sigma-asset/documents",
-		InputName:   "documents",
-		MaxFiles:    10,
-		MaxFileSize: 10 * 1024 * 1024, // 10MB
-		Overwrite:   false,
+		FolderName:           "sigma-asset/documents",
+		InputName:            "documents",
+		MaxFiles:             10,
+		MaxFileSize:          10 * 1024 * 1024, // 10MB
+		Overwrite:            false,
+		EagerTransformations: "f_auto,q_auto", // Auto format + quality for images
 	}
 }
 
 // GetCategoryImageUploadConfig returns a pre-configured upload config for category images
+// * Eager transformations: resize to max 800px + WebP + auto quality
+// * Reduces storage & bandwidth usage on free tier
 func GetCategoryImageUploadConfig() UploadConfig {
 	return UploadConfig{
 		AllowedTypes: []string{
@@ -419,15 +439,18 @@ func GetCategoryImageUploadConfig() UploadConfig {
 			".gif",
 			".webp",
 		},
-		FolderName:  "sigma-asset/categories",
-		InputName:   "image",
-		MaxFiles:    1,
-		MaxFileSize: 5 * 1024 * 1024, // 5MB
-		Overwrite:   false,
+		FolderName:           "sigma-asset/categories",
+		InputName:            "image",
+		MaxFiles:             1,
+		MaxFileSize:          5 * 1024 * 1024, // 5MB
+		Overwrite:            false,
+		EagerTransformations: "w_800,c_limit/f_webp,q_auto", // Resize max 800px + WebP + auto quality
 	}
 }
 
 // GetAssetImageUploadConfig returns a pre-configured upload config for asset images
+// * Eager transformations: resize to max 1920px + WebP + auto quality
+// * Optimizes for display while reducing storage costs
 func GetAssetImageUploadConfig() UploadConfig {
 	return UploadConfig{
 		AllowedTypes: []string{
@@ -437,11 +460,12 @@ func GetAssetImageUploadConfig() UploadConfig {
 			".gif",
 			".webp",
 		},
-		FolderName:  "sigma-asset/assets",
-		InputName:   "images",
-		MaxFiles:    10, // Allow up to 10 images per asset
-		MaxFileSize: 10 * 1024 * 1024, // 10MB per image
-		Overwrite:   false,
+		FolderName:           "sigma-asset/assets",
+		InputName:            "images",
+		MaxFiles:             10,               // Allow up to 10 images per asset
+		MaxFileSize:          10 * 1024 * 1024, // 10MB per image
+		Overwrite:            false,
+		EagerTransformations: "w_1920,c_limit/f_webp,q_auto", // Resize max 1920px + WebP + auto quality
 	}
 }
 
