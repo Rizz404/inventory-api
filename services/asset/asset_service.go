@@ -237,8 +237,8 @@ func (s *Service) CreateAsset(ctx context.Context, payload *domain.CreateAssetPa
 		go s.sendAssetAssignmentNotification(context.Background(), &createdAsset, *payload.AssignedTo, true)
 	}
 
-	// * Send notification if asset is high-value
-	if payload.PurchasePrice != nil && *payload.PurchasePrice > 10000 {
+	// * Send notification if asset is high-value (> 10 million IDR)
+	if payload.PurchasePrice != nil && *payload.PurchasePrice > 10000000 {
 		go s.sendHighValueAssetNotificationToAdmins(context.Background(), &createdAsset)
 	}
 
@@ -355,7 +355,7 @@ func (s *Service) BulkCreateAssets(ctx context.Context, payload *domain.BulkCrea
 			go s.sendAssetAssignmentNotification(context.Background(), &createdAssets[i], *payload.Assets[i].AssignedTo, true)
 		}
 
-		if payload.Assets[i].PurchasePrice != nil && *payload.Assets[i].PurchasePrice > 10000 {
+		if payload.Assets[i].PurchasePrice != nil && *payload.Assets[i].PurchasePrice > 10000000 {
 			go s.sendHighValueAssetNotificationToAdmins(context.Background(), &createdAssets[i])
 		}
 	}
@@ -1507,10 +1507,11 @@ func (s *Service) sendHighValueAssetNotification(ctx context.Context, asset *dom
 
 	assetIdStr := asset.ID
 
-	// Format purchase price
+	// Format purchase price with thousand separators (Rupiah style)
 	value := "N/A"
 	if asset.PurchasePrice != nil {
-		value = fmt.Sprintf("%.2f", *asset.PurchasePrice)
+		price := *asset.PurchasePrice
+		value = formatRupiah(price)
 	}
 
 	titleKey, messageKey, params := messages.AssetHighValueNotification(asset.AssetName, asset.AssetTag, value)
@@ -1585,4 +1586,34 @@ func (s *Service) sendHighValueAssetNotificationToAdmins(ctx context.Context, as
 	}
 
 	log.Printf("Successfully sent high-value asset notification to %d admin(s) for asset ID: %s", len(admins), asset.ID)
+}
+
+// formatRupiah formats a float64 value with thousand separators (dots) for Rupiah currency
+func formatRupiah(amount float64) string {
+	// Convert to integer (Rupiah has no decimal places)
+	intAmount := int64(amount)
+
+	// Handle negative numbers
+	negative := intAmount < 0
+	if negative {
+		intAmount = -intAmount
+	}
+
+	// Convert to string
+	str := fmt.Sprintf("%d", intAmount)
+
+	// Add thousand separators (dots)
+	var result strings.Builder
+	n := len(str)
+	for i, digit := range str {
+		if i > 0 && (n-i)%3 == 0 {
+			result.WriteString(".")
+		}
+		result.WriteRune(digit)
+	}
+
+	if negative {
+		return "-" + result.String()
+	}
+	return result.String()
 }
