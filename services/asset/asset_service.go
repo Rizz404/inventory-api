@@ -518,7 +518,25 @@ func (s *Service) UpdateAsset(ctx context.Context, assetId string, payload *doma
 }
 
 func (s *Service) DeleteAsset(ctx context.Context, assetId string) error {
-	err := s.Repo.DeleteAsset(ctx, assetId)
+	// * Get asset data to retrieve data matrix image URL
+	asset, err := s.Repo.GetAssetById(ctx, assetId)
+	if err != nil {
+		return err
+	}
+
+	// * Delete data matrix image from Cloudinary if exists
+	if asset.DataMatrixImageUrl != "" && s.CloudinaryClient != nil {
+		publicID := cloudinary.ExtractPublicIDFromURL(asset.DataMatrixImageUrl)
+		if publicID != "" {
+			if err := s.CloudinaryClient.DeleteFile(ctx, publicID); err != nil {
+				log.Printf("Warning: Failed to delete data matrix image from Cloudinary for asset %s: %v", assetId, err)
+				// * Continue with asset deletion even if Cloudinary deletion fails
+			}
+		}
+	}
+
+	// * Delete asset from database
+	err = s.Repo.DeleteAsset(ctx, assetId)
 	if err != nil {
 		return err
 	}
@@ -529,6 +547,37 @@ func (s *Service) BulkDeleteAssets(ctx context.Context, payload *domain.BulkDele
 	// * Validate that IDs are provided
 	if len(payload.IDS) == 0 {
 		return domain.BulkDeleteAssetsResponse{}, domain.ErrBadRequestWithKey(utils.ErrAssetIDRequiredKey)
+	}
+
+	// * Get assets data to retrieve data matrix image URLs before deletion
+	if s.CloudinaryClient != nil {
+		publicIDsToDelete := []string{}
+		for _, assetId := range payload.IDS {
+			asset, err := s.Repo.GetAssetById(ctx, assetId)
+			if err != nil {
+				// * Asset might not exist, skip
+				continue
+			}
+			if asset.DataMatrixImageUrl != "" {
+				publicID := cloudinary.ExtractPublicIDFromURL(asset.DataMatrixImageUrl)
+				if publicID != "" {
+					publicIDsToDelete = append(publicIDsToDelete, publicID)
+				}
+			}
+		}
+
+		// * Delete data matrix images from Cloudinary in batch
+		if len(publicIDsToDelete) > 0 {
+			deletedCount, failedIDs, err := s.CloudinaryClient.DeleteMultipleFiles(ctx, publicIDsToDelete)
+			if err != nil {
+				log.Printf("Warning: Failed to delete some data matrix images from Cloudinary: %v", err)
+			}
+			if len(failedIDs) > 0 {
+				log.Printf("Warning: Failed to delete %d data matrix images from Cloudinary: %v", len(failedIDs), failedIDs)
+			}
+			log.Printf("Successfully deleted %d data matrix images from Cloudinary", deletedCount)
+			// * Continue with asset deletion even if some Cloudinary deletions fail
+		}
 	}
 
 	// * Perform bulk delete operation
