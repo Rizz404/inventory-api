@@ -48,9 +48,11 @@ const (
 	ErrAssetDataMatrixExistsKey     MessageKey = "error.asset.datamatrix_exists"
 	ErrAssetSerialNumberExistsKey   MessageKey = "error.asset.serial_number_exists"
 	ErrAssetIDRequiredKey           MessageKey = "error.asset.id_required"
-	ErrAssetTagRequiredKey          MessageKey = "error.asset.tag_required"
-	ErrAssetDataMatrixRequiredKey   MessageKey = "error.asset.datamatrix_required"
-	ErrAssetSerialNumberRequiredKey MessageKey = "error.asset.serial_number_required"
+	ErrAssetTagRequiredKey                         MessageKey = "error.asset.tag_required"
+	ErrAssetDataMatrixRequiredKey                  MessageKey = "error.asset.datamatrix_required"
+	ErrAssetSerialNumberRequiredKey                MessageKey = "error.asset.serial_number_required"
+	ErrAssetTagRequiredWhenCategoryChangesKey      MessageKey = "error.asset.tag_required_when_category_changes"
+	ErrDataMatrixRequiredWhenCategoryChangesKey    MessageKey = "error.asset.datamatrix_required_when_category_changes"
 
 	// * Scan log-specific error keys
 	ErrScanLogNotFoundKey   MessageKey = "error.scan_log.not_found"
@@ -623,6 +625,16 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "Serial number is required",
 		"id-ID": "Nomor seri diperlukan",
 		"ja-JP": "シリアル番号が必要です",
+	},
+	ErrAssetTagRequiredWhenCategoryChangesKey: {
+		"en-US": "Asset tag must be provided when changing category",
+		"id-ID": "Tag aset harus disediakan saat mengubah kategori",
+		"ja-JP": "カテゴリを変更する際はアセットタグを提供する必要があります",
+	},
+	ErrDataMatrixRequiredWhenCategoryChangesKey: {
+		"en-US": "Data matrix image must be provided when changing category",
+		"id-ID": "Gambar data matrix harus disediakan saat mengubah kategori",
+		"ja-JP": "カテゴリを変更する際はデータマトリックス画像を提供する必要があります",
 	},
 
 	// * Scan log-specific error messages
