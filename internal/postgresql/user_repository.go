@@ -558,9 +558,9 @@ func (r *UserRepository) GetUserPersonalStatistics(ctx context.Context, userId s
 			a.id as asset_id,
 			a.asset_tag,
 			a.asset_name,
-			ct.category_name,
+			COALESCE(ct.category_name, '') as category_name,
 			a.condition_status,
-			a.purchase_price,
+			COALESCE(a.purchase_price, 0) as purchase_price,
 			a.updated_at
 		`).
 		Joins("JOIN categories c ON a.category_id = c.id").
@@ -631,7 +631,7 @@ func (r *UserRepository) GetUserPersonalStatistics(ctx context.Context, userId s
 		switch sc.Status {
 		case "Open":
 			stats.IssueReports.ByStatus.Open = int(sc.Count)
-		case "InProgress":
+		case "In Progress":
 			stats.IssueReports.ByStatus.InProgress = int(sc.Count)
 		case "Resolved":
 			stats.IssueReports.ByStatus.Resolved = int(sc.Count)
@@ -682,16 +682,16 @@ func (r *UserRepository) GetUserPersonalStatistics(ctx context.Context, userId s
 		Select(`
 			ir.id as issue_id,
 			ir.asset_id,
-			asset.asset_tag,
-			ir.title,
+			a.asset_tag,
+			COALESCE(irt.title, '') as title,
 			ir.priority,
 			ir.status,
-			ir.created_at as reported_date
+			ir.reported_date
 		`).
-		Joins("LEFT JOIN assets asset ON ir.asset_id = asset.id").
+		Joins("LEFT JOIN assets a ON ir.asset_id = a.id").
+		Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id AND irt.lang_code = ?", user.PreferredLang).
 		Where("ir.reported_by = ?", userId).
-		Where("ir.deleted_at IS NULL").
-		Order("ir.created_at DESC").
+		Order("ir.reported_date DESC").
 		Limit(10).
 		Find(&recentIssues).Error
 
@@ -720,10 +720,10 @@ func (r *UserRepository) GetUserPersonalStatistics(ctx context.Context, userId s
 	var avgResolutionDays float64
 	if err := r.db.WithContext(ctx).
 		Model(&model.IssueReport{}).
-		Select("AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))/86400) as avg_days").
+		Select("AVG(EXTRACT(EPOCH FROM (resolved_date - reported_date))/86400) as avg_days").
 		Where("reported_by = ?", userId).
 		Where("status IN ?", []string{"Resolved", "Closed"}).
-		Where("resolved_at IS NOT NULL").
+		Where("resolved_date IS NOT NULL").
 		Scan(&avgResolutionDays).Error; err != nil {
 		// Non-critical, continue
 		avgResolutionDays = 0
