@@ -566,7 +566,6 @@ func (r *UserRepository) GetUserPersonalStatistics(ctx context.Context, userId s
 		Joins("JOIN categories c ON a.category_id = c.id").
 		Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.lang_code = ?", user.PreferredLang).
 		Where("a.assigned_to = ?", userId).
-		Where("a.deleted_at IS NULL").
 		Find(&assetItems).Error
 
 	if err != nil {
