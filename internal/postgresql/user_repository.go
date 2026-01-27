@@ -557,9 +557,9 @@ func (r *UserRepository) GetUserPersonalStatistics(ctx context.Context, userId s
 		Select(`
 			a.id as asset_id,
 			a.asset_tag,
-			a.name,
+			a.asset_name as name,
 			c.name as category_name,
-			a.condition,
+			a.condition_status as condition,
 			a.purchase_price,
 			am.created_at as assigned_date
 		`).
@@ -671,13 +671,13 @@ func (r *UserRepository) GetUserPersonalStatistics(ctx context.Context, userId s
 
 	// Get recent issues (last 10)
 	type IssueItem struct {
-		IssueID      string     `gorm:"column:issue_id"`
-		AssetID      *string    `gorm:"column:asset_id"`
-		AssetTag     *string    `gorm:"column:asset_tag"`
-		Title        string     `gorm:"column:title"`
-		Priority     string     `gorm:"column:priority"`
-		Status       string     `gorm:"column:status"`
-		ReportedDate time.Time  `gorm:"column:reported_date"`
+		IssueID      string    `gorm:"column:issue_id"`
+		AssetID      *string   `gorm:"column:asset_id"`
+		AssetTag     *string   `gorm:"column:asset_tag"`
+		Title        string    `gorm:"column:title"`
+		Priority     string    `gorm:"column:priority"`
+		Status       string    `gorm:"column:status"`
+		ReportedDate time.Time `gorm:"column:reported_date"`
 	}
 
 	var recentIssues []IssueItem
