@@ -143,7 +143,6 @@ func main() {
 	}))
 	app.Use(helmet.New())
 	app.Use(favicon.New())
-	app.Use(logger.New())
 
 	// *===================================HEALTHCHECK===================================*
 	// Health check middleware with custom endpoints
@@ -157,6 +156,8 @@ func main() {
 		},
 		ReadinessEndpoint: "/readyz",
 	}))
+
+	app.Use(logger.New())
 
 	// *===================================ROUTES===================================*
 	app.Get("/metrics", monitor.New())

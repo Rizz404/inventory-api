@@ -686,13 +686,13 @@ func (r *UserRepository) GetUserPersonalStatistics(ctx context.Context, userId s
 		Select(`
 			ir.id as issue_id,
 			ir.asset_id,
-			a.asset_tag,
+			asset.asset_tag,
 			ir.title,
 			ir.priority,
 			ir.status,
 			ir.created_at as reported_date
 		`).
-		Joins("LEFT JOIN assets a ON ir.asset_id = a.id").
+		Joins("LEFT JOIN assets asset ON ir.asset_id = asset.id").
 		Where("ir.reported_by = ?", userId).
 		Where("ir.deleted_at IS NULL").
 		Order("ir.created_at DESC").
