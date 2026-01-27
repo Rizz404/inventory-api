@@ -139,6 +139,7 @@ const (
 	SuccessUserRetrievedByEmailKey      MessageKey = "success.user.retrieved_by_email"
 	SuccessUserCountedKey               MessageKey = "success.user.counted"
 	SuccessUserStatisticsRetrievedKey   MessageKey = "success.user.statistics_retrieved"
+	SuccessUserPersonalStatisticsRetrievedKey MessageKey = "success.user.personal_statistics_retrieved"
 	SuccessUserExistenceCheckedKey      MessageKey = "success.user.existence_checked"
 	SuccessUserNameExistenceCheckedKey  MessageKey = "success.user.name_existence_checked"
 	SuccessUserEmailExistenceCheckedKey MessageKey = "success.user.email_existence_checked"
@@ -830,6 +831,11 @@ var messageTranslations = map[MessageKey]map[string]string{
 		"en-US": "User statistics retrieved successfully",
 		"id-ID": "Statistik pengguna berhasil diambil",
 		"ja-JP": "ユーザー統計が正常に取得されました",
+	},
+	SuccessUserPersonalStatisticsRetrievedKey: {
+		"en-US": "User personal statistics retrieved successfully",
+		"id-ID": "Statistik personal pengguna berhasil diambil",
+		"ja-JP": "ユーザーの個人統計が正常に取得されました",
 	},
 
 	// * Category-specific success messages

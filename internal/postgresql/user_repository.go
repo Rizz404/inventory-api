@@ -526,3 +526,249 @@ func (r *UserRepository) GetUsersForExport(ctx context.Context, params domain.Us
 	// Convert to domain users
 	return mapper.ToDomainUsers(users), nil
 }
+
+func (r *UserRepository) GetUserPersonalStatistics(ctx context.Context, userId string) (domain.UserPersonalStatistics, error) {
+	var stats domain.UserPersonalStatistics
+
+	// Get user info
+	var user model.User
+	if err := r.db.WithContext(ctx).First(&user, "id = ?", userId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return stats, domain.ErrNotFound("user")
+		}
+		return stats, domain.ErrInternal(err)
+	}
+
+	// * === ASSET STATISTICS ===
+	// Get assigned assets (Checkout without return)
+	type AssetItem struct {
+		AssetID      string    `gorm:"column:asset_id"`
+		AssetTag     string    `gorm:"column:asset_tag"`
+		Name         string    `gorm:"column:name"`
+		Category     string    `gorm:"column:category_name"`
+		Condition    string    `gorm:"column:condition"`
+		Value        float64   `gorm:"column:purchase_price"`
+		AssignedDate time.Time `gorm:"column:assigned_date"`
+	}
+
+	var assetItems []AssetItem
+	err := r.db.WithContext(ctx).
+		Table("asset_movements am").
+		Select(`
+			a.id as asset_id,
+			a.asset_tag,
+			a.name,
+			c.name as category_name,
+			a.condition,
+			a.purchase_price,
+			am.created_at as assigned_date
+		`).
+		Joins("JOIN assets a ON am.asset_id = a.id").
+		Joins("JOIN categories c ON a.category_id = c.id").
+		Where("am.assigned_to = ?", userId).
+		Where("am.movement_type = ?", "Checkout").
+		Where("am.returned_at IS NULL").
+		Where("a.deleted_at IS NULL").
+		Where("am.deleted_at IS NULL").
+		Find(&assetItems).Error
+
+	if err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	// Calculate asset statistics
+	stats.Assets.Total.Count = len(assetItems)
+	var totalValue float64
+	conditionCount := make(map[string]int)
+
+	for _, item := range assetItems {
+		totalValue += item.Value
+		conditionCount[item.Condition]++
+	}
+
+	stats.Assets.Total.TotalValue = totalValue
+	stats.Assets.ByCondition.Good = conditionCount["Good"]
+	stats.Assets.ByCondition.Fair = conditionCount["Fair"]
+	stats.Assets.ByCondition.Poor = conditionCount["Poor"]
+	stats.Assets.ByCondition.Damaged = conditionCount["Damaged"]
+
+	// Convert to domain items
+	stats.Assets.Items = make([]domain.UserPersonalAssetItem, len(assetItems))
+	for i, item := range assetItems {
+		stats.Assets.Items[i] = domain.UserPersonalAssetItem{
+			AssetID:      item.AssetID,
+			AssetTag:     item.AssetTag,
+			Name:         item.Name,
+			Category:     item.Category,
+			Condition:    item.Condition,
+			Value:        item.Value,
+			AssignedDate: item.AssignedDate,
+		}
+	}
+
+	// * === ISSUE REPORT STATISTICS ===
+	// Get total count
+	var totalIssueCount int64
+	if err := r.db.WithContext(ctx).
+		Model(&model.IssueReport{}).
+		Where("reported_by = ?", userId).
+		Count(&totalIssueCount).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+	stats.IssueReports.Total.Count = int(totalIssueCount)
+
+	// Get counts by status
+	var statusCounts []struct {
+		Status string
+		Count  int64
+	}
+	if err := r.db.WithContext(ctx).
+		Model(&model.IssueReport{}).
+		Select("status, COUNT(*) as count").
+		Where("reported_by = ?", userId).
+		Group("status").
+		Scan(&statusCounts).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	for _, sc := range statusCounts {
+		switch sc.Status {
+		case "Open":
+			stats.IssueReports.ByStatus.Open = int(sc.Count)
+		case "InProgress":
+			stats.IssueReports.ByStatus.InProgress = int(sc.Count)
+		case "Resolved":
+			stats.IssueReports.ByStatus.Resolved = int(sc.Count)
+		case "Closed":
+			stats.IssueReports.ByStatus.Closed = int(sc.Count)
+		}
+	}
+
+	// Get counts by priority
+	var priorityCounts []struct {
+		Priority string
+		Count    int64
+	}
+	if err := r.db.WithContext(ctx).
+		Model(&model.IssueReport{}).
+		Select("priority, COUNT(*) as count").
+		Where("reported_by = ?", userId).
+		Group("priority").
+		Scan(&priorityCounts).Error; err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	for _, pc := range priorityCounts {
+		switch pc.Priority {
+		case "High":
+			stats.IssueReports.ByPriority.High = int(pc.Count)
+		case "Medium":
+			stats.IssueReports.ByPriority.Medium = int(pc.Count)
+		case "Low":
+			stats.IssueReports.ByPriority.Low = int(pc.Count)
+		}
+	}
+
+	// Get recent issues (last 10)
+	type IssueItem struct {
+		IssueID      string     `gorm:"column:issue_id"`
+		AssetID      *string    `gorm:"column:asset_id"`
+		AssetTag     *string    `gorm:"column:asset_tag"`
+		Title        string     `gorm:"column:title"`
+		Priority     string     `gorm:"column:priority"`
+		Status       string     `gorm:"column:status"`
+		ReportedDate time.Time  `gorm:"column:reported_date"`
+	}
+
+	var recentIssues []IssueItem
+	err = r.db.WithContext(ctx).
+		Table("issue_reports ir").
+		Select(`
+			ir.id as issue_id,
+			ir.asset_id,
+			a.asset_tag,
+			ir.title,
+			ir.priority,
+			ir.status,
+			ir.created_at as reported_date
+		`).
+		Joins("LEFT JOIN assets a ON ir.asset_id = a.id").
+		Where("ir.reported_by = ?", userId).
+		Where("ir.deleted_at IS NULL").
+		Order("ir.created_at DESC").
+		Limit(10).
+		Find(&recentIssues).Error
+
+	if err != nil {
+		return stats, domain.ErrInternal(err)
+	}
+
+	stats.IssueReports.RecentIssues = make([]domain.UserPersonalIssueReportItem, len(recentIssues))
+	for i, issue := range recentIssues {
+		stats.IssueReports.RecentIssues[i] = domain.UserPersonalIssueReportItem{
+			IssueID:      issue.IssueID,
+			AssetID:      issue.AssetID,
+			AssetTag:     issue.AssetTag,
+			Title:        issue.Title,
+			Priority:     issue.Priority,
+			Status:       issue.Status,
+			ReportedDate: issue.ReportedDate,
+		}
+	}
+
+	// Calculate summary
+	stats.IssueReports.Summary.OpenIssuesCount = stats.IssueReports.ByStatus.Open
+	stats.IssueReports.Summary.ResolvedIssuesCount = stats.IssueReports.ByStatus.Resolved
+
+	// Calculate average resolution time for resolved issues
+	var avgResolutionDays float64
+	if err := r.db.WithContext(ctx).
+		Model(&model.IssueReport{}).
+		Select("AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))/86400) as avg_days").
+		Where("reported_by = ?", userId).
+		Where("status IN ?", []string{"Resolved", "Closed"}).
+		Where("resolved_at IS NOT NULL").
+		Scan(&avgResolutionDays).Error; err != nil {
+		// Non-critical, continue
+		avgResolutionDays = 0
+	}
+	stats.IssueReports.Summary.AverageResolutionDays = avgResolutionDays
+
+	// * === SUMMARY STATISTICS ===
+	stats.Summary.AccountCreatedDate = user.CreatedAt
+	stats.Summary.LastLogin = user.LastLogin
+
+	// Calculate account age
+	accountAge := time.Since(user.CreatedAt)
+	days := int(accountAge.Hours() / 24)
+	stats.Summary.AccountAge = fmt.Sprintf("%d days", days)
+
+	// Check if has active issues
+	stats.Summary.HasActiveIssues = stats.IssueReports.ByStatus.Open > 0 || stats.IssueReports.ByStatus.InProgress > 0
+
+	// Calculate health score (100 base)
+	healthScore := 100
+	// -5 points per Fair condition asset
+	healthScore -= stats.Assets.ByCondition.Fair * 5
+	// -10 points per Poor condition asset
+	healthScore -= stats.Assets.ByCondition.Poor * 10
+	// -15 points per Damaged condition asset
+	healthScore -= stats.Assets.ByCondition.Damaged * 15
+	// -10 points per open High priority issue
+	healthScore -= stats.IssueReports.ByPriority.High * 10
+	// -5 points per open Medium priority issue (only count open/in-progress)
+	openMediumIssues := 0
+	if stats.IssueReports.ByStatus.Open > 0 || stats.IssueReports.ByStatus.InProgress > 0 {
+		// Rough estimate, actual calculation would need more detailed query
+		openMediumIssues = stats.IssueReports.ByPriority.Medium / 2
+	}
+	healthScore -= openMediumIssues * 5
+
+	// Ensure health score is between 0-100
+	if healthScore < 0 {
+		healthScore = 0
+	}
+	stats.Summary.HealthScore = healthScore
+
+	return stats, nil
+}

@@ -295,3 +295,179 @@ type UserSummaryStatisticsResponse struct {
 	LatestRegistrationDate   time.Time `json:"latestRegistrationDate"`
 	EarliestRegistrationDate time.Time `json:"earliestRegistrationDate"`
 }
+
+// --- Personal Statistics (Employee only) ---
+
+// Internal personal statistics structs (used in repository layer)
+type UserPersonalStatistics struct {
+	UserID       string                                `json:"userId"`
+	UserName     string                                `json:"userName"`
+	Role         UserRole                              `json:"role"`
+	Assets       UserPersonalAssetStatistics           `json:"assets"`
+	IssueReports UserPersonalIssueReportStatistics     `json:"issueReports"`
+	Summary      UserPersonalSummaryStatistics         `json:"summary"`
+}
+
+type UserPersonalAssetStatistics struct {
+	Total       UserPersonalAssetTotalStatistics      `json:"total"`
+	ByCondition UserPersonalAssetConditionStatistics   `json:"byCondition"`
+	Items       []UserPersonalAssetItem                `json:"items"`
+}
+
+type UserPersonalAssetTotalStatistics struct {
+	Count      int     `json:"count"`
+	TotalValue float64 `json:"totalValue"`
+}
+
+type UserPersonalAssetConditionStatistics struct {
+	Good    int `json:"good"`
+	Fair    int `json:"fair"`
+	Poor    int `json:"poor"`
+	Damaged int `json:"damaged"`
+}
+
+type UserPersonalAssetItem struct {
+	AssetID      string    `json:"assetId"`
+	AssetTag     string    `json:"assetTag"`
+	Name         string    `json:"name"`
+	Category     string    `json:"category"`
+	Condition    string    `json:"condition"`
+	Value        float64   `json:"value"`
+	AssignedDate time.Time `json:"assignedDate"`
+}
+
+type UserPersonalIssueReportStatistics struct {
+	Total         UserPersonalIssueReportTotalStatistics    `json:"total"`
+	ByStatus      UserPersonalIssueReportStatusStatistics   `json:"byStatus"`
+	ByPriority    UserPersonalIssueReportPriorityStatistics `json:"byPriority"`
+	RecentIssues  []UserPersonalIssueReportItem             `json:"recentIssues"`
+	Summary       UserPersonalIssueReportSummaryStatistics  `json:"summary"`
+}
+
+type UserPersonalIssueReportTotalStatistics struct {
+	Count int `json:"count"`
+}
+
+type UserPersonalIssueReportStatusStatistics struct {
+	Open       int `json:"open"`
+	InProgress int `json:"inProgress"`
+	Resolved   int `json:"resolved"`
+	Closed     int `json:"closed"`
+}
+
+type UserPersonalIssueReportPriorityStatistics struct {
+	High   int `json:"high"`
+	Medium int `json:"medium"`
+	Low    int `json:"low"`
+}
+
+type UserPersonalIssueReportItem struct {
+	IssueID      string    `json:"issueId"`
+	AssetID      *string   `json:"assetId"`
+	AssetTag     *string   `json:"assetTag"`
+	Title        string    `json:"title"`
+	Priority     string    `json:"priority"`
+	Status       string    `json:"status"`
+	ReportedDate time.Time `json:"reportedDate"`
+}
+
+type UserPersonalIssueReportSummaryStatistics struct {
+	OpenIssuesCount         int     `json:"openIssuesCount"`
+	ResolvedIssuesCount     int     `json:"resolvedIssuesCount"`
+	AverageResolutionDays   float64 `json:"averageResolutionDays"`
+}
+
+type UserPersonalSummaryStatistics struct {
+	AccountCreatedDate time.Time  `json:"accountCreatedDate"`
+	AccountAge         string     `json:"accountAge"`
+	LastLogin          *time.Time `json:"lastLogin"`
+	HasActiveIssues    bool       `json:"hasActiveIssues"`
+	HealthScore        int        `json:"healthScore"`
+}
+
+// Response personal statistics structs (used in service/handler layer)
+type UserPersonalStatisticsResponse struct {
+	UserID       string                                        `json:"userId"`
+	UserName     string                                        `json:"userName"`
+	Role         UserRole                                      `json:"role"`
+	Assets       UserPersonalAssetStatisticsResponse           `json:"assets"`
+	IssueReports UserPersonalIssueReportStatisticsResponse     `json:"issueReports"`
+	Summary      UserPersonalSummaryStatisticsResponse         `json:"summary"`
+}
+
+type UserPersonalAssetStatisticsResponse struct {
+	Total       UserPersonalAssetTotalStatisticsResponse      `json:"total"`
+	ByCondition UserPersonalAssetConditionStatisticsResponse   `json:"byCondition"`
+	Items       []UserPersonalAssetItemResponse                `json:"items"`
+}
+
+type UserPersonalAssetTotalStatisticsResponse struct {
+	Count      int      `json:"count"`
+	TotalValue Decimal2 `json:"totalValue"`
+}
+
+type UserPersonalAssetConditionStatisticsResponse struct {
+	Good    int `json:"good"`
+	Fair    int `json:"fair"`
+	Poor    int `json:"poor"`
+	Damaged int `json:"damaged"`
+}
+
+type UserPersonalAssetItemResponse struct {
+	AssetID      string    `json:"assetId"`
+	AssetTag     string    `json:"assetTag"`
+	Name         string    `json:"name"`
+	Category     string    `json:"category"`
+	Condition    string    `json:"condition"`
+	Value        Decimal2  `json:"value"`
+	AssignedDate time.Time `json:"assignedDate"`
+}
+
+type UserPersonalIssueReportStatisticsResponse struct {
+	Total         UserPersonalIssueReportTotalStatisticsResponse    `json:"total"`
+	ByStatus      UserPersonalIssueReportStatusStatisticsResponse   `json:"byStatus"`
+	ByPriority    UserPersonalIssueReportPriorityStatisticsResponse `json:"byPriority"`
+	RecentIssues  []UserPersonalIssueReportItemResponse             `json:"recentIssues"`
+	Summary       UserPersonalIssueReportSummaryStatisticsResponse  `json:"summary"`
+}
+
+type UserPersonalIssueReportTotalStatisticsResponse struct {
+	Count int `json:"count"`
+}
+
+type UserPersonalIssueReportStatusStatisticsResponse struct {
+	Open       int `json:"open"`
+	InProgress int `json:"inProgress"`
+	Resolved   int `json:"resolved"`
+	Closed     int `json:"closed"`
+}
+
+type UserPersonalIssueReportPriorityStatisticsResponse struct {
+	High   int `json:"high"`
+	Medium int `json:"medium"`
+	Low    int `json:"low"`
+}
+
+type UserPersonalIssueReportItemResponse struct {
+	IssueID      string    `json:"issueId"`
+	AssetID      *string   `json:"assetId"`
+	AssetTag     *string   `json:"assetTag"`
+	Title        string    `json:"title"`
+	Priority     string    `json:"priority"`
+	Status       string    `json:"status"`
+	ReportedDate time.Time `json:"reportedDate"`
+}
+
+type UserPersonalIssueReportSummaryStatisticsResponse struct {
+	OpenIssuesCount         int      `json:"openIssuesCount"`
+	ResolvedIssuesCount     int      `json:"resolvedIssuesCount"`
+	AverageResolutionDays   Decimal2 `json:"averageResolutionDays"`
+}
+
+type UserPersonalSummaryStatisticsResponse struct {
+	AccountCreatedDate time.Time  `json:"accountCreatedDate"`
+	AccountAge         string     `json:"accountAge"`
+	LastLogin          *time.Time `json:"lastLogin"`
+	HasActiveIssues    bool       `json:"hasActiveIssues"`
+	HealthScore        int        `json:"healthScore"`
+}

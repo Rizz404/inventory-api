@@ -47,6 +47,7 @@ func NewUserHandler(app fiber.Router, s user.UserService) {
 	users.Get("/cursor", handler.GetUsersCursor)
 	users.Get("/count", handler.CountUsers)
 	users.Get("/profile", middleware.AuthMiddleware(), handler.GetCurrentUser)
+	users.Get("/profile/statistics", middleware.AuthMiddleware(), handler.GetCurrentUserPersonalStatistics)
 	users.Patch("/profile", middleware.AuthMiddleware(), handler.UpdateCurrentUser)
 	users.Patch("/profile/password", middleware.AuthMiddleware(), handler.ChangeCurrentUserPassword)
 	users.Get("/name/:name", handler.GetUserByName)
@@ -476,6 +477,20 @@ func (h *UserHandler) GetUserStatistics(c *fiber.Ctx) error {
 	}
 
 	return web.Success(c, fiber.StatusOK, utils.SuccessUserStatisticsRetrievedKey, stats)
+}
+
+func (h *UserHandler) GetCurrentUserPersonalStatistics(c *fiber.Ctx) error {
+	id, ok := web.GetUserIDFromContext(c)
+	if !ok {
+		return web.HandleError(c, domain.ErrBadRequestWithKey(utils.ErrUserIDRequiredKey))
+	}
+
+	stats, err := h.Service.GetUserPersonalStatistics(c.Context(), id)
+	if err != nil {
+		return web.HandleError(c, err)
+	}
+
+	return web.Success(c, fiber.StatusOK, utils.SuccessUserPersonalStatisticsRetrievedKey, stats)
 }
 
 // *===========================EXPORT===========================*

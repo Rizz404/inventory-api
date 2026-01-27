@@ -170,6 +170,84 @@ func StatisticsToResponse(stats *domain.UserStatistics) domain.UserStatisticsRes
 	}
 }
 
+func PersonalStatisticsToResponse(stats *domain.UserPersonalStatistics) domain.UserPersonalStatisticsResponse {
+	// Convert asset items
+	assetItems := make([]domain.UserPersonalAssetItemResponse, len(stats.Assets.Items))
+	for i, item := range stats.Assets.Items {
+		assetItems[i] = domain.UserPersonalAssetItemResponse{
+			AssetID:      item.AssetID,
+			AssetTag:     item.AssetTag,
+			Name:         item.Name,
+			Category:     item.Category,
+			Condition:    item.Condition,
+			Value:        domain.NewDecimal2(item.Value),
+			AssignedDate: item.AssignedDate,
+		}
+	}
+
+	// Convert issue report items
+	issueItems := make([]domain.UserPersonalIssueReportItemResponse, len(stats.IssueReports.RecentIssues))
+	for i, item := range stats.IssueReports.RecentIssues {
+		issueItems[i] = domain.UserPersonalIssueReportItemResponse{
+			IssueID:      item.IssueID,
+			AssetID:      item.AssetID,
+			AssetTag:     item.AssetTag,
+			Title:        item.Title,
+			Priority:     item.Priority,
+			Status:       item.Status,
+			ReportedDate: item.ReportedDate,
+		}
+	}
+
+	return domain.UserPersonalStatisticsResponse{
+		UserID:   stats.UserID,
+		UserName: stats.UserName,
+		Role:     stats.Role,
+		Assets: domain.UserPersonalAssetStatisticsResponse{
+			Total: domain.UserPersonalAssetTotalStatisticsResponse{
+				Count:      stats.Assets.Total.Count,
+				TotalValue: domain.NewDecimal2(stats.Assets.Total.TotalValue),
+			},
+			ByCondition: domain.UserPersonalAssetConditionStatisticsResponse{
+				Good:    stats.Assets.ByCondition.Good,
+				Fair:    stats.Assets.ByCondition.Fair,
+				Poor:    stats.Assets.ByCondition.Poor,
+				Damaged: stats.Assets.ByCondition.Damaged,
+			},
+			Items: assetItems,
+		},
+		IssueReports: domain.UserPersonalIssueReportStatisticsResponse{
+			Total: domain.UserPersonalIssueReportTotalStatisticsResponse{
+				Count: stats.IssueReports.Total.Count,
+			},
+			ByStatus: domain.UserPersonalIssueReportStatusStatisticsResponse{
+				Open:       stats.IssueReports.ByStatus.Open,
+				InProgress: stats.IssueReports.ByStatus.InProgress,
+				Resolved:   stats.IssueReports.ByStatus.Resolved,
+				Closed:     stats.IssueReports.ByStatus.Closed,
+			},
+			ByPriority: domain.UserPersonalIssueReportPriorityStatisticsResponse{
+				High:   stats.IssueReports.ByPriority.High,
+				Medium: stats.IssueReports.ByPriority.Medium,
+				Low:    stats.IssueReports.ByPriority.Low,
+			},
+			RecentIssues: issueItems,
+			Summary: domain.UserPersonalIssueReportSummaryStatisticsResponse{
+				OpenIssuesCount:         stats.IssueReports.Summary.OpenIssuesCount,
+				ResolvedIssuesCount:     stats.IssueReports.Summary.ResolvedIssuesCount,
+				AverageResolutionDays:   domain.NewDecimal2(stats.IssueReports.Summary.AverageResolutionDays),
+			},
+		},
+		Summary: domain.UserPersonalSummaryStatisticsResponse{
+			AccountCreatedDate: stats.Summary.AccountCreatedDate,
+			AccountAge:         stats.Summary.AccountAge,
+			LastLogin:          stats.Summary.LastLogin,
+			HasActiveIssues:    stats.Summary.HasActiveIssues,
+			HealthScore:        stats.Summary.HealthScore,
+		},
+	}
+}
+
 // *==================== Update Map conversions (Harus snake case karena untuk database) ====================
 func ToModelUserUpdateMap(payload *domain.UpdateUserPayload) map[string]any {
 	updates := make(map[string]any)

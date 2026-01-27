@@ -35,6 +35,7 @@ type Repository interface {
 	CheckEmailExistsExcluding(ctx context.Context, email string, excludeUserId string) (bool, error)
 	CountUsers(ctx context.Context, params domain.UserParams) (int64, error)
 	GetUserStatistics(ctx context.Context) (domain.UserStatistics, error)
+	GetUserPersonalStatistics(ctx context.Context, userId string) (domain.UserPersonalStatistics, error)
 
 	// * Export
 	GetUsersForExport(ctx context.Context, params domain.UserParams) ([]domain.User, error)
@@ -62,6 +63,7 @@ type UserService interface {
 	CheckEmailExists(ctx context.Context, email string) (bool, error)
 	CountUsers(ctx context.Context, params domain.UserParams) (int64, error)
 	GetUserStatistics(ctx context.Context) (domain.UserStatisticsResponse, error)
+	GetUserPersonalStatistics(ctx context.Context, userId string) (domain.UserPersonalStatisticsResponse, error)
 
 	// * Export
 	ExportUserList(ctx context.Context, payload domain.ExportUserListPayload, params domain.UserParams, langCode string) ([]byte, string, error)
@@ -518,4 +520,26 @@ func (s *Service) GetUserStatistics(ctx context.Context) (domain.UserStatisticsR
 
 	// Convert to UserStatisticsResponse using mapper
 	return mapper.StatisticsToResponse(&stats), nil
+}
+
+func (s *Service) GetUserPersonalStatistics(ctx context.Context, userId string) (domain.UserPersonalStatisticsResponse, error) {
+	// Verify user exists
+	user, err := s.Repo.GetUserById(ctx, userId)
+	if err != nil {
+		return domain.UserPersonalStatisticsResponse{}, err
+	}
+
+	// Get personal statistics
+	stats, err := s.Repo.GetUserPersonalStatistics(ctx, userId)
+	if err != nil {
+		return domain.UserPersonalStatisticsResponse{}, err
+	}
+
+	// Set user info
+	stats.UserID = user.ID
+	stats.UserName = user.Name
+	stats.Role = user.Role
+
+	// Convert to response using mapper
+	return mapper.PersonalStatisticsToResponse(&stats), nil
 }
