@@ -19,7 +19,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -tags netgo -ldflags '-s -w' -o /app/seede
 FROM alpine:latest
 # Install ca-certificates & tzdata (PENTING untuk API calls & Timezone Indonesia)
 # Install wget untuk healthcheck
-RUN apk --no-cache add ca-certificates tzdata wget
+RUN apk --no-cache add ca-certificates tzdata wget curl
 WORKDIR /root/
 
 # Set timezone ke WIB (Jakarta)
