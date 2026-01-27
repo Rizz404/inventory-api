@@ -15,6 +15,14 @@ const (
 
 // APIKeyMiddleware validates API key for mobile client access
 func APIKeyMiddleware() fiber.Handler {
+	environment := os.Getenv("ENVIRONMENT")
+	// Skip API key validation in development mode
+	if environment == "development" {
+		return func(c *fiber.Ctx) error {
+			return c.Next()
+		}
+	}
+
 	apiKey := os.Getenv("API_KEY")
 	if apiKey == "" {
 		panic("API_KEY environment variable not set")
