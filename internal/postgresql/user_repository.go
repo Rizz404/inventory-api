@@ -540,36 +540,33 @@ func (r *UserRepository) GetUserPersonalStatistics(ctx context.Context, userId s
 	}
 
 	// * === ASSET STATISTICS ===
-	// Get assigned assets (Checkout without return)
+	// Get assigned assets (directly from assets table)
 	type AssetItem struct {
 		AssetID      string    `gorm:"column:asset_id"`
 		AssetTag     string    `gorm:"column:asset_tag"`
-		Name         string    `gorm:"column:name"`
-		Category     string    `gorm:"column:category_name"`
-		Condition    string    `gorm:"column:condition"`
+		AssetName    string    `gorm:"column:asset_name"`
+		CategoryName string    `gorm:"column:category_name"`
+		Condition    string    `gorm:"column:condition_status"`
 		Value        float64   `gorm:"column:purchase_price"`
-		AssignedDate time.Time `gorm:"column:assigned_date"`
+		AssignedDate time.Time `gorm:"column:updated_at"`
 	}
 
 	var assetItems []AssetItem
 	err := r.db.WithContext(ctx).
-		Table("asset_movements am").
+		Table("assets a").
 		Select(`
 			a.id as asset_id,
 			a.asset_tag,
-			a.asset_name as name,
-			c.name as category_name,
-			a.condition_status as condition,
+			a.asset_name,
+			ct.category_name,
+			a.condition_status,
 			a.purchase_price,
-			am.created_at as assigned_date
+			a.updated_at
 		`).
-		Joins("JOIN assets a ON am.asset_id = a.id").
 		Joins("JOIN categories c ON a.category_id = c.id").
-		Where("am.assigned_to = ?", userId).
-		Where("am.movement_type = ?", "Checkout").
-		Where("am.returned_at IS NULL").
+		Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.lang_code = ?", user.PreferredLang).
+		Where("a.assigned_to = ?", userId).
 		Where("a.deleted_at IS NULL").
-		Where("am.deleted_at IS NULL").
 		Find(&assetItems).Error
 
 	if err != nil {
@@ -598,8 +595,8 @@ func (r *UserRepository) GetUserPersonalStatistics(ctx context.Context, userId s
 		stats.Assets.Items[i] = domain.UserPersonalAssetItem{
 			AssetID:      item.AssetID,
 			AssetTag:     item.AssetTag,
-			Name:         item.Name,
-			Category:     item.Category,
+			Name:         item.AssetName,
+			Category:     item.CategoryName,
 			Condition:    item.Condition,
 			Value:        item.Value,
 			AssignedDate: item.AssignedDate,
@@ -735,6 +732,11 @@ func (r *UserRepository) GetUserPersonalStatistics(ctx context.Context, userId s
 	stats.IssueReports.Summary.AverageResolutionDays = avgResolutionDays
 
 	// * === SUMMARY STATISTICS ===
+	// Set user info at root level
+	stats.UserID = user.ID.String()
+	stats.UserName = user.Name
+	stats.Role = domain.UserRole(user.Role)
+
 	stats.Summary.AccountCreatedDate = user.CreatedAt
 	stats.Summary.LastLogin = user.LastLogin
 
