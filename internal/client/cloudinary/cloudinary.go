@@ -346,7 +346,7 @@ func GetAvatarUploadConfig() UploadConfig {
 		FolderName:     "sigma-asset/avatars",
 		InputName:      "avatar",
 		MaxFiles:       1,
-		MaxFileSize:    5 * 1024 * 1024, // 5MB
+		MaxFileSize:    10 * 1024 * 1024, // 10MB
 		Overwrite:      true,
 		Transformation: "w_500,c_limit/f_webp,q_auto", // Resize max 500px + WebP + auto quality
 	}
@@ -442,7 +442,7 @@ func GetCategoryImageUploadConfig() UploadConfig {
 		FolderName:     "sigma-asset/categories",
 		InputName:      "image",
 		MaxFiles:       1,
-		MaxFileSize:    5 * 1024 * 1024, // 5MB
+		MaxFileSize:    10 * 1024 * 1024, // 10MB
 		Overwrite:      false,
 		Transformation: "w_800,c_limit/f_webp,q_auto", // Resize max 800px + WebP + auto quality
 	}
