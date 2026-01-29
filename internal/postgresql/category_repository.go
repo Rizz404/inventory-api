@@ -404,13 +404,20 @@ func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params dom
 	// Apply filters
 	db = r.applyCategoryFilters(db, params.Filters)
 
-	// Apply sorting
-	db = r.applyCategorySorts(db, params.Sort, langCode)
+	// Apply sorting - for cursor pagination, we need consistent ordering by ID
+	if params.Sort != nil && params.Sort.Field != "" {
+		db = r.applyCategorySorts(db, params.Sort, langCode)
+		// Always add secondary sort by ID DESC for consistency (ULID = newer = larger)
+		db = db.Order("c.id DESC")
+	} else {
+		// Default to ID DESC for cursor pagination (newest first)
+		db = db.Order("c.id DESC")
+	}
 
 	// Apply cursor-based pagination
 	if params.Pagination != nil {
 		if params.Pagination.Cursor != "" {
-			db = db.Where("c.id > ?", params.Pagination.Cursor)
+			db = db.Where("c.id < ?", params.Pagination.Cursor)
 		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)

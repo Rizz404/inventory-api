@@ -400,13 +400,20 @@ func (r *NotificationRepository) GetNotificationsCursor(ctx context.Context, par
 	// Apply filters
 	db = r.applyNotificationFilters(db, params.Filters)
 
-	// Apply sorting
-	db = r.applyNotificationSorts(db, params.Sort, langCode)
+	// Apply sorting - for cursor pagination, we need consistent ordering by ID
+	if params.Sort != nil && params.Sort.Field != "" {
+		db = r.applyNotificationSorts(db, params.Sort, langCode)
+		// Always add secondary sort by ID DESC for consistency (ULID = newer = larger)
+		db = db.Order("n.id DESC")
+	} else {
+		// Default to ID DESC for cursor pagination (newest first)
+		db = db.Order("n.id DESC")
+	}
 
 	// Apply cursor-based pagination
 	if params.Pagination != nil {
 		if params.Pagination.Cursor != "" {
-			db = db.Where("n.id > ?", params.Pagination.Cursor)
+			db = db.Where("n.id < ?", params.Pagination.Cursor)
 		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)

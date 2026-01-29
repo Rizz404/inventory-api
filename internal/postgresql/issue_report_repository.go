@@ -30,42 +30,42 @@ func (r *IssueReportRepository) applyIssueReportFilters(db *gorm.DB, filters *do
 	}
 
 	if filters.AssetID != nil {
-		db = db.Where("ir.asset_id = ?", filters.AssetID)
+		db = db.Where("asset_id = ?", filters.AssetID)
 	}
 	if filters.ReportedBy != nil {
-		db = db.Where("ir.reported_by = ?", filters.ReportedBy)
+		db = db.Where("reported_by = ?", filters.ReportedBy)
 	}
 	if filters.ResolvedBy != nil {
-		db = db.Where("ir.resolved_by = ?", filters.ResolvedBy)
+		db = db.Where("resolved_by = ?", filters.ResolvedBy)
 	}
 	if filters.IssueType != nil {
-		db = db.Where("ir.issue_type = ?", filters.IssueType)
+		db = db.Where("issue_type = ?", filters.IssueType)
 	}
 	if filters.Priority != nil {
-		db = db.Where("ir.priority = ?", filters.Priority)
+		db = db.Where("priority = ?", filters.Priority)
 	}
 	if filters.Status != nil {
-		db = db.Where("ir.status = ?", filters.Status)
+		db = db.Where("status = ?", filters.Status)
 	}
 	if filters.IsResolved != nil {
 		if *filters.IsResolved {
-			db = db.Where("ir.status IN ('Resolved', 'Closed')")
+			db = db.Where("status IN ('Resolved', 'Closed')")
 		} else {
-			db = db.Where("ir.status IN ('Open', 'In Progress')")
+			db = db.Where("status IN ('Open', 'In Progress')")
 		}
 	}
 	if filters.DateFrom != nil {
-		db = db.Where("ir.reported_date >= ?", filters.DateFrom)
+		db = db.Where("reported_date >= ?", filters.DateFrom)
 	}
 	if filters.DateTo != nil {
-		db = db.Where("ir.reported_date <= ?", filters.DateTo)
+		db = db.Where("reported_date <= ?", filters.DateTo)
 	}
 	return db
 }
 
 func (r *IssueReportRepository) applyIssueReportSorts(db *gorm.DB, sort *domain.IssueReportSortOptions) *gorm.DB {
 	if sort == nil || sort.Field == "" {
-		return db.Order("ir.reported_date DESC")
+		return db.Order("reported_date DESC")
 	}
 
 	// Map camelCase sort field to snake_case database column
@@ -363,7 +363,7 @@ func (r *IssueReportRepository) BulkDeleteIssueReports(ctx context.Context, repo
 func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReport, error) {
 	var issueReports []model.IssueReport
 	db := r.db.WithContext(ctx).
-		Table("issue_reports ir").
+		Model(&model.IssueReport{}).
 		Preload("Translations").
 		Preload("Asset").
 		Preload("Asset.Category").
@@ -376,9 +376,14 @@ func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, pa
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id").
-			Where("ir.issue_type ILIKE ? OR irt.title ILIKE ? OR irt.description ILIKE ?", searchPattern, searchPattern, searchPattern).
-			Distinct("ir.id, ir.reported_date")
+		// Use subquery to get distinct IDs first, then fetch full records
+		subQuery := r.db.Table("issue_reports ir").
+			Select("DISTINCT ir.id").
+			Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id").
+			Joins("LEFT JOIN assets a ON ir.asset_id = a.id").
+			Where("ir.issue_type ILIKE ? OR irt.title ILIKE ? OR irt.description ILIKE ? OR a.asset_tag ILIKE ? OR a.asset_name ILIKE ?",
+				searchPattern, searchPattern, searchPattern, searchPattern, searchPattern)
+		db = db.Where("id IN (?)", subQuery)
 	}
 
 	// Apply filters, sorts, and pagination manually
@@ -404,7 +409,7 @@ func (r *IssueReportRepository) GetIssueReportsPaginated(ctx context.Context, pa
 func (r *IssueReportRepository) GetIssueReportsCursor(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReport, error) {
 	var issueReports []model.IssueReport
 	db := r.db.WithContext(ctx).
-		Table("issue_reports ir").
+		Model(&model.IssueReport{}).
 		Preload("Translations").
 		Preload("Asset").
 		Preload("Asset.Category").
@@ -417,17 +422,33 @@ func (r *IssueReportRepository) GetIssueReportsCursor(ctx context.Context, param
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id").
-			Where("ir.issue_type ILIKE ? OR irt.title ILIKE ? OR irt.description ILIKE ?", searchPattern, searchPattern, searchPattern).
-			Distinct("ir.id, ir.reported_date")
+		// Use subquery to get distinct IDs first, then fetch full records
+		subQuery := r.db.Table("issue_reports ir").
+			Select("DISTINCT ir.id").
+			Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id").
+			Joins("LEFT JOIN assets a ON ir.asset_id = a.id").
+			Where("ir.issue_type ILIKE ? OR irt.title ILIKE ? OR irt.description ILIKE ? OR a.asset_tag ILIKE ? OR a.asset_name ILIKE ?",
+				searchPattern, searchPattern, searchPattern, searchPattern, searchPattern)
+		db = db.Where("id IN (?)", subQuery)
 	}
 
-	// Apply filters, sorts, and cursor pagination manually
+	// Apply filters
 	db = r.applyIssueReportFilters(db, params.Filters)
-	db = r.applyIssueReportSorts(db, params.Sort)
+
+	// Apply sorting - for cursor pagination, we need consistent ordering by ID
+	if params.Sort != nil && params.Sort.Field != "" {
+		db = r.applyIssueReportSorts(db, params.Sort)
+		// Always add secondary sort by ID DESC for consistency (ULID = newer = larger)
+		db = db.Order("id DESC")
+	} else {
+		// Default to ID DESC for cursor pagination (newest first)
+		db = db.Order("id DESC")
+	}
+
+	// Apply cursor-based pagination
 	if params.Pagination != nil {
 		if params.Pagination.Cursor != "" {
-			db = db.Where("ir.id < ?", params.Pagination.Cursor)
+			db = db.Where("id < ?", params.Pagination.Cursor)
 		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)
@@ -446,7 +467,7 @@ func (r *IssueReportRepository) GetIssueReportById(ctx context.Context, issueRep
 	var issueReport model.IssueReport
 
 	err := r.db.WithContext(ctx).
-		Table("issue_reports ir").
+		Model(&model.IssueReport{}).
 		Preload("Translations").
 		Preload("Asset").
 		Preload("Asset.Category").
@@ -478,13 +499,18 @@ func (r *IssueReportRepository) CheckIssueReportExist(ctx context.Context, issue
 
 func (r *IssueReportRepository) CountIssueReports(ctx context.Context, params domain.IssueReportParams) (int64, error) {
 	var count int64
-	db := r.db.WithContext(ctx).Table("issue_reports ir")
+	db := r.db.WithContext(ctx).Model(&model.IssueReport{})
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id").
-			Where("ir.issue_type ILIKE ? OR irt.title ILIKE ? OR irt.description ILIKE ?", searchPattern, searchPattern, searchPattern).
-			Distinct("ir.id, ir.reported_date")
+		// Use subquery to get distinct IDs first
+		subQuery := r.db.Table("issue_reports ir").
+			Select("DISTINCT ir.id").
+			Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id").
+			Joins("LEFT JOIN assets a ON ir.asset_id = a.id").
+			Where("ir.issue_type ILIKE ? OR irt.title ILIKE ? OR irt.description ILIKE ? OR a.asset_tag ILIKE ? OR a.asset_name ILIKE ?",
+				searchPattern, searchPattern, searchPattern, searchPattern, searchPattern)
+		db = db.Where("id IN (?)", subQuery)
 	}
 
 	db = r.applyIssueReportFilters(db, params.Filters)
@@ -683,7 +709,7 @@ func (r *IssueReportRepository) GetIssueReportStatistics(ctx context.Context) (d
 func (r *IssueReportRepository) GetIssueReportsForExport(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReport, error) {
 	var issueReports []model.IssueReport
 	db := r.db.WithContext(ctx).
-		Table("issue_reports ir").
+		Model(&model.IssueReport{}).
 		Preload("Translations").
 		Preload("Asset").
 		Preload("Asset.Category").
@@ -696,9 +722,14 @@ func (r *IssueReportRepository) GetIssueReportsForExport(ctx context.Context, pa
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id").
-			Where("ir.issue_type ILIKE ? OR irt.title ILIKE ? OR irt.description ILIKE ?", searchPattern, searchPattern, searchPattern).
-			Distinct("ir.id, ir.reported_date")
+		// Use subquery to get distinct IDs first, then fetch full records
+		subQuery := r.db.Table("issue_reports ir").
+			Select("DISTINCT ir.id").
+			Joins("LEFT JOIN issue_report_translations irt ON ir.id = irt.report_id").
+			Joins("LEFT JOIN assets a ON ir.asset_id = a.id").
+			Where("ir.issue_type ILIKE ? OR irt.title ILIKE ? OR irt.description ILIKE ? OR a.asset_tag ILIKE ? OR a.asset_name ILIKE ?",
+				searchPattern, searchPattern, searchPattern, searchPattern, searchPattern)
+		db = db.Where("id IN (?)", subQuery)
 	}
 
 	// Apply filters

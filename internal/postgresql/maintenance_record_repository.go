@@ -371,12 +371,23 @@ func (r *MaintenanceRecordRepository) GetRecordsCursor(ctx context.Context, para
 			Group("maintenance_records.id")
 	}
 
-	// Apply filters, sorts, and cursor pagination manually
+	// Apply filters
 	db = r.applyRecordFilters(db, params.Filters)
-	db = r.applyRecordSorts(db, params.Sort)
+
+	// Apply sorting - for cursor pagination, we need consistent ordering by ID
+	if params.Sort != nil && params.Sort.Field != "" {
+		db = r.applyRecordSorts(db, params.Sort)
+		// Always add secondary sort by ID DESC for consistency (ULID = newer = larger)
+		db = db.Order("maintenance_records.id DESC")
+	} else {
+		// Default to ID DESC for cursor pagination (newest first)
+		db = db.Order("maintenance_records.id DESC")
+	}
+
+	// Apply cursor-based pagination
 	if params.Pagination != nil {
 		if params.Pagination.Cursor != "" {
-			db = db.Where("mr.id > ?", params.Pagination.Cursor)
+			db = db.Where("maintenance_records.id < ?", params.Pagination.Cursor)
 		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)

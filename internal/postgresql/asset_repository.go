@@ -269,17 +269,23 @@ func (r *AssetRepository) GetAssetsCursor(ctx context.Context, params domain.Ass
 	// Apply filters
 	db = r.applyAssetFilters(db, params.Filters)
 
-	// Apply sorting
-	db = r.applyAssetSorts(db, params.Sort)
+	// Apply sorting - for cursor pagination, we need consistent ordering by ID
+	if params.Sort != nil && params.Sort.Field != "" {
+		db = r.applyAssetSorts(db, params.Sort)
+		// Always add secondary sort by ID DESC for consistency (ULID = newer = larger)
+		db = db.Order("a.id DESC")
+	} else {
+		// Default to ID DESC for cursor pagination (newest first)
+		db = db.Order("a.id DESC")
+	}
 
 	// Apply cursor-based pagination
 	if params.Pagination != nil {
+		if params.Pagination.Cursor != "" {
+			db = db.Where("a.id < ?", params.Pagination.Cursor)
+		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)
-		}
-		if params.Pagination.Cursor != "" {
-			// Assuming sorting DESC by ID for cursor
-			db = db.Where("a.id < ?", params.Pagination.Cursor)
 		}
 	}
 

@@ -412,8 +412,8 @@ func (r *AssetMovementRepository) GetAssetMovementsPaginated(ctx context.Context
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		// Join with assets table for search in asset tag/name
 		db = db.Joins("LEFT JOIN assets a ON am.asset_id = a.id").
-			Where("a.asset_tag ILIKE ? OR a.serial_number ILIKE ?",
-				"%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%")
+			Where("a.asset_tag ILIKE ? OR a.asset_name ILIKE ? OR a.serial_number ILIKE ?",
+				"%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%")
 	}
 
 	// Apply filters, sorts, and pagination manually
@@ -458,16 +458,27 @@ func (r *AssetMovementRepository) GetAssetMovementsCursor(ctx context.Context, p
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		// Join with assets table for search in asset tag/name
 		db = db.Joins("LEFT JOIN assets a ON am.asset_id = a.id").
-			Where("a.asset_tag ILIKE ? OR a.serial_number ILIKE ?",
-				"%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%")
+			Where("a.asset_tag ILIKE ? OR a.asset_name ILIKE ? OR a.serial_number ILIKE ?",
+				"%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%")
 	}
 
-	// Apply filters, sorts, and cursor pagination manually
+	// Apply filters
 	db = r.applyAssetMovementFilters(db, params.Filters)
-	db = r.applyAssetMovementSorts(db, params.Sort)
+
+	// Apply sorting - for cursor pagination, we need consistent ordering by ID
+	if params.Sort != nil && params.Sort.Field != "" {
+		db = r.applyAssetMovementSorts(db, params.Sort)
+		// Always add secondary sort by ID DESC for consistency (ULID = newer = larger)
+		db = db.Order("am.id DESC")
+	} else {
+		// Default to ID DESC for cursor pagination (newest first)
+		db = db.Order("am.id DESC")
+	}
+
+	// Apply cursor-based pagination
 	if params.Pagination != nil {
 		if params.Pagination.Cursor != "" {
-			db = db.Where("am.id > ?", params.Pagination.Cursor)
+			db = db.Where("am.id < ?", params.Pagination.Cursor)
 		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)
@@ -559,8 +570,8 @@ func (r *AssetMovementRepository) CountAssetMovements(ctx context.Context, param
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		// Join with assets table for search in asset tag/name
 		db = db.Joins("LEFT JOIN assets a ON am.asset_id = a.id").
-			Where("a.asset_tag ILIKE ? OR a.serial_number ILIKE ?",
-				"%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%")
+			Where("a.asset_tag ILIKE ? OR a.asset_name ILIKE ? OR a.serial_number ILIKE ?",
+				"%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%")
 	}
 
 	db = r.applyAssetMovementFilters(db, params.Filters)
@@ -906,8 +917,8 @@ func (r *AssetMovementRepository) GetAssetMovementsForExport(ctx context.Context
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		db = db.Joins("LEFT JOIN assets a ON am.asset_id = a.id").
-			Where("a.asset_tag ILIKE ? OR a.serial_number ILIKE ?",
-				"%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%")
+			Where("a.asset_tag ILIKE ? OR a.asset_name ILIKE ? OR a.serial_number ILIKE ?",
+				"%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%", "%"+*params.SearchQuery+"%")
 	}
 
 	db = r.applyAssetMovementFilters(db, params.Filters)

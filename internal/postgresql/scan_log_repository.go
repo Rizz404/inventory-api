@@ -238,13 +238,20 @@ func (r *ScanLogRepository) GetScanLogsCursor(ctx context.Context, params domain
 	// Apply filters
 	db = r.applyScanLogFilters(db, params.Filters)
 
-	// Apply sorting
-	db = r.applyScanLogSorts(db, params.Sort)
+	// Apply sorting - for cursor pagination, we need consistent ordering by ID
+	if params.Sort != nil && params.Sort.Field != "" {
+		db = r.applyScanLogSorts(db, params.Sort)
+		// Always add secondary sort by ID DESC for consistency (ULID = newer = larger)
+		db = db.Order("sl.id DESC")
+	} else {
+		// Default to ID DESC for cursor pagination (newest first)
+		db = db.Order("sl.id DESC")
+	}
 
 	// Apply cursor-based pagination
 	if params.Pagination != nil {
 		if params.Pagination.Cursor != "" {
-			db = db.Where("sl.id > ?", params.Pagination.Cursor)
+			db = db.Where("sl.id < ?", params.Pagination.Cursor)
 		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)

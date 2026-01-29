@@ -389,17 +389,23 @@ func (r *LocationRepository) GetLocationsCursor(ctx context.Context, params doma
 	// Apply filters
 	db = r.applyLocationFilters(db, params.Filters)
 
-	// Apply sorting
-	db = r.applyLocationSorts(db, params.Sort, langCode)
+	// Apply sorting - for cursor pagination, we need consistent ordering by ID
+	if params.Sort != nil && params.Sort.Field != "" {
+		db = r.applyLocationSorts(db, params.Sort, langCode)
+		// Always add secondary sort by ID DESC for consistency (ULID = newer = larger)
+		db = db.Order("l.id DESC")
+	} else {
+		// Default to ID DESC for cursor pagination (newest first)
+		db = db.Order("l.id DESC")
+	}
 
 	// Apply cursor-based pagination
 	if params.Pagination != nil {
+		if params.Pagination.Cursor != "" {
+			db = db.Where("l.id < ?", params.Pagination.Cursor)
+		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)
-		}
-		if params.Pagination.Cursor != "" {
-			// Assuming sorting DESC by ID for cursor
-			db = db.Where("l.id < ?", params.Pagination.Cursor)
 		}
 	}
 
