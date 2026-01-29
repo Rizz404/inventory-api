@@ -30,13 +30,13 @@ func (r *CategoryRepository) applyCategoryFilters(db *gorm.DB, filters *domain.C
 	}
 
 	if filters.ParentID != nil {
-		db = db.Where("c.parent_id = ?", filters.ParentID)
+		db = db.Where("parent_id = ?", filters.ParentID)
 	}
 	if filters.HasParent != nil {
 		if *filters.HasParent {
-			db = db.Where("c.parent_id IS NOT NULL")
+			db = db.Where("parent_id IS NOT NULL")
 		} else {
-			db = db.Where("c.parent_id IS NULL")
+			db = db.Where("parent_id IS NULL")
 		}
 	}
 	return db
@@ -44,7 +44,7 @@ func (r *CategoryRepository) applyCategoryFilters(db *gorm.DB, filters *domain.C
 
 func (r *CategoryRepository) applyCategorySorts(db *gorm.DB, sort *domain.CategorySortOptions, langCode string) *gorm.DB {
 	if sort == nil || sort.Field == "" {
-		return db.Order("c.created_at DESC")
+		return db.Order("created_at DESC")
 	}
 
 	order := "DESC"
@@ -54,7 +54,7 @@ func (r *CategoryRepository) applyCategorySorts(db *gorm.DB, sort *domain.Catego
 
 	if sort.Field == domain.CategorySortByCategoryName {
 		// Use subquery for sorting by translation
-		subquery := fmt.Sprintf("(SELECT category_name FROM category_translations WHERE category_id = c.id AND lang_code = '%s' LIMIT 1)", langCode)
+		subquery := fmt.Sprintf("(SELECT category_name FROM category_translations WHERE category_id = categories.id AND lang_code = '%s' LIMIT 1)", langCode)
 		return db.Order(fmt.Sprintf("%s %s", subquery, order))
 	}
 
@@ -338,22 +338,19 @@ func (r *CategoryRepository) BulkDeleteCategories(ctx context.Context, categoryI
 func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.Category, error) {
 	var categories []model.Category
 	db := r.db.WithContext(ctx).
-		Table("categories c").
+		Model(&model.Category{}).
 		Preload("Translations").
 		Preload("Parent").
 		Preload("Parent.Translations")
 
-	needsJoin := params.SearchQuery != nil && *params.SearchQuery != "" ||
-		(params.Sort != nil && params.Sort.Field == domain.CategorySortByCategoryName)
-
-	if needsJoin {
-		db = db.Select("c.id, c.category_code, c.created_at, c.updated_at").
-			Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id")
-		if params.SearchQuery != nil && *params.SearchQuery != "" {
-			searchPattern := "%" + *params.SearchQuery + "%"
-			db = db.Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
-				Distinct("c.id, c.created_at")
-		}
+	if params.SearchQuery != nil && *params.SearchQuery != "" {
+		searchPattern := "%" + *params.SearchQuery + "%"
+		// Use subquery to get distinct IDs first, then fetch full records
+		subQuery := r.db.Table("categories c").
+			Select("DISTINCT c.id").
+			Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id").
+			Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern)
+		db = db.Where("id IN (?)", subQuery)
 	}
 
 	// Apply filters
@@ -383,22 +380,19 @@ func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params 
 func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.Category, error) {
 	var categories []model.Category
 	db := r.db.WithContext(ctx).
-		Table("categories c").
+		Model(&model.Category{}).
 		Preload("Translations").
 		Preload("Parent").
 		Preload("Parent.Translations")
 
-	needsJoin := params.SearchQuery != nil && *params.SearchQuery != "" ||
-		(params.Sort != nil && params.Sort.Field == domain.CategorySortByCategoryName)
-
-	if needsJoin {
-		db = db.Select("c.id, c.category_code, c.created_at, c.updated_at").
-			Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id")
-		if params.SearchQuery != nil && *params.SearchQuery != "" {
-			searchPattern := "%" + *params.SearchQuery + "%"
-			db = db.Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
-				Distinct("c.id, c.created_at")
-		}
+	if params.SearchQuery != nil && *params.SearchQuery != "" {
+		searchPattern := "%" + *params.SearchQuery + "%"
+		// Use subquery to get distinct IDs first, then fetch full records
+		subQuery := r.db.Table("categories c").
+			Select("DISTINCT c.id").
+			Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id").
+			Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern)
+		db = db.Where("id IN (?)", subQuery)
 	}
 
 	// Apply filters
@@ -408,16 +402,16 @@ func (r *CategoryRepository) GetCategoriesCursor(ctx context.Context, params dom
 	if params.Sort != nil && params.Sort.Field != "" {
 		db = r.applyCategorySorts(db, params.Sort, langCode)
 		// Always add secondary sort by ID DESC for consistency (ULID = newer = larger)
-		db = db.Order("c.id DESC")
+		db = db.Order("id DESC")
 	} else {
 		// Default to ID DESC for cursor pagination (newest first)
-		db = db.Order("c.id DESC")
+		db = db.Order("id DESC")
 	}
 
 	// Apply cursor-based pagination
 	if params.Pagination != nil {
 		if params.Pagination.Cursor != "" {
-			db = db.Where("c.id < ?", params.Pagination.Cursor)
+			db = db.Where("id < ?", params.Pagination.Cursor)
 		}
 		if params.Pagination.Limit > 0 {
 			db = db.Limit(params.Pagination.Limit)
@@ -499,13 +493,16 @@ func (r *CategoryRepository) CheckCategoryCodeExistExcluding(ctx context.Context
 
 func (r *CategoryRepository) CountCategories(ctx context.Context, params domain.CategoryParams) (int64, error) {
 	var count int64
-	db := r.db.WithContext(ctx).Table("categories c")
+	db := r.db.WithContext(ctx).Model(&model.Category{})
 
 	if params.SearchQuery != nil && *params.SearchQuery != "" {
 		searchPattern := "%" + *params.SearchQuery + "%"
-		db = db.Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id").
-			Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern).
-			Distinct("c.id")
+		// Use subquery to get distinct IDs first
+		subQuery := r.db.Table("categories c").
+			Select("DISTINCT c.id").
+			Joins("LEFT JOIN category_translations ct ON c.id = ct.category_id").
+			Where("c.category_code ILIKE ? OR ct.category_name ILIKE ?", searchPattern, searchPattern)
+		db = db.Where("id IN (?)", subQuery)
 	}
 
 	// Apply filters
