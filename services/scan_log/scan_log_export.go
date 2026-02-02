@@ -65,7 +65,7 @@ func (s *Service) exportScanLogListToPDF(logs []domain.ScanLogListResponse, lang
 	workDir, _ := os.Getwd()
 	fontRegularPath := filepath.Join(workDir, "assets", "fonts", "NotoSansJP-Regular.ttf")
 	fontBoldPath := filepath.Join(workDir, "assets", "fonts", "NotoSansJP-Bold.ttf")
-	logoPath := filepath.Join(workDir, "assets", "images", "company-logo.png")
+	logoPath := filepath.Join(workDir, "assets", "images", "fts-logo.png")
 
 	pdf := gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{
