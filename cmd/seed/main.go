@@ -18,6 +18,7 @@ import (
 	"github.com/Rizz404/inventory-api/services/location"
 	"github.com/Rizz404/inventory-api/services/maintenance_record"
 	"github.com/Rizz404/inventory-api/services/maintenance_schedule"
+	"github.com/Rizz404/inventory-api/services/notification"
 	"github.com/Rizz404/inventory-api/services/user"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -202,18 +203,20 @@ func initServices(db *gorm.DB) *Services {
 	assetRepository := postgresql.NewAssetRepository(db)
 	assetMovementRepository := postgresql.NewAssetMovementRepository(db)
 	issueReportRepository := postgresql.NewIssueReportRepository(db)
+	notificationRepository := postgresql.NewNotificationRepository(db)
 	maintenanceScheduleRepository := postgresql.NewMaintenanceScheduleRepository(db)
 	maintenanceRecordRepository := postgresql.NewMaintenanceRecordRepository(db)
 
 	// Initialize services
 	userService := user.NewService(userRepository, cloudinaryClient)
-	categoryService := category.NewService(categoryRepository, nil, userRepository, nil)                                         // nil for notification and cloudinary in seeder
-	locationService := location.NewService(locationRepository, nil, userRepository)                                              // nil for notification in seeder
-	assetService := asset.NewService(assetRepository, cloudinaryClient, nil, categoryService, userRepository)                    // nil for notification in seeder
-	assetMovementService := asset_movement.NewService(assetMovementRepository, assetService, locationService, userService, nil)  // nil for notification in seeder
-	issueReportService := issue_report.NewService(issueReportRepository, nil, assetService, userRepository)                      // nil for notification in seeder
-	maintenanceScheduleService := maintenance_schedule.NewService(maintenanceScheduleRepository, assetService, userService, nil) // nil for notification in seeder
-	maintenanceRecordService := maintenance_record.NewService(maintenanceRecordRepository, assetService, userService, nil)       // nil for notification in seeder
+	notificationService := notification.NewService(notificationRepository, userRepository, nil)                            // nil for FCM client in seeder
+	categoryService := category.NewService(categoryRepository, notificationService, userRepository, cloudinaryClient, nil) // nil for translator in seeder
+	locationService := location.NewService(locationRepository, notificationService, userRepository)
+	assetService := asset.NewService(assetRepository, cloudinaryClient, notificationService, categoryService, userRepository)
+	assetMovementService := asset_movement.NewService(assetMovementRepository, assetService, locationService, userService, notificationService)
+	issueReportService := issue_report.NewService(issueReportRepository, notificationService, assetService, userRepository)
+	maintenanceScheduleService := maintenance_schedule.NewService(maintenanceScheduleRepository, assetService, userService, notificationService)
+	maintenanceRecordService := maintenance_record.NewService(maintenanceRecordRepository, assetService, userService, notificationService)
 
 	return &Services{
 		User:                userService,

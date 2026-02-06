@@ -108,7 +108,7 @@ func main() {
 	authService := auth.NewService(userRepository, clients.SMTP)
 	userService := user.NewService(userRepository, clients.Cloudinary)
 	notificationService := notification.NewService(notificationRepository, userRepository, clients.FCM)
-	categoryService := category.NewService(categoryRepository, notificationService, userRepository, clients.Cloudinary)
+	categoryService := category.NewService(categoryRepository, notificationService, userRepository, clients.Cloudinary, clients.Translator)
 	locationService := location.NewService(locationRepository, notificationService, userRepository)
 	assetService := asset.NewService(assetRepository, clients.Cloudinary, notificationService, categoryService, userRepository)
 	scanLogService := scanLog.NewService(scanLogRepository)

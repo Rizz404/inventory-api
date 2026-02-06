@@ -334,6 +334,63 @@ func (r *CategoryRepository) BulkDeleteCategories(ctx context.Context, categoryI
 	return result, nil
 }
 
+func (r *CategoryRepository) AddCategoryTranslations(ctx context.Context, categoryId string, translations []domain.CategoryTranslation) error {
+	if len(translations) == 0 {
+		return nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Add new translations (skip if lang_code already exists)
+	for _, translation := range translations {
+		// Parse categoryId to SQLULID
+		catID, err := ulid.Parse(categoryId)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		modelTranslation := model.CategoryTranslation{
+			ID:           model.SQLULID(ulid.Make()),
+			CategoryID:   model.SQLULID(catID),
+			LangCode:     translation.LangCode,
+			CategoryName: translation.CategoryName,
+			Description:  translation.Description,
+		}
+
+		// Insert only if not exists (ON CONFLICT DO NOTHING equivalent)
+		var count int64
+		er := tx.Model(&model.CategoryTranslation{}).
+			Where("category_id = ? AND lang_code = ?", categoryId, translation.LangCode).
+			Count(&count).Error
+		if er != nil {
+			tx.Rollback()
+			return er
+		}
+
+		if count == 0 {
+			if err := tx.Create(&modelTranslation).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // *===========================QUERY===========================*
 func (r *CategoryRepository) GetCategoriesPaginated(ctx context.Context, params domain.CategoryParams, langCode string) ([]domain.Category, error) {
 	var categories []model.Category
