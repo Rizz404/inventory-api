@@ -691,3 +691,53 @@ func (r *LocationRepository) GetLocationStatistics(ctx context.Context) (domain.
 
 	return stats, nil
 }
+
+// AddLocationTranslations adds new translations to an existing location
+func (r *LocationRepository) AddLocationTranslations(ctx context.Context, locationId string, translations []domain.LocationTranslation) error {
+	if len(translations) == 0 {
+		return nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	for _, translation := range translations {
+		locID, err := ulid.Parse(locationId)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		modelTranslation := model.LocationTranslation{
+			ID:           model.SQLULID(ulid.Make()),
+			LocationID:   model.SQLULID(locID),
+			LangCode:     translation.LangCode,
+			LocationName: translation.LocationName,
+		}
+
+		var count int64
+		er := tx.Model(&model.LocationTranslation{}).
+			Where("location_id = ? AND lang_code = ?", locationId, translation.LangCode).
+			Count(&count).Error
+		if er != nil {
+			tx.Rollback()
+			return er
+		}
+
+		if count == 0 {
+			if err := tx.Create(&modelTranslation).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+
+	return tx.Commit().Error
+}

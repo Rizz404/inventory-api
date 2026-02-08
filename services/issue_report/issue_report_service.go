@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/client/gtranslate"
 	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
@@ -19,6 +20,7 @@ type Repository interface {
 	DeleteIssueReport(ctx context.Context, issueReportId string) error
 	BulkCreateIssueReports(ctx context.Context, reports []domain.IssueReport) ([]domain.IssueReport, error)
 	BulkDeleteIssueReports(ctx context.Context, reportIds []string) (domain.BulkDeleteIssueReports, error)
+	AddIssueReportTranslations(ctx context.Context, issueReportId string, translations []domain.IssueReportTranslation) error
 
 	// * QUERY
 	GetIssueReportsPaginated(ctx context.Context, params domain.IssueReportParams, langCode string) ([]domain.IssueReport, error)
@@ -69,17 +71,19 @@ type Service struct {
 	NotificationService NotificationService
 	AssetService        AssetService
 	UserRepo            UserRepository
+	Translator          *gtranslate.Client
 }
 
 // * Ensure Service implements IssueReportService interface
 var _ IssueReportService = (*Service)(nil)
 
-func NewService(r Repository, notificationService NotificationService, assetService AssetService, userRepo UserRepository) IssueReportService {
+func NewService(r Repository, notificationService NotificationService, assetService AssetService, userRepo UserRepository, translator *gtranslate.Client) IssueReportService {
 	return &Service{
 		Repo:                r,
 		NotificationService: notificationService,
 		AssetService:        assetService,
 		UserRepo:            userRepo,
+		Translator:          translator,
 	}
 }
 
@@ -110,6 +114,9 @@ func (s *Service) CreateIssueReport(ctx context.Context, payload *domain.CreateI
 		return domain.IssueReportResponse{}, err
 	}
 
+	// * Auto-translate missing languages in background
+	go s.autoTranslateCreateIssueReportAsync(createdIssueReport.ID, payload.Translations)
+
 	// * Send notification asynchronously
 	go s.sendIssueReportedNotification(context.Background(), &createdIssueReport)
 
@@ -127,6 +134,11 @@ func (s *Service) UpdateIssueReport(ctx context.Context, issueReportId string, p
 	updatedIssueReport, err := s.Repo.UpdateIssueReport(ctx, issueReportId, payload)
 	if err != nil {
 		return domain.IssueReportResponse{}, err
+	}
+
+	// * Auto-translate missing languages in background if translations updated
+	if len(payload.Translations) > 0 {
+		go s.autoTranslateUpdateIssueReportAsync(issueReportId, payload.Translations, updatedIssueReport.Translations)
 	}
 
 	// * Send notification asynchronously
@@ -445,4 +457,172 @@ func (s *Service) GetIssueReportStatistics(ctx context.Context) (domain.IssueRep
 
 	// Convert to IssueReportStatisticsResponse using mapper
 	return mapper.IssueReportStatisticsToResponse(&stats), nil
+}
+
+// *===========================ASYNC TRANSLATION===========================*
+
+// autoTranslateCreateIssueReportAsync translates issue report to missing languages in background
+func (s *Service) autoTranslateCreateIssueReportAsync(issueReportID string, userTranslations []domain.CreateIssueReportTranslationPayload) {
+	if len(userTranslations) >= 3 {
+		return // All languages provided, no need to translate
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Convert domain types to utils types
+	utilsTranslations := make([]utils.IssueReportCreateTranslation, len(userTranslations))
+	for i, t := range userTranslations {
+		utilsTranslations[i] = utils.IssueReportCreateTranslation{
+			LangCode:        t.LangCode,
+			Title:           t.Title,
+			Description:     t.Description,
+			ResolutionNotes: nil,
+		}
+	}
+
+	// Translate using utils helper
+	translatedPayloads, err := utils.AutoTranslateIssueReportCreate(ctx, s.Translator, utilsTranslations)
+	if err != nil {
+		log.Printf("Failed to auto-translate issue report ID %s: %v", issueReportID, err)
+		return
+	}
+
+	// Extract only new translations
+	newTranslations := make([]domain.IssueReportTranslation, 0)
+	for _, translated := range translatedPayloads {
+		// Skip user-provided translations
+		isUserProvided := false
+		for _, userTrans := range userTranslations {
+			if userTrans.LangCode == translated.LangCode {
+				isUserProvided = true
+				break
+			}
+		}
+
+		if !isUserProvided {
+			newTranslations = append(newTranslations, domain.IssueReportTranslation{
+				LangCode:        translated.LangCode,
+				Title:           translated.Title,
+				Description:     translated.Description,
+				ResolutionNotes: translated.ResolutionNotes,
+			})
+		}
+	}
+
+	// Save auto-translated translations to database
+	if len(newTranslations) > 0 {
+		if err := s.Repo.AddIssueReportTranslations(ctx, issueReportID, newTranslations); err != nil {
+			log.Printf("Failed to save auto-translated issue report translations for ID %s: %v", issueReportID, err)
+		}
+	}
+}
+
+// autoTranslateUpdateIssueReportAsync translates issue report updates to missing languages in background
+func (s *Service) autoTranslateUpdateIssueReportAsync(issueReportID string, userUpdates []domain.UpdateIssueReportTranslationPayload, existingTranslations []domain.IssueReportTranslation) {
+	if len(userUpdates) == 0 {
+		return // No updates provided
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// If user updated all 3 languages, no need to auto-translate
+	updatedLangCodes := make([]string, len(userUpdates))
+	for i, t := range userUpdates {
+		updatedLangCodes[i] = t.LangCode
+	}
+
+	if len(updatedLangCodes) >= 3 {
+		return
+	}
+
+	// Convert domain types to utils types
+	utilsUpdates := make([]utils.IssueReportUpdateTranslation, len(userUpdates))
+	for i, t := range userUpdates {
+		utilsUpdates[i] = utils.IssueReportUpdateTranslation{
+			LangCode:        t.LangCode,
+			Title:           t.Title,
+			Description:     t.Description,
+			ResolutionNotes: t.ResolutionNotes,
+		}
+	}
+
+	utilsExisting := make([]utils.IssueReportExistingTranslation, len(existingTranslations))
+	for i, t := range existingTranslations {
+		utilsExisting[i] = utils.IssueReportExistingTranslation{
+			LangCode:        t.LangCode,
+			Title:           t.Title,
+			Description:     t.Description,
+			ResolutionNotes: t.ResolutionNotes,
+		}
+	}
+
+	// Translate using utils helper
+	translatedPayloads, err := utils.AutoTranslateIssueReportUpdate(ctx, s.Translator, utilsUpdates, utilsExisting)
+	if err != nil {
+		log.Printf("Failed to auto-translate updated issue report ID %s: %v", issueReportID, err)
+		return
+	}
+
+	// Extract only new translations (not in userUpdates)
+	newTranslations := make([]domain.IssueReportTranslation, 0)
+	for _, translated := range translatedPayloads {
+		// Skip user-updated translations
+		isUserUpdated := false
+		for _, userUpdate := range userUpdates {
+			if userUpdate.LangCode == translated.LangCode {
+				isUserUpdated = true
+				break
+			}
+		}
+
+		if !isUserUpdated && (translated.Title != nil || translated.Description != nil || translated.ResolutionNotes != nil) {
+			// Build full translation from update + existing
+			var existing *domain.IssueReportTranslation
+			for _, e := range existingTranslations {
+				if e.LangCode == translated.LangCode {
+					existing = &e
+					break
+				}
+			}
+
+			finalTitle := ""
+			if translated.Title != nil {
+				finalTitle = *translated.Title
+			} else if existing != nil {
+				finalTitle = existing.Title
+			}
+
+			var finalDescription *string
+			if translated.Description != nil {
+				finalDescription = translated.Description
+			} else if existing != nil && existing.Description != nil {
+				finalDescription = existing.Description
+			}
+
+			var finalResolutionNotes *string
+			if translated.ResolutionNotes != nil {
+				finalResolutionNotes = translated.ResolutionNotes
+			} else if existing != nil {
+				finalResolutionNotes = existing.ResolutionNotes
+			}
+
+			if finalTitle != "" {
+				newTranslations = append(newTranslations, domain.IssueReportTranslation{
+					LangCode:        translated.LangCode,
+					Title:           finalTitle,
+					Description:     finalDescription,
+					ResolutionNotes: finalResolutionNotes,
+				})
+			}
+		}
+	}
+
+	// Save auto-translated translations to database
+	if len(newTranslations) > 0 {
+		if err := s.Repo.AddIssueReportTranslations(ctx, issueReportID, newTranslations); err != nil {
+			log.Printf("Failed to save auto-translated issue report update translations for ID %s: %v", issueReportID, err)
+		}
+	}
 }

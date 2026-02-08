@@ -9,6 +9,7 @@ import (
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
+	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -724,4 +725,55 @@ func (r *MaintenanceRecordRepository) GetMaintenanceRecordsForExport(ctx context
 	}
 
 	return mapper.ToDomainMaintenanceRecords(records), nil
+}
+
+// AddMaintenanceRecordTranslations adds new translations to an existing maintenance record
+func (r *MaintenanceRecordRepository) AddMaintenanceRecordTranslations(ctx context.Context, recordId string, translations []domain.MaintenanceRecordTranslation) error {
+	if len(translations) == 0 {
+		return nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	for _, translation := range translations {
+		recID, err := ulid.Parse(recordId)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		modelTranslation := model.MaintenanceRecordTranslation{
+			ID:       model.SQLULID(ulid.Make()),
+			RecordID: model.SQLULID(recID),
+			LangCode: translation.LangCode,
+			Title:    translation.Title,
+			Notes:    translation.Notes,
+		}
+
+		var count int64
+		er := tx.Model(&model.MaintenanceRecordTranslation{}).
+			Where("record_id = ? AND lang_code = ?", recordId, translation.LangCode).
+			Count(&count).Error
+		if er != nil {
+			tx.Rollback()
+			return er
+		}
+
+		if count == 0 {
+			if err := tx.Create(&modelTranslation).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+
+	return tx.Commit().Error
 }

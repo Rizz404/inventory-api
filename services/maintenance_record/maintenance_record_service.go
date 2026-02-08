@@ -2,10 +2,12 @@ package maintenance_record
 
 import (
 	"context"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/client/gtranslate"
 	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
@@ -19,6 +21,7 @@ type Repository interface {
 	DeleteRecord(ctx context.Context, recordId string) error
 	BulkCreateRecords(ctx context.Context, records []domain.MaintenanceRecord) ([]domain.MaintenanceRecord, error)
 	BulkDeleteRecords(ctx context.Context, recordIds []string) (domain.BulkDeleteMaintenanceRecords, error)
+	AddMaintenanceRecordTranslations(ctx context.Context, recordId string, translations []domain.MaintenanceRecordTranslation) error
 
 	// Record queries
 	GetRecordsPaginated(ctx context.Context, params domain.MaintenanceRecordParams, langCode string) ([]domain.MaintenanceRecord, error)
@@ -70,12 +73,13 @@ type Service struct {
 	AssetService        AssetService
 	UserService         UserService
 	NotificationService NotificationService
+	Translator          *gtranslate.Client
 }
 
 var _ MaintenanceRecordService = (*Service)(nil)
 
-func NewService(r Repository, assetSvc AssetService, userSvc UserService, notificationSvc NotificationService) MaintenanceRecordService {
-	return &Service{Repo: r, AssetService: assetSvc, UserService: userSvc, NotificationService: notificationSvc}
+func NewService(r Repository, assetSvc AssetService, userSvc UserService, notificationSvc NotificationService, translator *gtranslate.Client) MaintenanceRecordService {
+	return &Service{Repo: r, AssetService: assetSvc, UserService: userSvc, NotificationService: notificationSvc, Translator: translator}
 }
 
 func (s *Service) CreateMaintenanceRecord(ctx context.Context, payload *domain.CreateMaintenanceRecordPayload, performedBy string) (domain.MaintenanceRecordResponse, error) {
@@ -145,6 +149,9 @@ func (s *Service) CreateMaintenanceRecord(ctx context.Context, payload *domain.C
 		return domain.MaintenanceRecordResponse{}, err
 	}
 
+	// * Auto-translate missing languages in background
+	go s.autoTranslateCreateMaintenanceRecordAsync(created.ID, payload.Translations)
+
 	// Send notification for completed maintenance
 	s.sendMaintenanceCompletedNotification(ctx, &created)
 
@@ -171,6 +178,11 @@ func (s *Service) UpdateMaintenanceRecord(ctx context.Context, recordId string, 
 	updated, err := s.Repo.UpdateRecord(ctx, recordId, payload)
 	if err != nil {
 		return domain.MaintenanceRecordResponse{}, err
+	}
+
+	// * Auto-translate missing languages in background if translations updated
+	if len(payload.Translations) > 0 {
+		go s.autoTranslateUpdateMaintenanceRecordAsync(recordId, payload.Translations, updated.Translations)
 	}
 
 	// Check if this update indicates a failed maintenance (e.g., notes contain "failed")
@@ -455,5 +467,161 @@ func (s *Service) sendMaintenanceFailedNotification(ctx context.Context, record 
 	_, err = s.NotificationService.CreateNotification(ctx, notificationPayload)
 	if err != nil {
 		// Log error but don't fail the operation
+	}
+}
+
+// *===========================ASYNC TRANSLATION===========================*
+
+// autoTranslateCreateMaintenanceRecordAsync translates maintenance record to missing languages in background
+func (s *Service) autoTranslateCreateMaintenanceRecordAsync(recordID string, userTranslations []domain.CreateMaintenanceRecordTranslationPayload) {
+	if len(userTranslations) >= 3 {
+		return // All languages provided, no need to translate
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Convert domain types to utils types
+	utilsTranslations := make([]utils.MaintenanceRecordCreateTranslation, len(userTranslations))
+	for i, t := range userTranslations {
+		utilsTranslations[i] = utils.MaintenanceRecordCreateTranslation{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Notes:    t.Notes,
+		}
+	}
+
+	// Translate using utils helper
+	translatedPayloads, err := utils.AutoTranslateMaintenanceRecordCreate(ctx, s.Translator, utilsTranslations)
+	if err != nil {
+		log.Printf("Failed to auto-translate maintenance record ID %s: %v", recordID, err)
+		return
+	}
+
+	// Extract only new translations
+	newTranslations := make([]domain.MaintenanceRecordTranslation, 0)
+	for _, translated := range translatedPayloads {
+		// Skip user-provided translations
+		isUserProvided := false
+		for _, userTrans := range userTranslations {
+			if userTrans.LangCode == translated.LangCode {
+				isUserProvided = true
+				break
+			}
+		}
+
+		if !isUserProvided {
+			newTranslations = append(newTranslations, domain.MaintenanceRecordTranslation{
+				LangCode: translated.LangCode,
+				Title:    translated.Title,
+				Notes:    translated.Notes,
+			})
+		}
+	}
+
+	// Save auto-translated translations to database
+	if len(newTranslations) > 0 {
+		if err := s.Repo.AddMaintenanceRecordTranslations(ctx, recordID, newTranslations); err != nil {
+			log.Printf("Failed to save auto-translated maintenance record translations for ID %s: %v", recordID, err)
+		}
+	}
+}
+
+// autoTranslateUpdateMaintenanceRecordAsync translates maintenance record updates to missing languages in background
+func (s *Service) autoTranslateUpdateMaintenanceRecordAsync(recordID string, userUpdates []domain.UpdateMaintenanceRecordTranslationPayload, existingTranslations []domain.MaintenanceRecordTranslation) {
+	if len(userUpdates) == 0 {
+		return // No updates provided
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// If user updated all 3 languages, no need to auto-translate
+	updatedLangCodes := make([]string, len(userUpdates))
+	for i, t := range userUpdates {
+		updatedLangCodes[i] = t.LangCode
+	}
+
+	if len(updatedLangCodes) >= 3 {
+		return
+	}
+
+	// Convert domain types to utils types
+	utilsUpdates := make([]utils.MaintenanceRecordUpdateTranslation, len(userUpdates))
+	for i, t := range userUpdates {
+		utilsUpdates[i] = utils.MaintenanceRecordUpdateTranslation{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Notes:    t.Notes,
+		}
+	}
+
+	utilsExisting := make([]utils.MaintenanceRecordExistingTranslation, len(existingTranslations))
+	for i, t := range existingTranslations {
+		utilsExisting[i] = utils.MaintenanceRecordExistingTranslation{
+			LangCode: t.LangCode,
+			Title:    t.Title,
+			Notes:    t.Notes,
+		}
+	}
+
+	// Translate using utils helper
+	translatedPayloads, err := utils.AutoTranslateMaintenanceRecordUpdate(ctx, s.Translator, utilsUpdates, utilsExisting)
+	if err != nil {
+		log.Printf("Failed to auto-translate updated maintenance record ID %s: %v", recordID, err)
+		return
+	}
+
+	// Extract only new translations (not in userUpdates)
+	newTranslations := make([]domain.MaintenanceRecordTranslation, 0)
+	for _, translated := range translatedPayloads {
+		// Skip user-updated translations
+		isUserUpdated := false
+		for _, userUpdate := range userUpdates {
+			if userUpdate.LangCode == translated.LangCode {
+				isUserUpdated = true
+				break
+			}
+		}
+
+		if !isUserUpdated && (translated.Title != nil || translated.Notes != nil) {
+			// Build full translation from update + existing
+			var existing *domain.MaintenanceRecordTranslation
+			for _, e := range existingTranslations {
+				if e.LangCode == translated.LangCode {
+					existing = &e
+					break
+				}
+			}
+
+			finalTitle := ""
+			if translated.Title != nil {
+				finalTitle = *translated.Title
+			} else if existing != nil {
+				finalTitle = existing.Title
+			}
+
+			var finalNotes *string
+			if translated.Notes != nil {
+				finalNotes = translated.Notes
+			} else if existing != nil {
+				finalNotes = existing.Notes
+			}
+
+			if finalTitle != "" {
+				newTranslations = append(newTranslations, domain.MaintenanceRecordTranslation{
+					LangCode: translated.LangCode,
+					Title:    finalTitle,
+					Notes:    finalNotes,
+				})
+			}
+		}
+	}
+
+	// Save auto-translated translations to database
+	if len(newTranslations) > 0 {
+		if err := s.Repo.AddMaintenanceRecordTranslations(ctx, recordID, newTranslations); err != nil {
+			log.Printf("Failed to save auto-translated maintenance record update translations for ID %s: %v", recordID, err)
+		}
 	}
 }

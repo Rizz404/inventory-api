@@ -3,8 +3,10 @@ package location
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/client/gtranslate"
 	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
@@ -18,6 +20,7 @@ type Repository interface {
 	UpdateLocation(ctx context.Context, locationId string, payload *domain.UpdateLocationPayload) (domain.Location, error)
 	DeleteLocation(ctx context.Context, locationId string) error
 	BulkDeleteLocations(ctx context.Context, locationIds []string) (domain.BulkDeleteLocations, error)
+	AddLocationTranslations(ctx context.Context, locationId string, translations []domain.LocationTranslation) error
 
 	// * QUERY
 	GetLocationsPaginated(ctx context.Context, params domain.LocationParams, langCode string) ([]domain.Location, error)
@@ -65,16 +68,18 @@ type Service struct {
 	Repo                Repository
 	NotificationService NotificationService
 	UserRepo            UserRepository
+	Translator          *gtranslate.Client
 }
 
 // * Ensure Service implements LocationService interface
 var _ LocationService = (*Service)(nil)
 
-func NewService(r Repository, notificationService NotificationService, userRepo UserRepository) LocationService {
+func NewService(r Repository, notificationService NotificationService, userRepo UserRepository, translator *gtranslate.Client) LocationService {
 	return &Service{
 		Repo:                r,
 		NotificationService: notificationService,
 		UserRepo:            userRepo,
+		Translator:          translator,
 	}
 }
 
@@ -109,6 +114,9 @@ func (s *Service) CreateLocation(ctx context.Context, payload *domain.CreateLoca
 	if err != nil {
 		return domain.LocationResponse{}, err
 	}
+
+	// * Auto-translate missing languages in background
+	go s.autoTranslateCreateLocationAsync(createdLocation.ID, payload.Translations)
 
 	// * Convert to LocationResponse using mapper
 	return mapper.LocationToResponse(&createdLocation, mapper.DefaultLangCode), nil
@@ -189,6 +197,11 @@ func (s *Service) UpdateLocation(ctx context.Context, locationId string, payload
 	updatedLocation, err := s.Repo.UpdateLocation(ctx, locationId, payload)
 	if err != nil {
 		return domain.LocationResponse{}, err
+	}
+
+	// * Auto-translate missing languages in background if translations updated
+	if len(payload.Translations) > 0 {
+		go s.autoTranslateUpdateLocationAsync(locationId, payload.Translations, updatedLocation.Translations)
 	}
 
 	// * Send notification to all admin users
@@ -395,5 +408,156 @@ func (s *Service) sendLocationUpdatedNotification(ctx context.Context, locationI
 		log.Printf("Failed to create location updated notification for user ID: %s: %v", userID, err)
 	} else {
 		log.Printf("Successfully created location updated notification for user ID: %s", userID)
+	}
+}
+
+// *===========================ASYNC TRANSLATION===========================*
+
+// autoTranslateCreateLocationAsync translates location to missing languages in background
+func (s *Service) autoTranslateCreateLocationAsync(locationID string, userTranslations []domain.CreateLocationTranslationPayload) {
+	if len(userTranslations) >= 3 {
+		return // All languages provided, no need to translate
+	}
+
+	ctx, cancel :=  context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Convert domain types to utils types
+	utilsTranslations := make([]utils.LocationCreateTranslation, len(userTranslations))
+	for i, t := range userTranslations {
+		utilsTranslations[i] = utils.LocationCreateTranslation{
+			LangCode:     t.LangCode,
+			LocationName: t.LocationName,
+		}
+	}
+
+	// Translate using utils helper
+	translatedPayloads, err := utils.AutoTranslateLocationCreate(ctx, s.Translator, utilsTranslations)
+	if err != nil {
+		log.Printf("Failed to auto-translate location ID %s: %v", locationID, err)
+		return
+	}
+
+	// Extract only new translations
+	newTranslations := make([]domain.LocationTranslation, 0)
+	for _, translated := range translatedPayloads {
+		// Skip user-provided translations
+		isUserProvided := false
+		for _, userTrans := range userTranslations {
+			if userTrans.LangCode == translated.LangCode {
+				isUserProvided = true
+				break
+			}
+		}
+
+		if !isUserProvided {
+			newTranslations = append(newTranslations, domain.LocationTranslation{
+				LangCode:     translated.LangCode,
+				LocationName: translated.LocationName,
+			})
+		}
+	}
+
+	// Save auto-translated translations to database
+	if len(newTranslations) > 0 {
+		if err := s.Repo.AddLocationTranslations(ctx, locationID, newTranslations); err != nil {
+			log.Printf("Failed to save auto-translated location translations for ID %s: %v", locationID, err)
+		}
+	}
+}
+
+// autoTranslateUpdateLocationAsync translates location updates to missing languages in background
+func (s *Service) autoTranslateUpdateLocationAsync(locationID string, userUpdates []domain.UpdateLocationTranslationPayload, existingTranslations []domain.LocationTranslation) {
+	if len(userUpdates) == 0 {
+		return // No updates provided
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Determine existing lang codes from all sources
+	existingLangCodes := make([]string, len(existingTranslations))
+	for i, t := range existingTranslations {
+		existingLangCodes[i] = t.LangCode
+	}
+
+	// Check if any updates are missing languages
+	updatedLangCodes := make([]string, len(userUpdates))
+	for i, t := range userUpdates {
+		updatedLangCodes[i] = t.LangCode
+	}
+
+	// If user updated all 3 languages, no need to auto-translate
+	if len(updatedLangCodes) >= 3 {
+		return
+	}
+
+	// Convert domain types to utils types
+	utilsUpdates := make([]utils.LocationUpdateTranslation, len(userUpdates))
+	for i, t := range userUpdates {
+		utilsUpdates[i] = utils.LocationUpdateTranslation{
+			LangCode:     t.LangCode,
+			LocationName: t.LocationName,
+		}
+	}
+
+	utilsExisting := make([]utils.LocationExistingTranslation, len(existingTranslations))
+	for i, t := range existingTranslations {
+		utilsExisting[i] = utils.LocationExistingTranslation{
+			LangCode:     t.LangCode,
+			LocationName: t.LocationName,
+		}
+	}
+
+	// Translate using utils helper
+	translatedPayloads, err := utils.AutoTranslateLocationUpdate(ctx, s.Translator, utilsUpdates, utilsExisting)
+	if err != nil {
+		log.Printf("Failed to auto-translate updated location ID %s: %v", locationID, err)
+		return
+	}
+
+	// Extract only new translations (not in userUpdates)
+	newTranslations := make([]domain.LocationTranslation, 0)
+	for _, translated := range translatedPayloads {
+		// Skip user-updated translations
+		isUserUpdated := false
+		for _, userUpdate := range userUpdates {
+			if userUpdate.LangCode == translated.LangCode {
+				isUserUpdated = true
+				break
+			}
+		}
+
+		if !isUserUpdated && translated.LocationName != nil {
+			// Build full translation from update + existing
+			var existing *domain.LocationTranslation
+			for _, e := range existingTranslations {
+				if e.LangCode == translated.LangCode {
+					existing = &e
+					break
+				}
+			}
+
+			finalName := ""
+			if translated.LocationName != nil {
+				finalName = *translated.LocationName
+			} else if existing != nil {
+				finalName = existing.LocationName
+			}
+
+			if finalName != "" {
+				newTranslations = append(newTranslations, domain.LocationTranslation{
+					LangCode:     translated.LangCode,
+					LocationName: finalName,
+				})
+			}
+		}
+	}
+
+	// Save auto-translated translations to database
+	if len(newTranslations) > 0 {
+		if err := s.Repo.AddLocationTranslations(ctx, locationID, newTranslations); err != nil {
+			log.Printf("Failed to save auto-translated location update translations for ID %s: %v", locationID, err)
+		}
 	}
 }

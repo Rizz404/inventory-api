@@ -569,9 +569,9 @@ func (s *Service) autoTranslateCategoryAsync(categoryID string, userTranslations
 	}
 
 	// Convert domain types to utils types
-	utilsTranslations := make([]utils.CreateTranslationPayload, len(userTranslations))
+	utilsTranslations := make([]utils.CategoryCreateTranslation, len(userTranslations))
 	for i, t := range userTranslations {
-		utilsTranslations[i] = utils.CreateTranslationPayload{
+		utilsTranslations[i] = utils.CategoryCreateTranslation{
 			LangCode:     t.LangCode,
 			CategoryName: t.CategoryName,
 			Description:  t.Description,
@@ -658,18 +658,18 @@ func (s *Service) autoTranslateUpdateCategoryAsync(categoryID string, userUpdate
 	}
 
 	// Convert domain types to utils types
-	utilsUpdates := make([]utils.UpdateTranslationPayload, len(userUpdates))
+	utilsUpdates := make([]utils.CategoryUpdateTranslation, len(userUpdates))
 	for i, t := range userUpdates {
-		utilsUpdates[i] = utils.UpdateTranslationPayload{
+		utilsUpdates[i] = utils.CategoryUpdateTranslation{
 			LangCode:     t.LangCode,
 			CategoryName: t.CategoryName,
 			Description:  t.Description,
 		}
 	}
 
-	utilsExisting := make([]utils.ExistingTranslation, len(existingTranslations))
+	utilsExisting := make([]utils.CategoryExistingTranslation, len(existingTranslations))
 	for i, t := range existingTranslations {
-		utilsExisting[i] = utils.ExistingTranslation{
+		utilsExisting[i] = utils.CategoryExistingTranslation{
 			LangCode:     t.LangCode,
 			CategoryName: t.CategoryName,
 			Description:  t.Description,

@@ -746,3 +746,55 @@ func (r *IssueReportRepository) GetIssueReportsForExport(ctx context.Context, pa
 	// Convert to domain issue reports
 	return mapper.ToDomainIssueReports(issueReports), nil
 }
+
+// AddIssueReportTranslations adds new translations to an existing issue report
+func (r *IssueReportRepository) AddIssueReportTranslations(ctx context.Context, issueReportId string, translations []domain.IssueReportTranslation) error {
+	if len(translations) == 0 {
+		return nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	for _, translation := range translations {
+		issueID, err := ulid.Parse(issueReportId)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		modelTranslation := model.IssueReportTranslation{
+			ID:              model.SQLULID(ulid.Make()),
+			ReportID:        model.SQLULID(issueID),
+			LangCode:        translation.LangCode,
+			Title:           translation.Title,
+			Description:     translation.Description,
+			ResolutionNotes: translation.ResolutionNotes,
+		}
+
+		var count int64
+		er := tx.Model(&model.IssueReportTranslation{}).
+			Where("issue_report_id = ? AND lang_code = ?", issueReportId, translation.LangCode).
+			Count(&count).Error
+		if er != nil {
+			tx.Rollback()
+			return er
+		}
+
+		if count == 0 {
+			if err := tx.Create(&modelTranslation).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+
+	return tx.Commit().Error
+}

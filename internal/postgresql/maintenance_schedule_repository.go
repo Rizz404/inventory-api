@@ -9,6 +9,7 @@ import (
 	"github.com/Rizz404/inventory-api/domain"
 	"github.com/Rizz404/inventory-api/internal/postgresql/gorm/model"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
+	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -839,4 +840,55 @@ func (r *MaintenanceScheduleRepository) GetMaintenanceSchedulesForExport(ctx con
 	}
 
 	return mapper.ToDomainMaintenanceSchedules(schedules), nil
+}
+
+// AddMaintenanceScheduleTranslations adds new translations to an existing maintenance schedule
+func (r *MaintenanceScheduleRepository) AddMaintenanceScheduleTranslations(ctx context.Context, scheduleId string, translations []domain.MaintenanceScheduleTranslation) error {
+	if len(translations) == 0 {
+		return nil
+	}
+
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	for _, translation := range translations {
+		schedID, err := ulid.Parse(scheduleId)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		modelTranslation := model.MaintenanceScheduleTranslation{
+			ID:          model.SQLULID(ulid.Make()),
+			ScheduleID:  model.SQLULID(schedID),
+			LangCode:    translation.LangCode,
+			Title:       translation.Title,
+			Description: translation.Description,
+		}
+
+		var count int64
+		er := tx.Model(&model.MaintenanceScheduleTranslation{}).
+			Where("schedule_id = ? AND lang_code = ?", scheduleId, translation.LangCode).
+			Count(&count).Error
+		if er != nil {
+			tx.Rollback()
+			return er
+		}
+
+		if count == 0 {
+			if err := tx.Create(&modelTranslation).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+
+	return tx.Commit().Error
 }

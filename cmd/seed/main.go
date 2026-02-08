@@ -211,12 +211,12 @@ func initServices(db *gorm.DB) *Services {
 	userService := user.NewService(userRepository, cloudinaryClient)
 	notificationService := notification.NewService(notificationRepository, userRepository, nil)                            // nil for FCM client in seeder
 	categoryService := category.NewService(categoryRepository, notificationService, userRepository, cloudinaryClient, nil) // nil for translator in seeder
-	locationService := location.NewService(locationRepository, notificationService, userRepository)
+	locationService := location.NewService(locationRepository, notificationService, userRepository, nil)
 	assetService := asset.NewService(assetRepository, cloudinaryClient, notificationService, categoryService, userRepository)
 	assetMovementService := asset_movement.NewService(assetMovementRepository, assetService, locationService, userService, notificationService)
-	issueReportService := issue_report.NewService(issueReportRepository, notificationService, assetService, userRepository)
-	maintenanceScheduleService := maintenance_schedule.NewService(maintenanceScheduleRepository, assetService, userService, notificationService)
-	maintenanceRecordService := maintenance_record.NewService(maintenanceRecordRepository, assetService, userService, notificationService)
+	issueReportService := issue_report.NewService(issueReportRepository, notificationService, assetService, userRepository, nil)
+	maintenanceScheduleService := maintenance_schedule.NewService(maintenanceScheduleRepository, assetService, userService, notificationService, nil)
+	maintenanceRecordService := maintenance_record.NewService(maintenanceRecordRepository, assetService, userService, notificationService, nil)
 
 	return &Services{
 		User:                userService,

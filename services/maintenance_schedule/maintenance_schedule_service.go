@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Rizz404/inventory-api/domain"
+	"github.com/Rizz404/inventory-api/internal/client/gtranslate"
 	"github.com/Rizz404/inventory-api/internal/notification/messages"
 	"github.com/Rizz404/inventory-api/internal/postgresql/mapper"
 	"github.com/Rizz404/inventory-api/internal/utils"
@@ -19,6 +20,7 @@ type Repository interface {
 	DeleteSchedule(ctx context.Context, scheduleId string) error
 	BulkCreateSchedules(ctx context.Context, schedules []domain.MaintenanceSchedule) ([]domain.MaintenanceSchedule, error)
 	BulkDeleteSchedules(ctx context.Context, scheduleIds []string) (domain.BulkDeleteMaintenanceSchedules, error)
+	AddMaintenanceScheduleTranslations(ctx context.Context, scheduleId string, translations []domain.MaintenanceScheduleTranslation) error
 
 	// Schedule queries
 	GetSchedulesPaginated(ctx context.Context, params domain.MaintenanceScheduleParams, langCode string) ([]domain.MaintenanceSchedule, error)
@@ -78,12 +80,13 @@ type Service struct {
 	AssetService        AssetService
 	UserService         UserService
 	NotificationService NotificationService
+	Translator          *gtranslate.Client
 }
 
 var _ MaintenanceScheduleService = (*Service)(nil)
 
-func NewService(r Repository, assetSvc AssetService, userSvc UserService, notificationSvc NotificationService) MaintenanceScheduleService {
-	return &Service{Repo: r, AssetService: assetSvc, UserService: userSvc, NotificationService: notificationSvc}
+func NewService(r Repository, assetSvc AssetService, userSvc UserService, notificationSvc NotificationService, translator *gtranslate.Client) MaintenanceScheduleService {
+	return &Service{Repo: r, AssetService: assetSvc, UserService: userSvc, NotificationService: notificationSvc, Translator: translator}
 }
 
 func (s *Service) CreateMaintenanceSchedule(ctx context.Context, payload *domain.CreateMaintenanceSchedulePayload, createdBy string) (domain.MaintenanceScheduleResponse, error) {
@@ -152,6 +155,9 @@ func (s *Service) CreateMaintenanceSchedule(ctx context.Context, payload *domain
 		return domain.MaintenanceScheduleResponse{}, err
 	}
 
+	// * Auto-translate missing languages in background
+	go s.autoTranslateCreateMaintenanceScheduleAsync(created.ID, payload.Translations)
+
 	// Send notification asynchronously
 	go s.sendMaintenanceScheduledNotification(ctx, &created)
 
@@ -170,6 +176,12 @@ func (s *Service) UpdateMaintenanceSchedule(ctx context.Context, scheduleId stri
 	if err != nil {
 		return domain.MaintenanceScheduleResponse{}, err
 	}
+
+	// * Auto-translate missing languages in background if translations updated
+	if len(payload.Translations) > 0 {
+		go s.autoTranslateUpdateMaintenanceScheduleAsync(scheduleId, payload.Translations, updated.Translations)
+	}
+
 	return mapper.MaintenanceScheduleToResponse(&updated, langCode), nil
 }
 
@@ -386,5 +398,161 @@ func (s *Service) sendMaintenanceScheduledNotification(ctx context.Context, sche
 		log.Printf("Failed to create maintenance scheduled notification for schedule ID: %s: %v", schedule.ID, err)
 	} else {
 		log.Printf("Successfully created maintenance scheduled notification for schedule ID: %s", schedule.ID)
+	}
+}
+
+// *===========================ASYNC TRANSLATION===========================*
+
+// autoTranslateCreateMaintenanceScheduleAsync translates maintenance schedule to missing languages in background
+func (s *Service) autoTranslateCreateMaintenanceScheduleAsync(scheduleID string, userTranslations []domain.CreateMaintenanceScheduleTranslationPayload) {
+	if len(userTranslations) >= 3 {
+		return // All languages provided, no need to translate
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Convert domain types to utils types
+	utilsTranslations := make([]utils.MaintenanceScheduleCreateTranslation, len(userTranslations))
+	for i, t := range userTranslations {
+		utilsTranslations[i] = utils.MaintenanceScheduleCreateTranslation{
+			LangCode:    t.LangCode,
+			Title:       t.Title,
+			Description: t.Description,
+		}
+	}
+
+	// Translate using utils helper
+	translatedPayloads, err := utils.AutoTranslateMaintenanceScheduleCreate(ctx, s.Translator, utilsTranslations)
+	if err != nil {
+		log.Printf("Failed to auto-translate maintenance schedule ID %s: %v", scheduleID, err)
+		return
+	}
+
+	// Extract only new translations
+	newTranslations := make([]domain.MaintenanceScheduleTranslation, 0)
+	for _, translated := range translatedPayloads {
+		// Skip user-provided translations
+		isUserProvided := false
+		for _, userTrans := range userTranslations {
+			if userTrans.LangCode == translated.LangCode {
+				isUserProvided = true
+				break
+			}
+		}
+
+		if !isUserProvided {
+			newTranslations = append(newTranslations, domain.MaintenanceScheduleTranslation{
+				LangCode:    translated.LangCode,
+				Title:       translated.Title,
+				Description: translated.Description,
+			})
+		}
+	}
+
+	// Save auto-translated translations to database
+	if len(newTranslations) > 0 {
+		if err := s.Repo.AddMaintenanceScheduleTranslations(ctx, scheduleID, newTranslations); err != nil {
+			log.Printf("Failed to save auto-translated maintenance schedule translations for ID %s: %v", scheduleID, err)
+		}
+	}
+}
+
+// autoTranslateUpdateMaintenanceScheduleAsync translates maintenance schedule updates to missing languages in background
+func (s *Service) autoTranslateUpdateMaintenanceScheduleAsync(scheduleID string, userUpdates []domain.UpdateMaintenanceScheduleTranslationPayload, existingTranslations []domain.MaintenanceScheduleTranslation) {
+	if len(userUpdates) == 0 {
+		return // No updates provided
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// If user updated all 3 languages, no need to auto-translate
+	updatedLangCodes := make([]string, len(userUpdates))
+	for i, t := range userUpdates {
+		updatedLangCodes[i] = t.LangCode
+	}
+
+	if len(updatedLangCodes) >= 3 {
+		return
+	}
+
+	// Convert domain types to utils types
+	utilsUpdates := make([]utils.MaintenanceScheduleUpdateTranslation, len(userUpdates))
+	for i, t := range userUpdates {
+		utilsUpdates[i] = utils.MaintenanceScheduleUpdateTranslation{
+			LangCode:    t.LangCode,
+			Title:       t.Title,
+			Description: t.Description,
+		}
+	}
+
+	utilsExisting := make([]utils.MaintenanceScheduleExistingTranslation, len(existingTranslations))
+	for i, t := range existingTranslations {
+		utilsExisting[i] = utils.MaintenanceScheduleExistingTranslation{
+			LangCode:    t.LangCode,
+			Title:       t.Title,
+			Description: t.Description,
+		}
+	}
+
+	// Translate using utils helper
+	translatedPayloads, err := utils.AutoTranslateMaintenanceScheduleUpdate(ctx, s.Translator, utilsUpdates, utilsExisting)
+	if err != nil {
+		log.Printf("Failed to auto-translate updated maintenance schedule ID %s: %v", scheduleID, err)
+		return
+	}
+
+	// Extract only new translations (not in userUpdates)
+	newTranslations := make([]domain.MaintenanceScheduleTranslation, 0)
+	for _, translated := range translatedPayloads {
+		// Skip user-updated translations
+		isUserUpdated := false
+		for _, userUpdate := range userUpdates {
+			if userUpdate.LangCode == translated.LangCode {
+				isUserUpdated = true
+				break
+			}
+		}
+
+		if !isUserUpdated && (translated.Title != nil || translated.Description != nil) {
+			// Build full translation from update + existing
+			var existing *domain.MaintenanceScheduleTranslation
+			for _, e := range existingTranslations {
+				if e.LangCode == translated.LangCode {
+					existing = &e
+					break
+				}
+			}
+
+			finalTitle := ""
+			if translated.Title != nil {
+				finalTitle = *translated.Title
+			} else if existing != nil {
+				finalTitle = existing.Title
+			}
+
+			var finalDescription *string
+			if translated.Description != nil {
+				finalDescription = translated.Description
+			} else if existing != nil && existing.Description != nil {
+				finalDescription = existing.Description
+			}
+
+			if finalTitle != "" {
+				newTranslations = append(newTranslations, domain.MaintenanceScheduleTranslation{
+					LangCode:    translated.LangCode,
+					Title:       finalTitle,
+					Description: finalDescription,
+				})
+			}
+		}
+	}
+
+	// Save auto-translated translations to database
+	if len(newTranslations) > 0 {
+		if err := s.Repo.AddMaintenanceScheduleTranslations(ctx, scheduleID, newTranslations); err != nil {
+			log.Printf("Failed to save auto-translated maintenance schedule update translations for ID %s: %v", scheduleID, err)
+		}
 	}
 }

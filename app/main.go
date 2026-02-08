@@ -109,13 +109,13 @@ func main() {
 	userService := user.NewService(userRepository, clients.Cloudinary)
 	notificationService := notification.NewService(notificationRepository, userRepository, clients.FCM)
 	categoryService := category.NewService(categoryRepository, notificationService, userRepository, clients.Cloudinary, clients.Translator)
-	locationService := location.NewService(locationRepository, notificationService, userRepository)
+	locationService := location.NewService(locationRepository, notificationService, userRepository, clients.Translator)
 	assetService := asset.NewService(assetRepository, clients.Cloudinary, notificationService, categoryService, userRepository)
 	scanLogService := scanLog.NewService(scanLogRepository)
-	issueReportService := issueReport.NewService(issueReportRepository, notificationService, assetService, userRepository)
+	issueReportService := issueReport.NewService(issueReportRepository, notificationService, assetService, userRepository, clients.Translator)
 	assetMovementService := assetMovement.NewService(assetMovementRepository, assetService, locationService, userService, notificationService)
-	maintenanceScheduleService := maintenanceSchedule.NewService(maintenanceScheduleRepository, assetService, userService, notificationService)
-	maintenanceRecordService := maintenanceRecord.NewService(maintenanceRecordRepository, assetService, userService, notificationService)
+	maintenanceScheduleService := maintenanceSchedule.NewService(maintenanceScheduleRepository, assetService, userService, notificationService, clients.Translator)
+	maintenanceRecordService := maintenanceRecord.NewService(maintenanceRecordRepository, assetService, userService, notificationService, clients.Translator)
 
 	// *===================================CRON SERVICE===================================*
 	assetCronService := asset.NewCronService(assetRepository, notificationService)
