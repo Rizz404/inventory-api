@@ -61,6 +61,7 @@ func generateValidationMessage(err validator.FieldError) string {
 	field := err.Field()
 	tag := err.Tag()
 	param := err.Param()
+	kind := err.Kind()
 
 	switch tag {
 	case "required":
@@ -68,11 +69,43 @@ func generateValidationMessage(err validator.FieldError) string {
 	case "email":
 		return fmt.Sprintf("%s must be a valid email address", field)
 	case "min":
-		return fmt.Sprintf("%s must be at least %s characters long", field, param)
+		// Handle different types for min validation
+		switch kind {
+		case reflect.String:
+			return fmt.Sprintf("%s must be at least %s characters long", field, param)
+		case reflect.Slice, reflect.Array:
+			return fmt.Sprintf("%s must contain at least %s items", field, param)
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+			reflect.Float32, reflect.Float64:
+			return fmt.Sprintf("%s must be at least %s", field, param)
+		default:
+			return fmt.Sprintf("%s must be at least %s", field, param)
+		}
 	case "max":
-		return fmt.Sprintf("%s must not exceed %s characters", field, param)
+		// Handle different types for max validation
+		switch kind {
+		case reflect.String:
+			return fmt.Sprintf("%s must not exceed %s characters", field, param)
+		case reflect.Slice, reflect.Array:
+			return fmt.Sprintf("%s must not exceed %s items", field, param)
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+			reflect.Float32, reflect.Float64:
+			return fmt.Sprintf("%s must not exceed %s", field, param)
+		default:
+			return fmt.Sprintf("%s must not exceed %s", field, param)
+		}
 	case "len":
-		return fmt.Sprintf("%s must be exactly %s characters long", field, param)
+		// Handle different types for len validation
+		switch kind {
+		case reflect.String:
+			return fmt.Sprintf("%s must be exactly %s characters long", field, param)
+		case reflect.Slice, reflect.Array:
+			return fmt.Sprintf("%s must contain exactly %s items", field, param)
+		default:
+			return fmt.Sprintf("%s must be exactly %s", field, param)
+		}
 	case "gte":
 		return fmt.Sprintf("%s must be greater than or equal to %s", field, param)
 	case "lte":
