@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"log"
 	"strconv"
 
 	"github.com/Rizz404/inventory-api/domain"
@@ -107,22 +106,9 @@ func (h *LocationHandler) BulkCreateLocations(c *fiber.Ctx) error {
 
 func (h *LocationHandler) CreateLocation(c *fiber.Ctx) error {
 	var payload domain.CreateLocationPayload
-
-	// * Debug: Log raw body
-	log.Printf("[DEBUG] CreateLocation - Content-Type: %s", c.Get("Content-Type"))
-	log.Printf("[DEBUG] CreateLocation - Raw Body: %s", string(c.Body()))
-
 	if err := web.ParseAndValidate(c, &payload); err != nil {
-		// * Debug: Log validation error details
-		log.Printf("[DEBUG] CreateLocation - Validation Error: %v", err)
-		log.Printf("[DEBUG] CreateLocation - Parsed Payload: %+v", payload)
-		log.Printf("[DEBUG] CreateLocation - Translations Count: %d", len(payload.Translations))
 		return web.HandleError(c, err)
 	}
-
-	// * Debug: Log successful parse
-	log.Printf("[DEBUG] CreateLocation - Successfully parsed payload: %+v", payload)
-	log.Printf("[DEBUG] CreateLocation - Translations: %+v", payload.Translations)
 
 	location, err := h.Service.CreateLocation(c.Context(), &payload)
 	if err != nil {
