@@ -300,18 +300,18 @@ type UserSummaryStatisticsResponse struct {
 
 // Internal personal statistics structs (used in repository layer)
 type UserPersonalStatistics struct {
-	UserID       string                                `json:"userId"`
-	UserName     string                                `json:"userName"`
-	Role         UserRole                              `json:"role"`
-	Assets       UserPersonalAssetStatistics           `json:"assets"`
-	IssueReports UserPersonalIssueReportStatistics     `json:"issueReports"`
-	Summary      UserPersonalSummaryStatistics         `json:"summary"`
+	UserID       string                            `json:"userId"`
+	UserName     string                            `json:"userName"`
+	Role         UserRole                          `json:"role"`
+	Assets       UserPersonalAssetStatistics       `json:"assets"`
+	IssueReports UserPersonalIssueReportStatistics `json:"issueReports"`
+	Summary      UserPersonalSummaryStatistics     `json:"summary"`
 }
 
 type UserPersonalAssetStatistics struct {
-	Total       UserPersonalAssetTotalStatistics      `json:"total"`
-	ByCondition UserPersonalAssetConditionStatistics   `json:"byCondition"`
-	Items       []UserPersonalAssetItem                `json:"items"`
+	Total       UserPersonalAssetTotalStatistics     `json:"total"`
+	ByCondition UserPersonalAssetConditionStatistics `json:"byCondition"`
+	Items       []UserPersonalAssetItem              `json:"items"`
 }
 
 type UserPersonalAssetTotalStatistics struct {
@@ -337,11 +337,11 @@ type UserPersonalAssetItem struct {
 }
 
 type UserPersonalIssueReportStatistics struct {
-	Total         UserPersonalIssueReportTotalStatistics    `json:"total"`
-	ByStatus      UserPersonalIssueReportStatusStatistics   `json:"byStatus"`
-	ByPriority    UserPersonalIssueReportPriorityStatistics `json:"byPriority"`
-	RecentIssues  []UserPersonalIssueReportItem             `json:"recentIssues"`
-	Summary       UserPersonalIssueReportSummaryStatistics  `json:"summary"`
+	Total        UserPersonalIssueReportTotalStatistics    `json:"total"`
+	ByStatus     UserPersonalIssueReportStatusStatistics   `json:"byStatus"`
+	ByPriority   UserPersonalIssueReportPriorityStatistics `json:"byPriority"`
+	RecentIssues []UserPersonalIssueReportItem             `json:"recentIssues"`
+	Summary      UserPersonalIssueReportSummaryStatistics  `json:"summary"`
 }
 
 type UserPersonalIssueReportTotalStatistics struct {
@@ -372,9 +372,9 @@ type UserPersonalIssueReportItem struct {
 }
 
 type UserPersonalIssueReportSummaryStatistics struct {
-	OpenIssuesCount         int     `json:"openIssuesCount"`
-	ResolvedIssuesCount     int     `json:"resolvedIssuesCount"`
-	AverageResolutionDays   float64 `json:"averageResolutionDays"`
+	OpenIssuesCount       int     `json:"openIssuesCount"`
+	ResolvedIssuesCount   int     `json:"resolvedIssuesCount"`
+	AverageResolutionDays float64 `json:"averageResolutionDays"`
 }
 
 type UserPersonalSummaryStatistics struct {
@@ -387,18 +387,18 @@ type UserPersonalSummaryStatistics struct {
 
 // Response personal statistics structs (used in service/handler layer)
 type UserPersonalStatisticsResponse struct {
-	UserID       string                                        `json:"userId"`
-	UserName     string                                        `json:"userName"`
-	Role         UserRole                                      `json:"role"`
-	Assets       UserPersonalAssetStatisticsResponse           `json:"assets"`
-	IssueReports UserPersonalIssueReportStatisticsResponse     `json:"issueReports"`
-	Summary      UserPersonalSummaryStatisticsResponse         `json:"summary"`
+	UserID       string                                    `json:"userId"`
+	UserName     string                                    `json:"userName"`
+	Role         UserRole                                  `json:"role"`
+	Assets       UserPersonalAssetStatisticsResponse       `json:"assets"`
+	IssueReports UserPersonalIssueReportStatisticsResponse `json:"issueReports"`
+	Summary      UserPersonalSummaryStatisticsResponse     `json:"summary"`
 }
 
 type UserPersonalAssetStatisticsResponse struct {
-	Total       UserPersonalAssetTotalStatisticsResponse      `json:"total"`
-	ByCondition UserPersonalAssetConditionStatisticsResponse   `json:"byCondition"`
-	Items       []UserPersonalAssetItemResponse                `json:"items"`
+	Total       UserPersonalAssetTotalStatisticsResponse     `json:"total"`
+	ByCondition UserPersonalAssetConditionStatisticsResponse `json:"byCondition"`
+	Items       []UserPersonalAssetItemResponse              `json:"items"`
 }
 
 type UserPersonalAssetTotalStatisticsResponse struct {
@@ -424,11 +424,11 @@ type UserPersonalAssetItemResponse struct {
 }
 
 type UserPersonalIssueReportStatisticsResponse struct {
-	Total         UserPersonalIssueReportTotalStatisticsResponse    `json:"total"`
-	ByStatus      UserPersonalIssueReportStatusStatisticsResponse   `json:"byStatus"`
-	ByPriority    UserPersonalIssueReportPriorityStatisticsResponse `json:"byPriority"`
-	RecentIssues  []UserPersonalIssueReportItemResponse             `json:"recentIssues"`
-	Summary       UserPersonalIssueReportSummaryStatisticsResponse  `json:"summary"`
+	Total        UserPersonalIssueReportTotalStatisticsResponse    `json:"total"`
+	ByStatus     UserPersonalIssueReportStatusStatisticsResponse   `json:"byStatus"`
+	ByPriority   UserPersonalIssueReportPriorityStatisticsResponse `json:"byPriority"`
+	RecentIssues []UserPersonalIssueReportItemResponse             `json:"recentIssues"`
+	Summary      UserPersonalIssueReportSummaryStatisticsResponse  `json:"summary"`
 }
 
 type UserPersonalIssueReportTotalStatisticsResponse struct {
@@ -459,9 +459,9 @@ type UserPersonalIssueReportItemResponse struct {
 }
 
 type UserPersonalIssueReportSummaryStatisticsResponse struct {
-	OpenIssuesCount         int      `json:"openIssuesCount"`
-	ResolvedIssuesCount     int      `json:"resolvedIssuesCount"`
-	AverageResolutionDays   Decimal2 `json:"averageResolutionDays"`
+	OpenIssuesCount       int      `json:"openIssuesCount"`
+	ResolvedIssuesCount   int      `json:"resolvedIssuesCount"`
+	AverageResolutionDays Decimal2 `json:"averageResolutionDays"`
 }
 
 type UserPersonalSummaryStatisticsResponse struct {
